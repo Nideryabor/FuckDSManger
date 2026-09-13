@@ -1,0 +1,188 @@
+===== DIAG =====
+1789206306152 hookM i65.x count=1
+1789206306152 hookM p96.b count=1
+1789206306153 hookM android.content.res.Resources.getValue count=2
+1789206306153 early hooks registered
+1789206306154 hookM hw1.a count=1
+1789206306154 hookM hw1.b count=1
+1789206306155 hookM android.content.res.Resources.getString count=2
+1789206306155 hookM android.content.res.Resources.getText count=2
+1789206306156 hookM android.app.Activity.dispatchTouchEvent count=1
+1789206306157 hookM yu9.m count=1
+1789206306157 hookM android.content.res.Resources.getDrawable count=2
+1789206306159 hookM android.app.Activity.onActivityResult count=2
+1789206306159 hookM uv1.u count=1
+1789206306159 hookM vp4.get count=1
+1789206306160 hookM az5.h count=1
+1789206306160 hookM android.content.res.Resources.getValue count=2
+1789206306160 hookM i65.x count=1
+1789206306160 hookM p96.b count=1
+1789206306160 handleLoadPackage done
+1789206306208 onResume: module alive
+1789206306208 pick hooks ensured
+1789206306208 check i65 OK
+1789206306208 check p96 OK
+1789206306255 Li65.x called
+===== DS DATA =====
+support_chat_file_exts
+{"id":1066981998,"value":["wxml","wxss","wxs","axml","acss","sjs","swan","ttml","ttss","qml","qss","pdf","png","jpg","jpeg","svg","svgz","bmp","gif","webp","ico","xbm","dib","pjp","tif","pjpeg","avif","apng","tiff","jfif","txt","md","csv","tsv","html","json","log","dot","go","h","c","cpp","cxx","cc","cs","java","js","css","jsp","php","py","py3","asp","yaml","yml","ini","conf","ts","tsx","doc","docx","ppt","pptx","xls","xlsx","abap","asc","ash","ampl","mod","g4","apib","apl","dyalog","asax","ascx","ashx","asmx","aspx","axd","dats","hats","sats","as","adb","ada","ads","agda","als","apacheconf","vhost","cls","applescript","scpt","arc","ino","asciidoc","adoc","aj","asm","a51","inc","nasm","aug","ahk","ahkl","au3","awk","auk","gawk","mawk","nawk","bat","cmd","befunge","bison","bb","decls","bmx","bsv","boo","b","bf","brs","bro","cats","idc","w","cake","cshtml","csx","c++","cp","h++","hh","hpp","hxx","inl","ipp","tcc","tpp","c-objdump","chs","clp","cmake","in","cob","cbl","ccp","cobol","cpy","capnp","mss","ceylon","chpl","ch","ck","cirru","clw","icl","dcl","click","clj","boot","cl2","cljc","cljs","hl","cljscm","cljx","hic","coffee","_coffee","cjsx","cjs","cts","mjs","mts","cson","iced","cfm","cfml","cfc","lisp","asd","cl","l","lsp","ny","podsl","sexp","cps","coq","v","cppobjdump","c++-objdump","c++objdump","cpp-objdump","cxx-objdump","creole","cr","feature","cu","cuh","cy","pyx","pxd","pxi","d","di","d-objdump","com","dm","zone","arpa","darcspatch","dpatch","dart","diff","patch","dockerfile","djs","dylan","dyl","intr","lid","E","ecl","eclxml","sch","brd","epj","e","ex","exs","elm","el","emacs","desktop","em","emberscript","erl","es","escript","hrl","xrl","yrl","fs","fsi","fsx","fx","flux","f90","f","f03","f08","f77","f95","for","fpp","factor","fy","fancypack","fan","fth","4th","forth","fr","frt","ftl","g","gco","gcode","gms","gap","gd","gi","tst","s","ms","glsl","fp","frag","frg","fsh","fshader","geo","geom","glslv","gshader","shader","vert","vrx","vsh","vshader","gml","kid","ebuild","eclass","po","pot","glf","gp","gnu","gnuplot","plot","plt","golo","gs","gst","gsx","vark","grace","gradle","gf","graphql","gv","man","1in","1m","1x","3in","3m","3qt","3x","me","n","rno","roff","groovy","grt","gtpl","gvy","gsp","hcl","tf","hlsl","fxh","hlsli","htm","st","xht","xhtml","mustache","jinja","eex","erb","deface","phtml","http","haml","handlebars","hbs","hb","hs","hsc","hx","hxsl","hy","pro","dlm","ipf","cfg","prefs","properties","irclog","weechatlog","idr","lidr","ni","i7x","iss","io","ik","thy","ijs","flex","jflex","geojson","lock","topojson","json5","jsonld","jq","jsx","jade","j","_js","bones","es6","jake","jsb","jscad","jsfl","jsm","jss","njs","pac","sjs","ssjs","sublime-build","sublime-commands","sublime-completions","sublime-keymap","sublime-macro","sublime-menu","sublime-mousemap","sublime-project","sublime-settings","sublime-theme","sublime-workspace","sublime_metrics","sublime_session","xsjs","xsjslib","jl","ipynb","krl","kicad_pcb","kit","kt","ktm","kts","lfe","ll","lol","lsl","lslp","lvproj","lasso","las","lasso8","lasso9","ldml","latte","lean","hlean","less","lex","ly","ily","m","ld","lds","liquid","lagda","litcoffee","lhs","ls","_ls","xm","x","xi","lgt","logtalk","lookml","lua","fcgi","nse","pd_lua","rbxs","wlua","mumps","m4","mcfunction","mcr","mtml","muf","mak","mk","mkfile","mako","mao","markdown","mkd","mkdn","mkdown","ron","mask","mathematica","cdf","ma","map","mt","nb","nbp","wl","wlt","matlab","maxpat","maxhelp","maxproj","mxt","pat","mediawiki","wiki","moo","metal","minid","druby","duby","mir","mirah","mo","mms","mmk","monkey","moon","myt","ncl","nl","nsi","nsh","axs","axi","nlogo","nginxconf","nim","nimrod","ninja","nit","nix","nu","numpy","numpyw","numsc","ml","eliom","eliomi","ml4","mli","mll","mly","objdump","mm","sj","omgrofl","opa","opal","opencl","p","scad","org","ox","oxh","oxo","oxygene","oz","pwn","aw","ctp","php3","php4","php5","php6","php7","php8","phps","phpt","pls","pck","pkb","pks","plb","plsql","sql","pov","pan","psc","parrot","pasm","pir","pas","dfm","dpr","lpr","pp","pl","al","cgi","perl","ph","plx","pm","pod","psgi","t","6pl","6pm","nqp","p6","p6l","p6m","pl6","pm6","pkl","pig","pike","pmod","pogo","pony","ps","eps","ps1","psd1","psm1","pde","prolog","yap","spin","proto","pub","pd","pb","pbi","purs","bzl","gyp","lmi","pyde","pyi","pyp","pyt","pyw","rpy","tac","wsgi","xpy","pytb","qml","qbs","pri","r","rd","rsx","raml","rdoc","rbbas","rbfrm","rbmnu","rbres","rbtbar","rbuistate","rhtml","rmd","rkt","rktd","rktl","scrbl","rl","raw","reb","r2","r3","rebol","red","reds","cw","rs","rsh","robot","rg","rb","builder","gemspec","god","irbrc","jbuilder","mspec","pluginspec","podspec","rabl","rake","rbuild","rbw","rbx","ru","ruby","thor","watchr","sas","scss","smt2","smt","sparql","rq","sqf","hqf","cql","ddl","prc","tab","udf","viw","db2","ston","sage","sagews","sls","sass","scala","sbt","sc","scaml","scm","sld","sps","ss","sci","sce","self","sh","bash","bats","command","ksh","tmux","tool","zsh","sh-session","shen","sl","slim","smali","tpl","sp","sma","nut","stan","ML","fun","sig","sml","do","ado","doh","ihlp","mata","matah","sthlp","styl","scd","swift","sv","svh","vh","toml","txl","tcl","adp","tm","tcsh","csh","tex","aux","bbx","bib","cbx","dtx","ins","lbx","ltx","mkii","mkiv","mkvi","sty","toc","tea","no","textile","thrift","tu","ttl","twig","upc","anim","asset","meta","prefab","unity","uno","uc","ur","urs","vcl","vhdl","vhd","vhf","vhi","vho","vhs","vht","vhw","vala","vapi","veo","vim","vb","bas","frm","frx","vba","vbhtml","vbs","volt","vue","owl","webidl","x10","xc","xml","ant","axml","ccxml","clixml","cproject","csl","csproj","ct","dita","ditamap","ditaval","config","dotsettings","filters","fsproj","fxml","glade","grxml","iml","ivy","jelly","jsproj","kml","launch","mdpolicy","mxml","nproj","nuspec","odd","osm","plist","props","ps1xml","psc1","pt","rdf","rss","scxml","srdf","storyboard","stTheme","sublime-snippet","targets","tmCommand","tml","tmLanguage","tmPreferences","tmSnippet","tmTheme","ui","urdf","ux","vbproj","vcxproj","vssettings","vxml","wsdl","wsf","wxi","wxl","wxs","x3d","xacro","xaml","xib","xlf","xliff","xmi","dist","xproj","xsd","xul","zcml","xsp-config","metadata","xpl","xproc","xquery","xq","xql","xqm","xqy","xs","xslt","xsl","xojo_code","xojo_menu","xojo_report","xojo_script","xojo_toolbar","xojo_window","xtend","reek","rviz","sublime-syntax","syntax","yang","y","yacc","yy","zep","zimpl","zmpl","zpl","ec","eh","edn","fish","mu","nc","ooc","rst","rest","wisp","prg","prw","gitignore","gitkeep","gitmodules","example","avifs","blp","bufr","bw","cur","dcx","dds","emf","fit","fits","flc","fli","ftc","ftu","gbr","grib","h5","hdf","hif","icb","icns","iim","im","j2c","j2k","jp2","jpc","jpe","jpf","jpx","mpeg","mpg","msp","pbm","pcd","pcx","pfm","pgm","pnm","ppm","psd","pxr","qoi","ras","rgb","rgba","sgi","tga","vda","vst","wmf","xpm","epub","mobi"]}
+
+query_files_time_interval
+{"id":607730926,"value":1000}
+
+camera_compress_ratio
+{"id":327221844,"value":0.8}
+
+sm_pass_code_type
+{"id":2087144064,"value":"spatial_select"}
+
+max_upload_file_size
+{"id":279109398,"value":104857600}
+
+android_apk_link
+{"id":73458866,"value":"https://download.deepseek.com/app?utm_source=android_app"}
+
+should_use_sm_device_id
+{"id":1152282431,"value":true}
+
+pow_header_paths
+{"id":1576211625,"value":["/api/v0/users/register","/api/v0/users/register_by_mobile","/api/v0/users/login_by_mobile_sms","/api/v0/users/oauth/google/login","/api/v0/users/create_sms_verification_code","/api/v0/users/create_email_verification_code"]}
+
+authed_pow_functions
+{"id":1034971337,"value":["search","deep_think","completion","file"]}
+
+query_title_time_interval
+{"id":1221207916,"value":3000}
+
+max_input_files
+{"id":106398693,"value":50}
+
+enable_google_sign_in_captcha
+{"id":1735983383,"value":false}
+
+stop_stream_wait_times
+{"id":681439413,"value":1000}
+
+deep_think_button_suffix
+{"id":227691405,"value":""}
+
+report_http_biz_error
+{"id":1513530345,"value":true}
+
+completion_request_timeout_millis
+{"id":2055060336,"value":120000}
+
+hcaptcha_enabled
+{"id":951609837,"value":true}
+
+dead_link_detection
+{"id":1353546749,"value":true}
+
+show_new_chat_button_above_input
+{"id":125804228,"value":false}
+
+ds_settings_enabled
+{"id":438009947,"value":true}
+
+auto_resume_max_time_ms
+{"id":92179736,"value":5000}
+
+auto_resume_interval_ms
+{"id":1081627291,"value":1000}
+
+record_stop_delay_ms
+{"id":2135781530,"value":0}
+
+launch_clean_session_interval_seconds
+{"id":985220088,"value":21600}
+
+hif_max_retry_interval_secs
+{"id":1806424694,"value":600}
+
+completion_request_timeout_ms
+{"id":1429241854,"value":60000}
+
+edit_request_timeout_ms
+{"id":912299024,"value":60000}
+
+regenerate_request_timeout_ms
+{"id":962533274,"value":60000}
+
+continue_request_timeout_ms
+{"id":2001562968,"value":60000}
+
+resume_request_timeout_ms
+{"id":410318079,"value":60000}
+
+auto_resume_request_timeout_ms
+{"id":1804498312,"value":3000}
+
+search_state_on_launch
+{"id":19572873,"value":"on"}
+
+search_state_on_manually_created_chat
+{"id":1724703034,"value":"keep"}
+
+search_state_on_automatically_created_chat
+{"id":1081694394,"value":"on"}
+
+search_state_on_login
+{"id":741308588,"value":"on"}
+
+search_state_trigger
+{"id":948828287,"value":{"trigger":"on","trigger_version":1}}
+
+allow_file_with_search
+{"id":1291879659,"value":true}
+
+normal_history_and_file_token_limit
+{"id":2037161179,"value":890880}
+
+r1_history_and_file_token_limit
+{"id":1720155256,"value":890880}
+
+volcengine_enabled
+{"id":591966471,"value":"true"}
+
+sm_sdk_host
+{"id":1763363875,"value":"https://fp-it.fengkongcloud.com"}
+
+one_tap_login_enabled
+{"id":2132348239,"value":true}
+
+pow_prefetch
+{"id":1467781796,"value":true}
+
+pow_prefetch_count
+{"id":677462759,"value":1}
+
+session_prefetch
+{"id":401669711,"value":true}
+
+model_configs
+{"id":1356454870,"value":[{"model_type":"default","name":"快速模式","description":"","welcome_msg":"使用快速模式开始对话","is_default":true,"enabled":true,"switchable":true,"show_model_name_in_session":false,"edit_quota":5,"regenerate_quota":5,"input_character_limit":2621440,"think_feature":{},"search_feature":{},"regenerate_options":null,"file_feature":{"token_limit":890880,"token_limit_with_thinking":890880,"max_input_file_count":50,"max_upload_file_size":104857600,"support_file_exts":["wxml","wxss","wxs","axml","acss","sjs","swan","ttml","ttss","qml","qss","pdf","png","jpg","jpeg","svg","svgz","bmp","gif","webp","ico","xbm","dib","pjp","tif","pjpeg","avif","apng","tiff","jfif","txt","md","csv","tsv","html","json","log","dot","go","h","c","cpp","cxx","cc","cs","java","js","css","jsp","php","py","py3","asp","yaml","yml","ini","conf","ts","tsx","doc","docx","ppt","pptx","xls","xlsx","abap","asc","ash","ampl","mod","g4","apib","apl","dyalog","asax","ascx","ashx","asmx","aspx","axd","dats","hats","sats","as","adb","ada","ads","agda","als","apacheconf","vhost","cls","applescript","scpt","arc","ino","asciidoc","adoc","aj","asm","a51","inc","nasm","aug","ahk","ahkl","au3","awk","auk","gawk","mawk","nawk","bat","cmd","befunge","bison","bb","decls","bmx","bsv","boo","b","bf","brs","bro","cats","idc","w","cake","cshtml","csx","c++","cp","h++","hh","hpp","hxx","inl","ipp","tcc","tpp","c-objdump","chs","clp","cmake","in","cob","cbl","ccp","cobol","cpy","capnp","mss","ceylon","chpl","ch","ck","cirru","clw","icl","dcl","click","clj","boot","cl2","cljc","cljs","hl","cljscm","cljx","hic","coffee","_coffee","cjsx","cjs","cts","mjs","mts","cson","iced","cfm","cfml","cfc","lisp","asd","cl","l","lsp","ny","podsl","sexp","cps","coq","v","cppobjdump","c++-objdump","c++objdump","cpp-objdump","cxx-objdump","creole","cr","feature","cu","cuh","cy","pyx","pxd","pxi","d","di","d-objdump","com","dm","zone","arpa","darcspatch","dpatch","dart","diff","patch","dockerfile","djs","dylan","dyl","intr","lid","E","ecl","eclxml","sch","brd","epj","e","ex","exs","elm","el","emacs","desktop","em","emberscript","erl","es","escript","hrl","xrl","yrl","fs","fsi","fsx","fx","flux","f90","f","f03","f08","f77","f95","for","fpp","factor","fy","fancypack","fan","fth","4th","forth","fr","frt","ftl","g","gco","gcode","gms","gap","gd","gi","tst","s","ms","glsl","fp","frag","frg","fsh","fshader","geo","geom","glslv","gshader","shader","vert","vrx","vsh","vshader","gml","kid","ebuild","eclass","po","pot","glf","gp","gnu","gnuplot","plot","plt","golo","gs","gst","gsx","vark","grace","gradle","gf","graphql","gv","man","1in","1m","1x","3in","3m","3qt","3x","me","n","rno","roff","groovy","grt","gtpl","gvy","gsp","hcl","tf","hlsl","fxh","hlsli","htm","st","xht","xhtml","mustache","jinja","eex","erb","deface","phtml","http","haml","handlebars","hbs","hb","hs","hsc","hx","hxsl","hy","pro","dlm","ipf","cfg","prefs","properties","irclog","weechatlog","idr","lidr","ni","i7x","iss","io","ik","thy","ijs","flex","jflex","geojson","lock","topojson","json5","jsonld","jq","jsx","jade","j","_js","bones","es6","jake","jsb","jscad","jsfl","jsm","jss","njs","pac","sjs","ssjs","sublime-build","sublime-commands","sublime-completions","sublime-keymap","sublime-macro","sublime-menu","sublime-mousemap","sublime-project","sublime-settings","sublime-theme","sublime-workspace","sublime_metrics","sublime_session","xsjs","xsjslib","jl","ipynb","krl","kicad_pcb","kit","kt","ktm","kts","lfe","ll","lol","lsl","lslp","lvproj","lasso","las","lasso8","lasso9","ldml","latte","lean","hlean","less","lex","ly","ily","m","ld","lds","liquid","lagda","litcoffee","lhs","ls","_ls","xm","x","xi","lgt","logtalk","lookml","lua","fcgi","nse","pd_lua","rbxs","wlua","mumps","m4","mcfunction","mcr","mtml","muf","mak","mk","mkfile","mako","mao","markdown","mkd","mkdn","mkdown","ron","mask","mathematica","cdf","ma","map","mt","nb","nbp","wl","wlt","matlab","maxpat","maxhelp","maxproj","mxt","pat","mediawiki","wiki","moo","metal","minid","druby","duby","mir","mirah","mo","mms","mmk","monkey","moon","myt","ncl","nl","nsi","nsh","axs","axi","nlogo","nginxconf","nim","nimrod","ninja","nit","nix","nu","numpy","numpyw","numsc","ml","eliom","eliomi","ml4","mli","mll","mly","objdump","mm","sj","omgrofl","opa","opal","opencl","p","scad","org","ox","oxh","oxo","oxygene","oz","pwn","aw","ctp","php3","php4","php5","php6","php7","php8","phps","phpt","pls","pck","pkb","pks","plb","plsql","sql","pov","pan","psc","parrot","pasm","pir","pas","dfm","dpr","lpr","pp","pl","al","cgi","perl","ph","plx","pm","pod","psgi","t","6pl","6pm","nqp","p6","p6l","p6m","pl6","pm6","pkl","pig","pike","pmod","pogo","pony","ps","eps","ps1","psd1","psm1","pde","prolog","yap","spin","proto","pub","pd","pb","pbi","purs","bzl","gyp","lmi","pyde","pyi","pyp","pyt","pyw","rpy","tac","wsgi","xpy","pytb","qml","qbs","pri","r","rd","rsx","raml","rdoc","rbbas","rbfrm","rbmnu","rbres","rbtbar","rbuistate","rhtml","rmd","rkt","rktd","rktl","scrbl","rl","raw","reb","r2","r3","rebol","red","reds","cw","rs","rsh","robot","rg","rb","builder","gemspec","god","irbrc","jbuilder","mspec","pluginspec","podspec","rabl","rake","rbuild","rbw","rbx","ru","ruby","thor","watchr","sas","scss","smt2","smt","sparql","rq","sqf","hqf","cql","ddl","prc","tab","udf","viw","db2","ston","sage","sagews","sls","sass","scala","sbt","sc","scaml","scm","sld","sps","ss","sci","sce","self","sh","bash","bats","command","ksh","tmux","tool","zsh","sh-session","shen","sl","slim","smali","tpl","sp","sma","nut","stan","ML","fun","sig","sml","do","ado","doh","ihlp","mata","matah","sthlp","styl","scd","swift","sv","svh","vh","toml","txl","tcl","adp","tm","tcsh","csh","tex","aux","bbx","bib","cbx","dtx","ins","lbx","ltx","mkii","mkiv","mkvi","sty","toc","tea","no","textile","thrift","tu","ttl","twig","upc","anim","asset","meta","prefab","unity","uno","uc","ur","urs","vcl","vhdl","vhd","vhf","vhi","vho","vhs","vht","vhw","vala","vapi","veo","vim","vb","bas","frm","frx","vba","vbhtml","vbs","volt","vue","owl","webidl","x10","xc","xml","ant","axml","ccxml","clixml","cproject","csl","csproj","ct","dita","ditamap","ditaval","config","dotsettings","filters","fsproj","fxml","glade","grxml","iml","ivy","jelly","jsproj","kml","launch","mdpolicy","mxml","nproj","nuspec","odd","osm","plist","props","ps1xml","psc1","pt","rdf","rss","scxml","srdf","storyboard","stTheme","sublime-snippet","targets","tmCommand","tml","tmLanguage","tmPreferences","tmSnippet","tmTheme","ui","urdf","ux","vbproj","vcxproj","vssettings","vxml","wsdl","wsf","wxi","wxl","wxs","x3d","xacro","xaml","xib","xlf","xliff","xmi","dist","xproj","xsd","xul","zcml","xsp-config","metadata","xpl","xproc","xquery","xq","xql","xqm","xqy","xs","xslt","xsl","xojo_code","xojo_menu","xojo_report","xojo_script","xojo_toolbar","xojo_window","xtend","reek","rviz","sublime-syntax","syntax","yang","y","yacc","yy","zep","zimpl","zmpl","zpl","ec","eh","edn","fish","mu","nc","ooc","rst","rest","wisp","prg","prw","gitignore","gitkeep","gitmodules","example","avifs","blp","bufr","bw","cur","dcx","dds","emf","fit","fits","flc","fli","ftc","ftu","gbr","grib","h5","hdf","hif","icb","icns","iim","im","j2c","j2k","jp2","jpc","jpe","jpf","jpx","mpeg","mpg","msp","pbm","pcd","pcx","pfm","pgm","pnm","ppm","psd","pxr","qoi","ras","rgb","rgba","sgi","tga","vda","vst","wmf","xpm","epub","mobi"],"conflict_with_search":false,"vision":true,"enable_thumbnail":true},"prompt_feature":[{"id":9,"scene":"image","content":"这是什么"},{"id":10,"scene":"image","content":"分析一下"},{"id":11,"scene":"image","content":"怎么办"},{"id":12,"scene":"image","content":"解释一下"},{"id":13,"scene":"file","content":"分析一下"},{"id":14,"scene":"file","content":"答案是什么"},{"id":15,"scene":"file","content":"总结"},{"id":16,"scene":"file","content":"解释一下"}],"tips":{},"camera_mode":"photo_edit"},{"model_type":"expert","name":"专家模式","description":"","welcome_msg":"使用专家模式开始对话","is_default":false,"enabled":false,"switchable":false,"show_model_name_in_session":false,"edit_quota":5,"regenerate_quota":5,"input_character_limit":2621440,"think_feature":{},"search_feature":{},"regenerate_options":null,"file_feature":{"token_limit":890880,"token_limit_with_thinking":890880,"max_input_file_count":50,"max_upload_file_size":104857600,"support_file_exts":["wxml","wxss","wxs","axml","acss","sjs","swan","ttml","ttss","qml","qss","pdf","png","jpg","jpeg","svg","svgz","bmp","gif","webp","ico","xbm","dib","pjp","tif","pjpeg","avif","apng","tiff","jfif","txt","md","csv","tsv","html","json","log","dot","go","h","c","cpp","cxx","cc","cs","java","js","css","jsp","php","py","py3","asp","yaml","yml","ini","conf","ts","tsx","doc","docx","ppt","pptx","xls","xlsx","abap","asc","ash","ampl","mod","g4","apib","apl","dyalog","asax","ascx","ashx","asmx","aspx","axd","dats","hats","sats","as","adb","ada","ads","agda","als","apacheconf","vhost","cls","applescript","scpt","arc","ino","asciidoc","adoc","aj","asm","a51","inc","nasm","aug","ahk","ahkl","au3","awk","auk","gawk","mawk","nawk","bat","cmd","befunge","bison","bb","decls","bmx","bsv","boo","b","bf","brs","bro","cats","idc","w","cake","cshtml","csx","c++","cp","h++","hh","hpp","hxx","inl","ipp","tcc","tpp","c-objdump","chs","clp","cmake","in","cob","cbl","ccp","cobol","cpy","capnp","mss","ceylon","chpl","ch","ck","cirru","clw","icl","dcl","click","clj","boot","cl2","cljc","cljs","hl","cljscm","cljx","hic","coffee","_coffee","cjsx","cjs","cts","mjs","mts","cson","iced","cfm","cfml","cfc","lisp","asd","cl","l","lsp","ny","podsl","sexp","cps","coq","v","cppobjdump","c++-objdump","c++objdump","cpp-objdump","cxx-objdump","creole","cr","feature","cu","cuh","cy","pyx","pxd","pxi","d","di","d-objdump","com","dm","zone","arpa","darcspatch","dpatch","dart","diff","patch","dockerfile","djs","dylan","dyl","intr","lid","E","ecl","eclxml","sch","brd","epj","e","ex","exs","elm","el","emacs","desktop","em","emberscript","erl","es","escript","hrl","xrl","yrl","fs","fsi","fsx","fx","flux","f90","f","f03","f08","f77","f95","for","fpp","factor","fy","fancypack","fan","fth","4th","forth","fr","frt","ftl","g","gco","gcode","gms","gap","gd","gi","tst","s","ms","glsl","fp","frag","frg","fsh","fshader","geo","geom","glslv","gshader","shader","vert","vrx","vsh","vshader","gml","kid","ebuild","eclass","po","pot","glf","gp","gnu","gnuplot","plot","plt","golo","gs","gst","gsx","vark","grace","gradle","gf","graphql","gv","man","1in","1m","1x","3in","3m","3qt","3x","me","n","rno","roff","groovy","grt","gtpl","gvy","gsp","hcl","tf","hlsl","fxh","hlsli","htm","st","xht","xhtml","mustache","jinja","eex","erb","deface","phtml","http","haml","handlebars","hbs","hb","hs","hsc","hx","hxsl","hy","pro","dlm","ipf","cfg","prefs","properties","irclog","weechatlog","idr","lidr","ni","i7x","iss","io","ik","thy","ijs","flex","jflex","geojson","lock","topojson","json5","jsonld","jq","jsx","jade","j","_js","bones","es6","jake","jsb","jscad","jsfl","jsm","jss","njs","pac","sjs","ssjs","sublime-build","sublime-commands","sublime-completions","sublime-keymap","sublime-macro","sublime-menu","sublime-mousemap","sublime-project","sublime-settings","sublime-theme","sublime-workspace","sublime_metrics","sublime_session","xsjs","xsjslib","jl","ipynb","krl","kicad_pcb","kit","kt","ktm","kts","lfe","ll","lol","lsl","lslp","lvproj","lasso","las","lasso8","lasso9","ldml","latte","lean","hlean","less","lex","ly","ily","m","ld","lds","liquid","lagda","litcoffee","lhs","ls","_ls","xm","x","xi","lgt","logtalk","lookml","lua","fcgi","nse","pd_lua","rbxs","wlua","mumps","m4","mcfunction","mcr","mtml","muf","mak","mk","mkfile","mako","mao","markdown","mkd","mkdn","mkdown","ron","mask","mathematica","cdf","ma","map","mt","nb","nbp","wl","wlt","matlab","maxpat","maxhelp","maxproj","mxt","pat","mediawiki","wiki","moo","metal","minid","druby","duby","mir","mirah","mo","mms","mmk","monkey","moon","myt","ncl","nl","nsi","nsh","axs","axi","nlogo","nginxconf","nim","nimrod","ninja","nit","nix","nu","numpy","numpyw","numsc","ml","eliom","eliomi","ml4","mli","mll","mly","objdump","mm","sj","omgrofl","opa","opal","opencl","p","scad","org","ox","oxh","oxo","oxygene","oz","pwn","aw","ctp","php3","php4","php5","php6","php7","php8","phps","phpt","pls","pck","pkb","pks","plb","plsql","sql","pov","pan","psc","parrot","pasm","pir","pas","dfm","dpr","lpr","pp","pl","al","cgi","perl","ph","plx","pm","pod","psgi","t","6pl","6pm","nqp","p6","p6l","p6m","pl6","pm6","pkl","pig","pike","pmod","pogo","pony","ps","eps","ps1","psd1","psm1","pde","prolog","yap","spin","proto","pub","pd","pb","pbi","purs","bzl","gyp","lmi","pyde","pyi","pyp","pyt","pyw","rpy","tac","wsgi","xpy","pytb","qml","qbs","pri","r","rd","rsx","raml","rdoc","rbbas","rbfrm","rbmnu","rbres","rbtbar","rbuistate","rhtml","rmd","rkt","rktd","rktl","scrbl","rl","raw","reb","r2","r3","rebol","red","reds","cw","rs","rsh","robot","rg","rb","builder","gemspec","god","irbrc","jbuilder","mspec","pluginspec","podspec","rabl","rake","rbuild","rbw","rbx","ru","ruby","thor","watchr","sas","scss","smt2","smt","sparql","rq","sqf","hqf","cql","ddl","prc","tab","udf","viw","db2","ston","sage","sagews","sls","sass","scala","sbt","sc","scaml","scm","sld","sps","ss","sci","sce","self","sh","bash","bats","command","ksh","tmux","tool","zsh","sh-session","shen","sl","slim","smali","tpl","sp","sma","nut","stan","ML","fun","sig","sml","do","ado","doh","ihlp","mata","matah","sthlp","styl","scd","swift","sv","svh","vh","toml","txl","tcl","adp","tm","tcsh","csh","tex","aux","bbx","bib","cbx","dtx","ins","lbx","ltx","mkii","mkiv","mkvi","sty","toc","tea","no","textile","thrift","tu","ttl","twig","upc","anim","asset","meta","prefab","unity","uno","uc","ur","urs","vcl","vhdl","vhd","vhf","vhi","vho","vhs","vht","vhw","vala","vapi","veo","vim","vb","bas","frm","frx","vba","vbhtml","vbs","volt","vue","owl","webidl","x10","xc","xml","ant","axml","ccxml","clixml","cproject","csl","csproj","ct","dita","ditamap","ditaval","config","dotsettings","filters","fsproj","fxml","glade","grxml","iml","ivy","jelly","jsproj","kml","launch","mdpolicy","mxml","nproj","nuspec","odd","osm","plist","props","ps1xml","psc1","pt","rdf","rss","scxml","srdf","storyboard","stTheme","sublime-snippet","targets","tmCommand","tml","tmLanguage","tmPreferences","tmSnippet","tmTheme","ui","urdf","ux","vbproj","vcxproj","vssettings","vxml","wsdl","wsf","wxi","wxl","wxs","x3d","xacro","xaml","xib","xlf","xliff","xmi","dist","xproj","xsd","xul","zcml","xsp-config","metadata","xpl","xproc","xquery","xq","xql","xqm","xqy","xs","xslt","xsl","xojo_code","xojo_menu","xojo_report","xojo_script","xojo_toolbar","xojo_window","xtend","reek","rviz","sublime-syntax","syntax","yang","y","yacc","yy","zep","zimpl","zmpl","zpl","ec","eh","edn","fish","mu","nc","ooc","rst","rest","wisp","prg","prw","gitignore","gitkeep","gitmodules","example","avifs","blp","bufr","bw","cur","dcx","dds","emf","fit","fits","flc","fli","ftc","ftu","gbr","grib","h5","hdf","hif","icb","icns","iim","im","j2c","j2k","jp2","jpc","jpe","jpf","jpx","mpeg","mpg","msp","pbm","pcd","pcx","pfm","pgm","pnm","ppm","psd","pxr","qoi","ras","rgb","rgba","sgi","tga","vda","vst","wmf","xpm","epub","mobi"],"conflict_with_search":false,"vision":true,"enable_thumbnail":true},"prompt_feature":[{"id":9,"scene":"image","content":"这是什么"},{"id":10,"scene":"image","content":"分析一下"},{"id":11,"scene":"image","content":"怎么办"},{"id":12,"scene":"image","content":"解释一下"},{"id":13,"scene":"file","content":"分析一下"},{"id":14,"scene":"file","content":"答案是什么"},{"id":15,"scene":"file","content":"总结"},{"id":16,"scene":"file","content":"解释一下"}],"tips":{},"camera_mode":"photo_edit"},{"model_type":"vision","name":"识图模式","description":"","welcome_msg":"使用识图模式开始对话","is_default":false,"enabled":false,"switchable":false,"show_model_name_in_session":false,"edit_quota":5,"regenerate_quota":5,"input_character_limit":2621440,"think_feature":{},"search_feature":{},"regenerate_options":null,"file_feature":{"token_limit":890880,"token_limit_with_thinking":890880,"max_input_file_count":50,"max_upload_file_size":104857600,"support_file_exts":["wxml","wxss","wxs","axml","acss","sjs","swan","ttml","ttss","qml","qss","pdf","png","jpg","jpeg","svg","svgz","bmp","gif","webp","ico","xbm","dib","pjp","tif","pjpeg","avif","apng","tiff","jfif","txt","md","csv","tsv","html","json","log","dot","go","h","c","cpp","cxx","cc","cs","java","js","css","jsp","php","py","py3","asp","yaml","yml","ini","conf","ts","tsx","doc","docx","ppt","pptx","xls","xlsx","abap","asc","ash","ampl","mod","g4","apib","apl","dyalog","asax","ascx","ashx","asmx","aspx","axd","dats","hats","sats","as","adb","ada","ads","agda","als","apacheconf","vhost","cls","applescript","scpt","arc","ino","asciidoc","adoc","aj","asm","a51","inc","nasm","aug","ahk","ahkl","au3","awk","auk","gawk","mawk","nawk","bat","cmd","befunge","bison","bb","decls","bmx","bsv","boo","b","bf","brs","bro","cats","idc","w","cake","cshtml","csx","c++","cp","h++","hh","hpp","hxx","inl","ipp","tcc","tpp","c-objdump","chs","clp","cmake","in","cob","cbl","ccp","cobol","cpy","capnp","mss","ceylon","chpl","ch","ck","cirru","clw","icl","dcl","click","clj","boot","cl2","cljc","cljs","hl","cljscm","cljx","hic","coffee","_coffee","cjsx","cjs","cts","mjs","mts","cson","iced","cfm","cfml","cfc","lisp","asd","cl","l","lsp","ny","podsl","sexp","cps","coq","v","cppobjdump","c++-objdump","c++objdump","cpp-objdump","cxx-objdump","creole","cr","feature","cu","cuh","cy","pyx","pxd","pxi","d","di","d-objdump","com","dm","zone","arpa","darcspatch","dpatch","dart","diff","patch","dockerfile","djs","dylan","dyl","intr","lid","E","ecl","eclxml","sch","brd","epj","e","ex","exs","elm","el","emacs","desktop","em","emberscript","erl","es","escript","hrl","xrl","yrl","fs","fsi","fsx","fx","flux","f90","f","f03","f08","f77","f95","for","fpp","factor","fy","fancypack","fan","fth","4th","forth","fr","frt","ftl","g","gco","gcode","gms","gap","gd","gi","tst","s","ms","glsl","fp","frag","frg","fsh","fshader","geo","geom","glslv","gshader","shader","vert","vrx","vsh","vshader","gml","kid","ebuild","eclass","po","pot","glf","gp","gnu","gnuplot","plot","plt","golo","gs","gst","gsx","vark","grace","gradle","gf","graphql","gv","man","1in","1m","1x","3in","3m","3qt","3x","me","n","rno","roff","groovy","grt","gtpl","gvy","gsp","hcl","tf","hlsl","fxh","hlsli","htm","st","xht","xhtml","mustache","jinja","eex","erb","deface","phtml","http","haml","handlebars","hbs","hb","hs","hsc","hx","hxsl","hy","pro","dlm","ipf","cfg","prefs","properties","irclog","weechatlog","idr","lidr","ni","i7x","iss","io","ik","thy","ijs","flex","jflex","geojson","lock","topojson","json5","jsonld","jq","jsx","jade","j","_js","bones","es6","jake","jsb","jscad","jsfl","jsm","jss","njs","pac","sjs","ssjs","sublime-build","sublime-commands","sublime-completions","sublime-keymap","sublime-macro","sublime-menu","sublime-mousemap","sublime-project","sublime-settings","sublime-theme","sublime-workspace","sublime_metrics","sublime_session","xsjs","xsjslib","jl","ipynb","krl","kicad_pcb","kit","kt","ktm","kts","lfe","ll","lol","lsl","lslp","lvproj","lasso","las","lasso8","lasso9","ldml","latte","lean","hlean","less","lex","ly","ily","m","ld","lds","liquid","lagda","litcoffee","lhs","ls","_ls","xm","x","xi","lgt","logtalk","lookml","lua","fcgi","nse","pd_lua","rbxs","wlua","mumps","m4","mcfunction","mcr","mtml","muf","mak","mk","mkfile","mako","mao","markdown","mkd","mkdn","mkdown","ron","mask","mathematica","cdf","ma","map","mt","nb","nbp","wl","wlt","matlab","maxpat","maxhelp","maxproj","mxt","pat","mediawiki","wiki","moo","metal","minid","druby","duby","mir","mirah","mo","mms","mmk","monkey","moon","myt","ncl","nl","nsi","nsh","axs","axi","nlogo","nginxconf","nim","nimrod","ninja","nit","nix","nu","numpy","numpyw","numsc","ml","eliom","eliomi","ml4","mli","mll","mly","objdump","mm","sj","omgrofl","opa","opal","opencl","p","scad","org","ox","oxh","oxo","oxygene","oz","pwn","aw","ctp","php3","php4","php5","php6","php7","php8","phps","phpt","pls","pck","pkb","pks","plb","plsql","sql","pov","pan","psc","parrot","pasm","pir","pas","dfm","dpr","lpr","pp","pl","al","cgi","perl","ph","plx","pm","pod","psgi","t","6pl","6pm","nqp","p6","p6l","p6m","pl6","pm6","pkl","pig","pike","pmod","pogo","pony","ps","eps","ps1","psd1","psm1","pde","prolog","yap","spin","proto","pub","pd","pb","pbi","purs","bzl","gyp","lmi","pyde","pyi","pyp","pyt","pyw","rpy","tac","wsgi","xpy","pytb","qml","qbs","pri","r","rd","rsx","raml","rdoc","rbbas","rbfrm","rbmnu","rbres","rbtbar","rbuistate","rhtml","rmd","rkt","rktd","rktl","scrbl","rl","raw","reb","r2","r3","rebol","red","reds","cw","rs","rsh","robot","rg","rb","builder","gemspec","god","irbrc","jbuilder","mspec","pluginspec","podspec","rabl","rake","rbuild","rbw","rbx","ru","ruby","thor","watchr","sas","scss","smt2","smt","sparql","rq","sqf","hqf","cql","ddl","prc","tab","udf","viw","db2","ston","sage","sagews","sls","sass","scala","sbt","sc","scaml","scm","sld","sps","ss","sci","sce","self","sh","bash","bats","command","ksh","tmux","tool","zsh","sh-session","shen","sl","slim","smali","tpl","sp","sma","nut","stan","ML","fun","sig","sml","do","ado","doh","ihlp","mata","matah","sthlp","styl","scd","swift","sv","svh","vh","toml","txl","tcl","adp","tm","tcsh","csh","tex","aux","bbx","bib","cbx","dtx","ins","lbx","ltx","mkii","mkiv","mkvi","sty","toc","tea","no","textile","thrift","tu","ttl","twig","upc","anim","asset","meta","prefab","unity","uno","uc","ur","urs","vcl","vhdl","vhd","vhf","vhi","vho","vhs","vht","vhw","vala","vapi","veo","vim","vb","bas","frm","frx","vba","vbhtml","vbs","volt","vue","owl","webidl","x10","xc","xml","ant","axml","ccxml","clixml","cproject","csl","csproj","ct","dita","ditamap","ditaval","config","dotsettings","filters","fsproj","fxml","glade","grxml","iml","ivy","jelly","jsproj","kml","launch","mdpolicy","mxml","nproj","nuspec","odd","osm","plist","props","ps1xml","psc1","pt","rdf","rss","scxml","srdf","storyboard","stTheme","sublime-snippet","targets","tmCommand","tml","tmLanguage","tmPreferences","tmSnippet","tmTheme","ui","urdf","ux","vbproj","vcxproj","vssettings","vxml","wsdl","wsf","wxi","wxl","wxs","x3d","xacro","xaml","xib","xlf","xliff","xmi","dist","xproj","xsd","xul","zcml","xsp-config","metadata","xpl","xproc","xquery","xq","xql","xqm","xqy","xs","xslt","xsl","xojo_code","xojo_menu","xojo_report","xojo_script","xojo_toolbar","xojo_window","xtend","reek","rviz","sublime-syntax","syntax","yang","y","yacc","yy","zep","zimpl","zmpl","zpl","ec","eh","edn","fish","mu","nc","ooc","rst","rest","wisp","prg","prw","gitignore","gitkeep","gitmodules","example","avifs","blp","bufr","bw","cur","dcx","dds","emf","fit","fits","flc","fli","ftc","ftu","gbr","grib","h5","hdf","hif","icb","icns","iim","im","j2c","j2k","jp2","jpc","jpe","jpf","jpx","mpeg","mpg","msp","pbm","pcd","pcx","pfm","pgm","pnm","ppm","psd","pxr","qoi","ras","rgb","rgba","sgi","tga","vda","vst","wmf","xpm","epub","mobi"],"conflict_with_search":false,"vision":true,"enable_thumbnail":true},"prompt_feature":[{"id":9,"scene":"image","content":"这是什么"},{"id":10,"scene":"image","content":"分析一下"},{"id":11,"scene":"image","content":"怎么办"},{"id":12,"scene":"image","content":"解释一下"},{"id":13,"scene":"file","content":"分析一下"},{"id":14,"scene":"file","content":"答案是什么"},{"id":15,"scene":"file","content":"总结"},{"id":16,"scene":"file","content":"解释一下"}],"tips":{},"camera_mode":"photo_edit"}]}
+
+sse_auto_scroll_one_screen
+{"id":1562813852,"value":true}
+
+optimize_markdown
+{"id":1480667748,"value":true}
+
+citation_strategy
+{"id":753215616,"value":2}
+
+image_cache_invalidate_before
+{"id":1806834993,"value":1777444200000}
+
+files_host
+{"id":1450201665,"value":"files.deepseeksvc.com"}
+
+sse_smooth_follow
+{"id":386453158,"value":true}
+
+picture_compress_format
+{"id":1704976799,"value":"webp"}
+
+photo_picker_compress_ratio
+{"id":870509613,"value":0.8}
+

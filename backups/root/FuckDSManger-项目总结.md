@@ -1,0 +1,3465 @@
+# FuckDSManger —— DeepSeek 灰度管理器（LSPosed 模块）项目总结
+
+> 整理时间：2026-09-12
+> 当前最新版本：**2.9.7**（适配 DeepSeek **2.5.1**；见第四十九节 / `2.9.7-灰度类型适配-修好了.md`）
+> ✅ **2026-09-13（94/2.9.7）**：修掉「改了灰度选项、重启宿主无效」——`TYPES` 里 5 个键的类型还是 2.4.5 的
+> （4× search_state `b`→**`t`** 三态字符串、1× 平滑滚动刚度 `f`→**`i`**）；顺带修 `markDirty` / `GmEnv.bad|badPkg` 两处反向判断。
+> 上一版：2.9.6（适配 DeepSeek **2.5.1**；见第四十五节 / `2.9.0-适配DeepSeek-2.5.1-实施.md`、`2.9.1-灰度键纳管.md`）
+> ⚠️ **2.9.5 真机上整模块失效**（`GmEnv` VerifyError → `handleLoadPackage` 中断 → 后面所有 hook 没注册）→ **用 2.9.6**，见 **第四十八节** 与 `2.9.6-修复-VerifyError与模块自保.md`
+> ✅ **2026-09-13 真机验收（93/2.9.6）：模块恢复正常 + 环境检测绕过成功（登录通过）**
+> 🆕 2.9.5 新增「**环境伪装**」（绕过数美 SDK 的 root / 模块探测）→ 见 **第四十七节** 与 `2.9.5-环境伪装.md`
+> 上一个版本：2.8.0（适配 DeepSeek 2.4.5）
+> 输出路径：`/storage/emulated/0/Download/apks/`
+>
+> ✅ **本轮「摄像头取景」全链路打通**（2.7.6 → 2.8.0，连修 5 个 bug + 1 个新功能）：
+> 死分支 → 旋转映射 → 后台线程 → 混合盖屏 → **手动数码裁切**
+>
+> ⚠️ **当前唯一未完成事项**：
+> 1. 「修改背景」的**真底图模式**（已用「混合」打通，需按底色选手动方向）→ 见 `修改背景-进度与遗留.md` 与本文 **第二十七节**
+
+---
+
+## 一、项目概述
+
+| 项目 | 内容 |
+|---|---|
+| **目标 App** | DeepSeek `com.deepseek.chat.a` v2.4.5 |
+| **模块包名** | `com.little_femaleboy.cannot_show.the_big_won_whale` |
+| **入口类** | `com.little_femaleboy.cannot_show.the_big_won_whale.DisableFlagSecure` |
+| **模块模板** | `Disable-FLAG_SECURE_2.0.0.apk`（标准 Xposed 模块，LSPosed 兼容） |
+| **代码形态** | **纯手写 Smali**（环境无 java / python，无编译工具链） |
+| **构建方式** | MT 管理器 MCP（`mt_apk_*` 系列工具） |
+| **旧保留类** | `com.varuns2002.disable_flag_secure.*`（沿用模板包结构） |
+
+### 模块内部包结构
+
+```
+com/varuns2002/disable_flag_secure/
+├── DisableFlagSecure        ← 入口（xposed_init 指向）
+└── gm/                      ← 灰度管理器全家桶
+```
+
+---
+
+## 二、功能结构（当前形态）
+
+```
+DeepSeek 设置页
+ └── 「FuckDSManger」（偷换原「检查更新」条目，右侧保留版本号 2.4.5）
+      └── 菜单页 GmMenuDialog
+           ├── 灰度选项管理 ›  → GmDialog（62 项）
+           ├── 聊天 ›          → GmChatDialog
+           │    ├── [●] 防撤回开关
+           │    └── 本地数据库管理 ›  → GmDbDialog
+           ├── 美化 ›          → GmBeautyDialog
+           │    ├── [●] 修改助手图片开关
+           │    └── [选择图片]
+           ├── 环境伪装 ›        → GmEnvDialog（2.9.5 新增）
+           │    ├── [●] 总开关（key_env_bypass，默认开）
+           │    └── [●] 系统 API 伪装（key_env_api，默认开）
+           ├── 服务端灰度下发查看 ›  → GmDsDialog
+           └── [关闭]
+```
+
+---
+
+## 三、已完成功能清单
+
+### 3.1 入口与交互（早期迭代）
+
+| 功能 | 实现 |
+|---|---|
+| 设置页入口 | 偷换「检查更新」条目：hook `Resources.getString/getText` 拦截资源 `0x7f0f0217` 返回「FuckDSManger」 |
+| 拦截原检查更新逻辑 | `GmClickHook` 设 `setResult(FALSE)` + hook `Lhw1->b` 双保险 |
+| 防自启动误触 | hook `Activity.dispatchTouchEvent` 刷新时间戳，1.5 秒门槛（`GmTickHook` / `GmTouchHook`） |
+| 点击打开管理器 | hook `Lhw1->a(Continuation)` |
+
+### 3.2 灰度选项管理（`GmDialog`）
+
+| 功能 | 说明 |
+|---|---|
+| **62 项灰度** | 来源：`Lbw1` 配置总仓库 55 项 + 语音组 7 项 |
+| **读写方案** | 反射拿 `com.tencent.mmkv.MMKV` 的 `k()` / `defaultMMKV()`，转 `SharedPreferences` 接口读写 |
+| **读取方式** | `GmStore.read2(ctx,key,type)`：`contains` + 按类型 `getBoolean/getInt/getString/getFloat`（不用 `getAll()`） |
+| **类型支持** | `b`=bool、`i`=int、`f`=float、`s`=string |
+| **服务端灰度回显** | 本地无值时，回退读 `kv_remote_settings_<key>`（显示服务端真实灰度） |
+| **差异保存** | 记录初始值到 `sOrig`，保存时**只写改动过的项**（相同的跳过） |
+| **清空即恢复** | 输入框清空 → `GmStore.remove()` 删除本地覆盖，回到跟随灰度 |
+| **面板美化** | 24dp 圆角卡片、加粗标题、灰色副标题、分割线、两行布局（名称 + 说明） |
+| **深色模式** | `GmUtil.isNight/bg/tx/sub/line` 动态调色板 |
+| **保存按钮状态** | 初始「保存」→ 点击后「已保存 ✓」变灰 → 再改动自动恢复 |
+| **62 项说明** | `DESCS` 数组，从代码行为反推的「开了会怎样/关了会怎样」 |
+
+#### 62 项灰度键名（`kv_settings_*`）
+
+**对话/模型类**
+```
+deep_think_button_suffix       deep_think_enabled
+search_state_on_login          search_state_on_launch
+search_state_on_manually_created_chat
+search_state_on_automatically_created_chat
+conversation_search_enabled    allow_file_with_search
+normal_history_and_file_token_limit   r1_history_and_file_token_limit
+model_configs_v1               completion_request_timeout_ms
+regenerate_request_timeout_ms  auto_resume_request_timeout_ms
+edit_request_timeout_ms        continue_request_timeout_ms
+resume_request_timeout_ms      allow_parallel_streams
+interrupt_and_send_enabled     auto_resume_max_time_ms
+auto_resume_interval_ms        session_prefetch / session_prefetch_count
+launch_clean_session_interval_seconds  pinned_session_limit
+```
+
+**输入/语音类**
+```
+voice_input_enabled            input_default_voice
+input_view_voice_gesture_duration_ms   record_empty_detect_time_ms
+record_stop_delay_ms           max_duration_ms
+opus_bitrate
+```
+
+**UI/渲染类**
+```
+hide_assistant_avatar          select_text_without_markdown_syntax
+copy_text_without_markdown_syntax      disable_single_dollar_latex
+optimize_markdown              markdown_top_level_node_limit
+sse_smooth_follow              sse_auto_scroll_smooth_stiffness
+picture_compress_format        edit_menu_item_config
+```
+
+**文件/上传类**
+```
+max_input_file_count           max_upload_file_size
+query_files_time_interval      files_host
+```
+
+**网络/风控类**
+```
+hif_max_retry_interval_secs    pow_prefetch / pow_prefetch_count
+enable_webview_content_report  hcaptcha_enabled
+enable_google_sign_in_captcha  sm_pass_code_type / sm_sdk_host
+should_use_sm_device_id        volcengine_enabled
+one_tap_login_enabled          ds_settings_enabled
+report_http_failure_paths      pow_header_paths
+authed_pow_functions
+```
+
+**其它**
+```
+support_center_url             android_apk_link
+```
+
+### 3.3 聊天 —— 备份式防撤回
+
+| 组件 | 作用 |
+|---|---|
+| `GmDb` | SQLite 数据库层：`msgs(id,sid,body,ts)`，提供 `open/save/count/clear/sizeKb/list` |
+| `GmSwitch` | 防撤回开关监听（写 `fuckds_gm` SharedPreferences 的 `anti_revoke`） |
+| `GmRevokeHook` | hook DeepSeek 消息列表渲染方法 `yu9->m`，遍历消息 → 去重后入库（**3 秒节流**） |
+| `GmDbDialog` | 数据库管理页：条数/体积统计 + 滚动内容 + 清空/返回 |
+
+**设计说明**：DeepSeek **没有消息撤回机制**（全 APK 搜不到 `revoke`/`撤回`/`delete_message`，API 也无相关接口），故改为「**全程备份**」策略 —— 收到的消息持续落库，服务器删了本地仍有副本。
+
+### 3.4 美化 —— 修改助手图片
+
+| 组件 | 作用 |
+|---|---|
+| `GmAvatar` | 开关存储 + 图片文件管理（`files/fuckds_avatar.png`）+ 流式拷贝 URI → 私有目录 + 读成 Drawable |
+| `GmAvatarHook` | hook `Resources.getDrawable`，请求 `0x7f070059`（`assistant_message_avatar`）时返回自定义图 |
+| `GmAvatarSwitch` | 开关监听 + Toast |
+| `GmPickHook` | hook `onActivityResult` 捕获选图回调（**标记位方案**，不依赖 requestCode） |
+| `GmBeautyDialog` | 「选择图片」按钮（开关开启才可点）→ `ACTION_GET_CONTENT` |
+
+**✅ 2.1.0 已定位并修复** —— 根因：Compose 对 `.xml`+`vector` 资源**完全绕开** `Resources.getDrawable`（详见第十节）
+
+### 3.5 服务端灰度下发查看
+
+| 组件 | 作用 |
+|---|---|
+| `GmDs` | 文件存储（`files/fuckds_ds.txt`）：`save/read/clear/sizeKb/hasData` + `dump(Context,Map)` + `scan(Context)` |
+| `GmDsHook` | hook `uv1->u` 和 `az5->h`（两个同签名的下发应用点） |
+| `GmDsHook2` | hook `vp4->get`（**数据对象底层**，反射读字段 `a` 拿完整 Map） |
+| `GmStore.dumpAll` | **`allKeys()` 强制加载 + `getAll()`** 全量导出所有 `kv_*` 键值 |
+| `GmDsDialog` | 查看页：命中计数 + 体积 + 滚动内容 + 清空/返回；**打开时自动 `scan()`** |
+
+**技术发现：**
+- `Lvp4` 是一个 `Map`（`implements Ljava/util/Map;`），装着服务端下发的全部设置项
+- DS Settings 埋点字段：`ds_settings_scope` / `ds_settings_version` / `ds_setting_ids` / `ds_settings_exposure`
+- **MMKV 是懒加载的** —— 不先调 `allKeys()`，`getAll()` 返回空
+
+---
+
+## 四、类清单（模块内 `gm/` 包）
+
+| 类 | 类型 | 职责 |
+|---|---|---|
+| `GmEntry` | 入口辅助 | `sAct` 持有当前 Activity、`tick()` 时间戳 |
+| `GmUtil` | 工具 | `dp` / `toast` / `logE` / `logOnce` / **调色板** `isNight/bg/tx/sub/line` |
+| `GmStore` | 工具 | MMKV 反射读写：`get/read/read2/write/remove/dumpAll` |
+| `GmClick` | 监听器 | 统一 `OnClickListener`，`action 0~16` 分发 |
+| `GmClickHook` | Hook | 拦截设置页条目点击 |
+| `GmTouchHook` | Hook | `dispatchTouchEvent` → 刷新时间戳 |
+| `GmResTextHook` | Hook | `Resources.getString/getText` 拦截「检查更新」文案 |
+| `GmDialog` | UI | 62 项灰度列表 |
+| `GmMenuDialog` | UI | 二级菜单页 |
+| `GmChatDialog` | UI | 聊天页（防撤回 + 数据库管理入口） |
+| `GmDbDialog` | UI | 本地数据库管理页 |
+| `GmBeautyDialog` | UI | 美化页（助手图片） |
+| `GmDsDialog` | UI | 服务端灰度下发查看页 |
+| `GmDb` | 数据 | SQLite 防撤回数据库 |
+| `GmDs` | 数据 | 下发快照文本文件 |
+| `GmAvatar` | 数据 | 助手头像文件 + 开关 + 选图标记 |
+| `GmSwitch` | 监听器 | 防撤回开关 |
+| `GmAvatarSwitch` | 监听器 | 助手图片开关 |
+| `GmRevokeHook` | Hook | 消息列表备份 |
+| `GmAvatarHook` | Hook | 资源替换 |
+| `GmPickHook` | Hook | 选图回调捕获 |
+| `GmDsHook` / `GmDsHook2` | Hook | 服务端下发抓取 |
+
+---
+
+## 五、待办 / 遗留问题
+
+### 🔴 高优先级
+
+| # | 问题 | 现状 | 建议方向 |
+|---|---|---|---|
+| 0 | ~~**🔴「文件快捷选项」窗口不显示**~~ | ✅ **2.3.9 已修复**（`GmPromptDialog.open()` 两个前置分支写反，见第十二节） | — |
+| 1 | ~~**助手图片替换不生效**~~ | ✅ **2.1.0 已修复**（根因见第十节） | — |
+| 2 | ~~**服务端下发清单为空**~~ | ✅ **2.1.0 已加固**（新增 `vp4;<init>` 抓取点，见第十节） | 待真机验证 |
+| 3 | **「朗读文本」灰度缺失** | 用户在某处看到该灰度名，APK 里搜不到（`朗读`/`tts`/`speak`/`aloud` 全零命中） | 大概率是**服务端定义的 DS Setting 显示名**，需靠「下发查看」抓到真实 key |
+
+### 🟡 中优先级
+
+| # | 事项 | 说明 |
+|---|---|---|
+| 4 | `kv_remote_settings_id_xxx` 变体未回退 | 部分灰度可能是 id 版本，显示会为空 |
+| 5 | 防撤回的 hook 点待验证 | 当前挂 `yu9->m`（消息列表渲染），需实测确认能入库 |
+| 6 | `GmDsHook` 命中 0 的备选调用点 | `Laz5->h` / `Lrq9->f` / `Lwf9->A` 尚未全部 hook |
+
+### 🟢 低优先级 / 可扩展
+
+| # | 事项 |
+|---|---|
+| 7 | 美化页其它功能（主题色 / 字体 / 气泡样式） |
+| 8 | 聊天页其它功能 |
+| 9 | 灰度项自定义（用户手动添加 key） |
+| 10 | 导出/导入配置 |
+
+### 📷 摄像头取景 —— 已知限制 / 可增强（2.8.0 时点）
+
+| # | 项 | 说明 |
+|---|---|---|
+| C1 | **数码裁切高倍率画质** | 现为 View 层裁切（放大已有预览帧），300% 时约等效 840×360 ⇒ 可改用 `Camera.setZoom()` 走真·数字变焦 |
+| C2 | 权限拒绝后不自动重试 | 需手点一次「摄像头」；可加 `onRequestPermissionsResult` 回调 |
+| C3 | 未挂 `onPause` | 后台释放只靠 `onSurfaceTextureDestroyed` |
+| C4 | 与 DeepSeek 自身拍照**可能抢相机** | 宿主也用 Camera1 |
+| C5 | 预览尺寸取相机默认值 | 本例 `2520x1080`（21:9），恰好接近屏幕 20:9（裁切仅 ~6%）；换机型未必 |
+| C6 | 前置摄像头未做镜像 | Camera 前置预览天然镜像，习惯上可接受 |
+| C7 | `View.setBlendMode` 对 TextureView | ❌ **已验证不可用**（2.7.9 结案）；摄像头模式下「混合」位已退化为半透明叠加 |
+| C8 | `cam fit` / `cam fx` 两行 DIAG | 调试用，验收稳定后可摘除 |
+
+---
+
+## 六、关键技术备忘（踩坑记录）
+
+### 6.1 Smali 手写规范
+
+| 坑 | 教训 |
+|---|---|
+| **寄存器越界** | 涉及 `J`/`D` 宽类型时，末尾寄存器编号必须 `< .registers 总数`。例：`.registers 3` 里用 `const-wide v2`（占 v2+v3）→ **整个类被 verifier 拒绝** → 调用即崩 |
+| **`if-nez` vs `if-eqz`** | `if-nez` = `if (v != 0) goto`；`if-eqz` = `if (v == 0) goto`。写「为空就返回」时必须用 `if-eqz`（或 `if-nez` + return + label 的经典模式） |
+| **`insert_before_match` 陷阱** | 插入整段方法会导致 `missing END_METHOD_DIRECTIVE`；改用 `replace_match` 带上原方法头 |
+| **类加载时机** | 在 hook 回调外**引用某类的静态字段会强制加载该类**，若该类有校验问题会当场崩溃 → 静态标记位应放在「已知可用」的类里 |
+
+### 6.2 Xposed / Hook 经验
+
+| 坑 | 教训 |
+|---|---|
+| **hook 挂父类无效** | `Activity.onActivityResult` 会被 AndroidX 的 `ComponentActivity` 重写覆盖 → 要挂到**实际调用链上的那一层** |
+| **requestCode 不可靠** | 现代 App 用 `ActivityResultRegistry` 重映射 → 改用**自定义标记位**判断 |
+| **上下文时序** | 启动早期的下发流程中 `Activity` 还不存在 → 用 **`AndroidAppHelper.currentApplication()`** |
+| **hook 点在 try/catch 里会静默失败** | 类加载/方法查找失败被吞 → 需加**命中计数器**做可视化诊断 |
+| **节流必做** | 渲染类 Composable 调用极频繁，hook 里做 IO 必须加时间节流（3 秒） |
+
+### 6.3 DeepSeek 逆向情报
+
+| 项 | 值 |
+|---|---|
+| 灰度本地键 | `kv_settings_*` |
+| 灰度远程键 | `kv_remote_settings_*` / `kv_remote_settings_id_*` |
+| 配置仓库类 | `Lbw1`（55 项）、`Luv1`、`Lpn9`（语音 7 项） |
+| 配置下发应用点 | `Luv1->u` / `Laz5->h`（参数 `Lvp4; I; String; String;`） |
+| 下发数据对象 | `Lvp4`（`Map` 实现，字段 `a` 是 `Map`） |
+| DS Settings 埋点 | `ds_settings_scope` / `ds_settings_version` / `ds_setting_ids` / `ds_settings_exposure` |
+| 助手头像资源 | `assistant_message_avatar` = `0x7f070059` |
+| 「检查更新」资源 | `profile_check_for_updates` = `0x7f0f0217` |
+| 「检查更新」业务类 | `Lhw1`（`a(Continuation)` / `b(String,J,Lka2;)`） |
+| 设置页 Composable | `Lj22` / `Ll22`（`Ll22->r` 是片段合集） |
+| MMKV 类型方法 | `b(String)Z`=bool、`f(String)I`=int、`i(String)String`=string、`d(String,F)F`=float |
+| **MMKV 陷阱** | **懒加载** —— 必须先 `allKeys()` 再 `getAll()`，否则拿到空 Map |
+
+### 6.4 MMKV 反射桥
+
+```java
+Class<?> c = XposedHelpers.findClass("com.tencent.mmkv.MMKV", ctx.getClassLoader());
+Object mmkv = XposedHelpers.callStaticMethod(c, "k");       // 或 defaultMMKV()
+SharedPreferences sp = (SharedPreferences) mmkv;            // MMKV 实现了该接口
+```
+
+---
+
+## 七、版本历史
+
+| 版本 | 内容 |
+|---|---|
+| 1.0.7 | 浮层版：修误判，锚点改 `profile_check_for_updates`，超时 60s → 3s |
+| 1.0.8 | 偷梁换柱：hook `Lac5->A` 改文案，hook `Lhw1->a` 打开管理器 |
+| 1.0.9 | 四连修：改 `Resources.getString/getText` 拦截、`setResult(FALSE)` 阻断、防重复弹窗 |
+| 1.1.0 | 加时间门槛（5 分钟），仍误触发 |
+| 1.1.1 | 换 `dispatchTouchEvent` 信号，门槛 1.5 秒 ✅ |
+| 1.1.2 | 美化对话框 + 保存按钮状态 |
+| 1.1.3 | 修复状态回显（改用 `GmStore.read2`） |
+| 1.2.0 | **62 项灰度全家福** |
+| 1.3.0 | 加 62 项说明书 |
+| 1.3.1 | 说明重写为「开了会怎样/关了会怎样」 |
+| 1.4.0 | **二级菜单**结构 |
+| 1.4.1 | 🌙 深色模式适配 |
+| 1.5.0 | 新增「聊天」二级菜单（空） |
+| 1.6.0 | **防撤回**（备份式）+ 本地数据库管理 |
+| 1.6.1 | 修保存逻辑：**只写改动过的项** |
+| 1.7.0 | 灰度项回显**服务端真实值** |
+| 1.8.0 | 新增「美化」二级菜单（空） |
+| 1.9.0 | 美化：**修改助手图片**（开关 + 选图） |
+| 1.9.1 | 修 `hasImage` 寄存器越界 + 6 处 `if-nez` 方向错误 |
+| 1.9.2 | 选图 hook 改挂 `ComponentActivity` + 标记位方案 |
+| 1.9.3 | 标记位搬家到 `GmAvatar` + `GmPickHook` 瘦身 |
+| 1.9.4 | 头像替换加诊断提示 |
+| 2.0.0 | **服务端灰度下发查看**（hook `Luv1->u`） |
+| 2.0.1 | 修时序 bug（改用 `Application` 上下文）+ 命中计数 |
+| 2.0.2 | 加 hook `vp4->get`（数据对象底层）+ `az5->h` |
+| **2.0.3** | **`allKeys()+getAll()` 全量扫描**（不依赖 hook），打开页面自动扫描 |
+| **2.1.0** | **定位并修复「助手图片替换」根因**（hook `Resources.getValue` 逼 Compose 走普通资源分支）+ 修 `sTold` 诊断逻辑反向 bug + **新增 `vp4;<init>` 下发抓取点** |
+| 2.1.x | 加 `GmDiag` 内存诊断缓冲 + 在 GmDsDialog 显示 DIAG；`GmAvatarHook` 去掉 `sAct` 依赖（后又改回）；版本号接入 manifest |
+| 2.2.x | hook 注册位置反复调整；最终改为在 `GmResumeHook` 中动态补注册 `GmPickHook`；修 `currentApplication` → `sAct` |
+| **2.3.0** | **🎉 修 `GmPickHook` 的 VerifyError**（`invoke-static {v1}` → `{v1, v0}`）——一个漏写的寄存器导致 `handleLoadPackage` 中断，同时废掉「选图」和「下发」两大功能；**助手头像替换 + 服务端下发正式工作** |
+| **2.3.1** | 「服务端灰度下发查看」预览 TextView 加 `setTextIsSelectable(true)`，支持长按全选复制（便于导出下发内容做比对） |
+| **2.3.2** | **🐛 修 `GmDialog.save()` 反向 bug**（自 1.6.1 起保存一直失效）+ 灰度项 62 → **70**（补 A1 组 8 项）+ `GmStore` 新增 `l`(long) 类型 + `bak`/`restore` 备份还原 |
+| **2.3.3** | 新增「美化 › 文件快捷选项」JSON 编辑器（新类 `GmPrompt` / `GmPromptDialog`）——把 `model_configs` 里的 `prompt_feature` 单独拎出来编辑 |
+| 2.3.4 ~ 2.3.8 | **🔴 排查「文件快捷选项」点不开 / 窗口不显示**（详见 `已解决-文件快捷选项窗口不显示.md`）。期间只加了诊断代码，功能本体未变 |
+| ~~2.3.9~~ | ⚠️ **废弃**：只修了 `GmPromptDialog.open()` 的分支反向，**无实际效果**（真凶在 `GmClick` 分发链，见第十二节） |
+| **2.4.0** | **🎉 修「文件快捷选项」窗口不显示** —— 真凶：`GmClick.onClick` 的 `0x10` 分支跳错标签，导致 `0x11` 代码块成为**无入口死代码**（补 `:cond_11` 标签）；同时修 `GmPromptDialog.open()` 两处反向判断；清掉全部诊断 toast；版本号 `2.3.8/54` → `2.4.0/56` |
+| **2.4.1** | **「文件快捷选项」表格化编辑器** —— ①修 `GmPrompt` 4 处 `isEmpty` 反向判断（这是「内容显示为空」的原因）②`DEF` 换成**服务端真实 8 项** ③单文本框 → **ID/场景/内容 三列表格**（每格一个 EditText，可添加行、清空即删除）④改用 `org/json` 解析/构建，`content` 里可含 `]` `}` 等字符 ⑤`GmClick` 新增动作 `0x15`；版本号 `2.4.0/56` → `2.4.1/57` |
+| **2.4.2** | **去掉「按钮版」入口 + 聊天菜单新增「模型切换」开关** —— ①「文件快捷选项」只保留文字行入口 ②修 `GmStore.bak/restore` **3 处反向判断**（备份功能从建立起就是坏的，「恢复默认」实际是删键）③新增 `GmModel` / `GmModelSwitch`，通过改写 `model_configs` 里的 `switchable` 字段来放行**专家模式 / 识图模式**；版本号 `2.4.1/57` → `2.4.2/58`；类数 41 → 43 |
+| **2.4.3** | **美化菜单新增「招呼用语自定义」** —— ①新增 `GmHello`（数据层，三级键定位 `welcome_msg` + JSON 解析/构建 + `use`/`fallback_message` 引用一致性修复）②新增 `GmHelloDialog`（**ID │ 招呼语** 两列表格，可添加行、清空即删除）③`GmClick` 新增动作 `0x16`~`0x1a` ④`GmBeautyDialog` 新增入口行；版本号 `2.4.2/58` → `2.4.3/59`；类数 43 → 45 |
+| **2.4.4** | **🐛 修 `GmHello.build` 的 VerifyError** —— `.registers 10` + 1 个参数 ⇒ `p0 = v9`，却被当局部变量覆盖 → 整类被 ART 拒绝、一碰就崩。改为 `.registers 11`。**同时把 4 个新类共 30+ 个方法的参数寄存器落点全部人工核对了一遍**；版本号 `2.4.3/59` → `2.4.4/60` |
+| **2.4.5** | **服务端下发后自动重应用自定义** —— ①首次打开本体 APK 实证：`welcome_msg` 的本地值键就是 `kv_remote_settings_welcome_msg`；下发应用点 `Luv1;->u` 用 `{id,value}` 信封，拆成「值键 + id 键」落到 MMKV ②新增 `GmSync` / `GmSyncHook`，hook `uv1.u` / `az5.h` 的 `afterHookedMethod` → **推送落地后自动把用户覆盖改回来** ③三项 `reapply` 全用「先比后写」，重复触发零开销 ④`GmResumeHook` 里补一次兜底；版本号 `2.4.4/60` → `2.4.5/61`；类数 45 → 47 |
+| **2.4.6** | **🐛 修 `GmPrompt.reapply` / `GmModel.reapply` 的 VerifyError**（同类错误第二次）—— 参数寄存器 `p0`（v4 / v5）被 `const-string` 当临时变量覆盖 → 整类被拒 ⇒ **文件快捷选项等全废、点击无反应**。改为 `.registers 6` / `.registers 7`，并给 `GmResumeHook` 新增调用套 try/catch。**同时定死铁律**：`.registers = 局部个数 + 参数个数`，自检式「`最高 vN < .registers − 参数个数`」；版本号 `2.4.5/61` → `2.4.6/62` |
+| **2.4.7** | **🐛 修「模型切换」提示消息反向** —— `if-eqz v1, :ok`（v1 = `setOn` 返回值）写反，导致 **成功时显示「修改失败：未找到模型配置」、失败时显示「已启用」**。改为 `if-nez`。副作用：读者可知「提示找不到配置」其实说明**找到了**，即 `kv_remote_settings_model_configs_v1` 确实存在，无需再做键名兜底；版本号 `2.4.6/62` → `2.4.7/63` |
+| **2.4.8** | **根治「重启后被服务端覆盖」** —— 2.4.5 的「事后重应用」改晚了（App 已写入并派生内存状态）。改为**在 MMKV 写入那一刻拦截**：新增 `GmMmkvHook`，hook `com.tencent.mmkv.MMKV.p(String,String)Z`（= putString，混淆名由搜 `Lcom/tencent/mmkv/MMKV;->` 调用点实证得到）的 `beforeHookedMethod`，命中 `kv_remote_settings_model_configs_v1` / `kv_remote_settings_welcome_msg` 就替换 `args[1]`——**服务端的值从未落盘**。`GmSync` 加挂该 hook 并提供 `ctx()` 双保险；版本号 `2.4.7/63` → `2.4.8/64`；类数 47 → 48 |
+| **2.5.0** | **美化菜单新增「修改背景」**（图片 / 动态渐变，可开关、透明度可调）—— ①实证 DeepSeek 是纯 Compose 单 Activity、页面底色由 Compose 自绘 ⇒ 真底图需透明化 Compose（类名已混淆，有风险），**用户选定「蒙层式」** ②新增 `GmBg`（数据 + `ensure()` 挂载/摘除 + 签名去重）/ `GmBgView`（图片 center-crop 与渐变，`uptimeMillis` 相位 + `postInvalidateOnAnimation` **自驱动动画**）/ `GmBgSwitch` / `GmBgDialog` ③叠加在 DecorView 上、不设 clickable 以**触摸穿透** ④选图复用 `GmPickHook`（先问 GmBg 再问 GmAvatar）⑤`GmClick` 新增 `0x1b`~`0x23` 动作；版本号 `2.4.8/64` → `2.5.0/65`；类数 48 → 52 |
+| **2.5.1** | **🐛 修「修改背景没有效果」+ 新增「底图」位置**（反向判断第 11 次）—— `GmBg.ensure()` 开头的守卫写成 `if-nez sAct` ⇒ **有 Activity 就返回**，导致挂载逻辑一次都没跑过；改为 `if-eqz`。同时新增 `pos` 配置与对话框「位置」行：`蒙层`（盖在上层）/ **`底图`（index 0，在内容后面，默认）**；UI 签名扩充为 `pos*10000000+mode*1000000+grad*10000+alpha*10+hasImage`；美化页入口加 **WIP** 标识（`修改背景（WIP）›`）；`GmClick` 新增 `0x24`/`0x25`；版本号 `2.5.0/65` → `2.5.1/66` |
+| **2.5.2** | **🐛 修 `GmBg.ensure` 的 NPE（连带修掉两处反向判断）** —— `if-nez v2, :mk` / `if-nez v4, :mk` 语义写反 ⇒ `sView` 为 null 时直接对其调 `getParent()` → 点「底图」必崩。两处改 `if-eqz`，并把该方法的 **9 个守卫全部复核一遍**。**注意：这两个 bug 在 2.5.0 被 `sAct` 守卫那个 bug 挡着（方法从不执行），修掉第一个才暴露** —— 印证「多个 bug 互相掩盖」；版本号 `2.5.1/66` → `2.5.2/67` |
+| **2.5.3** | **🎉 真底图：透明化 Compose 页面底色** —— 用户反馈「蒙层有效、底图无效」⇒ 渲染正常，是 **Compose 页面底色不透明盖住了底图**。**用 data class 的 `toString()` 字段名反查到混淆类 `Laz1;` = `ColorScheme`**（48 个 `J` 字段 = Material3 1.3 的 48 个颜色角色）；按声明顺序得 `args[13]=background`、`args[15]=surface`；Compose `Color.Transparent` = `0L`。新增 `GmCsHook` 在构造函数里把这两参数置 0，`GmSync` 用 `hookAllConstructors` 注册（**构造函数不能用 `hookAllMethods`**）。限制：切换后需重启 App；版本号 `2.5.2/67` → `2.5.3/68`；类数 52 → 53 |
+| **2.5.4** | **🐛 修选图分流（反向判断第 12 次）+ 扩大透明化范围** —— `GmPickHook` 里 `if-eqz v0, :bg` 写反 ⇒ **选背景图走了头像分支、图像从未保存**，导致蒙层「只有渐变有效」；改 `if-nez`。另把 `GmCsHook` 的透明化从 2 项扩到 **surface 家族 10 项**（`background`/`surface`/`surfaceVariant`/`surfaceBright`/`surfaceDim`/`surfaceContainer*`，索引 13,15,17,29~35）作为定性实验：**能变透 ⇒ 确属 ColorScheme；不变透 ⇒ 页面底色另有来源**；版本号 `2.5.3/68` → `2.5.4/69` |
+| **2.5.5** | **换思路：用「混合模式」做真底图** —— 10 项 ColorScheme 全改透明后**界面毫无变化** ⇒ **DeepSeek 的 UI 不使用 Material3 `ColorScheme`**（自有一套配色），此路不通。改为把 **`android.R.id.content`** 设成 `MULTIPLY`（浅色）/ `SCREEN`（深色）混合到背后的底图上 —— **不碰 Compose**，让 App 内容自然"混"进底图：白底/黑底被底图取代，文字仍可读；未开启时恢复 `null`。`setBlendMode` 需 API 29+（已加 SDK 守卫 + try/catch）；版本号 `2.5.4/69` → `2.5.5/70` |
+| **2.9.1** | **纳管宿主 2.5.1 新增的 11 个灰度键**（承接 2.9.0 的宿主适配）—— ①`GmDialog` 70 → **81 项**（7× TTS 朗读参数 + `thinking_auto_fold_enabled` + `report_http_failure_paths` / `alert` / `banner`），`DESCS` 同序追加 11 行 ②`GmStore.write/remove` 新增 **`fuckds_pin_<key>` 影子镜像** ③`GmMmkvHook` 新增 3 键拦截，**读影子键、没 pin 就不碰下发**（避开「公告被冻住」的回归）④前 8 项用**裸键**：宿主 `kv_settings_*` 优先级高于 `kv_remote_settings_*`，天然压过下发，**不需要 hook**。版本号 `87/2.9.0` → `88/2.9.1`；详见 `2.9.1-灰度键纳管.md` |\n| **2.8.0** | **🆕 摄像头「手动数码裁切」（数字变焦）** —— 新增 `fuckds_bg_crop`（% ，默认 100，范围 **100~300**，步进 25）；实现走 **View 层裁切**（`fit()` 里 `scale = max(sx,sy) × crop/100`），不用 `Camera.setZoom()`（免设备支持判定 / 免离散档位 / 免碰 `Parameters`）。①`GmBg` 新增 `crop`/`setCrop` ②`GmCam.fit` 接入倍率（`sAct` 为 null 时跳过）③`GmBgDialog` 新增 `cropDown`/`cropUp`，`open()` 在「摄像头方向」下新增一行「裁切 N% [−][＋]」④`GmClick` 新增动作 `0x2e`/`0x2f`。**改裁切走 `refit()`（只重算视图尺寸，不重建 TextureView、不重启相机），不进 `sSig`**；版本号 `85/2.7.9` → `86/2.8.0` |
+| **2.7.9** | **🎉 修摄像头「不透明盖屏」= `pos=2`（混合）陷阱** —— 用户反馈「一打开背景并选择摄像头，UI 就被盖住」。2.7.8 加诊断行 `cam fx mode=.. pos=.. alpha=.. cam=..` ⇒ 用户复现给出 `pos=2`，**一击定位**。根因：①`GmBgDialog.setModeCam` 的自动挪位 `if (pos == 1) setPos(0)` **只覆盖「底图」，漏了「混合(pos=2)」** ②`GmCam.applyFx` 在 `pos==2` 时 `setAlpha(1.0f) + View.setBlendMode(...)`，而 **`TextureView` 是独立图层、无法自绘 Xfermode**，`setBlendMode` 一旦不生效/方向不对就是满屏不透明。修法：①`if (pos != 0) setPos(0)`（点「摄像头」自动切蒙层）②`applyFx` 的 `pos==2` 分支 `goto :cond_24` ⇒ **半透明叠加**。**结论：`View.setBlendMode` 对 TextureView 不可用（第三十九节遗留 #4 结案）**；另在 `fit()` 诊断行补 `sDeg=` 字段；版本号 `83/2.7.7` → `84/2.7.8` → `85/2.7.9` |
+| **2.7.8** | **🔍 纯诊断版**（业务逻辑零改动）—— 在 `GmCam.applyFx` 开头加一行 DIAG `cam fx mode=.. pos=.. alpha=.. cam=..`，为「UI 被覆盖」准备证据。**再次验证方法论：DIAG 一行 = 一次定位** |
+| **2.7.7** | **🎉 摄像头取景「旋转不生效」真凶：`GmCam.rot()` 映射错位 + 消除双重旋转源 —— 用户验收通过** —— 用户实测 2.7.6 后反馈「拉伸修好了，但旋转还是没修好」并贴出 DIAG：`cam fit deg=0 sDeg=0 scr=1440x3168 prev=2520x1080 v=7392x3168`。竖屏后置 `sDeg` 应为 90 却是 **0** ⇒ 画面永不旋转。根因：`GmCam.rot()`（屏幕旋转→角度）的三条 `if-ne` 链语义反了（`if-ne` = 「不等就跳」，被当成「相等才走」）⇒ 映射整体偏移一格（`0→90 / 1→180 / 2→270 / 3→0`，**四个值全错**）；后置公式 `(sensor.orientation - rot()) % 360 = (90-90) = 0` 完美吻合。修法：三条 `if-ne` → **`if-eq`**。另修隐患：`orient()` 里 `setDisplayOrientation(sDeg)` 与 `fit()` 的 `setRotation(sDeg)` 构成**双重旋转源**（若前者生效则转 2 倍）⇒ 改为 **`setDisplayOrientation(0)`**，旋转唯一来源锁定 `setRotation`。⚠️ **顺带推翻第 36 节旧结论**：「`setDisplayOrientation` 对 `setPreviewTexture` 不生效」证据不足（2.7.3 的「右偏 90°」很可能一直是 `sDeg=0` 的锅）；版本号 `82/2.7.6` → `83/2.7.7` |
+| **2.7.6** | **🐛 修摄像头取景两个「确定 bug」** —— ①`GmCam.fit()` 的 **90°/270° 交换分支是死代码**：两条 `if-ne` 串联要求 `v4 != 90 && v4 != 270` 才跳过，而进交换分支需 `v4 == 90 && v4 == 270`（不可能）⇒ 竖屏后置 `deg=90` 走了非交换算式，视图 `7392×3168`（应为 `3360×1440`）→ 画面放大 2.93×、裁掉 ~55%。修法：`if-eq v4,0x5a,:cond_swap` + `if-ne v4,0x10e,:cond_4f` + 新标签 `:cond_swap`。②`fit()` 在**后台线程**（`GmCamRun` 线程）调 `setLayoutParams/setRotation`，`requestLayout` 的线程检查异常被 `fit` 的 `catchall` 静默吞掉 ⇒ 新增 **`GmFitRun`**（`Runnable`），`doOpen()` 末尾改 `sTv.post(...)`，只把碰 View 的那段挪回主线程（`Camera.open()` 仍在后台）。类数 56 → 57；版本号 `81/2.7.5` → `82/2.7.6` |
+| **2.7.5** | **🐛 修旋转角取值反向（第 18 次反向判断）—— DIAG 日志定位** —— 用户贴出 DIAG：`cam fit deg=-1 ...` / `cam fit deg=0 ...` ⇒ 选「自动」时 `deg=-1`（**应为 sDeg≈90**），选「0°」时 `deg` 却是 sDeg。根因：`fit()` 里判断「rot() 是否为自动」写成了 **`if-gez v3, :cond_keep`**，而 **`if-gez` = 「>= 0 才跳」**（不是「< 0」）⇒ 逻辑整个反过来：**自动时用了 -1、手动时用了 sDeg**。后果完美解释用户的两个现象：①`setRotation(-1)` 转 1° ≈ 看不出变化；②**所有手动档都被替换成同一个 sDeg，所以「加几个旋转都是选项」**；③角度没生效 ⇒ 走了 0/180 的尺寸分支 ⇒ 比例/裁切不对，看起来「被拉伸」。修正为 **`if-ltz`**（< 0 才跳）；DIAG 增加 `sDeg=` 字段便于核对；版本号 `2.7.4/80` → `2.7.5/81` |
+| **2.7.4** | **🔧 旋转改用 `View.setRotation` + 显式尺寸（`setTransform` 实测无效）** —— 用户反馈「旋转加不加没区别」⇒ **`TextureView.setTransform()` 在这台机器上不生效**（推测与 SurfaceTexture 自带的变换矩阵打架）。改为完全绕开矩阵：**按旋转后的可见矩形算出视图尺寸 → `setLayoutParams(FrameLayout.LayoutParams(W,H) + Gravity.CENTER)` → `tv.setRotation(deg)`**。`View.setRotation` 是 View 系统的基础能力（父容器渲染层做变换），比 GPU 矩阵稳得多。⚠️ 尺寸基准必须取 **DecorView（屏幕）** 而不是视图自身 —— `setLayoutParams` 之后用自身尺寸会在反复 `fit()` 时自我放大（漂移）。另加 `GmDiag` 诊断行 `cam fit deg=.. scr=..x.. prev=..x.. v=..x..`；版本号 `2.7.3/79` → `2.7.4/80` |
+| **2.7.3** | **🔧 修摄像头画面「右偏 90°」+ 新增「画面旋转」手动档** —— 用户实测取景画面偏转 90°。根因：**`Camera.setDisplayOrientation()` 对 `setPreviewTexture(SurfaceTexture)` 这条预览路径不生效**（它只作用于 SurfaceView / 预览显示路径）⇒ 必须自己在 `TextureView.setTransform()` 里把画面转回来。同时发现 2.7.0 的宽高比算式也多此一举地 `swap` 了宽高（那是在「假设系统已帮忙转好」时才需要），**既然旋转要显式做就不该再 swap**，否则宽高比会被算反。修法：`GmCam.fit()` 重写 —— 取 `sDeg` 或手动配置角度 → 用原始预览宽高做**中心裁切等比缩放** → `matrix.postRotate(deg, cx, cy)`；新增 `fuckds_bg_rot`（`-1=自动 / 0 / 90 / 180 / 270`）、`GmBg.rot()/setRot()`、`GmCam.refit()`（只重算矩阵，不重启相机）、对话框「摄像头方向」行新增 **「旋转 自动」**循环按钮、`GmClick` 动作 `0x2d`；版本号 `2.7.2/78` → `2.7.3/79` |
+| **2.7.2** | **🐛 修 4 处反向判断（第 14~17 次）—— 摄像头取景「整屏盖住 UI」** —— ①`GmCam.applyFx` 的空值守卫写成 `if-nez p1, :ret`（= **view 不为 null 就返回**）⇒ **`setAlpha`/`setBlendMode` 一次都没执行**，TextureView 满不透明盖住整个界面（用户实测现象完全吻合）；改 `if-eqz`。②`GmBgDialog.setModeCam` 的「底图→蒙层」自动挪位写成 `if-eq`（pos==1 时反而跳过 `setPos`）；改 `if-ne`。③`GmCam.fit` 的 270° 换轴判断 `if-ne` 写反（270° 时反而不换轴）；改 `if-eq`。④`GmCam.rot` 的 Activity 判空 `if-nez` 写反；改 `if-eqz`。另：进入摄像头模式时自动把透明度设为 **40%**（太低看不见、太高糊 UI）；版本号 `2.7.1/77` → `2.7.2/78` |
+| **2.7.1** | **🐛 修 `GmBg.ensure` 的 VerifyError（分支汇合导致类型退化）** —— 2.7.0 让 `v5` 在摄像头分支持 `TextureView`、在另一分支持 `GmBgView`，两者在 `:got_view` 汇合后退化成 `View`。而 **2.6.0 留下的 `invoke-virtual {v5}, GmBgView;->setBlend(I)V` 恰好位于汇合点之后** ⇒ `GmBgView` 是 `final` 类，ART 要求「精确类型」⇒ **Verifier rejected class GmBg**，一 `onResume` 就崩（`GmResumeHook.afterHookedMethod` → `GmBg.ensure`）。修法：把 `setBlend` 调用挪进 `:cond_notcam` 分支（那里 `v5` 精确是 `GmBgView`），并删掉汇合点后的那一段；版本号 `2.7.0/76` → `2.7.1/77` |
+| **2.7.0** | **🆕 美化 › 修改背景 ›「摄像头取景」（实时取景当底图）** —— 新增第 3 种背景来源 `fuckds_bg_mode=2`，配套 `fuckds_bg_cam`（0=后置/1=前置，对话框可切）。**可行性前提已实证**：DeepSeek 自己声明了 `<uses-permission android:name="android.permission.CAMERA"/>`，模块借宿主进程的权限即可用相机。实现走**方案 A（TextureView 直通）**：新类 `GmCam`（Camera1 控制器）/`GmCamRun`（后台线程开相机，避免主线程阻塞）/`GmCamStl`（`SurfaceTextureListener`，surface 就绪拉流、销毁即释放）；合成不复用 `GmBgView` 的自绘混合（TextureView 是独立图层插不进 `onDraw`），改用 **`View.setAlpha`（蒙层）/ `View.setBlendMode`（混合，API 29+）**；含权限申请、方向摆正（`setDisplayOrientation`）、宽高比 center-crop（`setTransform`）；`GmClick` 新增 `0x2a~0x2c`；版本号 `2.6.4/75` → `2.7.0/76`；类数 53 → 56 |
+| **2.6.4** | **🎯 定位「浅色模式渲染异常」的真因：`isNight()` 判不准 App 的主题** —— 用户反馈「混合时页面整体还是白色、黑色字却变成了背景图的颜色」⇒ **这是 `SCREEN` 的行为**（`SCREEN(白底)=白`、`SCREEN(黑字)≈0.1+0.9·src`）。即浅色 UI 下跑的是 SCREEN ⇒ `isNight()` 返回了 true。原因：**`isNight()` 读的是 `Configuration.uiMode`（系统昼夜），而 DeepSeek 有自己独立的主题设置**（系统深色 + App 浅色，或反之）。修法：新增 **「混合方向」** 配置与 UI —— `fuckds_bg_dir`（0=自动/1=强制 MULTIPLY 浅色底/2=强制 SCREEN 深色底），`GmBg.dir()/  dirMul()/setDir()`，`GmBgDialog.dirAuto/dirLight/dirDark()`，`GmClick` 动作 `0x27~0x29`，对话框新增一行 `混合方向 [自动][浅色底][深色底]`；`setPosMix` 的推荐透明度与 `alphaUp` 的封顶判断全部改走 `dirMul()`；**签名里加入 `dir`**（否则改方向不会重建）。版本号 `2.6.3/74` → `2.6.4/75` |
+| **2.6.3** | **修「浅色模式渲染异常 + 字太淡」= 2.6.2 的副作用** —— 2.6.2 把混合的透明度一律抬到 90%，但 **`MULTIPLY` 的暗化随透明度单调增强**：90% 时白底 `0.1×255+0.9×11 ≈ 35`（深蓝黑），而文字 `≈ 4`（纯黑）⇒ **深色页面 + 纯黑文字 = 糊成一团**，浅色主题整个被压暗。深色走 `SCREEN`（`1-(1-dst)(1-src)`）黑底⊕图=图、白字=白 ⇒ 正常，与反馈完全吻合。修法：①`setPosMix()` 按昼夜给**各自推荐值**——浅色 **55%** / 深色 **92%**；②`alphaUp()` 在「混合 + 浅色」时**把强度封顶 70%**，保证页面不会被压到看不清字；③提示文案更新；版本号 `2.6.2/73` → `2.6.3/74` |
+| **2.6.2** | **让「混合」的效果一眼可辨（提升可测性）** —— 用户反馈 2.6.1 的「混合（真背景）」看起来「像蒙层一样淡淡的」。分析：**低透明度下两种合成在数学上几乎等价**（白底处 `0.75×白+0.25×图` 与 `0.75×白+0.25×(白×图)` 完全相等），只有文字/深色区域才有差别 ⇒ 25% 时本就分不出来。改为 `GmBgDialog.setPosMix()` 在切到混合时**自动把透明度抬到 90%**（若当前 < 80）并 toast 提示。这样两条路的结果都能一眼区分：底色变图=混合成功；界面被几乎不透明的渐变糊住=混合没生效。版本号 `2.6.1/72` → `2.6.2/73` |
+| **2.6.1** | **🐛 修「图片模式永远显示渐变」（反向判断第 13 次）** —— `GmBgView.onDraw` 里判断渲染分支那句写成了 `if-eqz v3, :cond_55`（v3 = `mode`）⇒ **`mode==0`（图片）被送进渐变分支**。而 `GmPickHook` 在保存背景图后会显式 `setMode(ctx, 0)`，所以「选完图 → 切图片模式 → 渲染成渐变」——**图片模式自 2.5.0 起从未生效过**，2.5.4 修的「选图分流反向」只是前半段，这是后半段。改为 `if-nez v3, :cond_55`（`mode != 0` 才走渐变）；版本号 `2.6.0/71` → `2.6.1/72` |
+| **2.6.0** | **真底图方案 ②：把混合模式搬到自己身上（`GmBgView` 自绘混合）** —— 2.5.5 是把 `MULTIPLY/SCREEN` 设在 **App 的 `android.R.id.content`** 上，等于「求对方配合」；2.6.0 改成**把背景层自己放回最上层，在 `onDraw` 里用 `Paint.setXfermode(PorterDuffXfermode(MULTIPLY/SCREEN))` 直接与下方已绘制的内容混合** —— 完全不依赖 App 内部实现，且不需要任何 API 29+ 的 `View.setBlendMode`。①`GmBgView` 新增字段 `h:I`（0=不混合 / 1=MULTIPLY / 2=SCREEN）与 `setBlend(I)V`；②`GmBg.ensure()` 的挂载分支重写：`pos==0` 蒙层（上层·透明叠加）、`pos==1` 底图（index 0，保留 2.5.5 内容混合 A/B）、**`pos==2` 混合（上层 + 自绘 Xfermode，浅色 MULTIPLY / 深色 SCREEN）**；③`GmBgDialog` 新增 `setPosMix()` + 第三个按钮「混合（真背景）」，提示文案改为「蒙层=半透明叠加；混合=把底图混进界面（建议透明度拉至 100%）」；④`GmClick` 新增动作 `0x26`；版本号 `2.5.5/70` → `2.6.0/71`；类数不变（53），改动 4 个类 |
+
+---
+
+## 八、构建方式
+
+```
+1. mt_apk_open(path="mt://current-apk", temporary=false)  → workspaceId
+2. mt_apk_edit_open(workspaceId)                          → editSessionId
+3. mt_apk_edit_text / mt_apk_edit_resource / mt_apk_patch_bytes...
+4. mt_apk_edit_check(runBuildChecks=true)                 ← 可选，先验证
+5. mt_apk_build(outputName="FuckDSManger_x.y.z.apk", sign=true)
+```
+
+**输出目录**：`/storage/emulated/0/Download/apks/`
+
+---
+
+## 九、下一步建议
+
+1. **「真底图」** —— 唯一剩的大项（`修改背景-进度与遗留.md` 第四节有 4 条候选方案：追根 composable / 挂 `screen_simple` / 运行时反查 ComposeView / 打磨蒙层兜底）
+2. **「朗读文本」灰度缺失** —— 需靠「服务端下发查看」抓真实 key（大概率是服务端定义的 DS Setting 显示名）
+3. `kv_remote_settings_id_*` 变体回退（部分灰度会显示为空）
+4. 「防撤回」hook 点实测确认能入库（当前挂 `yu9->m`）
+5. **摄像头增强**（见第五节 C1~C8；优先 **C1 数码裁切画质** → 换 `Camera.setZoom()` 真数字变焦）
+6. 美化页扩展（主题色 / 字体 / 气泡样式）、清理调试 DIAG（C8）、导出/导入配置
+7. ✅ 已完成：头像替换（2.1.0）、下发抓取（2.1.0）、文件快捷选项（2.4.0/2.4.1）、**摄像头取景（2.7.6~2.8.0）**
+
+---
+
+## 十、2.1.0 变更记录（2026-09-12）
+
+### 10.1 「助手图片替换」根因定位 ✅
+
+**问题**：选图保存成功（Toast 正常），但头像不变，重启也无效。
+
+**根因**：`assistant_message_avatar`（`0x7f070059`）指向 `res/Fi.xml`，其根节点是 **`<vector>`**。
+
+全 APK 中该资源**只有一处 dex 引用**：
+
+```smali
+# dex_method:Lp96;->b(Lnz5;Lyq3;I)V
+const v1, 0x7f070059
+invoke-static {v1, v2, p1}, Li65;->x(IILyq3;)Lqm6;   # = Compose painterResource(Int)
+```
+
+而 `Li65;->x`（`androidx.compose.ui.res.PainterResources_androidKt.painterResource`）的真实逻辑是：
+
+```
+TypedValue.string endsWith(".xml") ?
+ ├─ 是 → Resources.getXml(id) + 自研 VectorParser（Lth;）逐字段解析
+ │        ⚠️ 完全不经过 Resources.getDrawable！
+ └─ 否 → :cond_6f5
+          Resources.getDrawable(id, theme)
+          → check-cast BitmapDrawable
+          → BitmapDrawable.getBitmap() → new Lke;(Bitmap) → new Ldi0;(Lq74;) 返回
+```
+
+所以旧 `GmAvatarHook`（挂 `Resources.getDrawable`）在这条路径上**永不命中** —— 这就是失效原因。
+
+**修复**：新增 `GmVectorHook`，hook `Resources.getValue(ILandroid/util/TypedValue;Z)V`，
+在 `afterHookedMethod` 中把 id == `0x7f070059` 的 `TypedValue.string` 置为 `null`。
+
+- 源码处 `if-eqz v4, :cond_6f5`（v4 = tv.string）→ string 为 null 时**直接落入普通资源分支**
+- 该分支调用 `Resources.getDrawable(id, theme)` → 被已有 `GmAvatarHook` 拦截并返回自定义 `BitmapDrawable` ✓
+- `Drawable.createFromPath()` 对 png / jpg / webp 均返回 `BitmapDrawable`，满足后续 `check-cast` ✓
+- 仅在「开关开启 + 自定义图存在」时才改写，且只针对这一个 id，不影响其它资源
+
+**顺带修**：`GmAvatarHook;->beforeHookedMethod` 里诊断 toast 的条件写反了
+（`if-eqz sTold` 应为 `if-nez sTold`），导致「助手头像替换已生效」提示永远不弹。
+
+### 10.2 「服务端灰度下发」抓取点加固
+
+**现状复核（2.4.5 实证）**：
+
+| 目标 | 状态 |
+|---|---|
+| `Luv1;->u(Lvp4;ILjava/lang/String;Ljava/lang/String;)V` | ✅ 存在，2860 指令 / 207 字符串 / 659 invoke |
+| `Laz5;->h(Lvp4;ILjava/lang/String;Ljava/lang/String;)V` | ✅ 存在，261 指令 |
+| `Lvp4;->get(Ljava/lang/Object;)Ljava/lang/Object;` | ✅ 存在（但高频，每次查表都触发一次 dump） |
+
+`Luv1;->u` 的**唯一调用点**：
+`Lrq9;->f(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;`（Kotlin lambda，`invoke-virtual`）。
+
+**新增 `GmDsHook3`**：hook `Lvp4;-><init>(Ljava/util/Map;)V` → 下发数据对象**诞生**时 dump 完整 Map。
+该构造器共 4 个调用点，其中两处是网络 / 反序列化路径：
+
+- `Lva9;->c(Lf08;Lka2;)Ljava/lang/Object;`
+- `Lxp4;->e(Lik2;)Ljava/lang/Object;`
+
+⚠️ **新踩的坑**：`XposedBridge.hookAllMethods` 底层遍历的是 `getDeclaredMethods()`，
+**不包含构造函数** —— 对 `"<init>"` 会 hook 到 0 个方法且**静默失败**。
+必须改用
+`XposedHelpers.findAndHookConstructor(className, classLoader, Map.class, callback)`。
+
+### 10.3 类清单增补
+
+| 类 | 类型 | 职责 |
+|---|---|---|
+| `GmVectorHook` | Hook | `Resources.getValue` → 抹掉 vector 资源的 `.xml` 标记，逼 Compose 走普通资源分支 |
+| `GmDsHook3` | Hook | `vp4;<init>(Map)` → 下发数据诞生即 dump |
+
+（另：第四节漏记但确实存在的旧类：`GmDirtyTouch` / `GmResHook` / `GmResumeHook` / `GmTextHook`。）
+
+### 10.4 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.1.0.apk
+size            : 41969 bytes
+sha256(partial) : 3cf010dd1dc902cfe696c7c969b3013aacb820dc274af7675fc21c2f33739531
+signed          : V1 + V2 + V3
+```
+
+### 10.5 待验证（真机）
+
+1. **头像替换**是否生效 —— 打开设置页看助手头像；诊断 toast 现在应该会弹了
+2. **下发页**是否抓到数据 —— `sHits` 应随 `vp4;<init>` 命中而递增
+3. 若头像仍不生效 → 检查 `Li65;->x` 内 `Lwi7;->a` 的 TypedValue 缓存是否在 hook 生效前已被填充
+
+---
+
+## 十一、2.3.0 —— 四个致命 bug 的连环侦破（2026-09-12）
+
+> 症状：头像替换一直"没区别"，连续多个版本（2.1.0 ~ 2.2.3）都无效。
+> 最终在 **2.3.0** 全部解决。**四个 bug 互相掩盖**，是这次排查异常艰难的根本原因。
+
+### 11.1 决定性手段：内存诊断缓冲
+
+之前依赖 toast / Xposed 日志 / 写文件全部不可靠（原因见 Bug 3）。最终方案：
+
+- 新增 `GmDiag`，用**静态 StringBuilder** 记录日志（不依赖 Context、不依赖 IO）
+- 在 `GmDsDialog` 的内容区**顶部**拼接显示 `===== DIAG =====`
+- 用户打开「服务端灰度下发查看」即可看到全部诊断
+
+**这一招直接扭转了局面** —— 没有它，后面三个 bug 根本无从定位。
+
+### 11.2 四个 bug（按被发现顺序）
+
+#### Bug 1：Compose 对 vector 资源不走 `Resources.getDrawable`
+
+（详见第十节）
+
+#### Bug 2：`GmPickHook` 的 VerifyError ⭐ 最致命
+
+```smali
+# 错误
+invoke-static {v1}, Lcom/varuns2002/disable_flag_secure/gm/GmAvatar;->setOn(Landroid/content/Context;Z)V
+# 正确
+invoke-static {v1, v0}, Lcom/varuns2002/disable_flag_secure/gm/GmAvatar;->setOn(Landroid/content/Context;Z)V
+```
+
+**Dalvik 要求每个参数各占一个寄存器**，`setOn(Context, boolean)` 需要 2 个，
+原代码只写 `{v1}` → **类一加载就 VerifyError**。
+
+LSPosed 日志实锤：
+```
+java.lang.VerifyError: Verifier rejected class GmPickHook:
+  [0x2E] Rejecting invocation, expected 1 argument registers, method signature has 2 or more
+  at DisableFlagSecure.handleLoadPackage(Unknown Source:201)
+```
+
+**连锁反应（一个 bug 废掉两个大功能）：**
+
+| 后果 | 机制 |
+|---|---|
+| 选图功能从未成功 | 注册代码在 `handleLoadPackage` 第 201 行，抛 VerifyError → **整个方法中断** |
+| 服务端下发一直为空 | `uv1.u` / `az5.h` / `vp4.<init>` 全在中断点之后，**从未注册** |
+
+**教训**：`handleLoadPackage` 里 `new-instance 自己的类` 若抛异常（VerifyError / NoClassDefFoundError），
+会导致**后续所有 hook 静默失效**。必须：
+1. 每个 `new-instance` 都放进独立 try/catch
+2. 或把 hook 注册分散到多个入口（本次最终采用 `GmResumeHook` 动态补注册）
+
+#### Bug 3：`AndroidAppHelper.currentApplication()` 恒返回 null
+
+本机环境下该方法**永远返回 null**（原因未深究），导致所有依赖它的 hook 静默 return：
+
+```
+GmVectorHook / GmPainterHook / GmTraceHook / GmDsHook / GmDsHook2
+```
+
+**修复**：全部改用 `GmEntry.sAct`（Activity），与旧代码保持一致。
+
+> ⚠️ 讽刺的是：这是我在 2.1.0 里"自作聪明"把 `sAct` 改成 `currentApplication` 引入的，
+> 原代码本来就是对的。
+
+#### Bug 4：`if-gtz` / `if-lez` 一字之差
+
+```smali
+# 错误
+if-gtz v4, :cond_21     # if (n > 0) 跳出循环 ← 第一次读到数据就跑路
+# 正确
+if-lez v4, :cond_21     # if (n <= 0) 跳出循环
+```
+
+| 位置 | 后果 |
+|---|---|
+| `GmAvatar.saveImage` | 文件被创建但**写入 0 字节**，却仍返回 `true` → 弹"保存成功"假 toast |
+| `GmDs.read` | 文件内容**读不出来** → 永远显示"(暂无数据)" |
+
+**教训**：`if-gtz` = if (v > 0) branch；`if-lez` = if (v <= 0) branch。
+**循环读流的标准写法是 `if-lez`。**
+
+### 11.3 关键教训汇总
+
+| # | 教训 |
+|---|---|
+| 1 | **手写 smali 时，invoke 的寄存器个数必须与参数个数严格一致**（wide 占两个）——这是最容易犯且最致命的错误 |
+| 2 | **不要在 `handleLoadPackage` 里裸 `new-instance` 自己的类**，抛异常会导致后续 hook 全部失效 |
+| 3 | **不要依赖 `AndroidAppHelper.currentApplication()`**，本机环境不可用；用 `GmEntry.sAct` |
+| 4 | **循环读流用 `if-lez`**，不是 `if-gtz` |
+| 5 | **诊断要靠"内存缓冲 + UI 显示"**，toast / 日志 / 文件都可能被静默吞掉 |
+| 6 | **多个 bug 会互相掩盖**：修一个不见效，不一定是修错了，可能是后面还有 |
+
+### 11.4 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.3.0.apk
+versionCode 46 / versionName 2.3.0
+```
+
+### 11.5 遗留（待清理）
+
+- 修改后的版本仍带有大量 `GmDiag` 诊断代码和 toast 提示，稳定后可考虑清理
+- `GmDb.save` 的 `Long.valueOf(J)` 参数写作 `{v4, p0}`（Context 当了 long 高位）——**时间戳会算错**，待修
+- `GmDsHook2`（hook `vp4.get`）高频 dump，建议降频或移除
+
+---
+
+## 十二、2.4.0 —— 「文件快捷选项」窗口不显示 · 结案（2026-09-12）
+
+> 挂了 **6 个版本**（2.3.3 → 2.3.9）的老大难，本版彻底解决。
+> 期间一度误诊（2.3.9 只修了一半），教训见 12.4。
+> 详细报告见 `已解决-文件快捷选项窗口不显示.md`。
+
+### 12.1 结论：两个独立 bug 叠加，真凶在「分发层」
+
+| # | 位置 | 性质 | 影响 |
+|---|---|---|---|
+| **Bug A** ⭐ | `GmClick.onClick` 动作分发链 | **`0x11` 代码块是无入口死代码** | **真凶**：`open()` 从未被调用 |
+| Bug B | `GmPromptDialog.open()` 开头 | 两处前置判断条件反向 | 即使进了 `open()` 也会立刻 `return` |
+
+**2.3.9 只修了 Bug B，所以毫无效果 —— 代码根本走不到那里。**
+
+### 12.2 Bug A —— 分发链断了一环
+
+```smali
+# ❌ 2.3.3 ~ 2.3.9
+:cond_79
+const/16 v1, 0x10
+if-ne v0, v1, :cond_be          # action != 0x10 → 跳到【方法末尾 return】
+invoke-static {}, GmDsDialog;->clear()V
+return-void
+
+const/16 v1, 0x11               # ← 没有标签！没有任何分支能跳进来
+if-ne v0, v1, :cond_a6
+:try_start_85
+invoke-static {}, GmPromptDialog;->open()V
+```
+
+`onClick` 用的是「不等就跳下一块」的链式结构，每块的跳转目标 = **下一块的标签**：
+
+| 当前块 | 跳转目标 | 下一块 | 对吗 |
+|---|---|---|---|
+| `0xe` | `:cond_71` | `0xf` | ✅ |
+| `0xf` | `:cond_79` | `0x10` | ✅ |
+| **`0x10`** | **`:cond_be`** | **`0x11`** | ❌ **断了** |
+| `0x11` | `:cond_a6` | `0x12` | ✅ |
+| `0x12` | `:cond_ae` | `0x13` | ✅ |
+| `0x13` | `:cond_b6` | `0x14` | ✅ |
+| `0x14` | `:cond_be` | 末尾 `return` | ✅ |
+
+`:cond_be` 就是方法末尾的 `return-void`（`0x14` 跳它是对的），
+`0x10` 跳它等于**把 action ≥ 0x11 的请求全部原地丢弃**。
+
+**修复**（补标签 + 改目标）：
+
+```smali
+if-ne v0, v1, :cond_11          # ✅ 指向 0x11 块
+...
+:cond_11                        # ✅ 新增标签，补齐断掉的一环
+const/16 v1, 0x11
+```
+
+### 12.3 为什么之前所有诊断都指向了错误的结论
+
+| 现象 | 真相 |
+|---|---|
+| 2.3.4 / 2.3.5 在 `0x11` 分支塞 toast 永远不响 | 该块是**死代码**（当时误判为「点击没传到」） |
+| 2.3.6 在 `onClick` **最顶端**打印 `action=17` 能响 | 顶端在死代码**之前** → 成功制造「链路通的」假象 |
+| 2.3.7 `[gm] open ok` | （记录存疑）`open()` 实际从未被调用 |
+| 2.3.8 `[gm] shown=N` 探针不响 | 探针在 `open()` 内部，而 `open()` 没被调用 |
+| 无任何 LSPosed 报错 | 真的**什么都没发生**，不是被吞了 |
+
+### 12.4 教训升级（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 7 | **把「提前 `return-void`」重构成「`goto` 统一出口」时，分支条件必须同步取反**（与 2.3.2 `GmDialog.save()` 同源） |
+| 8 | **手写 smali 的链式 `if-ne` 分发，每一块的跳转目标必须是「下一块的标签」**。漏打标签 → 前一块跳到别处 → 整块变**无入口死代码**，而且**不报错、不崩溃、静默失效** |
+| 9 | **「顶端的日志能打出来」≠「分支执行到了」**。探针要放在想验证的路径**内部**，而不是它之前的公共入口 —— 否则会给出**误导性结论**，本次就因此多绕一个版本 |
+| 10 | **横向对比同类正常实现**是最快的定位手段（`GmBeautyDialog` / `GmDbDialog` 一比就现形；也顺便排除了「三层 Dialog 叠加」假设） |
+| 11 | 排查「静默失效」：**先怀疑控制流**（跳转目标 / 死代码 / 反向判断），再怀疑异常 |
+
+### 12.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.4.0.apk
+versionCode 56 / versionName 2.4.0
+size            : 41969 bytes
+sha256(partial) : e1f41c78cf94448f0b7996bb395fb79e6627e39c36b187f2206fcdbff1e07882
+signed          : V1 + V2 + V3
+changedClassCount : 3（GmClick / GmPromptDialog / GmBeautyDialog）
+```
+
+> ⚠️ `FuckDSManger_2.3.9.apk` 已废弃（只修了 Bug B）。
+
+---
+
+## 十三、2.4.1 —— 「文件快捷选项」表格化（2026-09-12）
+
+> 2.4.0 让窗口能显示了，但编辑框是**空的**；2.4.1 修好数据层并重做成表格。
+> 详细报告见 `2.4.1-文件快捷选项表格化.md`。
+
+### 13.1 第二批同族 bug：`isEmpty` 判断反向 ×4
+
+```smali
+# ❌ 错（GmPrompt.display ×2 / GmPrompt.apply ×2）
+invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
+move-result v1
+if-eqz v1, :cond_d          # 非空→跳走，空→return，完全反了
+```
+
+| 位置 | 后果 |
+|---|---|
+| `display()` ×2 | 用户/服务端 JSON **非空时被跳过** → 编辑框**显示空** |
+| `apply()` ×2 | 用户 JSON **非空时直接返回 false** → 保存永远判定失败 |
+
+**对策（重要）**：抽成语义化方法，杜绝在 `isEmpty()` 语境下裸写分支。
+
+```smali
+.method static ok(Ljava/lang/String;)Z      # 非 null 且非空
+```
+调用处变成 `if-eqz v1, :next` / `if-nez v1, :next` 两种简单形态，不再需要脑内取反。
+
+另修 `GmPromptDialog.save()` 两条 toast 的判断反向（`apply()==true` 反而弹失败）。
+
+### 13.2 服务端真实值（`ds_raw.txt` 提取）
+
+8 项：`id 9~12`（image：这是什么 / 分析一下 / 怎么办 / **解释一下**）
++ `id 13~16`（file：分析一下 / 答案是什么 / 总结 / **解释一下**）。
+旧 `DEF` 只有 6 项，**漏了 id 12 与 id 16**，已补齐。
+
+### 13.3 表格化 UI
+
+```
+┌──────────────────────────────────────────┐
+│ 文件快捷选项                               │
+│ ┌──────────────────────────────────────┐ │
+│ │ ID      │ 场景     │ 内容             │ │  ← 表头
+│ │ [ 9   ] │ [image ] │ [这是什么      ] │ │  ← 每格一个 EditText
+│ │ [ 10  ] │ [image ] │ [分析一下      ] │ │
+│ │ …（ScrollView，210dp）                 │ │
+│ └──────────────────────────────────────┘ │
+│           [ ＋ 添加一行 ]                  │
+│    [ 保存 ]  [ 恢复默认 ]  [ 返回 ]         │
+└──────────────────────────────────────────┘
+```
+
+- 行容器 `LinearLayout` 存于 `sBox`；三个 `ArrayList` 分别存 id/scene/content 的 `EditText`
+- **清空「内容」= 删除该行**（保存时自动丢弃）
+- ＋添加一行：`id = 当前最大 + 1`
+- JSON 解析/构建全部改用 **`org/json`**（不再是字符串拼接）→ `content` 里可安全包含 `]`、`}`、引号
+
+### 13.4 教训升级（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 12 | **`isEmpty()` 的布尔分支是全项目最高发的坑**（已出现 4 次：1.6.1 保存、2.3.2 保存、2.4.0 弹窗、2.4.1 display/apply）。**对策：一律抽成 `ok(String)Z` 之类的语义化方法，不在调用处内联取反。** |
+| 13 | 手写 smali 做 JSON 处理**优先用 `org/json` 而不是字符串 indexOf/substring**，既少写代码又天然免疫分隔符冲突 |
+
+### 13.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.4.1.apk
+versionCode 57 / versionName 2.4.1
+size            : 46065 bytes
+sha256(partial) : 0f3f4e71c30e2f7b53d06a6712e56e99779f2648af3f613ecc9aedc8e310b76c
+signed          : V1 + V2 + V3
+changedClassCount : 4（GmPrompt / GmPromptDialog / GmClick）
+```
+
+---
+
+## 十四、2.4.2 —— 去掉「按钮版」+ 聊天「模型切换」（2026-09-12）
+
+> 详细报告见 `2.4.2-模型切换开关.md`。
+
+### 14.1 UI 调整
+
+- `GmBeautyDialog`：「文件快捷选项（按钮版）」按钮**已删除**，只保留「文件快捷选项 ›」文字行
+  （顺手清掉一处 `new GmClick(0x11)` **死代码**）
+
+### 14.2 `switchable` 逆向结论
+
+`kv_remote_settings_model_configs_v1` 里每个模型对象都带 `switchable` 布尔值：
+
+| model_type | name | enabled | switchable |
+|---|---|---|---|
+| `default` | 快速模式 | true | **true** |
+| `expert` | 专家模式 | false | **false** |
+| `vision` | 识图模式 | false | **false** |
+
+`switchable` = **该模型能否被切换过去**。服务端只放开了「快速模式」，
+所以会话里切不到专家 / 识图。
+
+### 14.3 第 3 批同族 bug：`GmStore.bak / restore` 反向 ×3
+
+```smali
+invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
+move-result v1
+if-eqz v1, :cond_31     # ❌ 非空就跳走 → 备份永远存不下来
+```
+
+| 位置 | 后果 |
+|---|---|
+| `bak()` ×2 | **备份从未成功过** → 2.3.2 上线的「备份还原」形同虚设 |
+| `restore()` ×1 | 有备份时不还原，反而 `remove(key)` 把键删掉 |
+
+**连带影响**：`GmPrompt.apply()` 和「灰度项保存」都调 `bak()`，
+它们的「恢复默认」实际是**删掉整个键**（回落默认值），并非还原原值。2.4.2 一并修复。
+
+### 14.4 新功能：聊天 › 模型切换
+
+```
+管理器 → 菜单页 → 聊天
+   ├── [●] 防撤回
+   ├── [●] 模型切换        ← 🆕
+   ├── 本地数据库管理 ›
+   └── [返回]
+```
+
+| 操作 | 行为 |
+|---|---|
+| 打开 | 备份原 `model_configs` → 全部 `"switchable":false` → `true` → 写回；toast 提示（需重启 App） |
+| 关闭 | 有备份 → 还原原始值；无备份 → 全部 `true` → `false` |
+| 找不到配置 | 失败并提示先在 App 内打开一次设置页 |
+
+**新增类**
+
+| 类 | 职责 |
+|---|---|
+| `GmModel` | `MK`/`KEY`/`TRUE`/`FALSE` + `isOn` / `setOn` / `hasBak`；补丁用 `String.replace` |
+| `GmModelSwitch` | `OnCheckedChangeListener`，仿 `GmSwitch` |
+
+### 14.5 教训升级（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 14 | **`isEmpty()` 反向判断已累计 9 处**（1.6.1 / 2.3.2 / 2.4.0 / 2.4.1×4 / 2.4.2×3）。**这已经不是偶发失误，而是本项目的系统性缺陷模式**——手写 smali 时 `if-eqz` 与 `if-nez` 在「判空」语境下极易搞反。**铁律：一律抽成 `ok(String)Z` 之类语义化方法，禁止内联取反。** |
+| 15 | 新功能依赖既有工具方法时，**先把那个工具方法读一遍确认它是好的**。本次若不检查 `GmStore.bak`，新功能会「看起来很合理但永远不生效」 |
+
+### 14.6 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.4.2.apk
+versionCode 58 / versionName 2.4.2
+size            : 46065 bytes
+sha256(partial) : 0d01e7e46990bbc9e9b5de0e00d15357e43c9a0d7b9ef39dd6f9e31cd169748b
+signed          : V1 + V2 + V3
+classes         : 43（41 + GmModel + GmModelSwitch）
+changedClassCount : 8
+```
+
+### 14.7 遗留 / 可能下一步
+
+- 若开了开关仍**切不到**专家/识图 → 说明真正闸门是 `enabled` 字段（服务端对 expert/vision 也是 `false`），可再做一版一并放开
+- 可在聊天页把「模型切换」也做成带当前状态回显的副标题（如「已启用/已禁用」）
+
+---
+
+## 十五、2.4.3 —— 美化 › 招呼用语自定义（2026-09-12）
+
+> 详细报告见 `2.4.3-招呼用语自定义.md`。
+
+### 15.1 `welcome_msg` 逆向结论
+
+服务端**随机下发**（不一定每次都有）。结构：
+
+```json
+welcome_msg
+{"id":1336349584,"value":{
+  "messages":[{"id":0,"text":"你好，我能帮什么忙吗？"}, … 共 12 条 …],
+  "time_config":[{"start":360,"end":660,"use":[0..9]},
+                 {"start":780,"end":1050,"use":[0,1,2,3,4,5,10]},
+                 {"start":1050,"end":1320,"use":[0,1,2,3,4,5,11]}],
+  "fallback_message":[0,1,2,3,4,5]
+}}
+```
+
+| 字段 | 含义 |
+|---|---|
+| `messages[]` | 招呼语池：`id` + `text` |
+| `time_config[]` | 按时段选用的 id 列表（`start`/`end` = 从 0 点起的分钟数，360=06:00 / 660=11:00 / 780=13:00 / 1050=17:30 / 1320=22:00） |
+| `fallback_message` | 兜底时段用的 id 列表 |
+
+> ⚠️ `model_configs` 里每个模型对象也有个 **同名但不同义** 的 `welcome_msg`
+> （如 `"welcome_msg":"使用快速模式开始对话"` = 模型描述文案）。别混淆。
+
+### 15.2 本地键名：三级自动定位（本次最不确定的点）
+
+`welcome_msg` **不在**此前的 54 键下发快照里，本地键名无实证。对策：
+
+```
+1. 候选键试探：kv_remote_settings_welcome_msg / _v1 / welcome_msg / kv_welcome_msg
+2. 全量 MMKV 扫描：allKeys()+getAll()，找值里含 "time_config" 的键
+3. 兜底：kv_remote_settings_welcome_msg
+```
+
+对话框副标题**直接显示实际用到的键名**，一眼就能核对。
+
+### 15.3 新功能
+
+```
+管理器 → 菜单页 → 美化
+   ├── [●] 修改助手图片
+   ├── [选择图片]
+   ├── 文件快捷选项 ›
+   ├── 招呼用语 ›          ← 🆕
+   ├── ——————————
+   └── [返回]
+```
+
+表格：**ID │ 招呼语**，可改文字、可「＋添加一行」、清空「招呼语」即删除该条。
+
+**保存时的引用一致性修复**（`GmHello.fix()`）—— 因为 `use` / `fallback_message` 存的是消息 id：
+
+| 情况 | 处理 |
+|---|---|
+| 删除（清空文字） | 该 id 从 `messages` 移除，并从每个 `use` 与 `fallback_message` **剔除** |
+| 新增（＋添加一行） | 新 id **追加到每个 `use` 与 `fallback_message`**，保证在所有时段都能出现 |
+
+### 15.4 新增类
+
+| 类 | 职责 |
+|---|---|
+| `GmHello` | 三级键定位 + `items`/`build`/`fix`/`flt` + `get`/`put`/`display`/`apply`/`restore` |
+| `GmHelloDialog` | **ID │ 招呼语** 两列表格 UI（复刻 `GmPromptDialog` 结构，少一列） |
+
+`GmClick` 新增动作：`0x16` open / `0x17` save / `0x18` reset / `0x19` close / `0x1a` add。
+
+### 15.5 教训 / 备忘
+
+| # | 内容 |
+|---|---|
+| 16 | **服务端下发是"随机"的** —— 某个键这次没有不代表以后没有。凡是依赖下发数据的功能，**键名不能写死，要做探测 + 兜底**，并把「实际用到的键」显示出来方便核对 |
+| 17 | 碰到「A 里有字段 X，B 里也有字段 X 但含义不同」时，**先在文档里写明区别**，否则下次自己都会被绕进去（本次 `welcome_msg` 就是典型） |
+
+### 15.6 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.4.3.apk
+versionCode 59 / versionName 2.4.3
+size            : 46065 bytes
+sha256(partial) : f66ae17ba951c828ce969133a3bf7a9be8afc7f7f9635cb1872d3267a2ab785f
+signed          : V1 + V2 + V3
+classes         : 45（41 + GmModel + GmModelSwitch + GmHello + GmHelloDialog）
+changedClassCount : 10
+```
+
+---
+
+## 十六、2.4.4 —— 修复 `GmHello` 的 VerifyError（2026-09-12）
+
+### 16.1 崩溃
+
+```
+VerifyError: Verifier rejected class ...GmHello:
+  build(java.util.List) failed to verify:
+  [0x16] tried to get class from non-reference register v9 (type=Conflict)
+    at GmHelloDialog.open → GmClick.onClick
+```
+
+### 16.2 根因：**参数寄存器被当局部变量**
+
+```smali
+.method public static build(Ljava/util/List;)Ljava/lang/String;
+    .registers 10          # ❌ 1 个参数 → p0 = v9（最后一个寄存器）
+    ...
+    move-result v9         # ❌ 把参数 p0 覆盖成 int
+    ...
+    invoke-interface {p0}, Ljava/util/List;->size()I    # p0 已是 int → Conflict
+```
+
+**静态方法带 N 个参数时，参数占用「最后 N 个寄存器」：`p0 = v[.registers - N]`。**
+
+### 16.3 修复
+
+`.registers 10` → `.registers 11`（p0 变成 v10，v0..v9 全部可作局部变量）。
+
+修复后**逐个核对了 4 个新类共 30+ 个方法的 `.registers` 与最高使用寄存器**，仅此一处越界。
+
+### 16.4 教训升级（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 18 | **写新方法先算 `p0` 落点**：`p0 = v[.registers - 参数个数]`。**实例方法的 `this` 也算一个参数！** 然后再分配局部变量，二者绝不重叠 |
+| 19 | **构建检查抓不到这类错误** —— `edit_check` / `build` 只验汇编合法性（标签、寄存器越界），**不做 Dalvik/ART 类型验证**。修完 `VerifyError` 类问题后，必须**人工核对 `p0` 位置**，不能只靠 build passed |
+| 20 | `Verifier rejected class` = **整个类被拒**，表现是"一碰就崩"而不是"某方法慢"。看到就直接查寄存器类型冲突 |
+
+> 📌 这条坑在第六节 6.1 已经记过（"寄存器越界"），但这次犯的是**变体**：
+> 不是"越界"，而是"**参数寄存器与局部变量寄存器重叠**"。
+> 越界会被汇编器拦下，**重叠不会** —— 所以更隐蔽，只能靠人工算。
+
+### 16.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.4.4.apk
+versionCode 60 / versionName 2.4.4
+sha256(partial) : e7ce3d35c4264b4e5eb8d98b42a71f8644d89e2fb14a06b9649c3c945ce4fbae
+signed          : V1 + V2 + V3
+classes         : 45
+```
+
+---
+
+## 十七、2.4.5 —— 服务端下发后自动重应用（2026-09-12）
+
+> 详细报告见 `2.4.5-下发覆盖自动重应用.md`。
+> **本次首次成功打开本体 APK（`DeepSeek2_2.4.5.apk`，12915 个类）做实证**，
+> 不再靠推测 —— 这是本项目的又一个能力跃迁。
+
+### 17.1 问题
+
+用户反馈：招呼语保存后**只生效一次**，之后被服务端重新下发替换；但模块里存的用户文本还在。
+
+**根因**：模块走「改写 MMKV 落地层」方案，而 `kv_remote_settings_*` 就是服务端设置的落地层，
+**下次拉设置会被整个覆盖**。（这条风险其实早在 2.3.2 的文档里就写明了。）
+
+### 17.2 本体实证（关键突破）
+
+| 结论 | 证据 |
+|---|---|
+| `welcome_msg` 的本地值键 = **`kv_remote_settings_welcome_msg`** | `Laz5;` 的字符串常量（另有 `kv_remote_settings_id_welcome_msg`） |
+| 下发应用点用 `{id,value}` 信封，拆成「值键 + id 键」落 MMKV | `Luv1;->u` 开头：`v8="kv_remote_settings_…"`、`v14="kv_remote_settings_id_…"`、`value = v7.get("value")` |
+| `Luv1` 内部有 `ConcurrentHashMap` 缓存（`u()` 里会 `cache.put`） | 同处 |
+
+→ 之前 `GmHello.find()` 的首候选猜对了，能立即命中，不会退化到全量 MMKV 扫描。
+
+### 17.3 方案：hook 下发应用点 → 推送后重应用
+
+```
+服务端推送 → Luv1;->u / Laz5;->h（逐项落 MMKV）
+                ↓ afterHookedMethod
+          GmSync.reapplyAll()
+                ├── GmPrompt.reapply()  提示词快捷项
+                ├── GmHello.reapply()   招呼用语
+                └── GmModel.reapply()   模型切换
+```
+
+**「先比后写」是核心**：用户覆盖为空 → 跳过；当前值已等于要写的值 → 跳过。
+因此即便 `uv1.u` 一次下发被调用几十次，也只有第一次真正写 MMKV。
+而且无论我们的键在推送序列的哪个位置，覆盖后都会再被 hook 触发一次 → 最终一定是自定义值。
+
+**双保险**：`GmSyncHook`（主路径）+ `GmResumeHook` onResume（兜底，防止推送早于 Activity）。
+
+### 17.4 新增 / 改动
+
+| 类 | 说明 |
+|---|---|
+| **新增 `GmSync`** | `ensure(Context)`（只装一次 hook）+ `reapplyAll()` |
+| **新增 `GmSyncHook`** | `extends XC_MethodHook`，`afterHookedMethod` → `GmSync.reapplyAll()` |
+| `GmPrompt` / `GmHello` / `GmModel` | 各新增 `reapply(Context)Z` |
+| `GmResumeHook` | onResume 里加 `GmSync.ensure()` + `GmSync.reapplyAll()` |
+
+```
+changedClassCount : 13（含 2 个新增类）
+classes           : 45 → 47
+```
+
+### 17.5 教训 / 备忘
+
+| # | 内容 |
+|---|---|
+| 21 | **"目标 App 的 APK 能打开"是本项目最被低估的能力** —— 前 2.4.3 一路靠推测键名，一打开本体 5 分钟就实锤了。**凡是涉及目标 App 行为的判断，先去本体里找证据，别猜** |
+| 22 | 新增依赖 `uv1` / `az5` 这类**混淆类名**的 hook 时，要**先确认模块已有代码里用过**（`GmDsHook` 已在用），否则 App 一更新就静默失效。同时日志里补一句 `xxx hooks ensured` 便于排查 |
+| 23 | 「先比后写」是**幂等重应用**的通用做法：让"重复执行"变成零成本，就不必再费心做去抖/节流 |
+
+### 17.6 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.4.5.apk
+versionCode 61 / versionName 2.4.5
+size            : 46065 bytes
+sha256(partial) : 7be692b10a22cae9c3ffdf5662fe93c6482dd943e91ad85c276679ebb9536ba8
+signed          : V1 + V2 + V3
+classes         : 47（45 + GmSync + GmSyncHook）
+```
+
+---
+
+## 十八、2.4.6 —— 修复 `GmPrompt.reapply` / `GmModel.reapply` 的 VerifyError（2026-09-12）
+
+> **同类错误第二次**（见第十六节 16.2），必须升级为硬规则。
+
+### 18.1 崩溃
+
+```
+VerifyError: Verifier rejected class ...GmPrompt:
+  reapply(android.content.Context):
+  [0x1E] register v4 has type Precise Reference: java.lang.String
+         but expected Reference: android.content.Context
+    at GmSync.reapplyAll → GmResumeHook.afterHookedMethod
+```
+
+**连带**：`GmPrompt` 整类被拒 ⇒ **所有引用它的功能全废** ——
+「文件快捷选项」点了没反应（异常被 `GmClick` 的 try/catch 静默吞掉）。
+
+### 18.2 根因（与 16.2 完全同型）
+
+```smali
+.method public static reapply(Landroid/content/Context;)Z
+    .registers 5            # ❌ 1 个参数 → p0 = v4
+    const-string v4, "s"    # ❌ 覆盖了 Context 参数
+```
+
+`GmModel.reapply` 同样（`.registers 6` ⇒ p0 = v5，却被 `const-string v5` 覆盖）。
+
+### 18.3 ⭐ 铁律（写进流程，不再靠"记得"）
+
+```
+.registers = 局部寄存器个数 + 参数寄存器个数
+局部只允许用 v0 .. v(局部个数-1)
+```
+
+- 参数寄存器个数 = 形参个数 +（实例方法 ? 1，`this` 也算）；`long`/`double` 各占 2
+- ⇒ `p0` 恒为 `v[局部个数]`，**永不与局部重叠**
+- **自检公式**：`最高用到的 vN < .registers − 参数寄存器个数`
+
+| 方法 | 最高 vN | .registers | 参数寄存器 | 判定 |
+|---|---|---|---|---|
+| `GmPrompt.reapply` | v4 | 6 | 1 | 4 < 5 ✅ |
+| `GmModel.reapply` | v5 | 7 | 1 | 5 < 6 ✅ |
+| `GmHello.reapply` | v3 | 5 | 1 | 3 < 4 ✅ |
+| `GmSync.ensure` | v3 | 5 | 1 | 3 < 4 ✅ |
+
+### 18.4 教训升级（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 24 | **`const-string vN` 是最容易踩的参数覆盖点** —— 因为"临时塞个字符串"看起来无害。写带参数的方法时，**先把 `.registers` 按「局部个数 + 参数个数」算好，再动笔**，不要事后补 |
+| 25 | **一个类的 VerifyError 会连坐整个模块**：本类 + 所有引用它的功能同时失效，并可能表现为"点击无反应"（被别处的 try/catch 吞掉）而不是崩溃。**排查"点击无反应"时，第一反应应是查 VerifyError** |
+| 26 | 在整个模块里，**这是第 2 次同类事故**（16.2 / 18.2）。凡是"第二次犯"的错误，必须转成**可机械执行的检查公式**，而不是"下次注意" |
+
+### 18.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.4.6.apk
+versionCode 62 / versionName 2.4.6
+sha256(partial) : bd27c6be7fda306508cf4b4f145e3a6b58e7c71c42ff84895b390de210d09e79
+signed          : V1 + V2 + V3
+classes         : 47
+```
+
+---
+
+## 十九、2.4.7 —— 修「模型切换」提示消息反向（2026-09-12）
+
+### 19.1 现象 & 真相
+
+用户：开启「模型切换」后提示「修改失败：未找到模型配置」。
+
+**真相：消息判断反了，开关其实执行成功了。**
+
+```smali
+    invoke-static {v0, p2}, GmModel;->setOn(Context;Z)Z
+    move-result v1
+    if-eqz v1, :ok          # ❌ v1==0（失败）反而跳进「成功分支」
+```
+
+| `setOn` 结果 | 旧版显示 |
+|---|---|
+| 成功（1） | ❌「修改失败：未找到模型配置」 |
+| 失败（0） | ❌「模型切换已启用」 |
+
+**副产品**：用户这句报告反而**反证了 `kv_remote_settings_model_configs_v1` 确实存在且有值** ——
+不用再去写「键名自动探测」那套兜底了。（差一点就白写 300 行。）
+
+### 19.2 修复
+
+`if-eqz v1, :ok` → `if-nez v1, :ok`。
+
+顺带复核了同类消息判断：`GmPromptDialog.save()`（`if-eqz v3, :fail`）、`GmHelloDialog.save()`（无判断）都对。
+
+### 19.3 教训升级（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 27 | **`isEmpty` 家族的第 10 次变体** —— 这次是「**返回值布尔判断**」反向。**凡是要对方法返回值做分支，先把语义写成一句话**：`setOn(...) == true` ⇒ 成功 ⇒ 走成功分支。写完立刻回头看这条链，**别在 smali 里直接对着 `if-eqz/if-nez` 想**。 |
+| 28 | **用户的描述里藏着证据**："提示找不到配置" 说明它**找到了**（因为消息是反的）。**收到 bug 报告时，先怀疑"我们自己的提示是否可信"，再去怀疑外部条件** —— 这次差点为此写 300 行无用的兜底代码。 |
+| 29 | 反向判断在本项目已累计 **10 处**（1.6.1 / 2.3.2 / 2.4.0 / 2.4.1×4 / 2.4.2×3 / 2.4.7）。**建议后续把「判断 + 消息」成对写成小方法**（如 `GmUtil.toastOk(ctx, ok, 成功文案, 失败文案)`），从结构上消除出错机会。 |
+
+### 19.4 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.4.7.apk
+versionCode 63 / versionName 2.4.7
+sha256(partial) : 463c1983a0381fa43d28b4f636d59af9a298fcd67310e81490802a523b7ee426
+signed          : V1 + V2 + V3
+classes         : 47
+```
+
+---
+
+## 二十、2.4.8 —— 在 MMKV 写入那一刻拦截服务端覆盖（2026-09-12）
+
+> 详细报告见 `2.4.8-MMKV写入拦截.md`。
+
+### 20.1 为什么 2.4.5 的「事后重应用」不够
+
+2.4.5 是「下发落地**之后**再把 MMKV 改回来」—— **改晚了**：
+App 在下发过程中已经写入 MMKV 并派生出内存状态，重启后用户看到的仍是服务端行为。
+
+### 20.2 本体实证：MMKV 方法名映射（搜 `Lcom/tencent/mmkv/MMKV;->` 调用点）
+
+| 混淆名 | 含义 |
+|---|---|
+| `k()Lcom/tencent/mmkv/MMKV;` | defaultMMKV()（**印证**模块用的 `"k"` 是对的 ✅） |
+| **`p(String,String)Z`** | **写 String** ← 关键拦截点 |
+| `c(String,Z)Z` | 写 boolean |
+| `m(ILjava/lang/String;)V` / `n(JLjava/lang/String;)V` | 写 int / long |
+| `u(String)V` | remove |
+| `i(String)String` / `j(String,String)String` | 读 String（无默认 / 带默认） |
+
+`Laz5` 里正是用 `mmkv.p(key, value)` 写入下发值。
+
+### 20.3 方案：写入拦截（服务端的值**从未落盘**）
+
+```
+服务端推送 → Luv1.u → mmkv.p(key, serverValue)
+                            ↑ 在这里替换（GmMmkvHook.beforeHookedMethod）
+                          ├── kv_remote_settings_model_configs_v1
+                          │     ├── 模型切换开 → "switchable":false → true
+                          │     └── 有 prompt_feature 覆盖 → patch 进去
+                          └── kv_remote_settings_welcome_msg
+                                └── 有覆盖 → 整值替换为用户 JSON
+```
+
+**优势**：MMKV 与一切从 MMKV 读出的派生状态，拿到的都是我们的值。
+（`Laz5` 大量用 `i()/j()` 读 MMKV，说明取值路径走 MMKV。）
+
+**幂等性**：模块自己写这两个键也过这个 hook，但补丁幂等，无副作用。
+
+### 20.4 新增 / 改动
+
+| 类 | 说明 |
+|---|---|
+| **新增 `GmMmkvHook`** | 只处理 `(String,String)` 两参调用；命中两个键则替换 `args[1]` |
+| `GmSync` | `ensure()` 加挂 MMKV 的 `p`；新增 `ctx()`（`GmEntry.sAct` → `AndroidAppHelper.currentApplication()` 双保险）；`reapplyAll` 改用 `ctx()` |
+
+```
+changedClassCount : 14（含 1 个新增类）
+classes           : 47 → 48
+```
+
+### 20.5 教训 / 备忘
+
+| # | 内容 |
+|---|---|
+| 30 | **「事后修补」永远比不上「写入时拦截」** —— 只要数据是 App 从别处写进来的，就应该在**写入点**拦截，否则内存派生状态一定拿到旧值 |
+| 31 | **搜「调用点」比搜「定义」更有用**：`Lcom/tencent/mmkv/MMKV;->` 一次搜索就同时拿到了 defaultMMKV 的混淆名、putString 的混淆名、读方法名 —— 而这些在类定义里是看不出来的 |
+| 32 | 混淆方法名会随 App 升级而变。凡是依赖混淆名的 hook，**日志里必须留一句安装成功的标记**（本次 `sync hooks ensured`），否则失效时无从判断 |
+
+### 20.6 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.4.8.apk
+versionCode 64 / versionName 2.4.8
+sha256(partial) : 7aa5045c8a02ca7d560946ac9e2c5cf490969834a93eddc8bb191e69a9cc2557
+signed          : V1 + V2 + V3
+classes         : 48
+```
+
+---
+
+## 二十一、2.5.0 —— 美化 › 修改背景（2026-09-12）
+
+> 详细报告见 `2.5.0-修改背景.md`。
+
+### 21.1 为什么不做「真·底图」（技术约束实证）
+
+| 事实 | 证据 |
+|---|---|
+| 主 Activity = `com.deepseek.chat.MainActivity` | AndroidManifest |
+| 主题 `Theme.DeepSeek` 的 `windowBackground` 只是启动闪屏色 | `resource:0x7f100110` → `@color/splashscreenBackground` |
+| 页面底色由 Compose 自己绘制 | `onCreate` 里 `Ly03;->a(Lds;Lxr8;)`（setContent） |
+| **Compose 类被 R8 完全混淆** | `painterResource` = `Li65;` |
+
+⇒ `DecorView` 背景会被 Compose 盖住；要真底图必须透明化 Compose 的页面底色，
+而 Theme/ColorScheme 类名已混淆、需额外逆向 ⇒ **有失败风险**。
+
+**⇒ 用户拍板选「蒙层式」**（半透明图片/渐变叠在 App 上层，透明度可调）。
+
+### 21.2 功能
+
+```
+美化
+ ├── 修改助手图片
+ ├── 文件快捷选项 ›
+ ├── 招呼用语 ›
+ ├── 修改背景 ›          ← 🆕
+ └── [返回]
+```
+
+对话框：开关 / [图片][渐变][选择图片] / 渐变样式 ‹1/4› / 透明度 −25%＋ / 返回。
+4 套渐变预设：极光、晚霞、薄荷、暖阳。
+
+### 21.3 实现要点
+
+| 类 | 作用 |
+|---|---|
+| `GmBg` | 数据层 + `ensure()`（挂载/摘除 + **签名去重**） |
+| `GmBgView` | 自定义 View：图片 center-crop / 渐变；`uptimeMillis` 算相位 + `postInvalidateOnAnimation()` **自驱动动画**（不用 ValueAnimator） |
+| `GmBgSwitch` / `GmBgDialog` | 监听器 / 设置界面 |
+
+- 渐变数组 `[c0,c1,c2,c3,c0]` + 跨度 `2×width` + 平移 `1×width` ⇒ **无缝循环**
+- 叠在 **DecorView（FrameLayout）** 上，`LayoutParams(-1,-1)`
+- **触摸穿透**：不设 clickable → `onTouchEvent` 返回 false → 事件下传 ✓
+- 与模块对话框不冲突：Dialog 是独立 Window，始终在最上 ✓
+- 选图复用 `GmPickHook`：**先问 `GmBg.takePicking()`，再问 `GmAvatar.takePicking()`**，两者互不干扰
+
+```
+新增类 : GmBg / GmBgView / GmBgSwitch / GmBgDialog
+修改   : GmClick(+0x1b~0x23) / GmBeautyDialog / GmPickHook / GmResumeHook
+classes           : 48 → 52
+```
+
+### 21.4 教训 / 备忘
+
+| # | 内容 |
+|---|---|
+| 33 | **Compose 应用做「背景/主题级」改动，先确认页面底色是谁画的**。`windowBackground` 存在 ≠ Compose 会用它；本例里它只是闪屏色。想少走弯路就先读主 Activity 的 `onCreate` + 主题资源 |
+| 34 | 手写 smali 时 **`invoke-*` 非 range 形式最多 5 个寄存器**。`Canvas.drawRect(FFFFLandroid/graphics/Paint;)V` 要 6 个 → 必须把对象和参数摆到连续寄存器用 `invoke-*/range`（这是本次唯一一次编译失败） |
+| 35 | **自驱动动画（`onDraw` + `postInvalidateOnAnimation`）比 `ValueAnimator` 好写得多**：没有监听器类、没有生命周期管理，一个 `SystemClock.uptimeMillis()` 就够了 |
+
+### 21.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.5.0.apk
+versionCode 65 / versionName 2.5.0
+size            : 50161 bytes
+sha256(partial) : b05cf268442ab78dc9bfe3438170a081aa5ff80a2b5cebddf74888f4687add0e
+signed          : V1 + V2 + V3
+classes         : 52
+```
+
+---
+
+## 二十二、2.5.1 —— 修「没有效果」+ 底图位置（2026-09-12）
+
+### 22.1 「没有效果」的真因：**反向判断第 11 次** ⚠️
+
+```smali
+sget-object v0, ...GmEntry;->sAct:Landroid/app/Activity;
+if-nez v0, :ret        # ❌ 本意「没 Activity 就返回」，写成「有 Activity 就返回」
+```
+
+⇒ `GmBg.ensure()` **一次都没执行过**，背景从未挂载。改为 `if-eqz` 即修复。
+
+**这不是方案问题，是实现 bug。**
+
+### 22.2 新增「位置」开关
+
+| 值 | 含义 | 实现 |
+|---|---|---|
+| `0` | 蒙层（盖在内容上层） | `addView(view, params)` |
+| `1` | **底图（在内容后面）** ← 默认 | `addView(view, 0, params)` |
+
+UI 签名扩充：`pos*10000000 + mode*1000000 + grad*10000 + alpha*10 + hasImage`。
+对话框新增一行 `[蒙层（盖在上层）][底图（在内容后面）]`（动作 `0x24` / `0x25`）。
+
+### 22.3 美化页入口加 WIP
+
+`修改背景 ›` → **`修改背景（WIP）›`**
+
+### 22.4 教训升级（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 36 | **`isEmpty`/空值判断家族第 11 次**。这次是 `sAct == null` 检查写反。**对策：`if-*z` 写完立刻用中文把语义读一遍** ——「如果 Activity 存在就返回」一听就不对。凡是"守卫语句"（guard clause）都值得单独复核 |
+| 37 | 「用户说没效果」时，**先查守卫语句**。所有 hook / 挂载逻辑都以 `if (xxx == null) return` 开头，这类前置判断写反 = 功能整体静默失效，且没有任何日志 |
+
+### 22.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.5.1.apk
+versionCode 66 / versionName 2.5.1
+sha256(partial) : df834d9f9acdd84dd684ca4467743e9b518e8a0b4eec275440a899c342737347
+signed          : V1 + V2 + V3
+classes         : 52
+```
+
+---
+
+## 二十三、2.5.2 —— 修 `GmBg.ensure` 的 NPE（2026-09-12）
+
+### 23.1 崩溃
+
+```
+NPE: Attempt to invoke virtual method 'ViewParent android.view.View.getParent()'
+     on a null object reference
+  at GmBg.ensure(Unknown Source:77)
+  at GmBgDialog.setPosBehind → GmClick.onClick
+```
+
+### 23.2 根因：同一段里**两处 `if-*z` 写反**
+
+```smali
+if-nez v2, :mk          # ❌ 应为「v2 == null → 去重建」，写成了「v2 != null 才跳走」
+invoke-virtual {v2}, View;->getParent()    # ← v2 为 null 时直接 NPE
+...
+if-nez v4, :mk          # ❌ 应为「getParent() == null → 重建」
+```
+
+修复：两处都改成 `if-eqz`。
+
+### 23.3 为什么 2.5.0 没崩、2.5.1 才崩 —— **多个 bug 互相掩盖**
+
+2.5.0 的 `ensure()` 开头 `sAct` 守卫写反 ⇒ **整个方法从不执行**，把这两处挡在后面。
+修掉第一个（2.5.1）后它们才露头。
+
+> 与第十一节 11.3 的第 6 条教训完全一致：
+> **「修一个不见效，不一定是修错了，可能是后面还有」**。
+> 这次更进一步：**修掉一个，暴露下一个**。
+
+### 23.4 教训升级（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 38 | **一段代码里连续写多个 `if-*z` 时，逐个用中文读语义**。本次 `ensure` 里 9 个守卫全要复核一遍才对；只读"可疑的那一个"会漏。**建议：把守卫集中的方法整体重读，而不是只盯报错那一行** |
+| 39 | **修完一个"守卫写反"后，假定同方法里还有同类问题**，主动全量复核（本次就是这么找齐两处的） |
+| 40 | 崩溃行号（`Unknown Source:77`）对应的是 dex 指令序号而非源码行，**不能直接用来定位**；正确做法是**把整个方法读出来逐条核对语义**（本次就是这样定位的） |
+
+### 23.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.5.2.apk
+versionCode 67 / versionName 2.5.2
+sha256(partial) : 9a906ccae8f80e5e1d9f06fd4a65c3e6aa9516719655a464758a6bff141ebf06
+signed          : V1 + V2 + V3
+classes         : 52
+```
+
+---
+
+## 二十四、2.5.3 —— 真底图：透明化 Compose 页面底色（2026-09-12）
+
+### 24.1 用户反馈与结论
+
+> 蒙层有效、底图无效、无报错。
+
+⇒ **我们的渲染正常**，是 **App 的 Compose 页面底色不透明**，把 index 0 的底图盖住了。
+要真底图，必须把 Compose 的页面底色透明化。
+
+### 24.2 ⭐ 找到混淆后的 `ColorScheme`：`Laz1;`
+
+**方法**：`ColorScheme` 是 Kotlin data class，`toString()` 里带字段名 ⇒ 用字段名反查类。
+
+| 搜索串（dex_strings） | 命中 |
+|---|---|
+| `ColorScheme(primary=` | `Laz1;` |
+| `surfaceContainerHighest=` | `Laz1;` |
+
+**结构印证**：
+- **48 个 `J`(long) 字段** = 48 个颜色角色（每个 Compose `Color` 在字节码里是 `long`），与 Material3 1.3 的 48 个角色**完全吻合**
+- `<init>(JJJJ…×48)V`
+- `toString()` 里 48 个字段名字符串
+
+**参数索引**（按 Material3 声明顺序）：`args[13] = background`、`args[15] = surface`。
+
+**Compose `Color.Transparent` = `0L`**（`value class Color(val value: ULong)`，`Color(0L)` 打包即 0）。
+
+### 24.3 实现
+
+新增 `GmCsHook`：`beforeHookedMethod` 里，当「背景开启 且 位置=底图」时
+把 `args[13]` / `args[15]` 置为 `Long.valueOf(0)`。
+`GmSync.ensure` 里用 `XposedBridge.hookAllConstructors(findClass("az1", cl), new GmCsHook())` 注册。
+
+> ⚠️ **构造函数不能用 `hookAllMethods`**（内部遍历 `getDeclaredMethods()`，不含 `<init>`）。
+> 这条坑第十节 10.2 已经记过，本次是复用。
+
+### 24.4 已知限制
+
+**切换「底图」后需重启 App** —— `ColorScheme` 在组合期只构造一次并缓存。
+提示文案已改为「背景已开启（图片模式）— 底图模式需重启 App 生效」。
+
+### 24.5 教训 / 备忘
+
+| # | 内容 |
+|---|---|
+| 41 | **⭐ Kotlin data class 是最好的"反混淆路标"**：`toString()` 会把**字段名以字符串常量**编进 dex。要找混淆后的某个数据类，**搜它的一个字段名 + `=`** 即可（本次 `ColorScheme(primary=` 一击命中）。 |
+| 42 | **Compose 的 `Color` 在字节码里是 `long`**，所以 `ColorScheme` 的构造函数参数表就是"一长串 `J`"。**数一下有几个 `J` 就能确认是哪个版本的 ColorScheme**（本次 48 个 ⇒ Material3 1.3）。参数顺序 = Kotlin 声明顺序 ⇒ 可以直接定位 `background`/`surface` 的索引。 |
+| 43 | **`hookAllMethods` 不覆盖构造函数** —— 这条在本项目已出现两次（第十节、本次），**应该写进"给新 hook 打地基"的检查清单**。 |
+
+### 24.6 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.5.3.apk
+versionCode 68 / versionName 2.5.3
+sha256(partial) : c88323e9a612acce5be9af1fed3173df603b4d52c4c988e2898a9b6a84db6018
+signed          : V1 + V2 + V3
+classes         : 52 → 53
+```
+
+---
+
+## 二十五、2.5.4 —— 修选图分流 + 扩大透明化范围（2026-09-12）
+
+### 25.1 「蒙层只有渐变有效」的真因：**反向判断第 12 次**
+
+```smali
+invoke-static {}, GmBg;->takePicking()Z → v0
+if-eqz v0, :bg          # ❌ v0==0（不是背景选图）反而跳去处理背景
+```
+
+⇒ **选背景图时走的是头像分支** ⇒ 图像从未保存 ⇒ 只能画渐变（模式=图片但无文件时回退渐变）。
+修复：改 `if-nez`。
+
+### 25.2 底图仍无效的推断
+
+吐司弹出 ⇒ `GmCsHook` 确实改了 `ColorScheme` 构造参数 ⇒ **但页面没透** ⇒
+**页面底色不是 `ColorScheme.background/surface`**（或整体不来自 `ColorScheme`）。
+
+**本轮实验**：把透明化扩到 surface 家族 **10 项**
+（`background` / `surface` / `surfaceVariant` / `surfaceBright` / `surfaceDim` /
+`surfaceContainer` / `…High` / `…Highest` / `…Low` / `…Lowest`，索引 13,15,17,29~35）。
+
+- 若页面变透 ⇒ 确实是 ColorScheme 驱动，之后再逐项二分
+- 若仍无效 ⇒ 页面底色另有来源，需继续追 App 的根 composable
+  （`MainActivity.onCreate` → `Ly03;->a(Lds;Lxr8;)V` = setContent；但 `Lir8;` 是 R8
+   合并出的巨型 lambda 类，1909 行 packed-switch，追起来费劲）
+
+### 25.3 教训升级（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 44 | **反向判断已 12 次，且高度集中在"分流/守卫"场景**。建议：**每写一个 `if-*z` 分支，就在旁边用中文写出"走这条路的条件"**，例如「v0 != 0 ⇒ 是背景选图 ⇒ 去 :bg」。本次如果把这句话写出来，`if-eqz` 当场就会被发现 |
+| 45 | **"改了参数但没效果" ⇒ 说明改错了对象**（不是索引错，就是这个值根本不是页面在用的）。此时不要再微调同一个点，而要**换更大的范围做一次穷举实验**来定性 |
+
+### 25.4 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.5.4.apk
+versionCode 69 / versionName 2.5.4
+sha256(partial) : 2bb84dd9952ee5c61093937143f3945d106c49c0e12730ec413ad5aa703c9841
+signed          : V1 + V2 + V3
+classes         : 53
+```
+
+---
+
+## 二十六、2.5.5 —— 改用「混合模式」做真底图（2026-09-12）
+
+### 26.1 10 项实验的结论：**ColorScheme 不是答案**
+
+把 `background` + `surface` + 全部 `surfaceContainer*` 共 10 个角色改成透明后，
+**界面毫无变化** ⇒ **DeepSeek 的 UI 不使用 Material3 `ColorScheme`**（自有一套配色）；
+`az1` 只是被某些 M3 组件顺带构造的。
+
+**⇒ 继续在 ColorScheme 上纠缠没有意义，必须换路。**
+
+### 26.2 新方案：内容视图混合模式（完全不碰 Compose）
+
+把 `android.R.id.content` 的混合模式设为：
+
+| 模式 | 条件 | 效果 |
+|---|---|---|
+| `MULTIPLY` | 浅色 | 白底 × 底图 = **底图显形**；黑字 × 底图 ≈ 黑字，可读 |
+| `SCREEN` | 深色 | 近黑底 ⊕ 底图 = **底图显形**；白字 ⊕ 底图 = 白字，可读 |
+| `null` | 未开启/非底图 | 完全恢复 |
+
+`View.setBlendMode` 是 **API 29+**，用 `SDK_INT` 守卫 + try/catch。
+
+**思路要点**：不再试图把 App 弄透明，而是**让 App 的内容"混"到底图上** ——
+浅色模式下白底被底图自然取代，深色模式下黑底被底图自然取代，文字仍可读。
+
+### 26.3 教训 / 备忘
+
+| # | 内容 |
+|---|---|
+| 46 | **"改了参数但完全没反应"是最有价值的负结果**：它直接排除了一整条技术路线（ColorScheme），省下后续无数次微调。**做实验要设计成"能一次性定性"的形式**（本次：10 项一起改，而不是一个个试） |
+| 47 | 面对"对方完全遮蔽"的渲染问题，**换维度比硬刚更有效**：透明化走不通时，"混合模式"是同一目标（露出底图）的另一种实现路径，且完全不依赖对方的内部实现 |
+| 48 | 本项目已多次证明：**App 自有 UI 与 Material3 解耦**是常见形态。以后遇到 Compose 应用换肤类需求，**先确认它到底用不用 M3 的 ColorScheme**（最省的判定法：把 ColorScheme 全改透明看有没有变化） |
+
+### 26.4 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.5.5.apk
+versionCode 70 / versionName 2.5.5
+sha256(partial) : 90bf8f2eeb28b100ad407f444efed55fab94f432b8e6143851d92db49f07f256
+signed          : V1 + V2 + V3
+classes         : 53
+```
+
+---
+
+## 二十七、当前状态与遗留（2026-09-12 收工）
+
+> **本轮工作：新增「美化 › 修改背景」（图片 / 动态渐变）。**
+> 详细进度、证据、候选方案见独立文档 **`修改背景-进度与遗留.md`**。
+
+### 27.1 结论速览
+
+| 项 | 状态 |
+|---|---|
+| 蒙层模式（背景叠在 UI 上层，透明度可调） | ✅ 可用 |
+| 渐变（4 套预设 + 流动动画）、开关、透明度、位置切换 | ✅ 可用 |
+| 蒙层 + **图片**模式 | ⏳ 待验证（选图反向判断已于 2.5.4 修复） |
+| **底图（真背景）模式** | ❌ **不可见，未解决** ← 核心遗留 |
+| 2.5.5 的「混合模式」方案（`MULTIPLY`/`SCREEN`） | ⏳ 待验证 |
+
+### 27.2 核心遗留：底图模式不可见
+
+**已排除的路线（有证据，别再重复走）**：
+
+1. ~~给 `DecorView` 设背景~~ → 被内容盖住（蒙层可见 ⇒ 渲染本身没问题）
+2. ~~`ColorScheme.background`/`surface` 透明化~~ → **把 10 个 surface 角色全改透明，界面毫无变化**
+   ⇒ **DeepSeek 的 UI 不使用 Material3 `ColorScheme`**（自有一套配色）
+
+**已尝试但未验证**：`android.R.id.content` + `View.setBlendMode(MULTIPLY/SCREEN)`（2.5.5）。
+思路是**不把 App 弄透明，而是让 App 内容"混"到底图上**：白底/黑底被底图取代，文字仍可读。
+
+**下一步（按优先级）**：
+1. 验证 2.5.5 混合模式 → 有效则收工
+2. 无效 → 换层级/换 API：把混合设在 ComposeView 那层，或用 `setLayerType + Paint.setBlendMode`
+3. 仍无效 → 追 App 自己的根 composable
+   （`MainActivity.onCreate` → `Ly03;->a(Lds;Lxr8;)V` = setContent → `Lir8;` 的 1909 行巨型 lambda）
+4. 兜底 → 放弃真底图，打磨「蒙层」并去掉 WIP 标识
+
+### 27.3 本轮新增的逆向情报
+
+| 项 | 值 |
+|---|---|
+| 混淆类 `Laz1;` | = `androidx.compose.material3.ColorScheme`（48 个 `J` 字段；`args[13]=background`、`args[15]=surface`） |
+| ⭐ **反混淆技巧** | **Kotlin data class 的 `toString()` 把字段名编成字符串常量** ⇒ 搜「字段名 + `=`」即可反查混淆类 |
+| Compose `Color.Transparent` | `0L` |
+| 构造函数 hook | 不能用 `hookAllMethods`（不含 `<init>`），要用 `hookAllConstructors` |
+| 其它 | 见 `修改背景-进度与遗留.md` 第六节 |
+
+### 27.4 本轮新增的教训（补充第十一节）
+
+| # | 教训 |
+|---|---|
+| 44 | **反向判断累计 12 次**，高度集中在"分流/守卫"场景。**每写一个 `if-*z` 分支，立刻在旁边用中文写出"走这条路的条件"** |
+| 45 | **"改了参数但没效果" ⇒ 改错了对象**。此时不要再微调同一个点，而要做**能一次性定性的穷举实验**（本次 10 项齐改，一次排除整条路线） |
+| 46 | **"完全没反应的负结果"最有价值** —— 它直接砍掉一整条技术路线，省下无数次微调 |
+| 47 | **对方完全遮蔽时，换维度比硬刚有效**：透明化走不通，"混合模式"是同一目标（露出底图）的另一条路，且不依赖对方内部实现 |
+| 48 | **Kotlin data class 的 `toString()` 是最好的反混淆路标**（本项目已验证） |
+| 49 | **守卫语句（`if (x == null) return`）永远单独复核** —— 写反 = 整个功能静默失效，且无任何日志 |
+
+### 27.5 本轮版本
+
+| 版本 | 内容 |
+|---|---|
+| 2.5.0 | 新增「修改背景」（蒙层式：图片/渐变/透明度/开关） |
+| 2.5.1 | 修 `ensure` 守卫反向（功能从不执行）+ 新增「位置」开关 + 入口加 WIP |
+| 2.5.2 | 修 `ensure` 两处反向 → 点「底图」的 NPE |
+| 2.5.3 | 尝试透明化 Compose 页面底色（找到 `az1`=ColorScheme，改 background/surface） |
+| 2.5.4 | 修选图分流反向（图片模式一直失败）+ 透明化扩到 10 项做定性实验 |
+| **2.5.5** | **改走「混合模式」路线**（`MULTIPLY`/`SCREEN`），不碰 Compose |
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.5.5.apk
+versionCode 70 / versionName 2.5.5
+sha256(partial) : 90bf8f2eeb28b100ad407f444efed55fab94f432b8e6143851d92db49f07f256
+signed          : V1 + V2 + V3  ·  classes : 53
+```
+
+---
+
+## 二十八、2.6.0 —— 真底图方案 ②：把「混合」搬到自己身上（2026-09-12）
+
+### 28.1 问题回顾
+
+「底图」模式从 2.5.0 起就一直不可见。2.5.3/2.5.4 试图透明化 App 的 `ColorScheme`，
+2.5.5 改为给 App 的 `android.R.id.content` 设 `View.setBlendMode(MULTIPLY/SCREEN)` ——
+**两次都是在「求 App 配合」**：要么改它的颜色、要么改它的混合模式。
+
+### 28.2 2.6.0 的转向：混合模式设在自己的 `GmBgView` 上
+
+关键认识：**「背景可见」不一定要「背景在底层」**。
+把背景层放回**最上层**，但让它**不与内容做 alpha 叠加，而是做 `MULTIPLY/SCREEN` 混合**，
+视觉效果等价于「底图在内容后面」：
+
+| 模式 | 算法 | 浅色（白底/黑字） | 深色（近黑底/白字） |
+|---|---|---|---|
+| `MULTIPLY` | `dst × src` | 白底×图 = **图**；黑字×图 ≈ 黑字 ✅ | 黑底×图 ≈ 全黑 ❌ |
+| `SCREEN` | `1−(1−dst)(1−src)` | 白底⊕图 ≈ 全白 ❌ | 黑底⊕图 = **图**；白字⊕图 = 白字 ✅ |
+
+⇒ 浅色用 `MULTIPLY`、深色用 `SCREEN`（由 `GmUtil.isNight()` 决定）。
+
+### 28.3 为什么这次更可能成功
+
+1. **不碰 App 任何东西** —— 只改自己的 `onDraw`。
+2. **不依赖 API 29 的 `View.setBlendMode`** —— 用 `Paint.setXfermode(new PorterDuffXfermode(Mode.MULTIPLY/SCREEN))`，
+   `PorterDuff.Mode` 从 API 1 就有，minSdk 26 直接可用，不需要 SDK 守卫。
+3. **前提是「自绘视图没有被强制分层」**：`GmBgView` 的 `alpha` 始终是 1、不调
+   `setLayerType`、不在 View 级别调 `setBlendMode` ⇒ RenderNode `hasLayer() == false`
+   ⇒ 它的 `onDraw` 是在**同一个窗口画布**上、**在内容之后**执行的，
+   `MULTIPLY` 的 dst 就是刚画好的内容，混合天然成立。
+   （**注意**：若给这个 View 设了 view 级 alpha / blendMode / layer，就会被隔离成独立图层，
+   `onDraw` 里的混合会对着透明底做，反而失效 —— 这是本方案唯一的大坑。）
+
+### 28.4 代码改动（4 个类）
+
+| 类 | 改动 |
+|---|---|
+| `GmBgView` | 新增实例字段 `h:I`（0/1/2）；新增 `setBlend(I)V`；`onDraw` 在 `setAlpha` 之后按 `h` 设 `Xfermode` |
+| `GmBg` | `ensure()` 挂载分支重写为三分支：`pos==0` 蒙层(上层) / `pos==1` 底图(index 0) / `pos==2` 混合(上层+Xfermode) |
+| `GmBgDialog` | 新增 `setPosMix()`；第三个按钮「混合（真背景）」(动作 `0x26`)；副标题文案更新 |
+| `GmClick` | 新增 `0x26` 分支 |
+
+**关键 smali 片段**（`GmBgView.onDraw`）：
+
+```smali
+    # 混合标记 h：0=不混合；1=MULTIPLY（浅色）；2=SCREEN（深色）
+    iget v3, p0, Lcom/varuns2002/disable_flag_secure/gm/GmBgView;->h:I
+    if-eqz v3, :cond_ble          # h==0 → 跳过混合
+    const/4 v4, 0x1
+    if-ne v3, v4, :cond_bsc       # h!=1 → SCREEN
+    sget-object v3, Landroid/graphics/PorterDuff$Mode;->MULTIPLY:Landroid/graphics/PorterDuff$Mode;
+    goto :goto_bap
+    :cond_bsc
+    sget-object v3, Landroid/graphics/PorterDuff$Mode;->SCREEN:Landroid/graphics/PorterDuff$Mode;
+    :goto_bap
+    new-instance v4, Landroid/graphics/PorterDuffXfermode;
+    invoke-direct {v4, v3}, Landroid/graphics/PorterDuffXfermode;-><init>(Landroid/graphics/PorterDuff$Mode;)V
+    invoke-virtual {v2, v4}, Landroid/graphics/Paint;->setXfermode(Landroid/graphics/Xfermode;)Landroid/graphics/Xfermode;
+    :cond_ble
+```
+
+### 28.5 三种位置的关系（A/B 测试用）
+
+| 位置 | 层级 | 合成方式 | 状态 |
+|---|---|---|---|
+| 0 蒙层（盖在上层） | 上层 | alpha 叠加 | ✅ 已确认可用 |
+| 1 底图（在内容后面） | index 0 | 靠 2.5.5 给 content 设 `View.setBlendMode` | ❓ 未验证 |
+| 2 **混合（真背景）** | 上层 | **自绘 `PorterDuffXfermode`** | 🆕 本次 |
+
+> 三个按钮都在同一行，可以现场来回切，一次安装就能完成 A/B。
+
+### 28.6 测试要点
+
+1. 管理器 → 美化 → 修改背景（WIP）→「**混合（真背景）**」→ 打开开关
+2. **务必把「透明度」拉到 100%**（默认 25% 会跟蒙层看不出区别 —— 这是设计如此，不是 bug）
+3. 浅色模式应看到图片/渐变**真正变成页面底色**，文字仍可读
+4. 深色模式应自动切到 `SCREEN`
+5. 对比：点「底图（在内容后面）」看 2.5.5 那条路有没有反应
+
+### 28.7 若 2.6.0 也无效，下一个怀疑点
+
+- **自绘视图被强制分层**：确认 `GmBgView` 没有被 2.5.5 的 `setBlend()` 波及（那是设在 App 的 content 上，理论上无关）；
+  可在 `onDraw` 里打日志确认 `paint.getXfermode()` 非空、以及 `canvas.isHardwareAccelerated()`。
+- **窗口整体被 `saveLayer` 包裹**：极少数主题（如带 `windowIsTranslucent` 的）会有；
+  试把混合层挂到 `android.R.id.content` 的**父**（LinearLayout）上。
+- 回到路线 ③：追 App 自己的根 composable（`Lir8;->g` 那个 1909 行巨型 lambda）。
+
+### 28.8 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.6.0.apk
+versionCode 71 / versionName 2.6.0
+sha256(partial) : 0b54c49c04419ad87d5bd103a06ff2ba9d9038fb14ec02e5ba0621d072adfb51
+signed          : V1 + V2 + V3  ·  classes : 53
+```
+
+---
+
+## 二十九、2.6.1 —— 修「图片模式永远显示渐变」（2026-09-12）
+
+### 29.1 现象
+用户反馈：选了图片，界面出现的却是**渐变色**，不是背景图。
+
+### 29.2 根因：`GmBgView.onDraw` 的渲染分支判断写反（反向判断第 13 次）
+
+`mode` 取值：**`0 = 图片`，`1 = 渐变`**（`setModeImg()` 写 0、`setModeGrad()` 写 1，已实证）。
+`GmBg.ensure()` 把 `mode` 传给 `GmBgView.setup(IIILBitmap;)` 的第 1 个参数 → 字段 `e`。
+
+```smali
+    iget v3, p0, ...GmBgView;->e:I      # v3 = mode
+    if-eqz v3, :cond_55                 # ❌ mode == 0（图片）却跳去渐变分支
+```
+
+而 `GmPickHook` 保存背景图成功后会**显式切到图片模式**：
+
+```smali
+    invoke-static {v1, v0}, ...GmBg;->setMode(Landroid/content/Context;I)V   # v0 = 0 = 图片
+    invoke-static {v1}, ...GmBg;->ensure(Landroid/content/Context;)V
+```
+
+⇒ 时序正好是「选完图 → 切图片模式 → 渲染器走渐变分支」，所以**永远看到渐变**。
+
+**修复**：`if-eqz` → `if-nez`（`mode != 0` 才走渐变）。
+
+### 29.3 与前几次的关系（同一功能上的「连环反向判断」）
+
+| 版本 | 位置 | 反向判断 | 后果 |
+|---|---|---|---|
+| 2.5.4 | `GmPickHook` | `if-eqz v0, :bg` | 选背景图走了头像分支 ⇒ 图从未保存（**前半段**） |
+| **2.6.1** | **`GmBgView.onDraw`** | **`if-eqz v3, :cond_55`** | **图片模式永远渲染成渐变（后半段）** |
+
+> 两个 bug 前后夹击，解释了「图片模式从 2.5.0 起就从来没成功过」。
+> 而且因为 **默认 `mode = 0`**，2.5.x 的演示里「看到的渐变」其实一直是**跑错分支**的结果，
+> 恰好长得像预期效果，把 bug 藏了整整 6 个版本。
+
+### 29.4 教训
+
+| # | 教训 |
+|---|---|
+| 50 | **「默认值恰好能跑通」的 bug 最危险** —— 默认 `mode=0` 时表现为渐变（看起来正常），掩盖了分支写反；只有真正做到「切到 0」的路径（选图后）才暴露 |
+| 51 | **同一个功能上的反向判断会成串出现**：2.5.4 修了入口（选图），2.6.1 才修了出口（渲染）。修完一处要**顺着数据流往下再走一遍** |
+| 52 | **枚举型分支（`mode`/`pos`）的每个 `if-*z` 都要写上「取值表」再核对**，不能只看「空/非空」语义 |
+
+### 29.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.6.1.apk
+versionCode 72 / versionName 2.6.1
+sha256(partial) : a2f682c2b7f83a9783486a84890be59bcd8dda67b9018dbe514ac7d6bcc58645
+signed          : V1 + V2 + V3  ·  classes : 53
+```
+
+---
+
+## 三十、2.6.3 —— 修「浅色模式渲染异常 + 字太淡」（2026-09-12）
+
+### 30.1 反馈与诊断
+
+| 反馈 | 现象 |
+|---|---|
+| ① 字太淡，很难看清 | 浅色下 |
+| ② 浅色模式渲染异常，深色模式正常 | — |
+
+代码核对（`isNight` + `ensure` 分支）**均无 bug**：浅色 → `MULTIPLY`(h=1)，深色 → `SCREEN`(h=2)。
+问题出在**合成公式的数学性质**上。
+
+### 30.2 根因：MULTIPLY 的暗化随「透明度」单调增强
+
+绘制公式（`paint.alpha = a`）：
+
+```
+result = (1-a)·dst + a·(dst × src)
+```
+
+设页面白底 `dst=255`、正文 `dst=26`（#1A1A1A），底图取极光渐变首色 `#0B1026`（`src=11`）：
+
+| a | 页面 | 文字 | 观感 |
+|---|---|---|---|
+| 25% | 194 | 17 | 淡，接近蒙层 |
+| **55%** | **121** | **12** | **底图可见 + 文字清楚 ✅** |
+| 70% | 84 | 9 | 底图明显，文字尚可 ✅ |
+| **90%** | **35** | **4** | **深底 + 纯黑字 = 糊成一团 ❌** |
+
+⇒ **2.6.2 加的「自动抬到 90%」正是把浅色模式推到了最差的一档。**
+
+深色走 `SCREEN`：`1-(1-dst)(1-src)`。黑底(0) ⊕ 图 = 图；白字(255) ⊕ 图 = 白 ⇒ **永远可读**，
+所以「深色模式正常」。这也从侧面**证实混合机制本身是工作的** ✅
+
+### 30.3 修法
+
+| # | 改动 |
+|---|---|
+| 1 | `GmBgDialog.setPosMix()`：切换到混合时按昼夜给**推荐透明度** —— 浅色 **55%** / 深色 **92%**，并 toast 说明 |
+| 2 | `GmBgDialog.alphaUp()`：在「**混合 + 浅色**」时把强度**封顶 70%**，防止手滑拉到 100% 把界面压黑（对话框显示值 = 生效值） |
+| 3 | 副标题文案：「蒙层=半透明叠加；混合=底图混进界面（浅色上限 70%，深色 92%）」 |
+
+### 30.4 教训
+
+| # | 教训 |
+|---|---|
+| 53 | **提高「强度」在两个混合方向上效果相反**：`MULTIPLY` 越大越暗、`SCREEN` 越大越亮。**同一个透明度滑块在两种模式下含义相反**，绝不能给同一个默认值 |
+| 54 | **修 bug 前先算一遍合成公式**，别靠感觉调参。本次只是把 `dst/src` 代进公式，就完整预测了「字太淡 + 浅色异常 + 深色正常」三个现象 |
+| 55 | **「看起来像蒙层」不代表没生效** —— 低透明度下 `(1-a)dst + a·dst·src` 与 `(1-a)dst + a·src` 在白底处数值相同，只有文字/深色区才有差别 |
+
+### 30.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.6.3.apk
+versionCode 74 / versionName 2.6.3
+sha256(partial) : ff463a7c1da744b4dbd2a6d0904f47181bf894d6740dcacf709836c449ad3dfa
+signed          : V1 + V2 + V3  ·  classes : 53
+```
+
+---
+
+## 三十一、2.6.4 —— 定位并修掉「浅色模式渲染异常」（2026-09-12）
+
+### 31.1 关键线索
+
+> 用户反馈：「是混合时的问题，**黑色字变成了背景图里面的颜色，整体还是白色的**」
+
+这两个现象**精确指向 `SCREEN`**：
+
+| 像素 | SCREEN 计算 | 结果 | 与反馈 |
+|---|---|---|---|
+| 页面白底 255 | `1-(1-1)(1-src)` = 1 | **白** | ✅「整体还是白色的」 |
+| 文字 #1A1A1A = 26 | `1-(1-0.102)(1-src)` ≈ `0.1+0.9·src` | **变成底图的颜色** | ✅「黑字变成背景图的颜色」 |
+
+⇒ 浅色 UI 下跑的是 **SCREEN**，而 SCREEN 只在 `isNight()==true` 时才选。
+
+### 31.2 真因：`isNight()` 判的是「系统」，不是「App」
+
+```java
+// GmUtil.isNight —— 读 Configuration.uiMode（= 系统昼夜）
+(config.uiMode & 0x30) == 0x20
+```
+
+但 **DeepSeek 有自己的主题设置**。若「系统 = 深色」而「App 内设为浅色」，
+`isNight()` 返回 **true** ⇒ 给浅色界面套了 `SCREEN` ⇒ 上面那一幕。
+
+> ⚠️ 这个坑对本项目**影响面很大**：`GmUtil` 的整套调色板（`bg/tx/sub/line`）都用同一判断，
+> 也就是说管理器所有对话框的配色可能一直跟 App 实际主题是反的 —— 只是「整体一起反」不容易察觉。
+
+### 31.3 修法：混合方向可手动指定
+
+| 层 | 新增 |
+|---|---|
+| 配置 | `fuckds_bg_dir`：**0=自动（isNight）/ 1=强制 MULTIPLY（浅色底）/ 2=强制 SCREEN（深色底）** |
+| `GmBg` | `dir(ctx)I` / `setDir(ctx,i)` / **`dirMul(ctx)Z`**（统一出口：true=MULTIPLY，false=SCREEN） |
+| `GmBg.ensure` | 混合分支改为 `dirMul()` 决定；**`dir` 计入签名**（否则改方向不触发重建） |
+| `GmBgDialog` | `dirAuto()/dirLight()/dirDark()`（各带 toast）；`open()` 新增一行 `混合方向 [自动][浅色底][深色底]` |
+| `GmBgDialog.setPosMix/alphaUp` | 推荐透明度与封顶判断全部改走 `dirMul()` |
+| `GmClick` | 动作 `0x27 / 0x28 / 0x29` |
+
+**`dirMul()` 是唯一出口**，避免「昼夜判断」散落在多处再次走偏：
+
+```
+dir == 1 → MULTIPLY       (手动指定浅色底)
+dir == 2 → SCREEN         (手动指定深色底)
+dir == 0 → !isNight()     (自动回退)
+```
+
+### 31.4 教训
+
+| # | 教训 |
+|---|---|
+| 56 | **`Configuration.uiMode` ≠ App 主题**。App 完全可以用自己的偏好设置换肤而不动 uiMode。**凡是"跟随昼夜"的逻辑，都必须能手动覆盖** |
+| 57 | **「黑字变成底图的颜色、白底还是白的」是 SCREEN 的指纹**；「整页发暗、字发黑」是 MULTIPLY 的指纹。**根据现象反推混合模式**，比读代码更快定位 |
+| 58 | **判定函数要收敛成单一出口**（本次 `dirMul()`）。原先 `isNight()` 被 `ensure` / `setPosMix` / `alphaUp` 三处分别调用，一改就得改三处，容易漏 |
+| 59 | **影响重建的输入必须全部计入"签名"** —— `dir` 加进 sig 之前，改方向不会重建视图，表现为「点了没反应」 |
+
+### 31.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.6.4.apk
+versionCode 75 / versionName 2.6.4
+sha256(partial) : 9746c754290b0b18a15f90d1a2e45e2e15d012ff9971cb2f29c71ad2bcf1e6e1
+signed          : V1 + V2 + V3  ·  classes : 53
+```
+
+### 31.6 ✅ 真因已由用户实测确认
+
+> 用户答复：**「系统深色 + DeepSeek 浅色」**
+
+与推断完全一致：
+
+```
+系统 = 深色            ⇒ Configuration.uiMode & 0x30 == 0x20 ⇒ isNight() = true
+DeepSeek 内设为浅色     ⇒ 页面实际是浅色底 + 深色字
+                       ⇒ 给浅色界面套了 SCREEN
+                       ⇒ SCREEN(白底)=白  →  「整体还是白色的」
+                       ⇒ SCREEN(黑字)≈0.1+0.9·src →  「黑字变成背景图的颜色」
+```
+
+**⇒ 结论：凡是「跟随昼夜」的逻辑，在 App 主题与系统主题解耦的场景下必然判错。
+必须提供手动覆盖（本项目的 `fuckds_bg_dir`）。**
+
+> 📌 遗留提醒：`GmUtil.isNight()` 仍被整个管理器调色板（`bg/tx/sub/line`）使用。
+> 在「系统深色 + App 浅色」这类环境下，**管理器所有对话框的配色也是反的**。
+> 若要彻底解决，`GmUtil` 需要一个「取自 App 实际主题」的判断源（候选：读 DeepSeek 自己的主题偏好键，
+> 或运行时探测页面实际底色）。**这是下一个值得做的独立改进项。**
+
+---
+
+## 三十二、关于「把渐变背景色砍了」的结论（2026-09-12）
+
+**用户决定：只保证默认是「图片」，渐变保留可选，不改代码。**
+
+### 32.1 核查结论（改代码前先验证默认值）
+
+| 项 | 结论 |
+|---|---|
+| `mode` 默认值 | **0 = 图片** ✅（`GmPrompt.toInt()` 对空/null 返回 0；`mode()` 不做 `ok()` 判空，直接 `toInt`） |
+| 有无地方把 mode 设成 1 | **无**。`GmBgSwitch` 只 toast；`GmPickHook` 存图后反而强制 `setMode(0)` |
+| 因此 | **无需改代码**，全新用户/未写过键的用户拿到的就是图片 |
+
+### 32.2 之前"总看到渐变"的两个叠加原因（均已定性）
+
+| # | 原因 | 状态 |
+|---|---|---|
+| 1 | `GmBgView.onDraw` 的 `mode` 分支写反（`if-eqz` / `if-nez`）⇒ `mode==0`（图片）被送进渐变分支 | ✅ 2.6.1 已修 |
+| 2 | **没选图时 `bitmap == null` → 退回渐变分支**（占位，避免空白） | ✅ 有意设计，保留 |
+
+### 32.3 ⚠️ 残留与操作提示
+
+- **「默认值」只对从没写过 `fuckds_bg_mode` 的人生效**。若此前点过「渐变」，`fuckds_bg_mode=1` 已落盘，
+  默认值管不着 ⇒ **进对话框点一下「图片」按钮即可写回 0**。
+- **判断当前模式的办法**：拨一下「开启背景」开关，`GmBgSwitch` 会 toast
+  「背景已开启（图片模式）…」/「背景已开启（渐变模式）…」。
+
+### 32.4 待用户确认的后续选项
+
+若要**彻底删掉渐变入口**（去掉 `[渐变]` 与「渐变样式 ‹›」两行），需改：
+`GmBgDialog.open()`（删按钮与整行）、`GmClick`（`0x1d/0x1f/0x20` 分支）、`GmBgView`（渐变分支）。
+
+> ⚠️ 这与最初需求「支持图片**或**动态渐变色填充」冲突，**未经用户确认不擅自删除**。
+
+---
+
+## 三十三、2.7.0 —— 「摄像头取景」实时背景（2026-09-12）
+
+> 需求来源：用户在某个微信插件里见过「用摄像头捕捉的画面当背景」，想移植到「美化 › 修改背景」里。
+
+### 33.1 ⚠️ 先做可行性检查（Xposed 模块特有的硬约束）
+
+> **模块代码跑在目标 App 的进程里 ⇒ 相机权限算在 DeepSeek 头上，不是模块头上。
+> 模块无法给宿主 App 加权限。**
+
+检查结果（打开 `DeepSeek2_2.4.5.apk` 读清单）：
+
+```xml
+<uses-feature android:name="android.hardware.camera" android:required="false"/>
+<uses-permission android:name="android.permission.CAMERA"/>    ← ✅ 有！
+```
+
+⇒ **可行**，运行时授权即可。
+
+### 33.2 技术路线选型
+
+我们刚打通的「混合」是**靠 `GmBgView.onDraw` 里的 `Paint.setXfermode`** —— 只对**自己绘制的 View** 有效。
+相机预览的标准载体 `TextureView` 是**独立硬件图层**，插不进 `onDraw`。两条路：
+
+| 方案 | 合成手段 | 优点 | 缺点 |
+|---|---|---|---|
+| **A. TextureView 直通** ⭐选用 | `View.setBlendMode` / `setAlpha` | **零 CPU**、清晰、原生帧率 | 混合依赖 `View.setBlendMode`（API 29+，未验证） |
+| B. `ImageReader` 取帧 → Bitmap | 复用已验证的自绘混合 | 效果可控 | 每帧 YUV→ARGB 转换吃 CPU、画质糊 |
+
+**用户选定 A**。顺带：A 也是一次「`View.setBlendMode` 到底管不管用」的永久性实验（失败表现为「摄像头整屏盖住 UI」，切回蒙层即可）。
+
+### 33.3 实现结构
+
+| 类 | 职责 |
+|---|---|
+| `GmCam` | 相机控制器。`start(tv)`/`stop()`/`applyFx(ctx,view)`；内部 `doOpen()/doClose()`、`findId(facing)`（遍历 `Camera.CameraInfo.facing`）、`orient()`（`setDisplayOrientation` 标准公式）、`fit()`（`setTransform` 做 center-crop）、`rot()`（屏幕旋转角）、`ask()`（权限申请） |
+| `GmCamRun` | `Runnable`：把阻塞的 `Camera.open()`/`startPreview()` 丢到**后台线程** |
+| `GmCamStl` | `TextureView.SurfaceTextureListener`：surface 就绪 → 拉流；`onSurfaceTextureDestroyed` → **释放相机**（切后台/换视图自动关，靠它兜住生命周期） |
+
+**用 Camera1（`android.hardware.Camera`）而不是 Camera2**：Camera2 需要 `CameraDevice.StateCallback` +
+`CameraCaptureSession.StateCallback` + `HandlerThread` 三件套；Camera1 只要 `open()/setPreviewTexture()/startPreview()`，
+在**手写 smali** 的前提下复杂度差一个数量级。
+
+### 33.4 各模式与合成方式的关系
+
+| `mode` | 视图 | 蒙层(pos=0) | 混合(pos=2) | 底图(pos=1) |
+|---|---|---|---|---|
+| 0 图片 / 1 渐变 | `GmBgView`（自绘） | `Paint.setAlpha` | `Paint.setXfermode` | index 0 |
+| **2 摄像头** | `TextureView` | **`View.setAlpha`** | **`View.setBlendMode`** | index 0 |
+
+> ⚠️ **摄像头模式下「底图」= 不可见**（页面不透明会盖住）。所以 `setModeCam()` 里做了
+> 「若当前是底图则自动挪到蒙层」。
+>
+> 蒙层模式下相机的默认透明度建议调高（25% 太淡，相机基本看不见）。
+
+### 33.5 已知限制 / 待验证
+
+| # | 项 |
+|---|---|
+| 1 | **画质/方向／宽高比**：`orient()` 用标准公式、`fit()` 做 center-crop —— 但**都是纸面推导，未经真机验证**，可能需要在真机上微调 |
+| 2 | **`View.setBlendMode` 对 TextureView 是否生效**待验证（见 33.2） |
+| 3 | 权限拒绝后需要**手动再点一次**「摄像头」（未做自动重试） |
+| 4 | 后台释放依赖 `onSurfaceTextureDestroyed`，未额外挂 `onPause` |
+| 5 | 相机是稀缺资源：与 DeepSeek 自身拍照功能**可能抢占**（我们没做「对方要用就让路」） |
+
+### 33.6 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.0.apk
+versionCode 76 / versionName 2.7.0
+sha256(partial) : 5b46277bbef7a9c855f02bdeaa762dd09fccc6c0cc2cfae44ec0174a4237bd90
+signed          : V1 + V2 + V3  ·  classes : 56  ·  size : 54257
+```
+
+---
+
+## 三十四、2.7.1 —— 修 `GmBg.ensure` 的 VerifyError（分支汇合 / 类型退化）（2026-09-12）
+
+### 34.1 报错
+
+```
+java.lang.VerifyError: Verifier rejected class com.varuns2002.disable_flag_secure.gm.GmBg:
+  void GmBg.ensure(android.content.Context) failed to verify:
+  [0xE0] 'this' argument 'Reference: android.view.View'
+         not instance of 'Precise Reference: GmBgView'
+    at GmResumeHook.afterHookedMethod ... → 每次 onResume 必崩
+```
+
+### 34.2 根因：**分支汇合把寄存器类型「提升」成了父类**
+
+2.7.0 让同一个寄存器 `v5` 承载两种视图：
+
+```smali
+    if-ne v6, v7, :cond_notcam
+    new-instance v5, Landroid/view/TextureView;     # 摄像头分支：v5 = TextureView
+    ...
+    goto :got_view
+
+    :cond_notcam
+    new-instance v5, GmBgView;                       # 图片/渐变分支：v5 = GmBgView
+    invoke-virtual {v5, ...}, GmBgView;->setup(...)V # ← 这里精确，✅ 没问题
+
+    :got_view                                        # ← 汇合点：v5 = merge(两者) = View
+    ...
+    :goto_blend
+    invoke-virtual {v5, v8}, GmBgView;->setBlend(I)V # ← ❌ 2.6.0 留下的那句，踩在汇合点之后
+```
+
+**ART 的 verifier 在汇合点取所有前驱类型的「最小公共父类」** ⇒ `v5` 变成 `View`。
+而 `GmBgView` 声明为 **`public final`**，`invoke-virtual` 对它要求**精确类型**（报错里的 `Precise Reference`），于是整类被拒。
+
+> ⚠️ **注意**：`[0xE0]` 指向的是 `setBlend` 那一句，**不是** 紧挨着的 `setup`。
+> 报错行号容易把人带偏 —— 要看汇合点之后的所有调用。
+
+### 34.3 修法
+
+把 `GmBgView` 专属的调用**全部收进它自己的分支**，汇合点之后只允许出现「父类型也成立」的操作：
+
+```smali
+    invoke-virtual {v5, v6, v7, v8, v9}, GmBgView;->setup(...)V
+    # 混合方向：写在这里（v5 精确是 GmBgView）
+    invoke-static {p0}, GmBg;->pos(...)I
+    ...
+    if-ne v6, v7, :got_view          # pos != 2 → 不混合，跳过
+    ...
+    invoke-virtual {v5, v6}, GmBgView;->setBlend(I)V
+    :got_view                        # 之后 v5 只当 View 用（addView / applyFx / sput 到 sView）
+```
+
+### 34.4 教训
+
+| # | 教训 |
+|---|---|
+| 60 | **同一个寄存器不要跨分支承载不同的具体类型**。一旦有汇合点，类型就会退化成父类，「精确类型」调用全部失败 |
+| 61 | **`final` 类的 `invoke-virtual` 要求精确类型**（报错写作 `Precise Reference`），比普通类更严格 |
+| 62 | **报错给出的指令偏移可能不是"看起来最像"的那一句**。必须结合「哪两个分支汇合了」去定位真实的那一行 |
+| 63 | **这类 VerifyError 在构建期查不出来**（`mt_apk_edit_check` 只做 buildability 检查，不跑 ART verifier）⇒ **只能靠人工按数据流复核**，或真机试 |
+| 64 | 本项目历史上第一次遇到这个坑（前面全是 `.registers` 越界 / `if-*z` 反向）。**新增"一个变量两种类型"的分支时，必须检查汇合点之后有没有对该变量的"精确类型调用"** |
+
+### 34.5 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.1.apk
+versionCode 77 / versionName 2.7.1
+sha256(partial) : 95ec1383e95c7f1716ca2c05d7bb0b5989af0082082ba94f9cbff3813f3235b7
+signed          : V1 + V2 + V3  ·  classes : 56
+```
+
+---
+
+## 三十五、2.7.2 —— 修 4 处反向判断：摄像头「整屏盖住 UI」（2026-09-12）
+
+### 35.1 用户反馈
+
+> 「能正常调用，但是把 UI 都覆盖住了」
+
+### 35.2 主犯：`GmCam.applyFx` 的空值守卫写反（第 14 次）
+
+```smali
+if-nez p1, :ret     # ❌ if-nez = "p1 != 0 就跳"（对引用就是「不为 null 就跳」）
+                    #    我的注释写的是「view == null → 直接返回」，完全相反
+```
+
+后果：**view 非 null 时函数立刻返回** ⇒ `setAlpha` / `setBlendMode` **一次都没执行过** ⇒
+`TextureView` 以满不透明、无混合的状态盖在整个界面上 —— 与现象 100% 吻合。
+
+**修正**：`if-eqz p1, :ret`（`if-eqz` = 「等于 0（null）才跳」）。
+
+### 35.3 连带查出的另外 3 处（自己复查新代码发现）
+
+| # | 位置 | 错误 | 后果 |
+|---|---|---|---|
+| 2 | `GmBgDialog.setModeCam`「底图→蒙层」自动挪位 | `if-eq v1,v2,:goto_pos` | pos==1 时**反而跳过** `setPos`，自动挪位失效 |
+| 3 | `GmCam.fit` 的 270° 换轴 | `if-ne v5,v6,:cond_swap` | 270° 时**反而不换轴**，宽高比裁切算错 |
+| 4 | `GmCam.rot` 的 Activity 判空 | `if-nez v2,:ret` | 有 Activity 时直接返回 0，横屏下方向算错 |
+
+### 35.4 ⚠️ 重要语法澄清（这次踩坑的根源）
+
+**`if-*z` 系列有两组，含义不同：**
+
+| 助记符 | 含义 |
+|---|---|
+| `if-eqz vA` | vA **== 0** 时跳 |
+| `if-nez vA` | vA **!= 0** 时跳 |
+| `if-ltz vA` | vA **< 0** 时跳 |
+| `if-gez vA` | vA **>= 0** 时跳 |
+| `if-gtz vA` | vA **> 0** 时跳 |
+| `if-lez vA` | vA **<= 0** 时跳 |
+
+> `z` 只是「与 0 比较」的标记，**不是「等于 0 才跳」**。`if-ltz` / `if-gtz` 这类看的是
+> **前面的字母（lt/gt）**，方向是「小/大于 0」。
+>
+> **空值守卫的标准写法是 `if-eqz x, :ret`。**
+
+### 35.5 教训
+
+| # | 教训 |
+|---|---|
+| 65 | **反向判断累计 17 次**（2.6.1 是第 13 次，本次一次揪出 4 个）。**写 `if-*z` 时必须逐字念出来**：「XX 等于 0 才跳」/「XX 不等于 0 才跳」，再对照意图 |
+| 66 | **空值守卫统一用 `if-eqz`**，不要用 `if-nez` + 反向布局 |
+| 67 | **守卫写反 = 整个函数静默失效且无任何报错** —— 本次连日志都没有（`applyFx` 里全是 try/catch + 无返回值的 void） |
+| 68 | **"功能完全没反应"优先怀疑第一句守卫**，而不是中间的逻辑 |
+
+### 35.6 摄像头模式下的三种合成方式（供用户实测对比）
+
+| 位置 | 做法 | 期望效果 |
+|---|---|---|
+| **蒙层** | `TextureView.setAlpha(α)` | 半透明覆盖，UI 隐约可见（会自动设 α=40%） |
+| **混合** | `TextureView.setBlendMode(MULTIPLY/SCREEN)` | **相机当底图、UI 在上**（依赖 API 29+，待验证） |
+| **底图** | 相机放 index 0 + `content.setBlendMode(...)`（走 2.5.5 那条路） | 另一条独立机制，可作对照 |
+
+### 35.7 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.2.apk
+versionCode 78 / versionName 2.7.2
+sha256(partial) : d20a6273cd193599720870180662b27167981363afb0d1ef5e174a5d038ac3f5
+signed          : V1 + V2 + V3  ·  classes : 56
+```
+
+---
+
+## 三十六、2.7.3 —— 摄像头画面「右偏 90°」（2026-09-12）
+
+### 36.1 现象
+
+> 「向右偏转了 90°」
+
+### 36.2 根因 1：`setDisplayOrientation()` 管不到 SurfaceTexture 预览
+
+`Camera.setDisplayOrientation(deg)` 只影响**预览显示（SurfaceView / `setPreviewDisplay`）**那条路；
+当我们用 `setPreviewTexture(SurfaceTexture)`（TextureView 预览）时，**旋转不会自动生效**
+—— 画面就是 sensor 的原始朝向。
+
+⇒ **必须自己在 `TextureView.setTransform()` 的矩阵里把画面转回来。**
+
+### 36.3 根因 2：宽高比算式里多了一次 `swap`
+
+2.7.0 的 `fit()` 里有：
+
+```smali
+    if sDeg == 90 or 270 → 交换预览宽高
+```
+
+这个 `swap` 的前提是「**系统已经帮我转好了**，所以逻辑宽高要反过来算」。
+但既然上面已经证明 **旋转得我们自己显式做**，那这个 `swap` 就变成**多算了一次**，
+会把宽高比算反（表现为拉伸）。
+
+⇒ **去掉 swap**。
+
+### 36.4 修正后的 `fit()`
+
+```
+1. 取有效角度 deg = (手动配置 >= 0) ? 手动 : sDeg      # sDeg 由 sensor orientation 推算
+2. 用【原始】预览宽高 (pw, ph) 做等比中心裁切：
+     sx = vw/pw, sy = vh/ph, s = max(sx, sy)
+     matrix.setScale(s/sx, s/sy, cx, cy)
+3. 显式旋转：matrix.postRotate(deg, cx, cy)
+```
+
+**为什么旋转后仍然铺满**：缩放后贴图至少一边贴满视图，且相机 sensor 是横向的（`pw > ph`），
+旋转 90° 后另一方向的余量足够覆盖 —— 不会露黑边。
+
+### 36.5 保险：新增「画面旋转」手动档
+
+不同机型的 `sensor orientation` 组合很多（尤其前后置 + 折叠屏），纸面推导未必命中，
+所以加了一个循环按钮：**自动 → 0° → 90° → 180° → 270° → 自动**（配置 `fuckds_bg_rot`）。
+
+- 位置：对话框「摄像头方向」行 → `[后置] [前置] [旋转 自动]`
+- 切换时调 `GmCam.refit()` **只重算矩阵**（不重建 TextureView、不重启相机），**即时生效**
+
+### 36.6 教训
+
+| # | 教训 |
+|---|---|
+| 69 | **`Camera.setDisplayOrientation()` ≠ 对 SurfaceTexture 生效**。凡是用 `TextureView` 做预览的 Camera1 方案，旋转都得自己在 `setTransform` 里做 |
+| 70 | **一个补偿项会不会"多算"，取决于另一条路径是否已经补偿过**。2.7.0 的 `swap` 就是「以为系统转了」写下的，证明系统没转之后，它必须一起去掉 |
+| 71 | 涉及方向/矩阵这类**纸面推导无法验证**的东西，**一定要留一个手动档**（本次：可循环的旋转角），把不确定性交还给用户 |
+
+### 36.7 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.3.apk
+versionCode 79 / versionName 2.7.3
+sha256(partial) : 62df414dddd760565989dcfa181e8b9f78c7d167294436aa9a122a6d13182899
+signed          : V1 + V2 + V3  ·  classes : 56
+```
+
+---
+
+## 三十七、2.7.4 —— 旋转机制换成 `View.setRotation`（2026-09-12）
+
+### 37.1 反馈
+
+> 「你的旋转加不加没什么区别嘛，再加几个旋转都是选项」
+
+⇒ 选项能切（配置确实变了），但**画面纹丝不动** ⇒ **`TextureView.setTransform()` 没生效**。
+
+### 37.2 为什么 `setTransform` 不生效
+
+`TextureView` 最终渲染时的层变换 = **`SurfaceTexture.getTransformMatrix()` 与 `setTransform()` 的 `Matrix` 合成**。
+Camera1 的 `setPreviewTexture` 路径下，框架可能已经在 SurfaceTexture 上放了 buffer 变换
+（由 `setDisplayOrientation` 或 buffer geometry 决定）⇒ 两者叠加后行为不可控，实测表现为「设了没反应」。
+
+**⇒ 结论：不要在这条路径上和矩阵较劲。**
+
+### 37.3 新机制：`View.setRotation` + 显式尺寸
+
+完全绕开矩阵，只用最基础的 View 能力：
+
+```
+1. 有效角度 deg（手动配置优先，否则 sDeg）
+2. 算系数 k，使「旋转后」的可见矩形仍能盖满屏幕：
+     90/270 → k = max(vw/ph, vh/pw)     # 转完可见矩形是 (H, W)
+     0/180  → k = max(vw/pw, vh/ph)
+3. 视图尺寸 W = round(k*pw), H = round(k*ph)   ⇒ 内容宽高比 = 传感器宽高比（不拉伸）
+4. setLayoutParams(FrameLayout.LayoutParams(W, H), gravity = CENTER)
+5. tv.setRotation(deg)                        # View 级旋转，父容器渲染层做
+```
+
+**⚠️ 尺寸基准必须取 DecorView（屏幕），不能取视图自身**：
+第 4 步之后视图尺寸就变了，若下次 `fit()` 还用 `getWidth()` 当基准，会**越算越大**（正反馈漂移）。
+
+### 37.4 诊断钩子
+
+`fit()` 现在会往 `GmDiag` 写一行：
+
+```
+cam fit deg=90 scr=1080x2400 prev=640x480 v=2400x1800
+```
+
+查看位置：**管理器 → 服务端灰度下发查看 → 顶部 DIAG 区**。
+若旋转仍不对，这一行能直接告诉我们：`deg` 有没有传对、屏幕/preview 尺寸是多少、算出的视图尺寸是多少。
+
+### 37.5 教训
+
+| # | 教训 |
+|---|---|
+| 72 | **`TextureView.setTransform()` 与 SurfaceTexture 自带变换会打架**，在 Camera1 + `setPreviewTexture` 场景下可能完全无效。**旋转优先用 `View.setRotation()`** |
+| 73 | **改「自己尺寸」的逻辑，基准必须取外部（父容器/屏幕）**，否则会形成自我放大的正反馈漂移 |
+| 74 | **纸面推导不出来的东西，要留「可观测」的出口**（本次：DIAG 一行日志），而不是让用户反复试错 |
+| 75 | **同一个效果有两套机制时（矩阵 vs View 属性），先选语义更高层、由系统保证的那个** |
+
+### 37.6 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.4.apk
+versionCode 80 / versionName 2.7.4
+sha256(partial) : 1b91715e75dd2a71ef1bb7a93371cd4940cd8d51706c9a7e8ab0cf8c9263567f
+signed          : V1 + V2 + V3  ·  classes : 56
+```
+
+---
+
+## 三十八、2.7.5 —— DIAG 日志定位：旋转角取值反向（2026-09-12）
+
+### 38.1 这是本项目第一次靠「自建 DIAG 日志」一击定位
+
+用户贴出的 DIAG（关键两行）：
+
+```
+1789217885863 cam fit deg=-1 scr=1440x3168 prev=2520x1080 v=7392x3168
+1789217886304 cam fit deg=0  scr=1440x3168 prev=2520x1080 v=7392x3168
+```
+
+信息量很大：
+- **`deg` 确实随按钮变化** ⇒ 配置写入、按钮分发、`fit()` 调用链**全部通畅**（排除了一大片嫌疑）
+- 但「自动」时 `deg = -1` ⇒ **有效角度没有回退到 sDeg**
+- 「0°」时 `deg` 又是 sDeg 的值 ⇒ **手动值被丢弃**
+- 两行的 `v=7392x3168` 完全相同 ⇒ 都走了 `0/180` 分支（符合 deg ∈ {-1, 0}）
+
+⇒ **`deg` 的取值逻辑整个反了。**
+
+### 38.2 真凶：`if-gez` 用错（第 18 次反向判断）
+
+```smali
+    sget v4, GmCam;->sDeg:I              # 默认用 sensor 推算角
+    ...
+    invoke-static {v2}, GmBg;->rot(...)I
+    move-result v3
+    if-gez v3, :cond_keep                # ❌ if-gez = 「v3 >= 0 才跳」
+    move v4, v3                          # 本意：手动值覆盖 sDeg
+    :cond_keep
+```
+
+**`if-gez` 是「>= 0 就跳」，不是「< 0 就跳」。** 于是：
+
+| rot() | 期望 | 实际（写反后） |
+|---|---|---|
+| -1（自动） | 用 sDeg | **用 -1** ⇒ `setRotation(-1)` ≈ 不转 |
+| 0 / 90 / 180 / 270 | 用该值 | **全部被替换成 sDeg** ⇒ 四个档位表现一模一样 |
+
+**⇒ 一次写反，同时造成「旋转没反应」和「几个选项都一样」两个现象。**
+
+修正：`if-gez` → **`if-ltz`**。
+
+### 38.3 教训
+
+| # | 教训 |
+|---|---|
+| 76 | **反向判断累计 18 次**。`if-*z` 六兄弟必须逐字念：`eqz`=「==0 跳」`nez`=「!=0 跳」`ltz`=「<0 跳」`gez`=「>=0 跳」`gtz`=「>0 跳」`lez`=「<=0 跳」 |
+| 77 | **⭐ 自建可观测出口（DIAG）是本次能一击定位的关键**。前面几轮「靠猜 + 改 + 再试」耗费了大量往返；把中间量打出来之后，一眼就看穿 |
+| 78 | **"所有选项表现一样" 是「取值被覆盖」的典型特征** —— 不是渲染问题，是**参数没传进去** |
+| 79 | **"看起来像拉伸" 未必是缩放算错**，可能只是**角度没生效**导致走了另一条尺寸分支。先验证上游参数，再怀疑下游数学 |
+
+### 38.4 输出
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.5.apk
+versionCode 81 / versionName 2.7.5
+sha256(partial) : 973355a456eaa26ebcb3cc0a5ac12e4918ccb08801492d7e0d2e884796dbb980
+signed          : V1 + V2 + V3  ·  classes : 56
+```
+
+---
+
+# 三十九、摄像头取景（特色功能）—— 阶段性归档（2026-09-12 收工）
+
+> ⚠️ **状态：功能已实现并可用，但「画面朝向/比例」未最终验收，本轮到此暂停。**
+> 下次继续时**先读本节 39.6「继续时的第一步」**。
+
+---
+
+## 39.1 需求
+
+> 在「美化 › 修改背景」里加一个 **摄像头取景** 按钮：启用后持续调用摄像头，
+> **用摄像头捕捉到的画面作为背景**。前后置可切换。
+> （灵感来源：用户在某微信插件里见过同类效果）
+
+---
+
+## 39.2 ✅ 可行性结论（做之前必须先查的那一步）
+
+Xposed 模块的代码跑在**目标 App 进程**里，**相机权限算在 DeepSeek 头上，不是模块头上**。
+模块 APK 自己声明权限**没用**，也无法给宿主 App 加权限。
+
+实测 DeepSeek 清单：
+
+```xml
+<uses-feature android:name="android.hardware.camera" android:required="false"/>
+<uses-permission android:name="android.permission.CAMERA"/>     <!-- ✅ 有 -->
+```
+
+⇒ **可行**（只需运行时授权）。若宿主没声明 `CAMERA`，这个功能根本做不了。
+
+---
+
+## 39.3 技术选型
+
+我们已验证的「混合」靠 `GmBgView.onDraw` 里的 `Paint.setXfermode` —— **只对自绘 View 有效**。
+相机预览的标准载体 `TextureView` 是**独立硬件图层**，插不进 `onDraw`。两条路：
+
+| 方案 | 合成手段 | 结论 |
+|---|---|---|
+| **A. TextureView 直通** ⭐采用 | `View.setAlpha` / `View.setBlendMode` | 零 CPU、清晰，但合成要靠 View 级 API |
+| B. `ImageReader` 取帧 → Bitmap | 复用已验证的自绘混合 | 效果可控，但每帧 YUV→ARGB 转换吃 CPU、画质糊 |
+
+**相机 API 选 Camera1（`android.hardware.Camera`）**：
+Camera2 要 `CameraDevice.StateCallback` + `CameraCaptureSession.StateCallback` + `HandlerThread` 三件套，
+在**手写 smali** 前提下复杂度差一个数量级。
+
+---
+
+## 39.4 代码改动清单（2.7.0 ~ 2.7.5）
+
+### 新增类（类数 53 → 56）
+
+| 类 | 职责 |
+|---|---|
+| `GmCam` | 相机控制器。`start(tv)` / `stop()` / `refit()` / `applyFx(ctx,view)`；内部 `doOpen()`/`doClose()`/`findId(facing)`/`orient()`/`fit()`/`rot()()`/`ask()`/`setBlend()`/`clearBlend()` |
+| `GmCamRun` | `Runnable`：把阻塞的 `Camera.open()` / `startPreview()` 丢到**后台线程** |
+| `GmCamStl` | `TextureView.SurfaceTextureListener`：surface 就绪拉流；`onSurfaceTextureDestroyed` → **释放相机**（切后台/换视图自动关） |
+
+### 改动的类
+
+| 类 | 改动 |
+|---|---|
+| `GmBg` | `mode=2`（摄像头）分支：挂 `TextureView`；签名加入 `cam`；新增配置键 `K_CAM`/`K_ROT` 与 `cam()/setCam()/rot()/setRot()` |
+| `GmBgDialog` | 模式行加「摄像头」按钮；新增「摄像头方向」行 `[后置][前置][旋转 自动]`；新增 `setModeCam()/camBack()/camFront()/rotNext()` |
+| `GmBgSwitch` | 开关 toast 增加「（摄像头取景）」分支 |
+| `GmClick` | 新增动作 `0x2a`(摄像头) / `0x2b`(后置) / `0x2c`(前置) / `0x2d`(旋转循环) |
+
+### 配置项
+
+| 键 | 含义 |
+|---|---|
+| `fuckds_bg_mode` | `0=图片 / 1=渐变 / **2=摄像头**` |
+| `fuckds_bg_cam` | `0=后置 / 1=前置` |
+| `fuckds_bg_rot` | `-1=自动（用 sensor 推算）/ 0 / 90 / 180 / 270` |
+
+### 三种合成方式（摄像头模式）
+
+| 位置 | 做法 | 期望 |
+|---|---|---|
+| 蒙层 | `TextureView.setAlpha(α)` | 半透明覆盖，UI 隐约可见（进摄像头模式自动设 α=40%） |
+| 混合 | `TextureView.setBlendMode(MULTIPLY/SCREEN)` | **相机当底图、UI 在上**（API 29+，**未验证**） |
+| 底图 | 相机放 index 0 + `content.setBlendMode(...)`（2.5.5 那条路） | 另一条独立机制，可作对照 |
+
+---
+
+## 39.5 本轮 Bug 清单（2.7.0 → 2.7.5，含 5 处反向判断）
+
+| 版本 | 现象 | 根因 | 修复 |
+|---|---|---|---|
+| **2.7.0** | 首次实现 | — | — |
+| **2.7.1** | 一 `onResume` 就 **VerifyError** 崩溃 | `v5` 在两条分支持有不同具体类型（`TextureView` / `GmBgView`），**汇合后类型退化 `View`**，而 2.6.0 留下的 `GmBgView;->setBlend`（调用点恰在汇合点之后）要求「精确类型」（`final` 类） | 把 `setBlend` 收进 `:cond_notcam` 分支 |
+| **2.7.2** | 相机画面**整屏盖住 UI** | `GmCam.applyFx` 空值守卫写成 `if-nez p1, :ret`（= **p1 不为 null 就返回**）⇒ `setAlpha`/`setBlendMode` **一次都没执行** | 改 `if-eqz`（另连带修 3 处同族：`setModeCam` 挪位、`fit` 270° 换轴、`rot` 判空） |
+| **2.7.3** | 画面**右偏 90°** | **`Camera.setDisplayOrientation()` 对 `setPreviewTexture(SurfaceTexture)` 路径不生效**；且 2.7.0 的宽高比算式多算了一次 `swap`（那是「假设系统已转好」才需要的） | 自己用 `setTransform` 显式旋转 + 去掉 `swap` |
+| **2.7.4** | **旋转加了没区别** | **`TextureView.setTransform()` 与 SurfaceTexture 自带变换矩阵叠加后不生效** | 改用 **`View.setRotation()` + 显式 `setLayoutParams`**（完全绕开矩阵） |
+| **2.7.5** | 旋转各档**表现完全一样** | `fit()` 里 `if-gez v3, :cond_keep` 写反（**`if-gez` = 「>= 0 才跳」**）⇒ 自动时用了 `-1`、**手动档全被 `sDeg` 覆盖** | 改 `if-ltz` |
+
+> 累计反向判断：**18 次**（本轮贡献 5 次）。
+
+---
+
+## 39.6 继续时的第一步（重要）
+
+### ① 先看 DIAG
+
+管理器 → **服务端灰度下发查看** → 顶部 DIAG：
+
+```
+cam fit deg=<有效角> sDeg=<sensor 推算角> scr=<屏宽x高> prev=<预览宽x高> v=<视图宽x高>
+```
+
+- `deg` 应等于：手动档时 = 所选值；自动时 = `sDeg`
+- 点「旋转」四个档位，`deg` 与 `v=` **应各不相同**
+- 例：`scr=1440x3168`、`prev=2520x1080`、`deg=90` ⇒ 预期 `v≈3360x1440`
+
+### ② 若「自动」不对
+
+先确认 `sDeg` 是否合理（典型后置应为 90）。若 `sDeg` 恒为 0 ⇒ 查 `GmCam.orient()`：
+`Camera.getCameraInfo(id, info)` 的 `info.orientation` 是否读到、`rot()` 是否返回 0。
+
+### ③ 若比例仍不对
+
+尺寸公式在 `GmCam.fit()`：
+
+```
+90/270 → k = max(vw/ph, vh/pw)      # 旋转后可见矩形是 (H, W)
+0/180  → k = max(vw/pw, vh/ph)
+W = round(k*pw), H = round(k*ph)
+```
+
+> ⚠️ **基准尺寸必须取 DecorView（屏幕），不能用视图自身** ——
+> `fit()` 会 `setLayoutParams` 改视图尺寸，用自身尺寸会**自我放大（漂移）**。
+
+### ④ 若「混合」不生效（整屏被相机盖住）
+
+`View.setBlendMode` 对 `TextureView` 可能无效 ⇒ 改试**「底图」**（相机放 index 0 +
+`content.setBlendMode`，即 2.5.5 那条路），或退回「蒙层」用 alpha。
+
+### ⑤ 已知未做/未验证
+
+| # | 项 |
+|---|---|
+| 1 | **画面朝向/比例未最终验收**（2.7.5 修完 if-ltz 后用户未再实测） |
+| 2 | `View.setBlendMode` 对 TextureView 是否生效 —— **未验证** |
+| 3 | 权限拒绝后需**手动再点一次**「摄像头」（未做自动重试） |
+| 4 | 后台释放依赖 `onSurfaceTextureDestroyed`，**未额外挂 `onPause`** |
+| 5 | 相机是稀缺资源，与 DeepSeek 自身拍照**可能抢占**（未做让路） |
+| 6 | 预览尺寸用的是相机默认值（本例 `2520x1080`，21:9），未做「接近屏幕比例」的自适应选择 |
+
+### ⑥ 若要回退此功能
+
+删掉/停用即可，影响面很小：
+`GmBgDialog.open()` 里的「摄像头」按钮、「摄像头方向」整行；`GmClick` 的 `0x2a/0x2c/0x2d/0x2b` 分支；
+`GmBg.ensure()` 的 `mode==2` 分支即可（其余为新增类，留着不影响）。
+
+---
+
+## 39.7 本轮最有价值的方法论收获
+
+| # | 收获 |
+|---|---|
+| A | **⭐ 自建可观测出口（DIAG 日志）是关键**。前面 2.7.1~2.7.4 靠「猜 → 改 → 再试」，往返 4 轮；2.7.5 只是把 `deg` 打出来，**一次就定位**。以后凡是「改了参数没反应」，先在关键路径打一行日志 |
+| B | **`if-*z` 六兄弟必须逐字念**：`eqz`=「==0跳」`nez`=「!=0跳」`ltz`=「<0跳」`gez`=「>=0跳」`gtz`=「>0跳」`lez`=「<=0跳」。（空值守卫统一写 `if-eqz x, :ret`） |
+| C | **同一寄存器不要跨分支承载不同具体类型**，汇合后会退化成父类，对 `final` 类的调用直接过不了校验 |
+| D | **`TextureView` 的旋转不要用 `setTransform`**（会与 SurfaceTexture 自带矩阵叠加失效），用 `View.setRotation()` |
+| E | **改「自己尺寸」的逻辑，基准必须取外部（父容器/屏幕）**，否则正反馈漂移 |
+| F | **「所有选项表现一样」几乎一定是「参数没传进去」**，而不是渲染问题 —— 先验证上游参数 |
+
+---
+
+## 39.8 当前版本
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.5.apk
+versionCode 81 / versionName 2.7.5
+sha256(partial) : 973355a456eaa26ebcb3cc0a5ac12e4918ccb08801492d7e0d2e884796dbb980
+signed          : V1 + V2 + V3  ·  classes : 56  ·  size : 54257
+```
+
+---
+
+# 四十、2.7.6 —— 摄像头取景：两个「确定 bug」修复（2026-09-12）
+
+> 承接第三十九节。本轮**不改功能设计**，只修两处代码级硬错误，变量最小化，便于验证。
+
+## 40.1 🐛 Bug 1：`GmCam.fit()` 的 90°/270° 分支是**死代码**
+
+### 症状
+
+竖屏 + 后置相机（`sDeg` 通常 = 90°）时，画面**被极度放大、比例完全不对**。
+
+### 原代码（2.7.3 ~ 2.7.5）
+
+```smali
+    const/16 v2, 0x5a
+    if-ne v4, v2, :cond_4f      # v4 != 90 → 非交换
+    const/16 v2, 0x10e
+    if-ne v4, v2, :cond_4f      # v4 != 270 → 非交换
+    <交换宽高的算法>             # ← 永远到不了！
+```
+
+### 根因
+
+两条 `if-ne` 串联要求 **`v4 != 90 && v4 != 270`** 才跳走，
+而进入交换分支需要 **`v4 == 90 && v4 == 270`** —— **逻辑上不可能成立**。
+
+**用「或」表达的分支，被写成了「与」的判跳结构。**
+
+### 后果（数学验证）
+
+屏 `1440×3168`，预览 `2520×1080`（21:9，与屏幕 20:9 很接近）：
+
+| 分支 | 缩放比 | 视图尺寸 | 旋转 90° 后视觉 | 结论 |
+|---|---|---|---|---|
+| 非交换（旧·实际走到） | `max(1440/2520, 3168/1080)=2.933` | `7392×3168` | `3168×7392` | 放大 2.93×，裁掉 ~55% ❌ |
+| **交换（修复后）** | `max(1440/1080, 3168/2520)=1.333` | `3360×1440` | `1440×3360` | 几乎完美铺满 ✅ |
+
+> 注：「视图尺寸」= 给 `TextureView.setLayoutParams` 的未旋转尺寸；
+> 旋转 90° 后的视觉包围盒 = 高×宽互换。所以 90/270 必须用**交换**算式。
+
+### 修法
+
+```smali
+    const/16 v2, 0x5a
+    if-eq v4, v2, :cond_swap     # v4 == 90 → 交换
+    const/16 v2, 0x10e
+    if-ne v4, v2, :cond_4f       # v4 != 270 → 非交换
+    :cond_swap
+    <交换宽高的算法>
+```
+
+- `v4==90` → 第一条命中 → 交换 ✓
+- `v4==270` → 第一条不命中、第二条 `if-ne` 也不跳 → 落到 `:cond_swap` → 交换 ✓
+- `v4==0/180` → 第二条跳 `:cond_4f` → 非交换 ✓
+
+## 40.2 🐛 Bug 2：`fit()` 在**后台线程**操作 View
+
+### 链路
+
+```
+GmCam.start(tv) → spawn() → new Thread → GmCamRun.run()
+        → GmCam.doOpen() → GmCam.fit()
+              └── setLayoutParams() / setRotation()   ← 非 UI 线程！
+```
+
+`View.setLayoutParams()` 会触发 `requestLayout()` → `ViewRootImpl.checkThread()`，
+非 UI 线程下手机会抛 `CalledFromWrongThreadException`；
+而 `fit()` 整个被 `try/catchall` 吞掉，**异常静默消失**，表现为
+「改了尺寸/角度没反应」，且**不报错、不崩溃**（最难查的一类）。
+
+### 修法
+
+新增 `GmFitRun`（`implements Runnable`），把 `fit()` 的调用 **post 回主线程**：
+
+```smali
+    :goto_4d
+    new-instance v7, Lcom/varuns2002/disable_flag_secure/gm/GmFitRun;
+    invoke-direct {v7}, Lcom/varuns2002/disable_flag_secure/gm/GmFitRun;-><init>()V
+    invoke-virtual {v1, v7}, Landroid/view/TextureView;->post(Ljava/lang/Runnable;)Z
+    return-void
+```
+
+`GmFitRun.run()` 里**重新取** `sTv`/`sCam` 并判空（期间可能已被 `stop()` 释放），
+再调 `GmCam.fit(tv, cam)`；自身再包一层 try/catch 双保险。
+
+> 相机 `Camera.open()` 仍留在后台线程（阻塞操作，正确），
+> **只有碰 View 的那一段**挪回主线程。
+
+## 40.3 本轮改动清单
+
+| 类 | 改动 |
+|---|---|
+| `GmCam` | `fit()` 的 90/270 分支 `if-ne`→`if-eq`+新标签 `:cond_swap`；`doOpen()` 末尾由直接 `fit()` 改为 `GmFitRun` + `sTv.post()` |
+| **`GmFitRun`（新增）** | `Runnable`：主线程调用 `GmCam.fit(sTv, sCam)`，含判空 + try/catch |
+| `AndroidManifest.xml` | `81/2.7.5` → `82/2.7.6` |
+
+类数 56 → **57**。
+
+## 40.4 修改后的 `fit()` 分支骨架（核对用）
+
+```smali
+    const/16 v2, 0x5a
+    if-eq v4, v2, :cond_swap      # ← 修：==90 就交换
+    const/16 v2, 0x10e
+    if-ne v4, v2, :cond_4f        # !=270 走非交换
+    :cond_swap
+    # 交换算式： v2 = scr.w / prev.h ; v3 = scr.h / prev.w
+    goto :goto_55
+    :cond_4f
+    # 非交换：   v2 = scr.w / prev.w ; v3 = scr.h / prev.h
+    :goto_55
+    scale = max(v2, v3)
+    vw = round(prev.w * scale) ; vh = round(prev.h * scale)
+    setLayoutParams(vw, vh + gravity=CENTER) ; setRotation(deg)
+```
+
+## 40.5 测试 / 预期 DIAG
+
+```
+1. 安装 2.7.6，杀进程
+2. 管理器 → 美化 → 修改背景 → [摄像头] → [后置] → 开开关
+3. 管理器 → 服务端灰度下发查看 → 顶部 DIAG，找 cam fit 行
+   预期（竖屏 1440×3168 / 预览 2520×1080）：
+     自动(deg=90)  → v≈3360x1440   ← 修复前会是 7392x3168
+     旋转 0°       → v≈7392x3168
+     旋转 90°      → v≈3360x1440
+     旋转 180°     → v≈7392x3168
+     旋转 270°     → v≈3360x1440
+4. 画面应铺满、比例正常；点「旋转」四档，deg 与 v= 都应各不相同
+```
+
+**判读口诀**：`deg` 是 90 或 270 ⇒ `v=` 应该是「**窄×高**」（如 3360x1440）；
+`deg` 是 0 或 180 ⇒ `v=` 是「**宽×矮**」。对不上就是分支还是错的。
+
+## 40.6 教训（补充 39.7）
+
+| # | 收获 |
+|---|---|
+| G | **「或」条件写成 `if-ne` 串联 = 死分支**。「A 或 B 成立就跳 X」必须写成 `if-eq A→X` + `if-ne B→继续`，或两条 `if-eq` 跳同一标签。**写完把四个取值逐一走一遍** |
+| H | **凡是碰 `View` 的代码，必须确认线程**。`Camera.open()` 在后台没问题，但 `setLayoutParams/setRotation/setAlpha/setBlendMode` 全都要在主线程 |
+| I | **大 try/catch 会吞掉一切**。`fit()` 的 catchall 让「线程违规」变成「静默无效」—— 代价是排查 5 轮。**建议 catch 里至少写一行 DIAG** |
+| J | 分支型 bug 用**数值验算**最快：把「屏/预览/角度」代进去直接算，比在真机上试快得多 |
+
+## 40.7 当前版本
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.6.apk
+versionCode 82 / versionName 2.7.6
+sha256(partial) : 3199949801ae81d05ffbb91f07fac59ff1eb0c0cde07a2051a01bba8dd59827d
+signed          : V1 + V2 + V3  ·  classes : 57  ·  size : 54257
+```
+
+### 待验证
+
+| # | 项 |
+|---|---|
+| 1 | `deg=90/270` 时 `v=` 是否变成「窄×高」（3360x1440） |
+| 2 | 画面是否铺满且比例正常（不再被放大 2.9 倍） |
+| 3 | 「旋转」四档是否真有区别 |
+| 4 | `View.setBlendMode` 对 TextureView 是否生效（第三十九节遗留） |
+
+---
+
+# 四十一、2.7.7 —— 摄像头取景「旋转不生效」真凶：`rot()` 映射错位（2026-09-12）
+
+> 用户实测 2.7.6 后反馈：**「拉伸修好了，但旋转还是没修好」**，
+> 并附上 DIAG。本轮靠这一行日志一击定位。
+
+## 41.1 用户实测 DIAG（2.7.6）
+
+```
+1789218726931 cam fit deg=0 sDeg=0 scr=1440x3168 prev=2520x1080 v=7392x3168
+1789218735035 cam fit deg=0 sDeg=0 scr=1440x3168 prev=2520x1080 v=7392x3168
+...
+```
+
+**关键**：竖屏 + 后置相机，`sDeg` 应该是 **90**，实际是 **0**。
+且 `deg` 恒为 0 → 画面永不旋转 → 用户看到的「旋转没修好」。
+
+> 注：`v=7392x3168` 本身是 `deg=0` 的**正确**输出（非交换算式），
+> 说明 2.7.6 修的死分支/线程两个 bug 是对的，只是 `deg` 源头是错的。
+
+## 41.2 🐛 Bug 3：`GmCam.rot()`（屏幕旋转→角度）映射表**整体偏移一格**
+
+### 原代码（自 2.7.0 起）
+
+```smali
+    invoke-virtual {v2}, Landroid/view/Display;->getRotation()I
+    move-result v1                 # v1 = 0/1/2/3
+    const/4 v3, 0x1
+    if-ne v1, v3, :cond_1b        # v1 != 1 → 跳「90」分支
+    const/4 v3, 0x2
+    if-ne v1, v3, :cond_1e        # v1 != 2 → 跳「180」分支
+    const/4 v3, 0x3
+    if-ne v1, v3, :cond_21        # v1 != 3 → 跳「270」分支
+    :cond_1a
+    return v0                      # 0
+```
+
+`if-ne` = **不相等就跳走**，所以是「v1≠1 → 当作 90」—— 语义正好反着。
+
+### 实际取值表（旧）
+
+| `Display.getRotation()` | 应返回 | 旧代码返回 |
+|---|---|---|
+| `0` ROTATION_0 | `0` | **90** ❌ |
+| `1` ROTATION_90 | `90` | **180** ❌ |
+| `2` ROTATION_180 | `180` | **270** ❌ |
+| `3` ROTATION_270 | `270` | **0** ❌ |
+
+**四个值没有一个是对的，全部错位一格。**
+
+### 为什么 `sDeg = 0`
+
+`orient()` 后置相机公式：`sDeg = (sensor.orientation - rot() + 360) % 360`
+
+竖屏：`rot()` 应 = 0、错返 = 90 → `sDeg = (90 - 90) % 360 = 0` ← **与 DIAG 完全吻合**。
+
+### 修法
+
+三条 `if-ne` → **`if-eq`**（相等就跳到对应分支）：
+
+```smali
+    const/4 v3, 0x1
+    if-eq v1, v3, :cond_1b        # ==1 → 90
+    const/4 v3, 0x2
+    if-eq v1, v3, :cond_1e        # ==2 → 180
+    const/4 v3, 0x3
+    if-eq v1, v3, :cond_21        # ==3 → 270
+    :cond_1a
+    return v0                     # ==0 → 0
+```
+
+## 41.3 🐛 Bug 4（隐患）：双重旋转源
+
+`orient()` 里原本同时做了两件事：
+
+```smali
+    sput v1, GmCam;->sDeg:I
+    invoke-virtual {p0, v1}, Camera;->setDisplayOrientation(I)V   # ← 老写法：把 sDeg 也交给相机
+```
+
+而显示旋转已经由 `fit()` 里的 `TextureView.setRotation(sDeg)` 承担。
+**同一件事有两个写入源**，结果随「`setDisplayOrientation` 对 `setPreviewTexture` 是否生效」而变：
+
+| `setDisplayOrientation` 是否生效 | 老写法（传 sDeg） | 新写法（传 0） |
+|---|---|---|
+| 生效 | 转 **2×sDeg** = 180° ❌ | 转 sDeg ✅ |
+| 不生效 | 转 sDeg ✅ | 转 sDeg ✅ |
+
+**传 0 在两种情况下都正确** ⇒ 改为 `setDisplayOrientation(0)`，把旋转**唯一来源**固定为 `View.setRotation`。
+
+```smali
+    sput v1, Lcom/varuns2002/disable_flag_secure/gm/GmCam;->sDeg:I
+    const/4 v2, 0x0
+    invoke-virtual {p0, v2}, Landroid/hardware/Camera;->setDisplayOrientation(I)V
+```
+
+## 41.4 ⚠️ 顺带修正一个历史结论
+
+第三十六节曾判定：**「`setDisplayOrientation()` 对 `setPreviewTexture()` 不生效」**，并以此解释 2.7.3 的「右偏 90°」。
+
+但 `sDeg` 长期被 `rot()` 算成 **0**（本轮才发现），此时无论 `setDisplayOrientation` 生效与否都**不会旋转** ——
+「右偏 90°」完全可以由 `sDeg=0` 单独解释。
+
+⇒ **该结论证据不足，标记为「存疑」，不要继续拿它当前提。**
+
+## 41.5 本轮改动清单（2.7.6 → 2.7.7）
+
+| 位置 | 改动 |
+|---|---|
+| `GmCam.rot()` | 三条 `if-ne` → `if-eq`（映射表偏移修正） |
+| `GmCam.orient()` | `setDisplayOrientation(sDeg)` → `setDisplayOrientation(0)`（消除双重旋转） |
+| `AndroidManifest.xml` | `82/2.7.6` → `83/2.7.7` |
+
+类数不变（57）。
+
+## 41.6 预期 DIAG（2.7.7）
+
+环境：屏 `1440×3168`、预览 `2520×1080`、竖屏后置
+
+| 档位 | `deg` | `sDeg` | `v=` |
+|---|---|---|---|
+| **自动** | **90** | `90` | **`3360x1440`** |
+| 旋转 0° | 0 | 90 | `7392x3168` |
+| 旋转 90° | 90 | 90 | `3360x1440` |
+| 旋转 180° | 180 | 90 | `7392x3168` |
+| 旋转 270° | 270 | 90 | `3360x1440` |
+
+**两个判据**：
+1. `sDeg` 必须变成 **90**（不再是 0）；
+2. `deg` 是 90/270 ⇒ `v=` 是「窄×高」；`deg` 是 0/180 ⇒ `v=` 是「宽×矮」。
+
+## 41.7 教训
+
+| # | 收获 |
+|---|---|
+| K | **switch / 映射表用 `if` 链展开时，先写「取值 → 目标」对照表，再逐值验算**。`if-ne` 链天然是「不等就跳」，用它表达「等于才走某分支」必错 |
+| L | **同一属性不要有两个写入源**（`setDisplayOrientation` + `setRotation`）。要么只留一个，要么确保另一个恒为恒等值 |
+| M | **DIAG 里加一个「源头值」（`sDeg`）比加十个下游值有用** —— 这次是一眼看穿 |
+| N | **旧的「结论」也要用新证据复查**。第 36 节那条「setDisplayOrientation 不生效」的判定，很可能一直是 `rot()` 的锅 |
+
+## 41.8 当前版本
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.7.apk
+versionCode 83 / versionName 2.7.7
+sha256(partial) : 7491d180640ea7aef58b99795d10dd2536455639bfa9a0f65c0c5b1fbdd99e4f
+signed          : V1 + V2 + V3  ·  classes : 57  ·  size : 54257
+```
+
+## 41.9 ✅ 验收（2026-09-12）
+
+> 用户确认：**「摄像头取景」修好，功能通过验收。**
+
+「修改背景」三态现状（截至 2.7.7）：
+
+| 形态 | 状态 |
+|---|---|
+| 蒙层 | ✅ 可用 |
+| 混合（真背景） | 🟡 方向已通，需按底色手动选档 |
+| **摄像头取景** | ✅ **可用（2.7.7 验收）** |
+
+**摄像头四连 bug 复盘（2.7.0 → 2.7.7）**：`setDisplayOrientation` 误判 → 上错旋转机制 → 旋转角取值反向 → **显影分支死代码 + 后台线程动 View + `rot()` 映射错位**。
+**全部 4 个都是「条件判断写反 / 写错」家族** —— 与全项目累计的反向判断同源，是这个项目最大的技术债。
+
+**若将来再遇到「改了参数没反应」**，按此顺序排查：
+1. 关键路径先打 **DIAG**（本次两次一击定位都靠它）
+2. 该参数是否**真的传到**了下游（`deg` / `v=` 对照）
+3. 分支条件**逐值走一遍**（`if-*z` 六兄弟 + `if-ne` 链陷阱）
+4. 是否被 **try/catch 吞掉**
+5. 是否在**错误的线程**上碰了 View
+
+---
+
+# 四十二、2.7.9 —— 摄像头「不透明盖屏」：`pos=2`（混合）陷阱（2026-09-12）
+
+> 用户复现：**「一打开背景并选择摄像头就会这样」**（不必重启），并给出 2.7.8 的 DIAG。
+
+## 42.1 DIAG 证据
+
+```
+cam fit deg=90 sDeg=90 scr=1440x3168 prev=2520x1080 v=3360x1440   ← 2.7.7 旋转修复✅
+cam fx  mode=2 pos=2 alpha=40 cam=0                                ← 🎯 真凶
+```
+
+**`pos=2`（位置=混合）** —— 与「不透明盖住 UI」的现象完全对应。
+
+## 42.2 根因：`setModeCam` 只处理了「底图」，**漏了「混合」**
+
+```java
+setMode(ctx, 2);
+if (pos(ctx) == 1) setPos(ctx, 0);   // ← 只有 pos==1 才归零
+setAlpha(ctx, 40);
+```
+
+`pos` 取值是 `{0=蒙层, 1=底图, 2=混合}`，这句**只覆盖了 1**。
+存量 `pos=2` 的用户点「摄像头」后仍留在「混合」→ 走 `applyFx` 的 `pos==2` 分支：
+
+```
+addView(最上层) + setAlpha(1.0f) + View.setBlendMode(MULTIPLY/SCREEN)
+```
+
+## 42.3 为什么「混合」在摄像头下必然出问题
+
+| 背景实现 | 混合机制 | 摄像头可用？ |
+|---|---|---|
+| `GmBgView`（自绘） | `onDraw` 里 `Paint.setXfermode(PorterDuffXfermode)` | ✅（2.6.0 方案②） |
+| **`TextureView`（摄像头）** | **无法自绘**（SurfaceTexture 是独立图层，插不进 `onDraw`）⇒ 只能 `View.setBlendMode` | ❌ 且配 `setAlpha(1.0f)` ⇒ blend 一旦不生效/方向不对，就是**满屏不透明** |
+
+> 这正是第三十九节遗留 #4「`View.setBlendMode` 对 TextureView 是否生效 —— 未验证」的恶果。
+
+## 42.4 修法（2.7.9）
+
+| 位置 | 改动 |
+|---|---|
+| `GmBgDialog.setModeCam` | `if (pos == 1) setPos(0)` → **`if (pos != 0) setPos(0)`** —— 点「摄像头」自动切「蒙层」 |
+| `GmCam.applyFx` | `pos==2` 分支：`setAlpha(1.0f) + setBlend(...)` → **`goto :cond_24`**（= 半透明叠加，与「蒙层」同路径） |
+| toast 文案 | →「摄像头取景已选中（位置→蒙层，透明度 40%）…」 |
+
+**效果**：摄像头模式下「位置」统一走**半透明叠加**（由「透明度」滑块控制），
+彻底避开 `TextureView` 用不了的自绘混合机制。
+
+## 42.5 预期 DIAG（2.7.9）
+
+```
+cam fx mode=2 pos=0 alpha=40 cam=0      ← 点「摄像头」后 pos 应为 0
+```
+
+哪怕用户手动再点「混合」，`pos=2` 也会走半透明分支 ⇒ **不会再盖屏**。
+
+## 42.6 教训
+
+| # | 收获 |
+|---|---|
+| O | **枚举型可选值改动时，必须把所有取值列出来逐一处理**（`pos ∈ {0,1,2}`，只处理 `1` 就是漏项）。与反向判断同源：都是「没把取值空间走全」 |
+| P | **同一功能的两种实现（自绘 View / TextureView）能力不同**，UI 语义要跟着分叉；不能假设一套混合机制通用 |
+| Q | **DIAG 要打在「即将做决策的那一行之前」** —— 本次 `cam fx` 一行直接锁定 `pos=2` |
+
+## 42.7 当前版本
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.7.9.apk
+versionCode 85 / versionName 2.7.9
+sha256(partial) : 7aa09e1f7208ad7f73ab54e39ef39ba70ff15dce503c65ba6d614ce6aaef54fe
+signed          : V1 + V2 + V3  ·  classes : 57  ·  size : 54257
+```
+
+> 注：2.7.8 加在 `GmCam.applyFx` 的 `cam fx mode=.. pos=.. alpha=.. cam=..` 诊断行**暂时保留**，
+> 待本轮验收通过后再决定是否摘除。
+
+---
+
+# 四十三、2.8.0 —— 摄像头「手动数码裁切」（数字变焦）（2026-09-12）
+
+## 43.1 需求
+
+用户：给摄像头加一个**手动调整数码裁切**的功能。
+
+## 43.2 实现选型
+
+| 方案 | 说明 | 结论 |
+|---|---|---|
+| Camera1 `setZoom()` | 相机内部数字变焦，理论画质更好 | ❌ 依赖设备 `isZoomSupported()`、档位离散、设备差异大、要碰 `Parameters` |
+| **View 层裁切（在 `fit()` 的 scale 上乘倍率）** | 在「等比铺满」基础上再放大/缩小 | ✅ 连续可调、不依赖设备、与现有 `fit()` 天然统一、实时生效 |
+
+**采用 View 层裁切。**
+
+## 43.3 配置项
+
+| 键 | 类型 | 含义 | 默认 |
+|---|---|---|---|
+| `fuckds_bg_crop` | i | 裁切倍率（%），**100 = 刚好铺满、不额外裁切** | `100` |
+
+范围 **100 ~ 300**，步进 **25**（共 9 档）。
+
+## 43.4 改动的类（2.7.9 → 2.8.0）
+
+| 类 | 改动 |
+|---|---|
+| `GmBg` | 新增 `crop(Context)I`（默认 100）+ `setCrop(Context,I)V` |
+| `GmCam.fit` | `scale = max(sx, sy) × (crop / 100)`；`sAct` 为 null 时跳过（保持 1.0） |
+| `GmBgDialog` | 新增 `cropDown()` / `cropUp()`（钳制 100~300，调 `GmCam.refit()` 实时生效）；`open()` 在「摄像头方向」行下新增一行 **「裁切 N% [−][＋]」** |
+| `GmClick` | 新增动作 **`0x2e`（−）/ `0x2f`（＋）** |
+| `AndroidManifest.xml` | `85/2.7.9` → `86/2.8.0` |
+
+## 43.5 关键设计点
+
+- **裁切不进签名 `sSig`**：改裁切走 **`GmCam.refit()`**（只重算视图尺寸 + 重设 LayoutParams），
+  **不重建 `TextureView`、不重启相机** —— 与「旋转」同一套轻量机制 ✓
+- 重启后由 `ensure → doOpen → fit` 自动读回 `crop`，无需额外处理 ✓
+- `cropUp/cropDown` 的钳制写法：
+  - `cropDown`：`if-ge v1, 0x64, :cond` → `v1 >= 100` 才跳过钳制（`if-ge` =「大于等于则跳」）
+  - `cropUp`：`if-le v1, 0x12c, :cond` → `v1 <= 300` 才跳过钳制
+
+## 43.6 预期 DIAG
+
+`deg=90` 时（基准 `v=3360x1440`）：
+
+| 裁切 | 有效 scale | 预期 `v=` |
+|---|---|---|
+| 100% | 1.333 | `3360x1440` |
+| 150% | 2.000 | `5040x2160` |
+| 200% | 2.667 | `6720x2880` |
+| 300% | 4.000 | `10080x4320` |
+
+**v 随 crop 线性放大** ⇒ 可据此验证裁切是否真的生效。
+
+> ⚠️ View 层裁切是「放大已有预览帧」，倍率越高越糊（预览 2520×1080 时 300% 约等效 840×360）。
+> 若日后嫌糊，可再改用 `Camera.setZoom()` 走真·数字变焦（作为后续增强项）。
+
+## 43.7 当前版本
+
+```
+/storage/emulated/0/Download/apks/FuckDSManger_2.8.0.apk
+versionCode 86 / versionName 2.8.0
+sha256(partial) : ac21b3caf8fe3e7ea01eecded9e15009e19b31839157b0b6fd4f75e345575778
+signed          : V1 + V2 + V3  ·  classes : 57  ·  size : 54257
+```
+
+---
+
+# 四十四、2.9.0 —— 适配 DeepSeek 2.5.1（宿主升级专项，2026-09-12）
+
+> 详见独立文档：**`2.9.0-适配DeepSeek-2.5.1.md`**
+> 输出：`/storage/emulated/0/Download/apks/FuckDSManger_2.9.0.apk`（versionCode 86 → 87）
+
+宿主从 2.4.5 升到 **2.5.1（versionCode 271）**，R8 全量重排混淆名 ⇒ **旧 hook 点全部失效**
+（`hw1` 变成序列化器、`lac5` 消失、`vp4/uv1/az1/yu9/i65` 全被复用成别的类）。
+
+本轮完整重新定位并改造，关键新映射：
+
+| 功能 | 新锚点 |
+|---|---|
+| 检查更新文案 | 资源 `0x7f0f021f`（`profile_check_for_updates`） |
+| 检查更新点击 | `Lvc5;->Z(Loo9;[Ljava/lang/String;)V` 命中 `"/api/v0/check_client_update"` |
+| 头像 Painter | `Lkf5;->K(IILey3;)Lku6;` + `Lle`(ImageBitmap) + `Lok0`(BitmapPainter) |
+| 消息列表（防撤回） | `Lh91;->a(...)` → 反射 `Lpe5;->j()` 取 List |
+| 下发应用 | `Lp66;->h(Lbx4;ILjava/lang/String;ILjava/lang/String;)V`（数据对象 `Lbx4`，Map 实现） |
+| MMKV | `k()`→`l()`（defaultMMKV），`p`→`q`（putString） |
+| ColorScheme | ❌ 不再注册（2.5.5 已证无效） |
+
+改动 8 个类 + Manifest；`GmTextHook`/`GmTraceHook`/`GmCsHook` 保留但不再注册。
+
+⚠️ 本轮再次踩坑：**smali 零比较跳转语义**（`if-ltz` = `<0` 才跳，`if-gez` = `>=0` 才跳），
+`GmClickHook` 两处守卫第一版都写反，人工复核抓回 —— 见专文第四节。
+
+**下一步：真机验证**（入口 / 文案 / 灰度读写 / 下发 / 头像 / 防撤回，优先级见专文第五节）。
+
+---
+
+# 四十五、2.9.0 —— 适配 DeepSeek 2.5.1（正式实施，2026-09-12）
+
+> 详见独立文档：**`2.9.0-适配DeepSeek-2.5.1-实施.md`**（本文是权威版）
+> 文件：`FuckDSManger_2.8.0for_ds2.4.5.apk`（86/2.8.0，57 类）
+> → **`FuckDSManger_2.9.0_for_ds2.5.1.apk`**（87/2.9.0，58 类，已签名 V1/V2/V3）
+> 产物：`/storage/emulated/0/Download/apks/FuckDSManger_2.9.0_for_ds2.5.1.apk`
+
+⚠️ **重要澄清**：`2.9.0-适配DeepSeek-2.5.1.md` 是一份**探索日志**，记载了 2.9.0~2.9.7 的多轮尝试。
+本轮开工时核对发现：**MCP 目录里只有 2.8.0 原始包，日志里那些中间产物并不存在**。
+因此本轮**从 2.8.0 原始包完整重做了一遍**。
+
+- 日志里对「新锚点是谁」的逆向判断 —— **经逐条实证，全部正确**（可继续复用）
+- 日志里对「为什么没生效」的归因 —— **不可靠，勿沿用**（详见下）
+
+## 45.1 关键新映射（全部实测确认）
+
+| 功能 | 2.4.5 | **2.5.1** |
+|---|---|---|
+| 检查更新文案资源 | `0x7f0f0217` | **`0x7f0f021f`** |
+| 检查更新行点击 | `hw1.a` / `hw1.b` | **`Lm5;->v()` 且 `this.a == 0x14`** |
+| 头像 Painter | `i65.x` | **`Lkf5;->K(IILey3;)Lku6;`**（= `painterResource`）|
+| ImageBitmap / BitmapPainter | `ke` / `di0` | **`Lle`** / **`Lok0`** |
+| 消息列表 | `yu9.m(List)` | **`Lh91;->a(...)`** → 反射 `Lpe5;->j()` 取 List |
+| 下发应用（model 域） | `uv1.u` | **`Lp66;->h(Lbx4;ILjava/lang/String;Ljava/lang/String;)V`**（**4 参**）|
+| 下发应用（main 域） | `az5.h` | **`Lh02;->u(同签名)`** |
+| 下发数据对象 | `vp4` | **`Lbx4`**（`implements Map`，字段 `a`）|
+| MMKV 默认实例 / putString | `k()` / `p` | **`l()` / `q(String,String)Z`** |
+| ColorScheme / trace / 文案类 | `az1` / `p96.b` / `lac5.A` | ❌ 不注册 |
+
+## 45.2 本轮做对的 4 个技术决定
+
+1. **入口改 hook 行级 onClick（`m5.v` 的 `0x14`），砍掉触摸/时间门槛**
+   —— 老门槛依赖 `dispatchTouchEvent` 时间戳，链上任一层重写就会恒为 0 把自己拦死。
+   `0x14` 在设置页是**唯一**构造点，语义上不会误命中，不需要旁证。
+2. **`setResult` 的 Unit 用宿主 ClassLoader 反射取，绝不在模块里硬引用 `Llp9;`**
+   —— 硬引用会让模块自己的 Loader 找不到宿主类 ⇒ 整类 `NoClassDefFoundError` ⇒
+     hook 静默失效。**这极可能就是日志里「2.9.3 点击无任何反应」的真因。**
+3. **`hookM` 加固**：签名改成收 `hookClassName` 字符串，`Class.forName`+`newInstance` 挪进它的 try
+   —— 任何一条 hook 失败只废它自己（写 `hookM FAIL` 到 GmDiag），不再拖垮全局。
+4. **catch 块内只做不会抛异常的事**（logFail / GmDiag），绝不在里面 Toast。
+
+## 45.3 改动清单
+
+`DisableFlagSecure`（整类重写：hookM 加固 + 新注册表 + 包名守卫）、
+**`GmEntryHook`（新增）**、`GmResTextHook`、`GmPainterHook`、`GmStore`、`GmSync`、`GmRevokeHook`（新增 `asList`）、
+`GmResumeHook`、`AndroidManifest.xml`（86/2.8.0 → 87/2.9.0）。
+
+保留不注册：`GmTextHook` / `GmTraceHook` / `GmCsHook` / `GmClickHook`。
+
+## 45.4 自检结果
+
+- `mt_apk_edit_check(runBuildChecks=true)` → **passed**，changedClassCount 8，failedCount 0
+- 产物回读：`versionCode 87 / versionName 2.9.0`、类数 **57→58**、
+  `GmResTextHook` 已是 `0x7f0f021f`、注册表里 `p66`/`h02` 类名字符串正常
+- ⚠️ 产物与原始包**字节数恰好相同（54257）**，属 zip 压缩巧合，**不是没构建**
+
+## 45.5 新增教训（补充第十一节）
+
+1. **不要在模块里 `sget-object` 宿主的类**（哪怕只是取 `kotlin.Unit`）
+   —— 模块 Loader 看不见宿主类，整类加载失败、hook 静默失效。
+   要宿主的东西一律「宿主 ClassLoader + 反射」，并且**放在运行时而不是类初始化期**。
+2. **`mt_apk_edit_text` 的 `replace_match` 对"含引号的短串"匹配不友好**
+   —— 我那边 `"..."` 形式的 matchText 报 TEXT_MATCH_NOT_FOUND，而去掉引号又报 AMBIGUOUS
+   （`GmDsHook` 是 `GmDsHook2/3` 的前缀）。**结论：这种情况直接整类 `write_target` 更省事**。
+3. **改完 smali 一定要回读一遍自己写的文本**：本轮我把一处类名字符串写成了
+   `...disable_flag_secure/gm/GmDsHook`（斜杠），靠回读抓回。
+
+---
+
+# 四十六、2.9.1 —— 纳管 2.5.1 新增灰度键（2026-09-12）
+
+> 详细实施记录：**`2.9.1-灰度键纳管.md`**（本文只留要点）
+> 对照报告：**`2.5.1-灰度键对照-模块2.9.0.md`**
+> 产物：`/storage/emulated/0/Download/apks/FuckDSManger_2.9.1_for_ds2.5.1.apk`（88/2.9.1，81 项，58 类，V1/V2/V3）
+
+## 46.1 一句话
+
+2.5.1 的 main 域应用点 `Lh02;` 从 70 键 → **仍是 70 键但换了 9 个**（70−9+9），
+model 域 `Lp66;` 多了 `alert` / `banner` —— 模块一次性补齐 **11 项**，70 → **81**。
+
+## 46.2 🎉 老待办闭环：「朗读文本」灰度
+
+第五节待办 #3 / 第九节建议 #2 记的「**朗读文本灰度缺失（2.4.5 里 `朗读`/`tts` 全零命中）**」
+—— 2.5.1 **已落地**：7 个 `kv_remote_settings_tts_*`（getter `Lh02;->c..i`，本地键 `kv_settings_tts_*`，
+int，默认 `5000/240/240/-1/-1/1000/1000`）+ 13 条「朗读」资源（`read_aloud_start_label` 等）。
+**该项现在可以划掉。**
+
+## 46.3 三条新方法论（写进肌肉记忆）
+
+1. **`b()[J` = 权威键数表**：main 域应用点里这个方法把「(服务端键, id键)」成对列出来，
+   数组长度就是真实键数（2.5.1 = `0x46` = 70）。比搜字符串数出现次数可靠得多。
+2. **有没有 `kv_settings_<key>` 决定要不要 hook**：
+   有 ⇒ 模块用**裸键**，写 `kv_settings_*` 直接压过下发，**零 hook**；
+   没有 ⇒ 只能写 `kv_remote_settings_*`，**必须**加 `GmMmkvHook`。
+3. **拦截时绝不能用「同键旧值」当覆盖值** ⇒ 会退化成「用户没设过的键被永久冻结」。
+   一律用影子键 `fuckds_pin_<key>`（`GmStore.write/remove` 自动镜像），空 = 不干预。
+
+## 46.4 MMKV 路径实证（省得下次再猜）
+
+- `q(String key, String value)Z` = **下发/服务端路径** → native `encodeString(handle,key,value)`，**被 hook**
+- `putString` / `putInt` / `putBoolean` = **Editor 路径** → 各自直连 native，**不经过 `q`**
+- `apply()` / `commit()` = `sync()`；`getString` = `decodeString`
+
+⇒ 模块自己写值不会被自己的 hook 拦截（**无自锁**），这套 hook 设计成立。
+
+## 46.5 遗留
+
+TTS 7 项与 `alert`/`banner` 的真机验证、以及 `languages` / `providers_v1` 是否纳管，
+见 `2.9.1-灰度键纳管.md` 第五节。
+
+## 46.6 2.9.2 —— 修 VerifyError（2.9.1 真机一装就崩）
+
+**症状**：`GmResumeHook → GmSync.reapplyAll → GmPrompt.get` 时
+`VerifyError: Verifier rejected class GmStore: remove(Context,String) [0x2B] register v2
+has type String but expected Context` ⇒ App 一 `onResume` 就 FATAL。
+
+**根因**：`GmStore.remove` 是 **`.registers 4` + 2 参** ⇒ 局部只有 v0、v1，**`p0` = v2**。
+我插的影子键代码写了 `const-string v2, "fuckds_pin_"`，**把 p0（Context）压成了 String**。
+→ 临时寄存器改用 v0/v1。版本号 `88/2.9.1` → **`89/2.9.2`**。
+
+**⚠️ 新教训（第 19 条）**：
+1. **`edit_check(runBuildChecks=true)` 不做字节码校验**，VerifyError 能一路通过到真机；
+   插完 smali **必须回读人工复核**。
+2. 插 smali 前先算 **局部寄存器上限 = `.registers − 参数个数`**，
+   临时变量只能用 `< 上限` 的寄存器；`.registers` 很小的方法（如 4）最危险。
+3. 崩溃日志的「类 X 方法 Y 校验失败」要按 **Y 所在类** 修，别被上层调用栈带偏。
+
+## 46.7 2.9.3 —— TTS 总开关纳管 + 打通 `key_*` 命名空间
+
+**新发现**：TTS 的**总开关不在灰度里**，而是 App 本地设置
+**`key_auto_tts_enabled`**（MMKV 默认实例 = 模块 `GmStore` 同一实例；默认 **false**；
+读 `Ler;<init>` / 写 `Lwc0;->g`；UI = 聊天页顶栏 `AutoTtsButton`）。
+另有两层：`model_configs[].ttsFeature.autoTtsEnableByDefault`（默认 true，模块早可改）
+与 `auto_tts_capability`（服务端）。`Lk11` 日志证明 **客户端开关压过服务端能力位**。
+
+**改动**：①`GmDialog.addRow` 新增 **`key_` 前缀分支**（App 本地设置从此可纳管）
+②`KEYS` 81 → **83**（`0x53`）：`key_auto_tts_enabled`(b) / `key_tts_voice_id`(s)
+③版本号 `89/2.9.2` → **`90/2.9.3`**。
+
+**设计取舍**：这两个键**不做 pin 拦截** —— 它们是普通用户设置，App 自己也会写，
+加 pin 会与 UI 抢值；pin 只用于「服务端下发类」的键。
+
+**📝 过程记录（已查清）**：2.9.3 开工时发现会话里 `GmDialog` **已多出** `key_` 分支与那 2 个新键，
+而本轮对此**没有记忆** —— 实为**上一轮做到一半时服务端断连、会话被中断**，
+前一轮的写入已经落库（base 包仍是旧的，会话里是改好的版本）。
+
+**教训：上下文可能因断线 / 重生成 / 换会话而丢失 ⇒ 动爪前先回读目标方法与 `targetVersion`，
+以「会话当前文本」为准。** 本次靠这个才发现「已经改好了」，避免了重复插入与数组下标错位。
+
+## 46.8 2.9.4 —— 补齐 `model_configs.tts_feature`，让 TTS 按钮出现
+
+**真机证据**：用户提供的 2.5.1 下发快照里，三个模型对象**都没有 `tts_feature`**。
+而 `Lu9a;->b`（顶栏 AutoTtsButton）的可见性判定第一行就是
+`if (modelConfig.ttsFeature == null) return false;` ⇒ **本地开关打开也不显示**。
+
+**改动**：①新增类 **`GmTts`**（`fix` 字符串注入 + `ensure` 就地修补已存值）
+②`GmMmkvHook` 的 `model_configs` 分支在 `GmPrompt.patch` 后过 `GmTts.fix`
+③`GmSync.reapplyAll` 挂 `GmTts.ensure`（**每次 resume 自愈**，绕开 `kv_model_version` 版本号早退）
+④顺手修 `volcengine_enabled` 类型 `b`→`s`（下发实测是字符串）⑤`91/2.9.4`，类数 58 → **59**。
+
+**风格**：沿用模块既有的**纯字符串替换**（同 `GmModel` 的 switchable 改写），不引入 org.json。
+
+**留档**：注入是永久写进 MMKV 的；`ensure` 每次 resume 都会补，所以「清空模型配置表」
+不能撤销它 —— 要开关得做成管理器里的一行。
+
+---
+
+# 四十七、2.9.5 —— 环境伪装（绕过客户端 root / 模块环境检测）（2026-09-12）
+
+> 详细实施记录：**`2.9.5-环境伪装.md`**（本文只留要点）
+> 产物：`/storage/emulated/0/Download/apks/FuckDSManger_2.9.5_for_ds2.5.1.apk`（92/2.9.5，**68 类**，V1/V2/V3）
+
+## 47.1 需求
+
+用户设备 root + LSPosed，**不装模块**进 DeepSeek 也会被拦：
+点「获取验证码」→ toast「**当前设备运行环境异常，请尝试更换环境**」，登录被阻止。
+要求：模块里做一个**默认开启**的开关绕过它，并在**注入后弹一次吐司**。
+
+## 47.2 定位结论（全部实证）
+
+1. **提示文案**：资源 `0x7f0f00be` = `create_pass_code_risk_device_toast`，
+   唯一引用点是 `Loh2;->b(ILdo8;)V`（`CreateSmsVerificationCodeErrorCode` 错误码 → toast），
+   **错误码 2 = 风险设备**。⇒ 服务端判的，hook toast 没用，必须让上报指纹变干净。
+2. **检测方 = 数美反欺诈 SDK**（`com.ishumei.smantifraud.*` + `libsmsdk.so`）。
+   `Lj4;->A` 里 `SmAntiFraud.getDeviceId()` 拿 SMID，上报 JSON `{"organization","smid",...}`。
+3. **数美的 Java 层探测点**（类 `l1111l111111Il`）共 13 个：XposedBridge.jar /
+   hook 回调表 / XposedHelpers 缓存 / **`/proc/self/maps` 找 `/data/app/`+`xposedmodule`（模块探测）** /
+   `XposedInit.loadedPackagesInProcess|loadedModules` / riru `EdXpConfigGlobal` / 栈帧探测 / Runtime exec 探测 …
+   总采集出口：`l111l1111llIl;->l1111l111111Il(IZ)` → `dfp.SMSDK->v1(...)` → native `w1(...)`。
+4. ⭐ **数美自带一张「系统 API 监控清单」**：`l1111l111111Il` 里一个 base64+zlib 常量，
+   解压是 9.8KB JSON（`File.<init>` / `Runtime.exec` / `SystemProperties.get` /
+   `getInstalledPackages` / **`Modifier.isNative`** …）。**这就是它的防 cloaking 探测表**，
+   由 `l111l11111lIl()` 解析 ⇒ 先掐掉它，再谈伪装。
+5. 顺带：字节 APM 的 `Lsr9;->w()Z` 查 `/sbin/su` 等并写 `is_root`。
+
+## 47.3 改动清单
+
+- **新增 9 类**：`GmEnv`（总控）/ `GmEnvHook`（通用改返回值，6 种模式）/ `GmEnvFileHook`（root 路径）/
+  `GmEnvPmHook`（包名隐藏，抛 NameNotFoundException + 列表过滤）/ `GmEnvExecHook`（su 命令）/
+  `GmEnvPropHook`（12 条系统属性）/ `GmEnvSwitch` / `GmEnvClick` / `GmEnvDialog`
+- **改 3 类**：`DisableFlagSecure.handleLoadPackage`（**最早期**装钩子）、
+  `GmMenuDialog.open`（新增「环境伪装 ›」行）、`GmResumeHook.afterHookedMethod`（刷新 + 吐司）
+- **清单**：`92 / 2.9.5`
+- **两个开关都默认开**：`key_env_bypass` / `key_env_api`（空 = 没设过 = 开）；
+  `sOn`/`sApi` 在 `<clinit>` 先置 true，拿到 Context 后再 `refresh()` 校正（解决早期读不到设置的问题）
+- 钩子**无条件安装**、每次调用读缓存 ⇒ **开关即时生效，不用重启**
+
+## 47.4 自检
+
+- `edit_check(runBuildChecks=true)` → **passed**（changedClassCount 12，failed 0）
+- 产物回读：`92 / 2.9.5`、类数 59 → **68**、V1/V2/V3 同证书
+- ⚠️ 构建检查**不做字节码校验**，已按铁律人工回读全部新代码，其中抓回 **7 处 `if-eqz`/`if-nez` 写反**（见 47.5）
+
+## 47.5 新增教训
+
+1. **`if-eqz` = 等于 0 跳；`if-nez` = 不等于 0 跳** —— 手写新代码时**本轮又翻车 7 处**
+   （`badCmd` / `install` / `refresh` / `toastOnce` / `onResume` / `PmHook` / `Switch`）。
+   **唯一有效对策：写完立刻回读，逐条确认方向。**
+2. **共用 return 标签 = VerifyError 温床**（不同分支同寄存器类型不一致）。
+   本轮统一写法：**每个提前返回配独立标签，且标签放在主流程 `return-void` 之后**（无类型合流）。
+3. **`edit_check` 不校验字节码**（2.9.2 老教训，本轮再次确认）。
+4. 逆向手法：**base64 长常量先怀疑 zlib 压缩配置**。环境无 python/zlib，用 QuickJS 手写 inflate 解出。
+
+## 47.6 已知限制（必须说清）
+
+> ✅ **2026-09-13 实测结论**：2.9.6 修好 VerifyError 后真机验证 —— **登录直接通过，「获取验证码」不再弹环境异常**。
+> 即**只清 Java 侧信号就已经够用**（native 没咬人）。下面几条改为「备忘 / 复发时的处置顺序」。
+
+- `libsmsdk.so`（884KB，字符串加密）的 **native 侧检测无法用 Xposed 在 Java 层改**；
+  本轮清干净的是**全部 Java 侧信号**（含 `/proc/self/maps` 模块探测、API 监控清单）——
+  **实测证明这就是够的**，但宿主升级 / 数美更新后要重新验证。
+- 错误码 2 是**服务端**判的。若该 SMID 已被标记，只清信号可能仍拦 ⇒ 需配合清理 SMID / 换指纹重试。
+- 建议同时用 LSPosed 隐藏（DenyList + Shamiko）把模块可见性关掉，双保险。
+- 若仍被拦：先只留「总开关」关掉「系统 API 伪装」，排除「hook 系统 API 反被 `Modifier.isNative` 抓到」。
+
+---
+
+# 四十八、2.9.6 —— 修 `GmEnv` VerifyError（2.9.5 真机「插件失效」的唯一根因）（2026-09-13）
+
+> 详细记录：**`2.9.6-修复-VerifyError与模块自保.md`**
+> 产物：`FuckDSManger_2.9.6_for_ds2.5.1.apk`（**93 / 2.9.6**，68 类，V1/V2/V3）
+
+## 48.1 报错（用户给的 LSPosed 日志）
+
+```
+java.lang.VerifyError: Verifier rejected class com.varuns2002.disable_flag_secure.gm.GmEnv:
+  void GmEnv.setApi(Context, boolean): [0xD] register v2 has type String but expected Context
+  void GmEnv.setOn(Context, boolean):  同上
+    at DisableFlagSecure.handleLoadPackage
+```
+
+## 48.2 根因：**又是「参数寄存器被当局部变量」**（第 20 条教训）
+
+`setOn/setApi` 写了 `.registers 4` + 2 个参数 ⇒ **局部只有 v0/v1，p0 = v2**，
+我又敲了 `const-string v2, "b"` 把 Context 压成 String。
+**与 2.9.2 崩 `GmStore.remove` 完全同型（16.2 / 46.6）——教训读过、写进总结，还是又踩了。**
+
+## 48.3 连锁后果（两个症状 = 一个 bug）
+
+`GmEnv` 整类校验失败 ⇒ 类加载即抛 `VerifyError` ⇒ LSPosed 的 `handleLoadPackage` 是整体 try/catch，
+异常被吃掉但**后面的代码全部不执行**：
+
+1. `GmEnv.install()` 没跑 ⇒ **环境钩子一个都没装上** ⇒ 「反检测无效」（**不是打不过 native，是压根没运行**）
+2. 其后全部模块核心 hook（入口偷换 / 灰度 / 防撤回 / 头像…）没注册 ⇒ 「插件是注入了相当于没注入」
+
+## 48.4 改动
+
+①`setOn/setApi` `.registers 4 → 5`（真凶）②新增 **`GmUtil.envSafe(ClassLoader)`**（`:try/.catchall` 包住
+`GmEnv.install`），调用点改走它 ⇒ **将来任何 Error/VerifyError 都不会再带崩整个模块**
+③启动日志 `v2.9.0` → **`v2.9.6`**（下轮认版本）④`93 / 2.9.6`
+
+## 48.5 教训升级（第 20 条）
+
+**写 smali 方法第一步先算「局部寄存器上限 = `.registers` − 参数槽数」**（实例方法算 `this`，`J`/`D` 占 2 槽），
+**再用到的每个寄存器编号逐个核对**；`.registers` 小于 5 的方法最危险。
+2.9.6 已按此表把本轮全部新方法复核了一遍（见专项文档第五节）。
+
+## 48.6 另一条方法论
+
+**「整类校验失败」的杀伤力远大于「单个方法异常」**——因为它发生在**类加载期**，调用点还没进 try 就炸了。
+⇒ 凡是在 `handleLoadPackage` 里**新增的调用**，一律用「外层包装方法 + catchall」，别裸调新类。
+
+
+
+---
+
+# 四十九、2.9.7 —— 修「改了灰度选项、重启宿主无效」（**类型表与 2.5.1 不适配**）（2026-09-13）
+
+> 详细记录：**`2.9.7-灰度类型适配-修好了.md`**
+> 产物：`FuckDSManger_2.9.7_for_ds2.5.1.apk`（**94 / 2.9.7**，68 类，V1/V2/V3）
+> 症状：模块里改了灰度 → 弹「已写入覆盖，重启 App 生效」 → **重启宿主毫无变化**
+
+## 49.1 真凶：5 个键的「类型」还是 2.4.5 的
+
+`GmStore.write` 按 `TYPES` 表写（`putBoolean`/`putFloat`），2.5.1 的宿主按**新类型**读
+（`MMKV.j`=String / `MMKV.g`=Int）⇒ **MMKV 类型不符 → 读回默认值 → 改动被静默丢弃**。
+
+| 键 | 模块(2.9.6) | 宿主 2.5.1 | 写入后果 |
+|---|---|---|---|
+| `search_state_on_login` / `_on_launch` / `_on_manually_created_chat` / `_on_automatically_created_chat` | `b` | **String**（`on`/`off`） | 宿主 `getString` 读到 null |
+| `sse_auto_scroll_smooth_stiffness` | `f` | **Int**（默认 `Lf02;->V`=50） | 宿主 `getInt` 读到默认值 |
+
+⇒ 与 2.9.4 修掉的 `volcengine_enabled`（b→s）**同一类错误**。
+
+## 49.2 证据链（本次最有价值的取证手法，下次直接复用）
+
+1. **读优先级 / 实例 / 键名都先排除干净**：
+   - `Lo02;<init>`：`mmkv.contains("kv_settings_<k>") ? 本地值 : (map ? : kv_remote_settings_<k>)` ⇒ 本地覆盖优先 ✅
+   - `Lh02;<init>`（`q=MMKV.l()`）与模块 `GmStore.get()`（`MMKV.l()`）**同一实例** ✅
+   - 宿主 70 个 `kv_settings_*` 字面量 vs 模块 70 个裸键 → **70/70 一致** ✅
+2. **类型才是问题**：
+   - `Lo02;` 里 70 键只用 `MMKV.c`(Bool)/`g`(Int)/`j`(String)，**`MMKV.e`(Float) 命中 0 次** ⇒ 裸键里没有 float
+   - `Lbka;`（聊天页真实消费点）读刚度：`MMKV.g(String)I` + `int-to-float` + 默认 `Lf02;->V:I` ⇒ **int**
+   - `Lqa5;->D` / `Lo02;` 读 `search_state_on_login`：`MMKV.j(String)String`，默认 `Lf02;->M:String`
+   - **取值语义** `Laea;->s`：`"on"→true / "off"→false / 其它(含 "keep")→null(不覆盖)` ⇒ 合法值只有 `on`/`off`
+   - 下发实测 `ds_raw.txt:120`：`search_state_on_launch {"id":19572873,"value":"on"}` ✅
+3. **全量交叉审计**：把 `ds_raw.txt`（键 → `{"id":…,"value":…}`）的 JSON 值类型与模块 `TYPES` 逐键比对
+   → **只报出那 4 个 search_state 键** ✅（+ 命中外的那 1 个 float 键）
+4. **偏门手法**：smali 搜索直接用**getter 名**（`MMKV;->j(` / `->c(` / `->g(`）拿命中行号，
+   再与 `kv_settings_<键>` 的行号对齐 ⇒ 一次拿到「哪些键是 String」的名单。
+
+## 49.3 改动清单（9 项）
+
+1. `TYPES`：4× `"b"`→**`"t"`**（新类型码＝三态字符串开关）+ 1× `"f"`→**`"i"`**
+2. `DESCS`：上述 5 项同序改写（写明 `on`/`off`/留空=跟随下发）
+3. `GmDialog` 新增 4 个辅助方法：`isSw`(b|t) / `asOn`(`true`|`on`) / `norm`(sOrig 归一) / `val`(写值)
+4. `addRow`：开关判定→`isSw(p3)`、`setChecked`→`asOn(v2)`、sOrig→`norm(p3,v2)`
+5. `save`：值构造→`isSw(v4)` + `val(v4, isChecked())`
+6. `GmDialog.markDirty`：**`if-nez`→`if-eqz`**（反向判断！保存后按钮置灰再也不复活 ⇒ **同会话第二次保存无效**）
+7. `GmEnv.bad` / `badPkg`：**`if-nez`→`if-eqz`**（同一反向判断 ⇒ 环境伪装的 root/包名判定**一直是空转**）
+8. `DisableFlagSecure`：启动日志 `v2.9.6`→`v2.9.7`
+9. `AndroidManifest.xml`：`93/2.9.6`→**`94/2.9.7`**
+
+**设计要点**：`GmStore.read2/write` 的 if 链只认 `b/i/f/l`，**其余落 String 分支** ⇒
+新类型码 `t` **完全不用动 `GmStore`**（少一处手改＝少一处风险）。
+
+## 49.4 自检
+
+- `edit_check(runBuildChecks=true)` → **passed**，`changedClassCount 3`，`failedCount 0`
+- 产物回读：`94/2.9.7`、`"t"` **恰好 4 处**、`0x2d` 类型已是 `"i"`、
+  `markDirty`=`if-eqz`、`GmEnv.bad`=`if-eqz`、辅助方法齐 ✅
+- 寄存器复核（第 20 条铁律）：`isSw`(2/1参→v0)、`asOn`(3/1→v0,v1)、`norm`(4/2→v0)、`val`(3/2→v0)、
+  `addRow`(16/5→v0..v10，动用 v3~v6)、`save`(10/0→v0..v9，动用 v4~v6) ✅ 全在局部上限内
+
+## 49.5 教训（补充第十一节）
+
+**第 53 条：升级宿主后，键名对得上 ≠ 能生效 —— 必须逐键复核「类型」。**
+「改了没效果 / 重启无效」在 MMKV 场景下的头号嫌疑是**类型不符**（值写进去但读不回来），
+而 `kv_settings_*` 的存在性、实例一致性、读取优先级都只是**必要条件**。
+**离线全量审计手法**：拿「宿主读法（getter 名 + 行号）」和「真实下发数据的 JSON 值类型」**双向夹逼**，
+一次就能把问题键列全（本次 5 个）。
+
+**第 54 条：手写 smali 的低风险改法 ——「类型码扩展」优于「改 `GmStore`」。**
+利用 `read2/write` 的 else 分支（落 String），新增类型码只改 UI 层，
+共享逻辑零改动 ⇒ 不碰老代码就不会连带出 VerifyError。
+
+## 49.6 收官的「总审计报告」（2026-09-13）
+
+> **`2.9.7-灰度纳管-总审计报告.md`** —— 一页看全：真凶（5 个键类型）＋ 四层穷举审计
+> （键名 70/70 与 84+84、类型、`_id_` 版本键、`model_configs` 内部字段）＋ 未纳管清单（仅 `languages`/`providers_v1`）
+> ＋ 取证手法 ＋ 类型审计的两个坑 ＋ 明确"暂不做"的 4 项待办。
+> 数据文件已更新：**`ds_raw.txt` = 最新下发**（旧的 2.4.5 dump 归档为 `ds_raw-旧-2.4.5dump.txt`），
+> 新增 `ds_keys.txt` / `ds_key_types.txt`（键表+JSON 值类型）。

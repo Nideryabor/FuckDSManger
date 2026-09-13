@@ -1,0 +1,1 @@
+这是一个严重R8混淆的compose单activity应用
