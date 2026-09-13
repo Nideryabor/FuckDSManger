@@ -15,7 +15,7 @@
 
 | 项 | 值 |
 |---|---|
-| 目标宿主 | 某 AI 聊天 App · **2.5.1**（versionCode 271） |
+| 适配版本 | 某个 APP 的 **2.5.1** 版（versionCode 271） |
 | 模块包名 | `com.little_femaleboy.cannot_show.the_big_won_whale` |
 | 入口类 | `...the_big_won_whale.DisableFlagSecure`（内部 `gm/` = 灰度管理器全家桶） |
 | 代码形态 | **纯手写 Smali**（无 java / python 工具链） |
@@ -151,9 +151,9 @@
 
 构建完成的 APK 见 **[Releases](../../releases)** → 最新 [`v2.9.7`](../../releases/latest)
 
-| 版本 | 适配宿主 | 要点 |
+| 版本 | 适配版本 | 要点 |
 |---|---|---|
-| **2.9.7** | 宿主 **2.5.1** | versionCode 94 · 68 类 · V1+V2+V3 签名 · 修「改了灰度、重启无效」 |
+| **2.9.7** | 某个 APP 2.5.1 | versionCode 94 · 68 类 · V1+V2+V3 签名 · 修「改了灰度、重启无效」 |
 
 > 更早版本（2.7.9 及以前）的构建产物已不存在，仅保留文档记录。
 
