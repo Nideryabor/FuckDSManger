@@ -1,0 +1,83 @@
+voice_input_enabled	b	语音输入
+input_default_voice	s	默认音色
+input_view_voice_gesture_duration_ms	i	语音手势时长
+record_empty_detect_time_ms	i	空录音检测
+record_stop_delay_ms	i	录音停止延迟
+max_duration_ms	i	最长录音时长
+opus_bitrate	i	Opus 码率
+deep_think_button_suffix	s	深度思考后缀
+conversation_search_enabled	b	会话搜索
+search_state_on_login	t	登录后搜索态
+search_state_on_launch	t	启动后搜索态
+allow_parallel_streams	b	并发流
+interrupt_and_send_enabled	b	打断并发
+allow_file_with_search	b	文件+搜索
+sse_smooth_follow	b	流式平滑跟随
+normal_history_and_file_token_limit	i	普通上下文上限
+r1_history_and_file_token_limit	i	R1 上下文上限
+completion_request_timeout_ms	i	补全超时
+regenerate_request_timeout_ms	i	重新生成超时
+hif_max_retry_interval_secs	i	重试间隔(s)
+hcaptcha_enabled	b	hCaptcha 验证
+enable_google_sign_in_captcha	b	Google 登录验证
+one_tap_login_enabled	b	一键登录
+hide_assistant_avatar	b	隐藏助手头像
+select_text_without_markdown_syntax	b	选中去MD语法
+enable_webview_content_report	b	WebView 上报
+picture_compress_format	s	图片压缩格式
+support_center_url	s	客服中心地址
+query_files_time_interval	i	文件轮询间隔
+markdown_top_level_node_limit	i	MD 节点上限
+pow_prefetch_count	i	PoW 预取数
+session_prefetch_count	i	会话预取数
+pow_prefetch	b	PoW 预取开关
+session_prefetch	b	会话预取开关
+continue_request_timeout_ms	i	继续生成超时
+resume_request_timeout_ms	i	恢复生成超时
+edit_request_timeout_ms	i	编辑请求超时
+auto_resume_request_timeout_ms	i	自动续传超时
+auto_resume_max_time_ms	i	自动续传窗口
+auto_resume_interval_ms	i	自动续传间隔
+launch_clean_session_interval_seconds	i	启动清理间隔(s)
+pinned_session_limit	i	置顶会话上限
+max_upload_file_size	i	最大上传大小
+max_input_file_count	i	最大输入文件数
+sse_auto_scroll_one_screen	b	自动滚动一屏
+sse_auto_scroll_smooth_stiffness	i	平滑滚动刚度
+optimize_markdown	b	优化 Markdown
+disable_single_dollar_latex	b	禁用单$LaTeX
+show_new_chat_button_above_input	b	输入框上方新会话
+copy_text_without_markdown_syntax	b	复制去 MD 语法
+search_state_on_manually_created_chat	t	手动新建搜索态
+search_state_on_automatically_created_chat	t	自动新建搜索态
+should_use_sm_device_id	b	使用数美设备 ID
+dead_link_detection	b	死链检测
+gcy_enabled	b	观测云上报
+ds_settings_enabled	b	DS 设置开关
+volcengine_enabled	s	火山引擎开关
+sm_pass_code_type	s	验证码类型
+edit_menu_item_config	s	编辑菜单配置
+files_host	s	文件服务域名
+sm_sdk_host	s	数美 SDK 域名
+android_apk_link	s	安卓下载链接
+kv_remote_settings_support_chat_file_exts	s	支持文件后缀
+kv_remote_settings_pow_header_paths	s	PoW 头路径
+kv_remote_settings_authed_pow_functions	s	PoW 功能列表
+kv_remote_settings_image_cache_invalidate_before	l	图片缓存失效
+kv_remote_settings_camera_compress_ratio	f	拍照压缩比
+kv_remote_settings_photo_picker_compress_ratio	f	选图压缩比
+kv_remote_settings_search_state_trigger	s	搜索触发器
+kv_remote_settings_model_configs_v1	s	模型配置表
+tts_connect_timeout_ms	i	TTS 连接超时
+tts_prebuffer_ms	i	TTS 预缓冲
+tts_resume_buffer_ms	i	TTS 续播缓冲
+tts_resume_max_times	i	TTS 续播次数
+tts_resume_max_time_ms	i	TTS 续播窗口
+tts_resume_interval_ms	i	TTS 续播间隔
+tts_underrun_timeout_ms	i	TTS 欠载超时
+thinking_auto_fold_enabled	b	思考自动折叠
+kv_remote_settings_report_http_failure_paths	s	失败上报路径
+kv_remote_settings_alert	s	公告弹窗
+kv_remote_settings_banner	s	横幅
+key_auto_tts_enabled	b	自动朗读总开关
+key_tts_voice_id	s	朗读音色 ID
