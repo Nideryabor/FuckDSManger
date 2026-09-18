@@ -100,6 +100,7 @@
 
 | 版本 | 一句话 |
 |---|---|
+| **2.9.27** | 🛡 **兜底 + 全套可见诊断**：`GmVectorHook` 破坏矢量加载前先要求 `sPainter != null`（不再出现「空白头像」）；打印前 16 次 `kf5.K` 资源 id、关键分支全写进 LSPosed 日志 |
 | **2.9.26** | 🐛 **助手头像「蓝方块」换修法**：不动 tint、不动 `useLayer`，只在 `Modifier.paint`（`fh6.N`）把 `ColorFilter` 换成**恒等** `BlendMode.Dst`（+1 类 → 81） |
 | **2.9.25** | 🔍 `android_id replaced` 诊断日志（一次确认 hook 是否生效） |
 | **2.9.24** | 🎉 **设备身份伪装改为默认开启** ⇒ 装上即生效，不再依赖任何 UI；**真机验证：登录风控放行** |
@@ -163,7 +164,7 @@
 |---|---|
 | 🔴 | **2.9.12 宿主 2.5.2 适配待真机验收**（清单见 `版本/2.9.12.md` 第七节） |
 | 🔴 | 「真底图」模式（蒙层/混合已可用，真底图仍是 WIP） |
-| 🔴 | **助手头像「蓝方块」**：2.9.26 换修法（不动 tint/`useLayer`，只把 `Modifier.paint` 的 `ColorFilter` 换成恒等 `BlendMode.Dst`），**待真机验收**；判读表见 `版本/2.9.26.md` 第五节 |
+| 🔴 | **助手头像**：2.9.26 换修法（不动 tint/`useLayer`，只把 `Modifier.paint` 的 `ColorFilter` 换成恒等 `BlendMode.Dst`）+ 2.9.27 兜底与诊断，**待真机验收**（取日志必须先打开聊天窗口）；判读表见 `版本/2.9.27.md` 第四节 |
 | 🟡 | `languages` / `providers_v1` 两个只读域键是否纳管（写入会不会被重读尚未实测） |
 | 🟡 | 摄像头：`Camera.setZoom()` 真数字变焦（现为 View 层裁切，高倍率糊）、权限拒绝后自动重试、`onPause` 释放 |
 | 🟢 | 美化扩展（主题色/字体/气泡）、灰度项自定义、导出/导入配置 |
@@ -173,10 +174,11 @@
 
 ## 📦 发行版（Releases）
 
-构建完成的 APK 见 **[Releases](../../releases)** → 最新 [`v2.9.26`](../../releases/latest)
+构建完成的 APK 见 **[Releases](../../releases)** → 最新 [`v2.9.27`](../../releases/latest)
 
 | 版本 | 适配版本 | 要点 |
 |---|---|---|
+| **2.9.27** | 某个 APP 2.5.2 | versionCode 114 · **81 类** · V1+V2+V3 签名 · 头像线**兜底修复**（`GmVectorHook` 前置 `sPainter != null`）+ 全套可见诊断（前 16 次 `kf5.K` 资源 id） |
 | **2.9.26** | 某个 APP 2.5.2 | versionCode 113 · **81 类** · V1+V2+V3 签名 · **助手头像「蓝方块」换修法**：`Modifier.paint` 恒等 `BlendMode.Dst`（不动 tint、不动绘制分支） |
 | **2.9.25** | 某个 APP 2.5.2 | versionCode 112 · 80 类 · V1+V2+V3 签名 · `android_id replaced` 诊断日志 |
 | **2.9.24** | 某个 APP 2.5.2 | versionCode 111 · 80 类 · V1+V2+V3 签名 · 🎉 **设备身份伪装默认开启（装上即生效）** —— **真机验证：登录风控放行** |
