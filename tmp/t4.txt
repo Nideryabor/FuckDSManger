@@ -1,0 +1,62 @@
+isla 会 Til &
+
+19:45:55 vs
+—o-
+ae 日 志 SF hwo
+模块 日 志 详细 日 志
+@ XposedBridge (10410:14078) 09-18 19:45:38
+
+com.little_femaleboy.cannot_sho... 一 com.deepseek.chat.a
+
+FuckDSManger v2.9.27 [NEWPKG-ENTRY]
+handleLoadPackage ENTER
+
+@ XposedBridge (10410:14078) 09-18 19:45:38
+com.little_femaleboy.cannot_sho... 一 com.deepseek.chat.a
+
+FuckDSManger v2.9.27 handleLoadPackage ENTER
+
+@ XposedBridge (10410:14078) 09-18 19:45:38
+com.little_femaleboy.cannot_sho... 一 com.deepseek.chat.a
+
+FuckDSManger: pkg=com.deepseek.chat.a
+
+@ XposedBridge (10410:14078) 09-18 19:45:38
+com.little_femaleboy.cannot_sho... — com.deepseek.chat.a
+
+FuckDSManger: hookM kf5.K count=1
+
+@ XposedBridge (10410:14078) 09-18 19:45:38
+com.little_femaleboy.cannot_sho... 一 com.deepseek.chat.a
+
+FuckDSManger: hookM fh6.N count=1
+
+@ XposedBridge (10410:14078) 09-18 19:45:38
+com.little_femaleboy.cannot_sho... — com.deepseek.chat.a
+
+FuckDSManger: hookM me4.a count=1
+
+@ XposedBridge (10410:14078) 09-18 19:45:38
+com.little_femaleboy.cannot_sho... 一 com.deepseek.chat.a
+
+FuckDSManger: hookM
+android.content.res.Resources.getValue count=2
+
+@ XposedBridge (10410:14078) 09-18 19:45:38
+com.little_femaleboy.cannot_sho... 一 com.deepseek.chat.a
+
+FuckDSManger: hooked MainActivityonResume OK
+
+@ XposedBridge (10410:14078) 09-18 19:45:38
+com.little_femaleboy.cannot_sho... — com.deepseek.chat.a
+
+FuckDSManger: hookM
+android.content.res.Resources.getString count=2
+
+@ XposedBridge (10410:14078) 09-18 19:45:38
+com.little_femaleboy.cannot_sho... — com.deepseek.chat.a
+
+FuckDSManger: hookM
+android.content.res.Resources.getText count=2
+
+ai. _ mm et damn am ester ee
