@@ -1,0 +1,73 @@
+key	host_decode	module_type_before	should_be	verdict	note
+voice_input_enabled	c	b	b	OK	语音输入
+input_default_voice	c	s	b	FIX->b	默认音色
+input_view_voice_gesture_duration_ms	g	i	i	OK	语音手势时长
+record_empty_detect_time_ms	g	i	i	OK	空录音检测
+record_stop_delay_ms	g	i	i	OK	录音停止延迟
+max_duration_ms	g	i	i	OK	最长录音时长
+opus_bitrate	g	i	i	OK	Opus 码率
+deep_think_button_suffix	j	s	s	OK	深度思考后缀
+conversation_search_enabled	c	b	b	OK	会话搜索
+search_state_on_login	j	t	s	OK	登录后搜索态
+search_state_on_launch	j	t	s	OK	启动后搜索态
+allow_parallel_streams	c	b	b	OK	并发流
+interrupt_and_send_enabled	c	b	b	OK	打断并发
+allow_file_with_search	c	b	b	OK	文件+搜索
+sse_smooth_follow	c	b	b	OK	流式平滑跟随
+normal_history_and_file_token_limit	g	i	i	OK	普通上下文上限
+r1_history_and_file_token_limit	g	i	i	OK	R1 上下文上限
+completion_request_timeout_ms	g	i	i	OK	补全超时
+regenerate_request_timeout_ms	g	i	i	OK	重新生成超时
+hif_max_retry_interval_secs	g	i	i	OK	重试间隔(s)
+hcaptcha_enabled	c	b	b	OK	hCaptcha 验证
+enable_google_sign_in_captcha	c	b	b	OK	Google 登录验证
+one_tap_login_enabled	c	b	b	OK	一键登录
+hide_assistant_avatar	c	b	b	OK	隐藏助手头像
+select_text_without_markdown_syntax	c	b	b	OK	选中去MD语法
+enable_webview_content_report	c	b	b	OK	WebView 上报
+picture_compress_format	j	s	s	OK	图片压缩格式
+support_center_url	j	s	s	OK	客服中心地址
+query_files_time_interval	g	i	i	OK	文件轮询间隔
+markdown_top_level_node_limit	g	i	i	OK	MD 节点上限
+pow_prefetch_count	g	i	i	OK	PoW 预取数
+session_prefetch_count	g	i	i	OK	会话预取数
+pow_prefetch	c	b	b	OK	PoW 预取开关
+session_prefetch	c	b	b	OK	会话预取开关
+continue_request_timeout_ms	g	i	i	OK	继续生成超时
+resume_request_timeout_ms	g	i	i	OK	恢复生成超时
+edit_request_timeout_ms	g	i	i	OK	编辑请求超时
+auto_resume_request_timeout_ms	g	i	i	OK	自动续传超时
+auto_resume_max_time_ms	g	i	i	OK	自动续传窗口
+auto_resume_interval_ms	g	i	i	OK	自动续传间隔
+launch_clean_session_interval_seconds	g	i	i	OK	启动清理间隔(s)
+pinned_session_limit	g	i	i	OK	置顶会话上限
+max_upload_file_size	g	i	i	OK	最大上传大小
+max_input_file_count	g	i	i	OK	最大输入文件数
+sse_auto_scroll_one_screen	c	b	b	OK	自动滚动一屏
+sse_auto_scroll_smooth_stiffness	g	i	i	OK	平滑滚动刚度
+optimize_markdown	c	b	b	OK	优化 Markdown
+disable_single_dollar_latex	c	b	b	OK	禁用单$LaTeX
+show_new_chat_button_above_input	c	b	b	OK	输入框上方新会话
+copy_text_without_markdown_syntax	c	b	b	OK	复制去 MD 语法
+search_state_on_manually_created_chat	j	t	s	OK	手动新建搜索态
+search_state_on_automatically_created_chat	j	t	s	OK	自动新建搜索态
+should_use_sm_device_id	c	b	b	OK	使用数美设备 ID
+dead_link_detection	c	b	b	OK	死链检测
+gcy_enabled	c	b	b	OK	观测云上报
+ds_settings_enabled	c	b	b	OK	DS 设置开关
+volcengine_enabled	j	s	s	OK	火山引擎开关
+sm_pass_code_type	j	s	s	OK	验证码类型
+edit_menu_item_config	g	s	i	FIX->i	编辑菜单配置
+files_host	j	s	s	OK	文件服务域名
+sm_sdk_host	j	s	s	OK	数美 SDK 域名
+android_apk_link	j	s	s	OK	安卓下载链接
+tts_connect_timeout_ms	g	i	i	OK	TTS 连接超时
+tts_prebuffer_ms	g	i	i	OK	TTS 预缓冲
+tts_resume_buffer_ms	g	i	i	OK	TTS 续播缓冲
+tts_resume_max_times	g	i	i	OK	TTS 续播次数
+tts_resume_max_time_ms	g	i	i	OK	TTS 续播窗口
+tts_resume_interval_ms	g	i	i	OK	TTS 续播间隔
+tts_underrun_timeout_ms	g	i	i	OK	TTS 欠载超时
+thinking_auto_fold_enabled	c	b	b	OK	思考自动折叠
+key_auto_tts_enabled	(其他类)	b	-	OK	自动朗读总开关
+key_tts_voice_id	(其他类)	s	-	OK	朗读音色 ID
