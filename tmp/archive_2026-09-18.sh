@@ -15,7 +15,8 @@ sed -i 's#探针第 14 轮 `2.10.13-probe`（自造发送命令）待真机验�
 # ---------- 3. 刷新兜底备份 ----------
 git bundle create _release_backup/FuckDSManger_FULL_backup.bundle --all >/dev/null
 tar czf _release_backup/FuckDSManger_docs_snapshot_main.tar.gz \
-    --exclude=./.git --exclude=./_release_backup -C /workspace . 2>/dev/null
+    --exclude=./.git --exclude=./_release_backup --exclude=./巢穴 \
+    -C /workspace . 2>/dev/null
 ls -la _release_backup/*.bundle _release_backup/*.tar.gz
 
 # ---------- 4. 大纲 §8.1 记录本次刷新 ----------
