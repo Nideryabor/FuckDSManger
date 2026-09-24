@@ -1,0 +1,52 @@
+域	角色	职责	锚点(2.5.2)	旗舰指纹(S级)	重定位路径	失效后果	把握	本版核验
+入口	检查更新文案资源	替换设置页那一行文字	resource:0x7f0f021f	资源名 profile_check_for_updates	mt_apk_list view=resource_table prefix=profile_check_for_updates	设置页看不到模块名	★★★	
+入口	备用文案资源	最新版文案	resource:0x7f0f0220	资源名 profile_check_for_updates_newest	同上	无（备用）	★★★	
+入口	设置页容器	找行级 onClick	La18	SourceInfo SettingsPage.kt:94	mt_apk_search dex_strings query="SettingsPage.kt"	找不到入口所在类	★★☆	
+入口	入口点击	点「检查更新」行 → 弹管理器	Lm5;->v() 且 this.a == 0x14	Lm5 同形构造器 <init>(Lsv3;I)V + const/16 0x14；2.5.2 的 0x14 分支 → Lad8.a → Lgc8 → Lh12;->a()（含串 check_update）	搜 Lm5;-><init>(Lsv3;I)V 同形构造器 / 搜串 check_update 反查 / 在 switch 表里找 0x14	模块入口点不开（整模块不可用）	★★☆	
+入口	Kotlin Unit	setResult 返回值来源（必须宿主 ClassLoader 反射取，不可硬引用）	Llp9;->a	toString() == kotlin.Unit	搜 kotlin.Unit 串	NoClassDefFoundError ⇒ 入口静默失效	★★☆	
+入口	宿主 MainActivity	onResume 触发重应用	com.deepseek.chat.MainActivity	manifest launcher activity（混淆器保留）	读 manifest	重应用链路断	★★★	
+入口	触摸兜底	dispatchTouchEvent	android.app.Activity.dispatchTouchEvent	系统 API	—	手势入口失效	★★★	
+入口	选图回调	onActivityResult	Activity/FragmentActivity/ComponentActivity 三处	系统 API	—	选图回调失效	★★★	
+灰度	MMKV 默认实例	拿宿主同一个 KV	MMKV.l()	类 com.tencent.mmkv.MMKV（第三方不混淆）	看 p66.<init> 调谁	整个灰度读写失效	★★★	
+灰度	MMKV 写	putString 拦截（下发篡改）	MMKV.q(String,String)Z	形参组合 (String,String)Z；⚠️ 2.5.1 起 p 被复用成 p(String,F)V	从 p66.h()/h02.u() 调用点反查（教训 261）	下发篡改失效	★★★	
+灰度	MMKV 读	getString	MMKV.k(String,String)String	形参组合 (String,String)String	从 p66.f() 反查	读覆盖失效	★★★	
+灰度	MMKV 删	removeValue	MMKV.v(String)V	(String)V	同族方法表	复位功能失效	★★☆	
+灰度	下发应用点(model 域)	拦服务端下发	Lp66;->h(Lbx4;I,String,String)V	p66.a() 返回串 "model"	搜 dex_strings "model" 在设置域；或 implements Lk55;Lrb8; + 同签名	下发覆盖拦截失效	★★★	
+灰度	下发应用点(main 域)	同上	Lh02;->u(...)	h02.a() 返回串 "main"	同上（与 p66 是同形对）	同上	★★★	
+灰度	下发数据对象	遍历 dump	Lbx4	implements java.util.Map + 字段 a:Map	搜类结构	下发查看失效	★★☆	
+灰度	★灰度类型字典(总表)	63 项键的真实类型/默认值	Lo02	每项 = 键名 + 中文名 + 类型串("Int"/"Boolean") + 默认值 + contains→decode	mt_apk_dex_outline_class 读静态表	类型核验无从下手 ⇒ 灰度静默失效	★★★	
+灰度	灰度类型字典(录音·语音域)	7 项	Ln2a	同上	同上	同上	★★☆	
+灰度	灰度类型字典(TTS 域)	2 项 key_*	pk9	同上	同上	同上	★★☆	
+灰度	配置源头	读/写 model_configs	p66.f() 读 / p66.h(...) 写	键串 kv_remote_settings_model_configs_v1	搜键串	配置接管失效	★★★	
+美化	头像 Painter	替换助手图片	Lkf5;->K(IILey3;)Lku6;	方法内串 androidx.compose.ui.res.painterResource (PainterResources.android.kt:56)	搜该串	助手头像替换失效	★★★	
+美化	ImageBitmap 包装	Compose 位图	Lle	<init>(Bitmap) + implements Lxe4	结构确认	头像链路断	★★☆	
+美化	BitmapPainter	Compose 画笔	Lok0	toString() 含 BitmapPainter(image=	搜 toString 串	同上	★★☆	
+美化	Painter 基类	—	Lku6	—	—	同上	★★☆	
+美化	头像资源 id	定位助手头像	resource:0x7f070059	资源名 assistant_message_avatar	资源表搜名	同上	★★★	
+美化	矢量加载	逼走普通资源分支	Resources.getValue	系统 API	—	矢量头像分支失效	★★★	
+美化	Drawable 出口	兜底	Resources.getDrawable	系统 API	—	同上	★★★	
+美化	账号名	自定义名字	Ls5;->v() 且 a == 8	0x8 分支 → Lit9;->c（名字）+ 手机号脱敏	搜 Lit9;->c / 同形容器	账号名功能失效	★★☆	
+美化	账号头像	自定义头像	Lp5;->v() 且 a == 0xf	0xf 分支 → Lit9;->e	同上	账号头像功能失效	★★☆	
+美化	文案替换	反查设置条目	Resources.getString / getText	系统 API	—	入口文案不显示	★★★	
+消息	消息列表 Composable	渲染参数注入（防撤回备链）	Lh91;->a(Lpe5;Lme6;Ljb1;Lwr;Lhp8;Ljt6;ZLc76;Ley3;I)V	SourceInfo ChatMessageList.kt:77	搜 ChatMessageList.kt	防撤回失效	★★★	
+消息	列表状态对象	取 List	Lpe5;->j()Lie5;	反射取，须 instance-of List 校验	从 Lh91;->c 反查	防撤回取数失败	★★☆	
+消息	消息基类	l()=展示文本 / C()=拼接块 / D()=="USER" / x():I=本地序号	Lvq	⚠️ vq.S(String) 设的是 MessageClickBehavior（点击行为）不是正文	搜 cy5.toString() 含 MessageClickBehavior	取文本取错字段	★★☆	
+消息	真·消息类	唯一具体子类、字段全 final + copy ⇒ 不可变	Lnx	.super Lvq; 且是唯一具体子类	搜 .super Lvq; 的子类	抓不到消息事件	★★☆	
+消息	消息主存储	⭐ f:LinkedHashMap（key=vq.x()）	Lwr;->f	⚠️ wr.x():hp8 是「渲染列表」空壳（2.10.85 结论，2.19.0 又踩）	读 Lwr 字段表	读到空壳 ⇒ 恒空	★★☆	
+消息	消息更新事件	流式补丁 / 重新登记	Lwr;->a(Lvq;Z)V / z(Lwr,List) / u()	z 的 args[1] = 完整 List<vq>	搜 Lwr 方法表	流式捕获失效	★☆☆	
+消息	渲染列表类型	SnapshotStateList	Lhp8	toArray/size/get 都是自身声明	—	反射取数坑	★★☆	
+消息	会话 id	取会话	Lwr;->h()（新会话回传）/ M()→wr / N()	⚠️ wr.a 实战常为 null（2.14.8/2.14.9 反复）	—	发到错误会话/新开对话	★☆☆	
+消息	会话提供接口	拿 component	Lao1	M()→wr	—	发送链路断	★★☆	
+通话	发送命令派发	发消息	Lao1;->J(Object)	参数类名即命令类型	—	发消息失效	★★☆	
+通话	打字发送命令	new cn1(text,0) + ao1.J(cmd)	Lcn1	<init>(String,int)；b 字段 = 正文	搜构造器	打字发送失效	★★☆	
+通话	语音发送命令	ASR 识别文字	Lfn1	<init>(String,String)；a = 识别文字、b = UUID	搜构造器	语音识别文字抓不到	★★☆	
+通话	生成结束信号	状态机出口	Lum1	⚠️ 不是「生成结束」专属（ym1/session_switch 后也紧跟）⇒ 只能当加分项	—	状态机卡死	★☆☆	
+通话	录音控制器	驱动宿主录音	Lxe1;->s(Lgz3;String)Z（状态式接口！）/ k() / J(Z) / E()	由 Lao1;->j 持有	—	PTT 失效 / 卡 Pressed	★★☆	
+通话	录音器	原始录音	Lqra	AudioRecord 16k/MONO/PCM16	—	聆听信号丢失	★★★	
+通话	系统级免费信号	聆听/朗读状态	AudioRecord.startRecording/stop、MediaPlayer.start/stop	⚠️ 探针也是改动也会咬人（2.18.6 全摘才有全绿）⇒ 默认关	—	干扰宿主	★★★	
+环境	数美主类	root/模块探测	com.ishumei.smantifraud.l1111l111111Il	第三方 SDK，包名不混淆；13 个探测方法	—	登录风控被拦	★★★	
+环境	数美 native	同上	libsmsdk.so	文件大小 842488 字节 + 导出符号	—	同上	★★★	
+环境	字节 APM	root 检测	Lsr9;->w()	串 /sbin/su 等；写上报字段 is_root	搜 /sbin/su	上报 is_root=true	★★☆	
+导航	路由承载类	枚举 route	（无 hook 依赖）	正则 com\.deepseek\.chat\..*Route（matchMode=exact）	—	（情报）	★★★	
+导航	NavController	跳转	（无 hook 依赖）	—	串 android-support-nav:controller:deepLinkIntent	⚠️ 只剩 23 个方法，navigate(String) 已被剪	★★☆	
+导航	NavHost	Compose 导航	（无 hook 依赖）	SourceInfo androidx.navigation.compose.NavHost (NavHost.kt:490)	—	（情报）	★★★	
