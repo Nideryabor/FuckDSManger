@@ -1,2 +1,9 @@
 .DS_Store
 Thumbs.db
+
+# —— 别把真实数据/产物扫进公开仓 ——
+*.apk
+*.db
+*.db-shm
+*.db-wal
+*.bundle

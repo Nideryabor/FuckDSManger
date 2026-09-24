@@ -1,0 +1,18 @@
+角色	职责	2.5.2 混淆名	旗舰指纹（可 search 的幸存字符串/签名）	重定位路径	把握
+NavController	导航控制器：navigate / popBackStack / getGraph / 回退栈	Lld6;	"Navigation destination that matches route " ；"android-support-nav:controller:deepLinkIntent" ；"You must call setGraph() before calling getGraph()"	mt_apk_search target=dex_strings query="android-support-nav:controller:deepLinkIntent" → 取 locator 的宿主类	高
+route→routeString 转换	把路由对象转成「带参 route 字符串」；失败时打日志	Lld6;->f(Ljava/lang/Object;)Ljava/lang/String;	日志串 "Destination with route " + " cannot be found in navigation graph "	由 NavController 轮廓里的方法串反查	高
+navigate 实现	唯一存活的重载 navigate(route: Any, extras)	Lld6;->n(Ljava/lang/Object;Lrd6;)V	方法内先 getClass() → serializer(class) → serialName.hashCode()	NavController 轮廓 methods 里唯一收 (Object, Lrd6;) 的方法	高
+NavGraph	图：matchRoute(route, args, searchChildren) 返回 DeepLinkMatch	Lid6;	方法 o(Ljava/lang/String;ZLid6;)Ldd6;	由 NavController 的 graph 字段（c:Lid6;）反查；或搜方法签名	中
+NavDestination	目的地：route 串 / 参数表 / 深度链接	Lfd6;	字段 g:Ljava/lang/String;（route） ；方法 a(Landroid/os/Bundle;)Landroid/os/Bundle;	由 DeepLinkMatch.a 的返回类型反查	中
+DeepLinkMatch	匹配结果：destination + bundle	Ldd6;	字段 a:<NavDestination>; b:Landroid/os/Bundle;	Lid6;->o 的返回类型	中
+destination id 计算	serialName.hashCode()，这就是 NavDestination.id	Lx95;->B(Lv35;)I	调用链 descriptor → SerialDescriptor.serialName → String.hashCode()	搜 "Cannot locate NavType for argument [" 找到同一工具类	高
+route 串生成	generateRouteWithArgs(route, argumentMap)	Lx95;->C(Ljava/lang/Object;LinkedHashMap;)Ljava/lang/String;	"Cannot locate NavType for argument ["	同上（同一 R8 静态工具桶）	高
+参数表构建	SerialDescriptor + NavType 映射 → 参数 Map	Lx95;->s(Ls78;Ljava/util/Map;)Lyd6;	与 K/C 同桶	同上	中
+参数缺失报错	报「某路由某参数找不到 NavType」	Lx95;->K(SSSS)Ljava/lang/String;	" could not find any NavType for argument " + " of type " + "Route " + " - typeMap received was "	同上	高
+序列化器工厂	serializer(kClass) 反射入口（kotlinx 缓存）	Lan7;->a:Lbn7; / Lbn7;->b(Ljava/lang/Class;)Lf15;	由 Lld6;->f 的调用链反查	在 f() 里顺链找	中
+ObjectSerializer 构造器	(name, objectInstance, annotations) → 路由序列化器	Lia3;-><init>(Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/annotation/Annotation;)V	签名本身即指纹（该形参组合全库唯一）	搜 dex_names 里 <init>(String,Object,Annotation[])	高
+NavHost (Compose)	Compose 侧 NavHost/rememberNavController	Lvc5;（含 NavHost.kt:490 的类） + Ljc5;（rememberNavController）	"androidx.navigation.compose.NavHost (NavHost.kt:490)" ；"androidx.navigation.compose.rememberNavController (NavHostController.kt:57)"	mt_apk_search target=dex_strings query="androidx.navigation.compose.NavHost"	高
+nested graph 判别	同名（不带 .xxxRoute 后缀）的路由串即为 nested graph 本体	Lbc8;（Settings）/ Lgb0;（Auth）	用「FQ 名 + 无 Route 后缀」的正则即可判定	穷举路由时对无后缀项另行标注	高
+路由枚举锚	穷举全部路由的唯一入口：所有 (String,Object,Annotation[]) 构造点	11 个承载类：Lx98; Lh; Lcb0; Lua0; Lxa0; Lld0; Liv9; Lw7; Lb5a; Lm28; Lhu8;	mt_apk_search target=dex_strings queryType=regex query="com\.deepseek\.chat\..*Route" matchMode=exact → 命中类即承载类	前缀换成宿主包名即可复用于任何宿主	高
+navigate 调用点全集	宿主**自己**跳页的全部入口（18 处 / 5 个类）	Ldy;（4） Lk5;（7） Lz90;（4） Lzk2;（1） + Lld6; 自身桥（2）	mt_apk_search target=smali query="Lld6;->n(" → 18 处，全库就这些	换 NavController 混淆名后同法复用	高
+（反证）宿主从不按字符串跳	持有路由**字符串**的 11 个类，**没有任何一个**调用 navigate	——	两次搜索结果交叉比对即得	——	高
