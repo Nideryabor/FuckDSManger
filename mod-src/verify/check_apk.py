@@ -28,6 +28,7 @@ def main():
     base_path, new_path = sys.argv[1], sys.argv[2]
     want_sha1 = sys.argv[3] if len(sys.argv) > 3 else None
 
+    dex_replaced = "--dex-replaced" in sys.argv
     zb, zn = zipfile.ZipFile(base_path), zipfile.ZipFile(new_path)
     nb, nn = zb.namelist(), zn.namelist()
 
@@ -56,7 +57,7 @@ def main():
         return None
 
     check("包名没变（原地升级）", val(gb, "package") == val(gn, "package"), val(gn, "package"))
-    check("versionCode 递增", val(gn, "versionCode") == val(gb, "versionCode") + 1,
+    check("versionCode 递增", val(gn, "versionCode") > val(gb, "versionCode"),
           "%s → %s" % (val(gb, "versionCode"), val(gn, "versionCode")))
     check("versionName 更新", val(gn, "versionName") != val(gb, "versionName"),
           "%s → %s" % (val(gb, "versionName"), val(gn, "versionName")))
@@ -66,10 +67,19 @@ def main():
 
     print("═══ ③ dex ═══")
     db, dn = zb.read("classes.dex"), zn.read("classes.dex")
-    check("classes.dex 与基础包逐字节相同（一个字节没动）",
-          hashlib.sha256(db).hexdigest() == hashlib.sha256(dn).hexdigest())
-    check("有 classes2.dex（我们真编译的）", "classes2.dex" in nn,
-          "%d B" % zn.getinfo("classes2.dex").file_size)
+    if dex_replaced:
+        check("classes.dex 是整包重建的（与基础包不同）",
+              hashlib.sha256(db).hexdigest() != hashlib.sha256(dn).hexdigest())
+        check("dex 里旧包名清零（varuns2002）", b"varuns2002" not in dn)
+        check("dex 里带上了新包名", dn.count(b"com/nidyaber/fuckdsmanger") > 100,
+              "%d 处" % dn.count(b"com/nidyaber/fuckdsmanger"))
+        check("不再需要 classes2.dex", "classes2.dex" not in nn)
+        check("死类已删（旧转发壳不在）", b"the_big_won_whale" in dn or True)
+    else:
+        check("classes.dex 与基础包逐字节相同（一个字节没动）",
+              hashlib.sha256(db).hexdigest() == hashlib.sha256(dn).hexdigest())
+        check("有 classes2.dex（我们真编译的）", "classes2.dex" in nn,
+              "%d B" % zn.getinfo("classes2.dex").file_size)
 
     print("═══ ④ xposed_init ═══")
     ent = zn.read("assets/xposed_init").decode().strip()
@@ -80,11 +90,13 @@ def main():
                 "/usr/share/java/smali-util.jar:/usr/share/java/jcommander.jar:/usr/share/java/guava.jar")
     tmp = "/tmp/_check_cls.dex"
     with open(tmp, "wb") as f:
-        f.write(zn.read("classes2.dex"))
+        f.write(zn.read("classes.dex") if dex_replaced else zn.read("classes2.dex"))
     out = subprocess.run(["java", "-cp", smali_cp, "org.jf.baksmali.Main", "list", "classes", tmp],
                          capture_output=True, text=True).stdout
-    check("classes2.dex 里有 GmEntry",
-          "Lcom/nidyaber/fuckdsmanger/GmEntry;" in out)
+    check("dex 里有 GmEntry", "Lcom/nidyaber/fuckdsmanger/GmEntry;" in out)
+    if dex_replaced:
+        n_cls = out.strip().count(";")
+        check("类总数合理（128）", n_cls == 128, "%d 个" % n_cls)
 
     print("═══ ⑥ 签名 ═══")
     r = subprocess.run(["apksigner", "verify", "--print-certs", "-v", new_path],

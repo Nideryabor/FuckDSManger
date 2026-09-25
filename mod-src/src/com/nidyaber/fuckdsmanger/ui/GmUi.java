@@ -13,7 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.varuns2002.disable_flag_secure.gm.GmUtil;
+import com.nidyaber.fuckdsmanger.gm.GmUtil;
 
 /**
  * GmUi —— 模块 UI 的工具箱（**真编译版**）🐲

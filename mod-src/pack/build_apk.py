@@ -163,7 +163,8 @@ def write_zip(path, entries):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", required=True, help="基础 APK（提供 dex 与资源素材）")
-    ap.add_argument("--entry-dex", help="我们真编译出来的入口 dex")
+    ap.add_argument("--dex", help="整包替换用的 classes.dex（全量重建时）")
+    ap.add_argument("--entry-dex", help="我们真编译出来的入口 dex（追加为 classes2.dex）")
     ap.add_argument("--entry-class", default="com.nidyaber.fuckdsmanger.GmEntry")
     ap.add_argument("--version-code", type=int)
     ap.add_argument("--version-name")
@@ -196,15 +197,21 @@ def main():
     entries = [
         {"name": "AndroidManifest.xml", "data": manifest},
     ]
-    if base_dex:
-        entries.append({"name": "classes.dex", "data": base_dex})
-        print("classes.dex : %d 字节（基础包原样）" % len(base_dex))
-    if a.entry_dex:
-        with open(a.entry_dex, "rb") as f:
-            our = f.read()
-        name = "classes2.dex" if base_dex else "classes.dex"
-        entries.append({"name": name, "data": our})
-        print("%s : %d 字节（我们真编译的入口）" % (name, len(our)))
+    if a.dex:
+        with open(a.dex, "rb") as f:
+            whole = f.read()
+        entries.append({"name": "classes.dex", "data": whole})
+        print("classes.dex : %d 字节（★ 整包重建）" % len(whole))
+    else:
+        if base_dex:
+            entries.append({"name": "classes.dex", "data": base_dex})
+            print("classes.dex : %d 字节（基础包原样）" % len(base_dex))
+        if a.entry_dex:
+            with open(a.entry_dex, "rb") as f:
+                our = f.read()
+            name = "classes2.dex" if base_dex else "classes.dex"
+            entries.append({"name": name, "data": our})
+            print("%s : %d 字节（我们真编译的入口）" % (name, len(our)))
 
     init = (a.entry_class + "\n").encode("utf-8")
     entries.append({"name": "assets/xposed_init", "data": init})

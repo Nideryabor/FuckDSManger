@@ -12,7 +12,8 @@ const-string 写入了什么 / 被 findClass 或 new-instance 装进了哪个类
 import re
 import sys
 
-GM = "com.varuns2002.disable_flag_secure.gm."
+GM_PREFIXES = ["com.nidyaber.fuckdsmanger.gm.",
+               "com.varuns2002.disable_flag_secure.gm."]   # 改名前后都认
 
 
 def unescape(s):
@@ -24,14 +25,18 @@ def short(desc):
     d = desc.strip()
     if d.startswith("L") and d.endswith(";"):
         d = d[1:-1].replace("/", ".")
-    if d.startswith(GM):
-        d = d[len(GM):]
+    for p in GM_PREFIXES:
+        if d.startswith(p):
+            return d[len(p):]
     return d
 
 
 def short_str(v):
     """hook 类的字符串形式是 FQCN，压成短名再比。"""
-    return v[len(GM):] if v.startswith(GM) else v
+    for p in GM_PREFIXES:
+        if v.startswith(p):
+            return v[len(p):]
+    return v
 
 
 def main(path):

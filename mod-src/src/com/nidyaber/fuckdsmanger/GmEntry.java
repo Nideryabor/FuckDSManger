@@ -1,6 +1,6 @@
 package com.nidyaber.fuckdsmanger;
 
-import com.varuns2002.disable_flag_secure.gm.*;
+import com.nidyaber.fuckdsmanger.gm.*;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -24,18 +24,18 @@ import java.util.Map;
 public final class GmEntry implements IXposedHookLoadPackage {
 
     /** gm 包前缀（javac 会把 "GM + 类名" 折叠成单个 const-string，和原来的手写字面量一模一样）。 */
-    private static final String GM = "com.varuns2002.disable_flag_secure.gm.";
+    private static final String GM = "com.nidyaber.fuckdsmanger.gm.";
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lp) {
-        XposedBridge.log("FuckDSManger NL 2.22.111 handleLoadPackage ENTER");
+        XposedBridge.log("FuckDSManger NL 2.22.112 handleLoadPackage ENTER");
         GmCrashHook.install();
 
         String pkg = lp.packageName;
         GmUtil.log("pkg=" + pkg);
         if (!pkg.startsWith("com.deepseek.chat")) return;
 
-        GmUtil.log("===== NL 2.22.111 启动 | 日志：logcat+DIAG+文件 三通道 · 轮转256KB · 可读时间戳 =====");
+        GmUtil.log("===== NL 2.22.112 启动 | 日志：logcat+DIAG+文件 三通道 · 轮转256KB · 可读时间戳 =====");
 
         ClassLoader cl = lp.classLoader;
         GmUtil.envSafe(cl);
