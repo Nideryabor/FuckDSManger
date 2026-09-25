@@ -1,0 +1,31 @@
+-dontoptimize
+-keepattributes Signature,InnerClasses,EnclosingMethod,*Annotation*
+-keep class com.nidyaber.fuckdsmanger.** { *; }
+-keep class **.R { *; }
+-keep class **.R$* { *; }
+-allowaccessmodification
+-repackageclasses 'fdm.r8'
+-printmapping /workspace/pipeline/out/mapping.txt
+-printseeds   /workspace/pipeline/out/seeds.txt
+-printusage   /workspace/pipeline/out/usage.txt
+-dontwarn kotlinx.serialization.**
+-dontwarn org.jetbrains.**
+-dontwarn javax.annotation.**
+-dontwarn androidx.window.**
+-dontwarn com.google.common.**
+-dontwarn com.google.**
+-dontwarn java.awt.**
+-dontwarn sun.misc.**
+-dontwarn android.app.Notification$**
+-dontwarn android.app.Notification$Metric$**
+-dontwarn android.**
+-dontwarn androidx.annotation.**
+-dontwarn androidx.collection.**
+-dontwarn kotlinx.**
+-dontwarn androidx.compose.runtime.Immutable
+-dontwarn androidx.compose.runtime.Stable
+-dontwarn androidx.compose.runtime.annotation.**
+-dontwarn **
+-keep class androidx.customview.poolingcontainer.** { *; }
+-keep class androidx.customview.poolingcontainer.R { *; }
+-keep class androidx.customview.poolingcontainer.R$id { *; }

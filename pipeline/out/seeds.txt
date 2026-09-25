@@ -1,0 +1,2158 @@
+androidx.compose.ui.R$string
+androidx.customview.poolingcontainer.R
+com.nidyaber.fuckdsmanger.gm.HostMount
+androidx.drawerlayout.R$string
+androidx.vectordrawable.R$id
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt
+androidx.vectordrawable.animated.R$string
+androidx.core.R$style
+androidx.core.R$color
+androidx.lifecycle.viewmodel.R
+androidx.vectordrawable.animated.R$attr
+androidx.customview.R$id
+androidx.vectordrawable.animated.R
+androidx.vectordrawable.R$string
+androidx.drawerlayout.R$attr
+androidx.vectordrawable.animated.R$id
+androidx.viewpager.R$drawable
+androidx.drawerlayout.R$layout
+androidx.navigationevent.R
+androidx.autofill.R
+androidx.compose.ui.R$color
+androidx.dynamicanimation.R$color
+androidx.vectordrawable.R$attr
+kotlinx.coroutines.flow.Flow
+androidx.core.R$layout
+androidx.drawerlayout.R$dimen
+androidx.savedstate.R$id
+androidx.vectordrawable.animated.R$color
+com.nidyaber.fuckdsmanger.R$string
+androidx.customview.R$color
+com.nidyaber.fuckdsmanger.gm.HostMountKt
+androidx.customview.R$integer
+androidx.vectordrawable.R$integer
+androidx.core.R$dimen
+androidx.vectordrawable.animated.R$dimen
+androidx.compose.material3.adaptive.layout.R$string
+androidx.autofill.R$color
+androidx.drawerlayout.R$style
+androidx.coordinatorlayout.R$style
+androidx.vectordrawable.R$layout
+androidx.compose.material3.R$style
+androidx.coordinatorlayout.R$layout
+androidx.loader.R$string
+androidx.navigationevent.R$id
+androidx.vectordrawable.R$drawable
+androidx.core.R$integer
+androidx.compose.runtime.ProvidableCompositionLocal
+androidx.loader.R$id
+com.nidyaber.fuckdsmanger.R$dimen
+androidx.customview.poolingcontainer.PoolingContainer
+androidx.core.R$string
+androidx.activity.R$id
+androidx.loader.R$attr
+androidx.customview.R
+androidx.lifecycle.runtime.R$id
+androidx.dynamicanimation.R
+androidx.compose.ui.R$style
+androidx.coordinatorlayout.R$dimen
+com.nidyaber.fuckdsmanger.R$id
+androidx.loader.R$dimen
+androidx.viewpager.R$color
+com.nidyaber.fuckdsmanger.gm.GmZygote
+androidx.drawerlayout.R$id
+androidx.vectordrawable.R$color
+androidx.appcompat.R
+androidx.compose.ui.R
+androidx.customview.R$layout
+androidx.customview.R$string
+androidx.viewpager.R$string
+androidx.customview.poolingcontainer.PoolingContainerListener
+androidx.vectordrawable.R$dimen
+androidx.drawerlayout.R$color
+androidx.viewpager.R$layout
+androidx.loader.R$layout
+androidx.compose.foundation.R$string
+androidx.core.R$attr
+androidx.autofill.R$layout
+androidx.loader.R$style
+androidx.core.R
+kotlin.coroutines.jvm.internal.BaseContinuationImpl
+androidx.autofill.R$dimen
+com.nidyaber.fuckdsmanger.R$drawable
+androidx.autofill.R$string
+androidx.vectordrawable.animated.R$layout
+androidx.loader.R$drawable
+androidx.dynamicanimation.R$layout
+androidx.autofill.R$integer
+androidx.dynamicanimation.R$attr
+androidx.appcompat.R$attr
+androidx.customview.poolingcontainer.PoolingContainerListenerHolder
+androidx.viewpager.R$integer
+androidx.dynamicanimation.R$id
+com.nidyaber.fuckdsmanger.gm.HostMount$open$ctx$1
+androidx.core.R$id
+androidx.dynamicanimation.R$style
+androidx.activity.R
+androidx.autofill.R$id
+androidx.compose.ui.graphics.R$id
+androidx.coordinatorlayout.R$drawable
+kotlin.jvm.internal.DefaultConstructorMarker
+androidx.drawerlayout.R$integer
+com.nidyaber.fuckdsmanger.R$layout
+androidx.viewpager.R$dimen
+androidx.dynamicanimation.R$integer
+androidx.coordinatorlayout.R$id
+androidx.customview.R$style
+androidx.viewpager.R$style
+androidx.drawerlayout.R
+androidx.coordinatorlayout.R
+androidx.coordinatorlayout.R$integer
+androidx.coordinatorlayout.R$color
+androidx.vectordrawable.animated.R$drawable
+androidx.viewpager.R
+androidx.vectordrawable.R
+com.nidyaber.fuckdsmanger.R$style
+androidx.loader.R$color
+com.nidyaber.fuckdsmanger.R
+com.nidyaber.fuckdsmanger.R$attr
+androidx.lifecycle.runtime.R
+androidx.viewpager.R$id
+androidx.appcompat.R$id
+androidx.autofill.R$attr
+androidx.compose.material3.R$string
+androidx.dynamicanimation.R$string
+androidx.compose.material3.R
+androidx.vectordrawable.R$style
+androidx.compose.material3.R$integer
+androidx.coordinatorlayout.R$string
+com.nidyaber.fuckdsmanger.R$integer
+com.nidyaber.fuckdsmanger.R$color
+androidx.customview.R$dimen
+kotlinx.coroutines.internal.StackTraceRecoveryKt
+androidx.loader.R$integer
+androidx.compose.ui.graphics.R
+androidx.autofill.R$style
+androidx.coordinatorlayout.R$attr
+androidx.dynamicanimation.R$dimen
+androidx.compose.foundation.R$id
+androidx.compose.foundation.R
+androidx.compose.material3.adaptive.layout.R
+androidx.savedstate.R
+androidx.lifecycle.viewmodel.R$id
+androidx.customview.R$attr
+androidx.viewpager.R$attr
+androidx.drawerlayout.R$drawable
+androidx.vectordrawable.animated.R$integer
+androidx.vectordrawable.animated.R$style
+androidx.customview.R$drawable
+androidx.core.R$drawable
+com.nidyaber.fuckdsmanger.R$styleable
+androidx.dynamicanimation.R$drawable
+androidx.compose.ui.R$id
+androidx.loader.R
+androidx.autofill.R$drawable
+androidx.compose.material3.R$string: int m3c_date_input_invalid_for_pattern
+androidx.loader.R$id: int notification_main_column_container
+androidx.customview.R$id: int forever
+androidx.coordinatorlayout.R$drawable: int notification_template_icon_low_bg
+androidx.drawerlayout.R$attr: int fontWeight
+androidx.customview.R$attr: int fontVariationSettings
+kotlinx.coroutines.scheduling.WorkQueue: int producerIndex$volatile
+com.nidyaber.fuckdsmanger.R$drawable: int ic_mood
+androidx.vectordrawable.animated.R$drawable: int notification_icon_background
+androidx.compose.foundation.R$string: int androidx_compose_foundation_autofill
+androidx.autofill.R$dimen: int notification_action_icon_size
+androidx.compose.material3.R$string: int m3c_date_range_picker_title
+androidx.core.R$id: int accessibility_custom_action_3
+com.nidyaber.fuckdsmanger.R$layout: int notification_action
+androidx.autofill.R$id: int accessibility_custom_action_25
+androidx.customview.R$style: int Widget_Compat_NotificationActionContainer
+com.nidyaber.fuckdsmanger.R$string: int indeterminate
+com.nidyaber.fuckdsmanger.R$id: int action_image
+androidx.autofill.R$id: int normal
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_range_picker_start_headline
+com.nidyaber.fuckdsmanger.R$layout: int notification_action_tombstone
+androidx.autofill.R$id: int chronometer
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamily_fontProviderCerts
+androidx.compose.ui.R$id: int accessibility_custom_action_16
+androidx.vectordrawable.animated.R$layout: int notification_template_icon_group
+androidx.drawerlayout.R$id: int tag_unhandled_key_event_manager
+androidx.drawerlayout.R$id: int accessibility_custom_action_7
+androidx.vectordrawable.R$id: int action_container
+androidx.autofill.R$id: int accessibility_custom_action_23
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_17
+androidx.coordinatorlayout.R$drawable: int notification_tile_bg
+androidx.customview.R$drawable: int notify_panel_notification_icon_bg
+com.nidyaber.fuckdsmanger.R$drawable: int ic_arrow_back
+androidx.core.R$id: int tag_unhandled_key_listeners
+androidx.customview.R$drawable: int notification_template_icon_low_bg
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_input_headline_description
+androidx.compose.ui.R$id: int accessibility_custom_action_17
+androidx.drawerlayout.R$attr: int fontStyle
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_7
+androidx.dynamicanimation.R$drawable: int notification_bg_low_normal
+androidx.vectordrawable.R$drawable: int notify_panel_notification_icon_bg
+androidx.core.R$attr: int fontVariationSettings
+androidx.autofill.R$id: int accessibility_custom_action_8
+androidx.vectordrawable.animated.R$id: int tag_unhandled_key_event_manager
+com.nidyaber.fuckdsmanger.R$dimen: int notification_right_side_padding_top
+androidx.compose.material3.R$string: int m3c_bottom_sheet_pane_title
+androidx.dynamicanimation.R$layout: int notification_template_icon_group
+androidx.autofill.R$id: int accessibility_custom_action_29
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_23
+androidx.dynamicanimation.R$dimen: int compat_notification_large_icon_max_height
+androidx.loader.R$dimen: int notification_subtext_size
+com.nidyaber.fuckdsmanger.R$drawable: int ic_home
+androidx.viewpager.R$drawable: int notification_action_background
+androidx.core.R$id: int accessibility_custom_action_16
+androidx.vectordrawable.animated.R$attr: int fontProviderPackage
+androidx.drawerlayout.R$id: int accessibility_custom_action_22
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_gradientRadius
+androidx.viewpager.R$dimen: int notification_action_icon_size
+androidx.compose.material3.adaptive.layout.R$string: int m3_adaptive_default_pane_expansion_start_offset_anchor_description
+androidx.drawerlayout.R$id: int text2
+androidx.coordinatorlayout.R$id: int icon
+androidx.autofill.R$id: int accessibility_custom_action_4
+com.nidyaber.fuckdsmanger.gm.HostMount: com.nidyaber.fuckdsmanger.gm.HostMount INSTANCE
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: kotlin.jvm.functions.Function2 lambda$-2095128264
+androidx.drawerlayout.R$dimen: int compat_button_padding_vertical_material
+kotlinx.coroutines.internal.LimitedDispatcher: int runningWorkers$volatile
+androidx.vectordrawable.R$style: int TextAppearance_Compat_Notification_Title
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_centerY
+androidx.core.R$id: int accessibility_custom_action_31
+androidx.loader.R$attr: int ttcIndex
+androidx.core.R$attr: int fontProviderFallbackQuery
+com.nidyaber.fuckdsmanger.R$dimen: int notification_action_text_size
+androidx.vectordrawable.animated.R$id: int right_side
+androidx.customview.R$id: int accessibility_custom_action_11
+androidx.core.R$id: int info
+com.nidyaber.fuckdsmanger.R$integer: int status_bar_notification_info_maxnum
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_0
+androidx.vectordrawable.animated.R$id: int notification_background
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_30
+androidx.compose.ui.R$string: int state_on
+androidx.autofill.R$id: int accessibility_custom_action_9
+androidx.autofill.R$id: int accessibility_action_clickable_span
+androidx.viewpager.R$color: int notification_action_color_filter
+com.nidyaber.fuckdsmanger.R$attr: int fontProviderAuthority
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_endX
+androidx.core.R$id: int notification_main_column_container
+androidx.customview.R$id: int accessibility_custom_action_16
+androidx.vectordrawable.R$drawable: int notification_template_icon_bg
+androidx.vectordrawable.animated.R$id: int dialog_button
+com.nidyaber.fuckdsmanger.R$attr: int fontProviderFetchTimeout
+com.nidyaber.fuckdsmanger.R$string: int state_on
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_23
+androidx.autofill.R$dimen: int notification_action_text_size
+androidx.loader.R$id: int async
+androidx.vectordrawable.animated.R$color: int notification_icon_bg_color
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_25
+com.nidyaber.fuckdsmanger.R$id: int icon_group
+com.nidyaber.fuckdsmanger.R$drawable: int notification_icon_background
+androidx.coordinatorlayout.R$id: int async
+androidx.vectordrawable.animated.R$drawable: int notification_tile_bg
+androidx.vectordrawable.R$style: int Widget_Compat_NotificationActionText
+androidx.customview.R$color: int androidx_core_secondary_text_default_material_light
+androidx.core.R$dimen: int notification_big_circle_margin
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_24
+androidx.compose.material3.R$string: int m3c_time_picker_toggle_touch
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_6
+androidx.autofill.R$drawable: int notification_template_icon_low_bg
+androidx.vectordrawable.R$id: int italic
+androidx.dynamicanimation.R$attr: int fontProviderPackage
+androidx.drawerlayout.R$drawable: int notification_bg_low
+com.nidyaber.fuckdsmanger.R$dimen: int compat_control_corner_material
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_7
+androidx.autofill.R$id: int accessibility_custom_action_22
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_15
+com.nidyaber.fuckdsmanger.R$id: int async
+androidx.drawerlayout.R$id: int accessibility_custom_action_23
+androidx.coordinatorlayout.R$style: int TextAppearance_Compat_Notification
+com.nidyaber.fuckdsmanger.R$id: int text
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_24
+com.nidyaber.fuckdsmanger.R$styleable: int[] Capability
+androidx.dynamicanimation.R$layout: int notification_template_part_chronometer
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_scroll_to_earlier_years
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_range_picker_end_headline
+androidx.vectordrawable.R$dimen: int compat_button_inset_vertical_material
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_input_invalid_for_pattern
+androidx.drawerlayout.R$dimen: int compat_notification_large_icon_max_height
+androidx.core.R$id: int accessibility_custom_action_23
+androidx.compose.material3.R$string: int m3c_date_input_headline
+com.nidyaber.fuckdsmanger.R$id: int tag_accessibility_pane_title
+androidx.core.R$id: int tag_screen_reader_focusable
+com.nidyaber.fuckdsmanger.R$id: int tag_accessibility_clickable_spans
+androidx.vectordrawable.animated.R$dimen: int compat_button_padding_vertical_material
+androidx.drawerlayout.R$id: int line1
+androidx.viewpager.R$dimen: int compat_button_padding_vertical_material
+androidx.viewpager.R$id: int forever
+androidx.autofill.R$dimen: int notification_top_pad
+androidx.loader.R$drawable: int notification_bg
+androidx.vectordrawable.R$id: int accessibility_custom_action_19
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_12
+androidx.vectordrawable.R$id: int accessibility_action_clickable_span
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_minute
+androidx.viewpager.R$id: int time
+androidx.coordinatorlayout.R$id: int dialog_button
+androidx.core.R$drawable: int notification_bg_normal_pressed
+androidx.vectordrawable.R$id: int accessibility_custom_action_14
+androidx.drawerlayout.R$dimen: int notification_content_margin_start
+androidx.coordinatorlayout.R$layout: int notification_action_tombstone
+com.nidyaber.fuckdsmanger.R$drawable: int ic_layers
+androidx.vectordrawable.R$id: int accessibility_custom_action_16
+androidx.viewpager.R$id: int notification_main_column_container
+androidx.vectordrawable.animated.R$dimen: int compat_button_inset_vertical_material
+androidx.compose.material3.adaptive.layout.R$string: int m3_adaptive_default_pane_expansion_drag_handle_content_description
+kotlinx.coroutines.channels.BufferedChannel: long receivers$volatile
+androidx.compose.material3.R$string: int m3c_date_picker_navigate_to_year_description
+androidx.core.R$id: int tag_on_receive_content_listener
+androidx.coordinatorlayout.R$drawable: int notification_bg_low_normal
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_26
+androidx.dynamicanimation.R$dimen: int notification_main_column_padding_top
+androidx.core.R$id: int accessibility_custom_action_28
+androidx.compose.material3.adaptive.layout.R$string: int m3_adaptive_default_pane_expansion_end_offset_anchor_description
+androidx.core.R$integer: int status_bar_notification_info_maxnum
+androidx.compose.ui.R$id: int androidx_compose_ui_view_composition_context
+androidx.vectordrawable.R$style: int TextAppearance_Compat_Notification_Info
+com.nidyaber.fuckdsmanger.R$attr: int fontWeight
+com.nidyaber.fuckdsmanger.R$drawable: int notify_panel_notification_icon_bg
+androidx.autofill.R$dimen: int compat_control_corner_material
+androidx.drawerlayout.R$string: int status_bar_notification_info_overflow
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_dialog_title
+androidx.loader.R$drawable: int notification_bg_low_pressed
+androidx.core.R$id: int accessibility_custom_action_24
+androidx.core.R$id: int italic
+androidx.compose.material3.R$style: int EdgeToEdgeFloatingDialogWindowTheme
+androidx.loader.R$dimen: int compat_button_inset_horizontal_material
+androidx.loader.R$dimen: int notification_large_icon_width
+androidx.compose.material3.adaptive.layout.R$string: int m3_adaptive_default_pane_expansion_proportion_anchor_description
+androidx.customview.R$attr: int fontProviderFetchStrategy
+androidx.compose.ui.R$id: int accessibility_custom_action_8
+androidx.dynamicanimation.R$style: int TextAppearance_Compat_Notification
+androidx.autofill.R$id: int tag_transition_group
+androidx.viewpager.R$drawable: int notification_bg_normal_pressed
+androidx.core.R$id: int accessibility_custom_action_20
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_15
+androidx.coordinatorlayout.R$style: int Widget_Compat_NotificationActionContainer
+androidx.viewpager.R$string: int status_bar_notification_info_overflow
+androidx.viewpager.R$dimen: int compat_button_inset_horizontal_material
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_19
+androidx.coordinatorlayout.R$style: int Widget_Compat_NotificationActionText
+androidx.drawerlayout.R$id: int accessibility_custom_action_5
+androidx.core.R$string: int call_notification_screening_text
+androidx.compose.ui.R$id: int accessibility_custom_action_12
+androidx.viewpager.R$id: int notification_main_column
+androidx.vectordrawable.R$id: int accessibility_custom_action_3
+androidx.compose.material3.R$string: int m3c_time_picker_toggle_keyboard
+androidx.loader.R$dimen: int notification_action_text_size
+androidx.customview.R$id: int tag_unhandled_key_listeners
+androidx.loader.R$drawable: int notification_template_icon_bg
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_8
+androidx.customview.R$dimen: int notification_small_icon_background_padding
+androidx.vectordrawable.R$drawable: int notification_icon_background
+androidx.dynamicanimation.R$id: int tag_unhandled_key_listeners
+com.nidyaber.fuckdsmanger.R$id: int tag_system_bar_state_monitor
+androidx.customview.R$dimen: int notification_action_icon_size
+androidx.compose.ui.R$string: int tab
+com.nidyaber.fuckdsmanger.R$string: int close_sheet
+com.nidyaber.fuckdsmanger.R$id: int notification_main_column_container
+androidx.vectordrawable.R$id: int accessibility_custom_action_12
+androidx.viewpager.R$id: int normal
+androidx.coordinatorlayout.R$id: int actions
+androidx.compose.ui.R$id: int accessibility_custom_action_13
+androidx.drawerlayout.R$id: int tag_accessibility_clickable_spans
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_toggle_keyboard
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_12
+androidx.coordinatorlayout.R$id: int notification_background
+androidx.drawerlayout.R$id: int accessibility_custom_action_30
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColorItem_android_color
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_29
+kotlinx.coroutines.JobSupport$Finishing: java.lang.Object _rootCause$volatile
+androidx.vectordrawable.animated.R$attr: int fontProviderCerts
+androidx.compose.ui.R$id: int hide_in_inspector_tag
+androidx.compose.material3.R$string: int m3c_date_picker_today_description
+com.nidyaber.fuckdsmanger.R$id: int hide_graphics_layer_in_inspector_tag
+androidx.dynamicanimation.R$id: int forever
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamily_fontProviderFetchStrategy
+androidx.viewpager.R$style: int Widget_Compat_NotificationActionText
+androidx.vectordrawable.R$id: int line3
+androidx.autofill.R$id: int accessibility_custom_action_28
+androidx.autofill.R$id: int accessibility_custom_action_26
+com.nidyaber.fuckdsmanger.R$color: int notification_icon_bg_color
+androidx.compose.material3.R$string: int m3c_dropdown_menu_collapsed
+com.nidyaber.fuckdsmanger.R$drawable: int ic_sms
+androidx.vectordrawable.animated.R$id: int text
+androidx.coordinatorlayout.R$id: int tag_accessibility_actions
+androidx.compose.ui.R$id: int accessibility_custom_action_4
+androidx.core.R$id: int forever
+androidx.customview.R$drawable: int notification_bg_normal_pressed
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamily_fontProviderFallbackQuery
+androidx.autofill.R$attr: int fontProviderPackage
+androidx.vectordrawable.R$dimen: int notification_top_pad
+androidx.drawerlayout.R$id: int icon
+kotlinx.coroutines.channels.BufferedChannel: java.lang.Object receiveSegment$volatile
+androidx.customview.R$color: int androidx_core_ripple_material_light
+com.nidyaber.fuckdsmanger.R$drawable: int notification_bg_low
+androidx.coordinatorlayout.R$dimen: int notification_right_icon_size
+androidx.viewpager.R$dimen: int notification_small_icon_background_padding
+androidx.vectordrawable.R$attr: int fontWeight
+androidx.dynamicanimation.R$id: int italic
+androidx.vectordrawable.R$id: int accessibility_custom_action_20
+androidx.customview.R$id: int action_text
+androidx.dynamicanimation.R$dimen: int notification_top_pad
+androidx.drawerlayout.R$id: int notification_main_column_container
+androidx.viewpager.R$layout: int notification_template_icon_group
+androidx.customview.R$drawable: int notification_bg_low_normal
+androidx.drawerlayout.R$id: int dialog_button
+com.nidyaber.fuckdsmanger.R$dimen: int notification_subtext_size
+androidx.dynamicanimation.R$drawable: int notification_template_icon_low_bg
+androidx.vectordrawable.R$id: int tag_accessibility_clickable_spans
+androidx.vectordrawable.R$attr: int ttcIndex
+com.nidyaber.fuckdsmanger.R$id: int action_text
+androidx.core.R$drawable: int notification_template_icon_bg
+androidx.vectordrawable.R$id: int tag_screen_reader_focusable
+androidx.autofill.R$id: int notification_background
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_input_label
+com.nidyaber.fuckdsmanger.R$string: int selected
+kotlinx.coroutines.channels.BufferedChannel: long bufferEnd$volatile
+androidx.coordinatorlayout.R$color: int notification_action_color_filter
+androidx.vectordrawable.R$drawable: int notification_bg_low_normal
+androidx.appcompat.R$attr: int fontVariationSettings
+androidx.core.R$id: int accessibility_custom_action_11
+androidx.vectordrawable.animated.R$attr: int fontProviderFetchStrategy
+androidx.autofill.R$style: int TextAppearance_Compat_Notification
+androidx.compose.material3.R$string: int m3c_date_range_picker_scroll_to_next_month
+com.nidyaber.fuckdsmanger.R$dimen: int notification_main_column_padding_top
+androidx.loader.R$integer: int status_bar_notification_info_maxnum
+androidx.coordinatorlayout.R$dimen: int compat_button_padding_vertical_material
+kotlinx.coroutines.JobSupport$Finishing: int _isCompleting$volatile
+androidx.coordinatorlayout.R$id: int tag_unhandled_key_event_manager
+androidx.loader.R$dimen: int notification_large_icon_height
+androidx.dynamicanimation.R$id: int actions
+androidx.vectordrawable.R$id: int accessibility_custom_action_2
+androidx.core.R$id: int tag_accessibility_actions
+androidx.vectordrawable.R$attr: int alpha
+androidx.customview.R$id: int tag_screen_reader_focusable
+androidx.drawerlayout.R$attr: int ttcIndex
+androidx.vectordrawable.R$id: int dialog_button
+androidx.customview.R$id: int tag_accessibility_heading
+androidx.dynamicanimation.R$id: int icon
+androidx.drawerlayout.R$layout: int custom_dialog
+com.nidyaber.fuckdsmanger.R$style: int EdgeToEdgeFloatingDialogWindowTheme
+androidx.core.R$id: int icon_group
+androidx.compose.material3.R$string: int m3c_bottom_sheet_collapse_description
+com.nidyaber.fuckdsmanger.R$string: int m3c_wide_navigation_rail_pane_title
+androidx.autofill.R$dimen: int compat_button_padding_horizontal_material
+androidx.coordinatorlayout.R$layout: int notification_template_part_chronometer
+androidx.viewpager.R$drawable: int notification_template_icon_low_bg
+androidx.compose.ui.R$id: int compose_view_saveable_id_tag
+com.nidyaber.fuckdsmanger.gm.HostMount$open$ctx$1: android.content.res.AssetManager $am
+kotlinx.coroutines.channels.BufferedChannel: java.lang.Object bufferEndSegment$volatile
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_28
+androidx.customview.R$dimen: int notification_right_side_padding_top
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_31
+com.nidyaber.fuckdsmanger.R$drawable: int notification_action_background
+com.nidyaber.fuckdsmanger.gm.HostMount: int $stable
+androidx.autofill.R$layout: int custom_dialog
+androidx.compose.material3.R$string: int m3c_date_picker_headline_description
+androidx.compose.material3.R$string: int m3c_date_picker_switch_to_day_selection
+androidx.autofill.R$id: int tag_accessibility_actions
+androidx.vectordrawable.animated.R$drawable: int notification_template_icon_bg
+androidx.autofill.R$style: int TextAppearance_Compat_Notification_Title
+androidx.viewpager.R$dimen: int notification_top_pad
+androidx.vectordrawable.R$id: int accessibility_custom_action_15
+androidx.loader.R$id: int text
+androidx.core.R$drawable: int ic_call_answer_low
+androidx.coordinatorlayout.R$dimen: int compat_button_inset_vertical_material
+androidx.autofill.R$dimen: int notification_large_icon_width
+androidx.drawerlayout.R$layout: int notification_action_tombstone
+androidx.coordinatorlayout.R$id: int line3
+androidx.loader.R$attr: int alpha
+androidx.autofill.R$id: int line3
+kotlinx.coroutines.DefaultExecutor: int debugStatus
+androidx.customview.R$dimen: int compat_notification_large_icon_max_width
+androidx.drawerlayout.R$id: int accessibility_custom_action_14
+androidx.vectordrawable.animated.R$id: int icon_group
+androidx.dynamicanimation.R$dimen: int notification_large_icon_height
+androidx.autofill.R$dimen: int notification_small_icon_size_as_large
+androidx.loader.R$id: int icon
+androidx.activity.R$id: int report_drawn
+androidx.vectordrawable.animated.R$style: int TextAppearance_Compat_Notification_Info
+com.nidyaber.fuckdsmanger.R$string: int m3_adaptive_default_pane_expansion_start_offset_anchor_description
+androidx.vectordrawable.animated.R$style: int TextAppearance_Compat_Notification_Time
+androidx.vectordrawable.animated.R$dimen: int notification_top_pad_large_text
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_6
+androidx.vectordrawable.animated.R$dimen: int notification_right_icon_size
+androidx.customview.R$id: int text
+androidx.autofill.R$dimen: int compat_notification_large_icon_max_height
+androidx.customview.R$id: int accessibility_custom_action_4
+com.nidyaber.fuckdsmanger.R$drawable: int ic_dashboard
+androidx.compose.ui.R$color: int vector_tint_color
+androidx.compose.ui.R$id: int accessibility_custom_action_27
+kotlinx.coroutines.internal.LockFreeLinkedListNode: java.lang.Object _prev$volatile
+androidx.customview.R$id: int action_divider
+androidx.dynamicanimation.R$attr: int fontProviderFetchTimeout
+androidx.viewpager.R$attr: int fontProviderCerts
+androidx.customview.R$id: int accessibility_custom_action_19
+androidx.customview.R$attr: int fontWeight
+androidx.compose.material3.R$string: int m3c_date_input_label
+androidx.core.R$id: int tag_unhandled_key_event_manager
+com.nidyaber.fuckdsmanger.R$string: int m3c_tooltip_pane_description
+androidx.compose.ui.R$id: int accessibility_custom_action_18
+androidx.compose.material3.R$string: int m3c_time_picker_minute_text_field
+androidx.autofill.R$drawable: int notification_template_icon_bg
+androidx.customview.R$id: int italic
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_range_picker_scroll_to_next_month
+com.nidyaber.fuckdsmanger.R$id: int edit_text_id
+androidx.drawerlayout.R$dimen: int notification_top_pad
+com.nidyaber.fuckdsmanger.gm.HostMount: java.lang.String[] CANDIDATES
+com.nidyaber.fuckdsmanger.R$styleable: int Capability_queryPatterns
+androidx.customview.R$id: int accessibility_custom_action_14
+androidx.customview.R$id: int icon
+androidx.dynamicanimation.R$dimen: int notification_large_icon_width
+androidx.core.R$attr: int fontProviderSystemFontFamily
+androidx.core.R$drawable: int ic_call_answer_video
+androidx.core.R$id: int tag_compat_insets_dispatch
+androidx.customview.R$id: int accessibility_custom_action_5
+androidx.vectordrawable.animated.R$dimen: int notification_media_narrow_margin
+androidx.viewpager.R$style: int TextAppearance_Compat_Notification
+androidx.customview.R$color: int notification_icon_bg_color
+androidx.customview.R$id: int tag_transition_group
+kotlinx.coroutines.scheduling.WorkQueue: java.lang.Object lastScheduledTask$volatile
+com.nidyaber.fuckdsmanger.R$id: int tag_screen_reader_focusable
+androidx.dynamicanimation.R$id: int info
+androidx.drawerlayout.R$integer: int status_bar_notification_info_maxnum
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_hour_selection
+androidx.drawerlayout.R$attr: int fontProviderAuthority
+androidx.loader.R$dimen: int compat_button_padding_vertical_material
+androidx.core.R$dimen: int notification_top_pad_large_text
+androidx.lifecycle.viewmodel.R$id: int view_tree_view_model_store_owner
+androidx.loader.R$attr: int fontProviderAuthority
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_22
+androidx.customview.R$dimen: int compat_button_inset_vertical_material
+kotlinx.coroutines.android.HandlerDispatcherKt: android.view.Choreographer choreographer
+androidx.coordinatorlayout.R$dimen: int compat_notification_large_icon_max_height
+androidx.compose.ui.R$id: int inspection_slot_table_set
+androidx.core.R$layout: int notification_template_custom_big
+androidx.drawerlayout.R$id: int accessibility_custom_action_20
+androidx.compose.ui.R$string: int navigation_menu
+com.nidyaber.fuckdsmanger.R$id: int tag_on_apply_window_listener
+com.nidyaber.fuckdsmanger.R$drawable: int ic_info
+androidx.compose.ui.R$id: int accessibility_custom_action_24
+androidx.customview.R$drawable: int notification_template_icon_bg
+androidx.drawerlayout.R$id: int accessibility_custom_action_9
+androidx.coordinatorlayout.R$color: int notification_icon_bg_color
+androidx.drawerlayout.R$id: int text
+androidx.coordinatorlayout.R$dimen: int notification_subtext_size
+androidx.drawerlayout.R$dimen: int notification_right_side_padding_top
+androidx.core.R$drawable: int notification_bg_low
+androidx.vectordrawable.animated.R$drawable: int notify_panel_notification_icon_bg
+androidx.coordinatorlayout.R$attr: int fontProviderFetchStrategy
+androidx.customview.R$id: int accessibility_custom_action_30
+androidx.compose.ui.R$string: int snackbar_pane_title
+androidx.vectordrawable.animated.R$attr: int fontWeight
+androidx.vectordrawable.R$dimen: int notification_subtext_size
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_4
+com.nidyaber.fuckdsmanger.R$styleable: int ColorStateListItem_lStar
+com.nidyaber.fuckdsmanger.R$styleable: int ColorStateListItem_android_color
+androidx.coordinatorlayout.R$drawable: int notification_bg
+androidx.vectordrawable.R$attr: int fontProviderCerts
+androidx.dynamicanimation.R$attr: int ttcIndex
+androidx.vectordrawable.R$dimen: int notification_media_narrow_margin
+androidx.autofill.R$drawable: int notification_icon_background
+androidx.dynamicanimation.R$drawable: int notification_bg_normal_pressed
+com.nidyaber.fuckdsmanger.R$drawable: int ic_upload
+androidx.compose.ui.R$string: int dropdown_menu
+androidx.dynamicanimation.R$dimen: int notification_top_pad_large_text
+com.nidyaber.fuckdsmanger.R$string: int call_notification_decline_action
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_20
+androidx.drawerlayout.R$drawable: int notification_template_icon_bg
+androidx.vectordrawable.animated.R$integer: int status_bar_notification_info_maxnum
+androidx.customview.R$id: int icon_group
+androidx.drawerlayout.R$id: int tag_accessibility_pane_title
+androidx.customview.R$id: int notification_background
+androidx.core.R$dimen: int notification_right_side_padding_top
+androidx.customview.R$attr: int alpha
+com.nidyaber.fuckdsmanger.R$drawable: int ic_settings
+androidx.autofill.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.compose.material3.R$style: int EdgeToEdgeFloatingDialogTheme
+androidx.core.R$id: int accessibility_custom_action_13
+androidx.drawerlayout.R$id: int actions
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_21
+androidx.autofill.R$dimen: int notification_main_column_padding_top
+com.nidyaber.fuckdsmanger.R$string: int m3c_dropdown_menu_expanded
+androidx.viewpager.R$dimen: int notification_content_margin_start
+com.nidyaber.fuckdsmanger.R$attr: int fontVariationSettings
+androidx.dynamicanimation.R$attr: int alpha
+androidx.drawerlayout.R$id: int accessibility_action_clickable_span
+androidx.dynamicanimation.R$integer: int status_bar_notification_info_maxnum
+androidx.core.R$dimen: int notification_large_icon_height
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_8
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_minute_suffix
+com.nidyaber.fuckdsmanger.gm.HostMount: java.lang.String modulePath
+androidx.core.R$id: int accessibility_custom_action_27
+androidx.vectordrawable.animated.R$drawable: int notification_bg_low_pressed
+com.nidyaber.fuckdsmanger.R$id: int view_tree_saved_state_registry_owner
+androidx.vectordrawable.R$id: int normal
+androidx.vectordrawable.animated.R$id: int notification_main_column
+androidx.viewpager.R$drawable: int notification_tile_bg
+androidx.coordinatorlayout.R$dimen: int notification_content_margin_start
+androidx.autofill.R$style: int TextAppearance_Compat_Notification_Time
+androidx.core.R$id: int tag_on_receive_content_mime_types
+com.nidyaber.fuckdsmanger.R$string: int snackbar_pane_title
+com.nidyaber.fuckdsmanger.R$drawable: int notification_tile_bg
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt INSTANCE
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_switch_to_year_selection
+androidx.coordinatorlayout.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.autofill.R$attr: int ttcIndex
+androidx.core.R$id: int blocking
+androidx.autofill.R$id: int accessibility_custom_action_20
+androidx.customview.R$id: int accessibility_custom_action_20
+androidx.customview.R$id: int accessibility_custom_action_24
+androidx.core.R$drawable: int notification_template_icon_low_bg
+androidx.core.R$id: int line1
+com.nidyaber.fuckdsmanger.R$attr: int fontProviderCerts
+androidx.customview.R$id: int accessibility_custom_action_13
+androidx.autofill.R$id: int async
+com.nidyaber.fuckdsmanger.R$id: int action_container
+androidx.drawerlayout.R$id: int right_icon
+androidx.customview.R$id: int accessibility_custom_action_15
+androidx.core.R$layout: int ime_base_split_test_activity
+androidx.vectordrawable.animated.R$layout: int notification_template_custom_big
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_3
+androidx.vectordrawable.R$id: int icon_group
+androidx.coordinatorlayout.R$drawable: int notification_bg_normal_pressed
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_tileMode
+com.nidyaber.fuckdsmanger.R$drawable: int ic_lock
+com.nidyaber.fuckdsmanger.R$id: int tag_unhandled_key_listeners
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_29
+androidx.compose.material3.adaptive.layout.R$string: int m3_adaptive_default_pane_expansion_drag_handle_action_description
+androidx.viewpager.R$attr: int fontWeight
+androidx.core.R$attr: int queryPatterns
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_5
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_13
+androidx.dynamicanimation.R$id: int async
+androidx.core.R$dimen: int compat_notification_large_icon_max_height
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_fontVariationSettings
+androidx.drawerlayout.R$drawable: int notification_icon_background
+androidx.viewpager.R$id: int actions
+androidx.vectordrawable.R$drawable: int notification_bg_normal_pressed
+androidx.customview.R$attr: int fontProviderPackage
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyProviderFallback_fontProviderQuery
+androidx.customview.R$dimen: int notification_top_pad_large_text
+androidx.drawerlayout.R$id: int tag_transition_group
+com.nidyaber.fuckdsmanger.R$integer: int m3c_window_layout_in_display_cutout_mode
+androidx.customview.R$id: int chronometer
+androidx.coordinatorlayout.R$id: int action_image
+androidx.dynamicanimation.R$attr: int fontProviderAuthority
+androidx.vectordrawable.animated.R$id: int line3
+androidx.drawerlayout.R$dimen: int notification_big_circle_margin
+androidx.dynamicanimation.R$drawable: int notify_panel_notification_icon_bg
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_input_invalid_year_range
+androidx.vectordrawable.R$id: int right_side
+com.nidyaber.fuckdsmanger.R$style: int TextAppearance_Compat_Notification_Title
+androidx.autofill.R$drawable: int notification_bg_normal_pressed
+androidx.core.R$layout: int notification_action_tombstone
+androidx.compose.material3.R$string: int m3c_date_picker_scroll_to_earlier_years
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_range_picker_scroll_to_previous_month
+androidx.viewpager.R$layout: int notification_template_part_chronometer
+com.nidyaber.fuckdsmanger.R$layout: int notification_template_part_chronometer
+com.nidyaber.fuckdsmanger.R$attr: int fontProviderSystemFontFamily
+com.nidyaber.fuckdsmanger.R$color: int call_notification_answer_color
+androidx.autofill.R$id: int accessibility_custom_action_16
+androidx.autofill.R$drawable: int notification_tile_bg
+androidx.customview.R$dimen: int compat_button_inset_horizontal_material
+com.nidyaber.fuckdsmanger.R$attr: int nestedScrollViewStyle
+androidx.autofill.R$layout: int notification_template_part_chronometer
+androidx.loader.R$string: int status_bar_notification_info_overflow
+androidx.core.R$dimen: int notification_action_icon_size
+androidx.autofill.R$style: int Widget_Compat_NotificationActionText
+androidx.viewpager.R$id: int right_icon
+androidx.compose.material3.R$string: int m3c_time_picker_period_toggle_description
+com.nidyaber.fuckdsmanger.R$id: int view_tree_view_model_store_owner
+androidx.customview.R$id: int accessibility_custom_action_8
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_8
+androidx.core.R$dimen: int compat_button_inset_vertical_material
+androidx.drawerlayout.R$id: int action_container
+androidx.core.R$id: int async
+androidx.customview.R$attr: int fontProviderFetchTimeout
+androidx.loader.R$dimen: int compat_button_padding_horizontal_material
+androidx.vectordrawable.R$dimen: int notification_action_text_size
+androidx.vectordrawable.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.drawerlayout.R$color: int androidx_core_secondary_text_default_material_light
+kotlinx.coroutines.internal.LockFreeLinkedListNode: java.lang.Object _next$volatile
+androidx.core.R$dimen: int notification_action_text_size
+androidx.compose.material3.R$string: int m3c_floating_toolbar_expand
+androidx.customview.R$id: int blocking
+androidx.core.R$layout: int notification_template_part_time
+com.nidyaber.fuckdsmanger.R$drawable: int ic_tune
+androidx.core.R$id: int accessibility_custom_action_29
+androidx.customview.R$id: int action_image
+androidx.viewpager.R$dimen: int notification_large_icon_height
+androidx.core.R$id: int dialog_button
+androidx.dynamicanimation.R$attr: int fontStyle
+androidx.vectordrawable.R$id: int text2
+androidx.coordinatorlayout.R$dimen: int notification_small_icon_background_padding
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_10
+androidx.customview.R$dimen: int notification_big_circle_margin
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_0
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyProviderFallback_fontVariationSettings
+androidx.viewpager.R$drawable: int notification_bg_low
+androidx.vectordrawable.animated.R$id: int title
+androidx.vectordrawable.animated.R$id: int actions
+androidx.drawerlayout.R$id: int tag_unhandled_key_listeners
+kotlinx.coroutines.scheduling.CoroutineScheduler: long controlState$volatile
+androidx.autofill.R$id: int action_text
+androidx.vectordrawable.R$dimen: int notification_main_column_padding_top
+androidx.drawerlayout.R$drawable: int notification_bg_normal
+androidx.compose.ui.R$id: int accessibility_custom_action_9
+androidx.dynamicanimation.R$layout: int notification_action
+kotlinx.coroutines.android.AndroidExceptionPreHandler: java.lang.Object _preHandler
+androidx.core.R$string: int call_notification_answer_action
+com.nidyaber.fuckdsmanger.R$id: int tag_compat_insets_dispatch
+androidx.autofill.R$id: int icon
+androidx.dynamicanimation.R$dimen: int notification_big_circle_margin
+androidx.coordinatorlayout.R$dimen: int notification_media_narrow_margin
+androidx.core.R$dimen: int notification_content_margin_start
+androidx.core.R$attr: int fontProviderFetchStrategy
+androidx.savedstate.R$id: int view_tree_saved_state_registry_owner
+com.nidyaber.fuckdsmanger.R$string: int status_bar_notification_info_overflow
+androidx.core.R$id: int normal
+com.nidyaber.fuckdsmanger.R$string: int not_selected
+androidx.autofill.R$dimen: int notification_small_icon_background_padding
+com.nidyaber.fuckdsmanger.R$style: int Widget_Compat_NotificationActionText
+androidx.vectordrawable.R$id: int accessibility_custom_action_24
+androidx.vectordrawable.animated.R$dimen: int compat_control_corner_material
+com.nidyaber.fuckdsmanger.R$layout: int ime_base_split_test_activity
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_25
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_17
+androidx.coordinatorlayout.R$attr: int fontProviderFetchTimeout
+androidx.autofill.R$id: int action_divider
+com.nidyaber.fuckdsmanger.R$drawable: int ic_call_answer
+androidx.autofill.R$id: int text
+androidx.vectordrawable.animated.R$attr: int fontStyle
+kotlinx.coroutines.DefaultExecutor: java.lang.Thread _thread
+com.nidyaber.fuckdsmanger.R$string: int androidx_compose_foundation_autofill
+com.nidyaber.fuckdsmanger.R$string: int androidx_compose_ui_autofill
+androidx.drawerlayout.R$id: int accessibility_custom_action_8
+androidx.coordinatorlayout.R$id: int notification_main_column
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_16
+androidx.autofill.R$attr: int fontProviderFetchTimeout
+com.nidyaber.fuckdsmanger.R$style: int TextAppearance_Compat_Notification_Time
+androidx.autofill.R$id: int accessibility_custom_action_21
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_11
+androidx.drawerlayout.R$id: int accessibility_custom_action_13
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_30
+androidx.customview.R$color: int notification_action_color_filter
+androidx.core.R$id: int accessibility_custom_action_21
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamily_fontProviderFetchTimeout
+com.nidyaber.fuckdsmanger.R$drawable: int notification_bg_low_pressed
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_30
+androidx.viewpager.R$dimen: int notification_top_pad_large_text
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamily_fontProviderSystemFontFamily
+androidx.compose.ui.R$id: int accessibility_custom_action_30
+androidx.core.R$dimen: int notification_subtext_size
+kotlinx.coroutines.CompletedExceptionally: int _handled$volatile
+androidx.coordinatorlayout.R$attr: int fontProviderCerts
+androidx.customview.R$layout: int notification_template_part_time
+androidx.compose.material3.adaptive.layout.R$string: int m3_adaptive_default_pane_expansion_drag_handle_state_description
+androidx.customview.R$dimen: int compat_button_padding_vertical_material
+androidx.compose.material3.R$string: int m3c_wide_navigation_rail_close_rail
+kotlinx.coroutines.scheduling.CoroutineScheduler$Worker: int workerCtl$volatile
+com.nidyaber.fuckdsmanger.R$string: int navigation_menu
+androidx.customview.R$drawable: int notification_bg_low_pressed
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_1
+androidx.autofill.R$drawable: int notification_bg_low_pressed
+androidx.core.R$id: int accessibility_custom_action_1
+com.nidyaber.fuckdsmanger.R$id: int line3
+com.nidyaber.fuckdsmanger.R$styleable: int Capability_shortcutMatchRequired
+com.nidyaber.fuckdsmanger.R$id: int notification_background
+com.nidyaber.fuckdsmanger.R$dimen: int notification_right_icon_size
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_13
+com.nidyaber.fuckdsmanger.R$drawable: int ic_content_copy
+androidx.vectordrawable.animated.R$id: int async
+androidx.core.R$id: int right_side
+androidx.compose.ui.R$id: int accessibility_custom_action_10
+androidx.compose.material3.R$string: int m3c_date_picker_switch_to_calendar_mode
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_2
+androidx.loader.R$attr: int fontProviderQuery
+androidx.compose.ui.R$string: int template_percent
+androidx.compose.ui.R$string: int selected
+androidx.loader.R$attr: int fontProviderPackage
+androidx.customview.R$id: int accessibility_custom_action_7
+kotlinx.coroutines.JobSupport: java.lang.Object _state$volatile
+androidx.customview.R$attr: int fontProviderAuthority
+kotlinx.coroutines.channels.BufferedChannel: java.lang.Object closeHandler$volatile
+com.nidyaber.fuckdsmanger.R$string: int m3c_dropdown_menu_collapsed
+androidx.drawerlayout.R$style: int TextAppearance_Compat_Notification_Info
+androidx.viewpager.R$color: int notification_icon_bg_color
+androidx.core.R$drawable: int notification_bg_low_pressed
+androidx.autofill.R$color: int notification_action_color_filter
+com.nidyaber.fuckdsmanger.R$id: int tag_transition_group
+androidx.vectordrawable.R$style: int TextAppearance_Compat_Notification
+kotlinx.coroutines.internal.ResizableAtomicArray: java.util.concurrent.atomic.AtomicReferenceArray array
+androidx.dynamicanimation.R$id: int chronometer
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_27
+androidx.dynamicanimation.R$color: int notification_icon_bg_color
+androidx.customview.R$style: int TextAppearance_Compat_Notification_Time
+androidx.core.R$style: int TextAppearance_Compat_Notification_Time
+androidx.drawerlayout.R$id: int accessibility_custom_action_31
+com.nidyaber.fuckdsmanger.R$drawable: int ic_menu
+androidx.dynamicanimation.R$attr: int fontProviderCerts
+androidx.core.R$dimen: int notification_small_icon_background_padding
+androidx.drawerlayout.R$id: int chronometer
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_17
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_switch_to_next_month
+androidx.autofill.R$id: int forever
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_switch_to_previous_month
+androidx.coordinatorlayout.R$id: int action_text
+androidx.core.R$id: int accessibility_custom_action_2
+androidx.core.R$dimen: int notification_large_icon_width
+com.nidyaber.fuckdsmanger.R$string: int m3_adaptive_default_pane_expansion_proportion_anchor_description
+androidx.drawerlayout.R$id: int info
+kotlinx.coroutines.scheduling.CoroutineScheduler$Worker: java.lang.Object nextParkedWorker
+androidx.autofill.R$id: int notification_main_column
+androidx.autofill.R$drawable: int notification_bg_normal
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_14
+androidx.viewpager.R$id: int title
+com.nidyaber.fuckdsmanger.R$drawable: int notification_template_icon_low_bg
+androidx.drawerlayout.R$id: int accessibility_custom_action_19
+androidx.vectordrawable.animated.R$dimen: int notification_main_column_padding_top
+androidx.dynamicanimation.R$color: int notification_action_color_filter
+com.nidyaber.fuckdsmanger.R$drawable: int ic_add
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_9
+androidx.compose.ui.R$id: int wrapped_composition_tag
+com.nidyaber.fuckdsmanger.R$style: int FloatingDialogWindowTheme
+androidx.loader.R$attr: int fontWeight
+androidx.vectordrawable.animated.R$drawable: int notification_bg_low
+androidx.coordinatorlayout.R$style: int TextAppearance_Compat_Notification_Title
+androidx.core.R$id: int accessibility_custom_action_7
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_headline_description
+androidx.drawerlayout.R$id: int action_text
+androidx.autofill.R$dimen: int compat_button_padding_vertical_material
+com.nidyaber.fuckdsmanger.R$layout: int notification_template_icon_group
+androidx.drawerlayout.R$dimen: int compat_notification_large_icon_max_width
+androidx.vectordrawable.R$id: int accessibility_custom_action_13
+androidx.drawerlayout.R$id: int notification_background
+androidx.vectordrawable.animated.R$drawable: int notification_bg
+androidx.compose.material3.R$string: int m3c_wide_navigation_rail_pane_title
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_25
+androidx.autofill.R$id: int accessibility_custom_action_10
+androidx.compose.ui.R$id: int accessibility_custom_action_31
+com.nidyaber.fuckdsmanger.R$color: int vector_tint_color
+androidx.drawerlayout.R$id: int accessibility_custom_action_21
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_28
+androidx.dynamicanimation.R$style: int Widget_Compat_NotificationActionText
+androidx.vectordrawable.R$integer: int status_bar_notification_info_maxnum
+com.nidyaber.fuckdsmanger.R$drawable: int ic_wifi
+androidx.drawerlayout.R$drawable: int notification_bg_low_normal
+androidx.viewpager.R$style: int Widget_Compat_NotificationActionContainer
+androidx.vectordrawable.R$style: int TextAppearance_Compat_Notification_Time
+androidx.drawerlayout.R$attr: int alpha
+androidx.vectordrawable.R$style: int Widget_Compat_NotificationActionContainer
+androidx.coordinatorlayout.R$id: int tag_transition_group
+androidx.core.R$id: int tag_system_bar_state_monitor
+androidx.compose.material3.R$string: int m3c_time_picker_minute_selection
+androidx.core.R$id: int accessibility_action_clickable_span
+androidx.vectordrawable.animated.R$attr: int fontProviderQuery
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_range_picker_day_in_range
+androidx.drawerlayout.R$dimen: int compat_control_corner_material
+androidx.vectordrawable.animated.R$style: int Widget_Compat_NotificationActionText
+com.nidyaber.fuckdsmanger.R$id: int androidx_compose_ui_view_composition_context
+androidx.coordinatorlayout.R$drawable: int notification_template_icon_bg
+androidx.vectordrawable.animated.R$dimen: int notification_action_icon_size
+com.nidyaber.fuckdsmanger.R$id: int view_tree_navigation_event_dispatcher_owner
+androidx.vectordrawable.animated.R$layout: int notification_template_part_chronometer
+androidx.core.R$id: int actions
+com.nidyaber.fuckdsmanger.R$dimen: int compat_button_inset_horizontal_material
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_4
+androidx.vectordrawable.R$id: int accessibility_custom_action_26
+com.nidyaber.fuckdsmanger.R$style: int DialogWindowTheme
+androidx.autofill.R$layout: int notification_template_part_time
+androidx.compose.material3.R$string: int m3c_suggestions_available
+androidx.viewpager.R$drawable: int notification_bg_low_normal
+androidx.autofill.R$attr: int fontStyle
+androidx.loader.R$attr: int fontProviderCerts
+androidx.autofill.R$id: int accessibility_custom_action_5
+kotlinx.coroutines.scheduling.CoroutineScheduler: long parkedWorkersStack$volatile
+androidx.viewpager.R$id: int text
+androidx.coordinatorlayout.R$id: int time
+androidx.viewpager.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.dynamicanimation.R$style: int Widget_Compat_NotificationActionContainer
+com.nidyaber.fuckdsmanger.R$id: int line1
+com.nidyaber.fuckdsmanger.R$color: int androidx_core_ripple_material_light
+com.nidyaber.fuckdsmanger.R$attr: int fontProviderFallbackQuery
+androidx.autofill.R$id: int accessibility_custom_action_0
+androidx.loader.R$id: int line1
+androidx.vectordrawable.animated.R$style: int TextAppearance_Compat_Notification_Line2
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyProviderFallback_fontProviderSystemFontFamily
+com.nidyaber.fuckdsmanger.R$drawable: int ic_download
+androidx.customview.R$dimen: int notification_content_margin_start
+androidx.drawerlayout.R$id: int accessibility_custom_action_27
+androidx.viewpager.R$dimen: int notification_media_narrow_margin
+androidx.vectordrawable.R$id: int accessibility_custom_action_27
+androidx.viewpager.R$layout: int notification_action_tombstone
+androidx.core.R$id: int action_text
+androidx.vectordrawable.animated.R$id: int right_icon
+com.nidyaber.fuckdsmanger.R$color: int androidx_core_secondary_text_default_material_light
+androidx.vectordrawable.animated.R$layout: int notification_action
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_28
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_no_selection_description
+androidx.viewpager.R$dimen: int notification_main_column_padding_top
+androidx.core.R$drawable: int notification_bg
+androidx.compose.ui.R$style: int FloatingDialogWindowTheme
+androidx.core.R$id: int tag_on_apply_window_listener
+androidx.core.R$dimen: int compat_control_corner_material
+androidx.vectordrawable.R$dimen: int compat_notification_large_icon_max_width
+com.nidyaber.fuckdsmanger.R$id: int consume_window_insets_tag
+com.nidyaber.fuckdsmanger.R$dimen: int notification_small_icon_background_padding
+androidx.autofill.R$id: int time
+androidx.core.R$id: int text2
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColorItem_android_offset
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_2
+androidx.customview.R$layout: int notification_template_part_chronometer
+androidx.core.R$color: int notification_icon_bg_color
+androidx.vectordrawable.animated.R$drawable: int notification_action_background
+androidx.vectordrawable.R$id: int accessibility_custom_action_10
+androidx.dynamicanimation.R$dimen: int compat_button_padding_horizontal_material
+androidx.coordinatorlayout.R$dimen: int notification_main_column_padding_top
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_range_picker_title
+com.nidyaber.fuckdsmanger.R$drawable: int ic_save
+androidx.customview.R$id: int tag_accessibility_clickable_spans
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_centerColor
+androidx.drawerlayout.R$dimen: int notification_subtext_size
+androidx.coordinatorlayout.R$drawable: int notification_bg_low
+com.nidyaber.fuckdsmanger.R$id: int view_tree_on_back_pressed_dispatcher_owner
+androidx.drawerlayout.R$id: int italic
+androidx.drawerlayout.R$id: int accessibility_custom_action_26
+androidx.dynamicanimation.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.coordinatorlayout.R$dimen: int notification_top_pad
+androidx.compose.ui.R$id: int auto_clear_focus_behavior_tag
+androidx.autofill.R$id: int action_container
+androidx.compose.ui.R$id: int accessibility_custom_action_21
+androidx.vectordrawable.animated.R$dimen: int notification_large_icon_width
+kotlinx.coroutines.scheduling.WorkQueue: int blockingTasksInBuffer$volatile
+com.nidyaber.fuckdsmanger.R$style: int TextAppearance_Compat_Notification_Info
+androidx.compose.material3.R$string: int m3c_floating_toolbar_collapse
+com.nidyaber.fuckdsmanger.R$id: int right_icon
+androidx.compose.ui.graphics.R$id: int hide_graphics_layer_in_inspector_tag
+com.nidyaber.fuckdsmanger.R$dimen: int notification_small_icon_size_as_large
+androidx.core.R$attr: int alpha
+androidx.autofill.R$color: int notification_icon_bg_color
+kotlinx.coroutines.scheduling.CoroutineScheduler$Worker: int indexInArray
+com.nidyaber.fuckdsmanger.R$attr: int fontProviderQuery
+androidx.core.R$id: int accessibility_custom_action_22
+androidx.loader.R$dimen: int compat_button_inset_vertical_material
+androidx.vectordrawable.R$string: int status_bar_notification_info_overflow
+com.nidyaber.fuckdsmanger.R$drawable: int ic_build
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_android_fontWeight
+androidx.viewpager.R$dimen: int notification_action_text_size
+androidx.viewpager.R$drawable: int notify_panel_notification_icon_bg
+androidx.autofill.R$style: int Widget_Compat_NotificationActionContainer
+androidx.drawerlayout.R$dimen: int notification_large_icon_width
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_20
+androidx.core.R$id: int icon
+androidx.autofill.R$id: int text2
+androidx.drawerlayout.R$id: int accessibility_custom_action_16
+androidx.autofill.R$id: int accessibility_custom_action_6
+androidx.core.R$id: int tag_transition_group
+androidx.compose.ui.R$id: int accessibility_custom_action_20
+androidx.compose.ui.R$id: int androidx_compose_ui_view_compose_view_context
+androidx.viewpager.R$style: int TextAppearance_Compat_Notification_Info
+androidx.compose.ui.R$id: int accessibility_custom_action_29
+androidx.vectordrawable.R$id: int accessibility_custom_action_25
+androidx.vectordrawable.animated.R$id: int chronometer
+androidx.activity.R$id: int view_tree_on_back_pressed_dispatcher_owner
+androidx.core.R$id: int action_image
+androidx.loader.R$id: int notification_background
+androidx.autofill.R$dimen: int compat_notification_large_icon_max_width
+com.nidyaber.fuckdsmanger.R$drawable: int ic_more_vert
+com.nidyaber.fuckdsmanger.R$id: int accessibility_action_clickable_span
+androidx.drawerlayout.R$layout: int notification_template_part_chronometer
+androidx.compose.ui.R$string: int androidx_compose_ui_autofill
+androidx.coordinatorlayout.R$integer: int status_bar_notification_info_maxnum
+androidx.autofill.R$attr: int alpha
+com.nidyaber.fuckdsmanger.R$string: int range_end
+androidx.compose.ui.R$id: int accessibility_custom_action_22
+androidx.autofill.R$dimen: int notification_top_pad_large_text
+com.nidyaber.fuckdsmanger.R$id: int time
+com.nidyaber.fuckdsmanger.R$layout: int notification_template_part_time
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_headline
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamily_fontProviderQuery
+androidx.compose.material3.R$string: int m3c_date_picker_switch_to_input_mode
+androidx.loader.R$style: int Widget_Compat_NotificationActionContainer
+com.nidyaber.fuckdsmanger.R$id: int normal
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_ttcIndex
+androidx.coordinatorlayout.R$dimen: int notification_action_icon_size
+com.nidyaber.fuckdsmanger.R$color: int vector_tint_theme_color
+androidx.core.R$drawable: int ic_call_decline_low
+androidx.customview.R$id: int info
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: kotlin.jvm.functions.Function2 lambda$-2122329070
+androidx.coordinatorlayout.R$dimen: int notification_big_circle_margin
+androidx.compose.ui.R$string: int close_sheet
+androidx.autofill.R$id: int tag_accessibility_clickable_spans
+androidx.dynamicanimation.R$drawable: int notification_action_background
+androidx.autofill.R$id: int tag_screen_reader_focusable
+com.nidyaber.fuckdsmanger.R$string: int m3c_bottom_sheet_dismiss_description
+androidx.coordinatorlayout.R$attr: int fontWeight
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_range_input_title
+kotlinx.coroutines.JobSupport: java.lang.Object _parentHandle$volatile
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_18
+androidx.drawerlayout.R$id: int accessibility_custom_action_0
+androidx.customview.R$dimen: int notification_right_icon_size
+androidx.vectordrawable.animated.R$id: int line1
+com.nidyaber.fuckdsmanger.R$attr: int fontStyle
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_input_headline
+androidx.dynamicanimation.R$id: int title
+kotlinx.coroutines.channels.BufferedChannel: java.lang.Object _closeCause$volatile
+androidx.customview.R$id: int tag_unhandled_key_event_manager
+androidx.core.R$drawable: int ic_call_decline
+androidx.vectordrawable.R$id: int accessibility_custom_action_28
+androidx.autofill.R$style: int TextAppearance_Compat_Notification_Info
+androidx.vectordrawable.R$id: int forever
+com.nidyaber.fuckdsmanger.R$dimen: int compat_notification_large_icon_max_height
+androidx.coordinatorlayout.R$id: int info
+kotlinx.coroutines.channels.BufferedChannel: long completedExpandBuffersAndPauseFlag$volatile
+androidx.core.R$id: int accessibility_custom_action_30
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_fontStyle
+androidx.autofill.R$id: int accessibility_custom_action_2
+androidx.vectordrawable.R$id: int blocking
+androidx.autofill.R$dimen: int notification_big_circle_margin
+androidx.customview.R$id: int accessibility_custom_action_1
+com.nidyaber.fuckdsmanger.R$styleable: int[] ColorStateListItem
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_input_title
+com.nidyaber.fuckdsmanger.R$string: int tab
+androidx.vectordrawable.animated.R$style: int TextAppearance_Compat_Notification_Title
+kotlinx.coroutines.scheduling.WorkQueue: int consumerIndex$volatile
+com.nidyaber.fuckdsmanger.R$string: int range_start
+com.nidyaber.fuckdsmanger.R$string: int in_progress
+androidx.customview.R$dimen: int notification_large_icon_width
+androidx.viewpager.R$id: int icon_group
+androidx.core.R$dimen: int notification_top_pad
+androidx.dynamicanimation.R$id: int action_text
+androidx.core.R$id: int accessibility_custom_action_5
+androidx.customview.R$id: int normal
+androidx.compose.ui.R$id: int accessibility_custom_action_25
+androidx.viewpager.R$id: int italic
+androidx.customview.R$attr: int font
+androidx.viewpager.R$drawable: int notification_icon_background
+androidx.vectordrawable.R$id: int accessibility_custom_action_5
+androidx.vectordrawable.R$dimen: int compat_notification_large_icon_max_height
+androidx.viewpager.R$attr: int fontProviderFetchTimeout
+androidx.customview.R$id: int accessibility_custom_action_29
+androidx.customview.R$string: int status_bar_notification_info_overflow
+androidx.customview.poolingcontainer.PoolingContainer: int IsPoolingContainerTag
+androidx.core.R$id: int accessibility_custom_action_18
+androidx.drawerlayout.R$layout: int notification_action
+androidx.core.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.vectordrawable.R$dimen: int compat_button_inset_horizontal_material
+androidx.vectordrawable.R$id: int tag_unhandled_key_event_manager
+androidx.viewpager.R$attr: int font
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_16
+com.nidyaber.fuckdsmanger.R$string: int template_percent
+androidx.coordinatorlayout.R$dimen: int notification_large_icon_width
+androidx.loader.R$dimen: int compat_control_corner_material
+androidx.vectordrawable.R$id: int accessibility_custom_action_17
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_24
+androidx.loader.R$style: int TextAppearance_Compat_Notification_Title
+androidx.coordinatorlayout.R$drawable: int notification_icon_background
+androidx.viewpager.R$drawable: int notification_bg_normal
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_16
+androidx.core.R$string: int call_notification_incoming_text
+androidx.vectordrawable.R$layout: int notification_action_tombstone
+com.nidyaber.fuckdsmanger.R$string: int m3_adaptive_default_pane_expansion_drag_handle_state_description
+androidx.loader.R$id: int chronometer
+androidx.loader.R$layout: int notification_template_custom_big
+androidx.vectordrawable.animated.R$attr: int alpha
+androidx.loader.R$dimen: int notification_media_narrow_margin
+androidx.coordinatorlayout.R$string: int status_bar_notification_info_overflow
+androidx.drawerlayout.R$id: int time
+androidx.loader.R$style: int TextAppearance_Compat_Notification
+androidx.drawerlayout.R$style: int TextAppearance_Compat_Notification_Title
+androidx.vectordrawable.animated.R$id: int blocking
+androidx.customview.R$id: int accessibility_custom_action_17
+androidx.vectordrawable.animated.R$layout: int custom_dialog
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_endY
+androidx.autofill.R$id: int accessibility_custom_action_3
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_year_picker_pane_title
+androidx.compose.ui.R$id: int accessibility_custom_action_3
+androidx.loader.R$dimen: int notification_right_icon_size
+androidx.compose.material3.R$string: int m3c_tooltip_long_press_label
+androidx.customview.R$id: int accessibility_custom_action_31
+androidx.compose.ui.R$string: int in_progress
+androidx.vectordrawable.R$layout: int notification_template_part_chronometer
+androidx.customview.R$id: int notification_main_column_container
+androidx.loader.R$dimen: int notification_content_margin_start
+androidx.dynamicanimation.R$attr: int fontWeight
+androidx.vectordrawable.R$id: int action_text
+androidx.autofill.R$attr: int fontProviderQuery
+androidx.customview.R$drawable: int notification_bg
+androidx.viewpager.R$id: int tag_transition_group
+androidx.autofill.R$id: int line1
+androidx.compose.material3.R$string: int m3c_date_picker_headline
+kotlin.coroutines.SafeContinuation: java.lang.Object result
+androidx.autofill.R$integer: int status_bar_notification_info_maxnum
+androidx.core.R$layout: int custom_dialog
+androidx.loader.R$id: int action_image
+androidx.dynamicanimation.R$dimen: int compat_button_inset_horizontal_material
+androidx.core.R$attr: int fontProviderAuthority
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_fontWeight
+androidx.core.R$style: int Widget_Compat_NotificationActionContainer
+androidx.compose.ui.R$id: int consume_window_insets_tag
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_19
+androidx.compose.ui.R$string: int indeterminate
+androidx.customview.R$id: int right_side
+com.nidyaber.fuckdsmanger.R$drawable: int notification_template_icon_bg
+androidx.core.R$id: int accessibility_custom_action_12
+androidx.drawerlayout.R$drawable: int notification_tile_bg
+androidx.vectordrawable.animated.R$string: int status_bar_notification_info_overflow
+androidx.coordinatorlayout.R$drawable: int notification_action_background
+kotlinx.coroutines.internal.LockFreeTaskQueueCore: long _state$volatile
+androidx.dynamicanimation.R$dimen: int notification_action_icon_size
+androidx.vectordrawable.animated.R$id: int action_text
+kotlinx.coroutines.scheduling.CoroutineScheduler: int _isTerminated$volatile
+androidx.vectordrawable.R$id: int notification_main_column
+androidx.coordinatorlayout.R$id: int text
+com.nidyaber.fuckdsmanger.R$styleable: int ColorStateListItem_android_alpha
+androidx.dynamicanimation.R$drawable: int notification_bg_normal
+androidx.vectordrawable.animated.R$dimen: int notification_right_side_padding_top
+androidx.core.R$color: int call_notification_decline_color
+kotlinx.coroutines.internal.LockFreeTaskQueue: java.lang.Object _cur$volatile
+com.nidyaber.fuckdsmanger.R$string: int close_drawer
+androidx.drawerlayout.R$dimen: int notification_action_text_size
+androidx.loader.R$id: int action_container
+androidx.core.R$drawable: int notify_panel_notification_icon_bg
+androidx.vectordrawable.R$attr: int fontProviderFetchTimeout
+androidx.autofill.R$dimen: int compat_button_inset_horizontal_material
+androidx.navigationevent.R$id: int view_tree_navigation_event_dispatcher_owner
+androidx.core.R$layout: int ime_secondary_split_test_activity
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_9
+androidx.autofill.R$dimen: int notification_right_side_padding_top
+androidx.core.R$string: int call_notification_decline_action
+androidx.vectordrawable.R$id: int accessibility_custom_action_30
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_0
+androidx.viewpager.R$id: int chronometer
+androidx.dynamicanimation.R$layout: int notification_template_custom_big
+androidx.vectordrawable.R$id: int tag_transition_group
+androidx.drawerlayout.R$dimen: int notification_action_icon_size
+androidx.dynamicanimation.R$id: int notification_main_column_container
+androidx.drawerlayout.R$drawable: int notification_bg_normal_pressed
+androidx.viewpager.R$dimen: int notification_right_side_padding_top
+androidx.core.R$dimen: int notification_main_column_padding_top
+androidx.customview.R$drawable: int notification_action_background
+androidx.autofill.R$id: int accessibility_custom_action_1
+androidx.loader.R$id: int right_icon
+androidx.autofill.R$id: int right_icon
+androidx.compose.material3.R$string: int m3c_date_picker_scroll_to_later_years
+androidx.loader.R$id: int icon_group
+androidx.vectordrawable.animated.R$dimen: int notification_large_icon_height
+androidx.coordinatorlayout.R$dimen: int compat_button_inset_horizontal_material
+com.nidyaber.fuckdsmanger.gm.HostMount$open$ctx$1: android.content.res.Resources $res
+androidx.loader.R$id: int title
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_minute_text_field
+androidx.autofill.R$id: int right_side
+androidx.dynamicanimation.R$dimen: int notification_right_icon_size
+androidx.vectordrawable.R$id: int accessibility_custom_action_6
+androidx.coordinatorlayout.R$id: int tag_accessibility_heading
+androidx.viewpager.R$id: int right_side
+androidx.vectordrawable.animated.R$id: int notification_main_column_container
+androidx.drawerlayout.R$id: int accessibility_custom_action_29
+androidx.dynamicanimation.R$dimen: int compat_button_inset_vertical_material
+androidx.drawerlayout.R$id: int accessibility_custom_action_10
+androidx.viewpager.R$dimen: int compat_notification_large_icon_max_width
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_6
+androidx.core.R$id: int line3
+androidx.customview.R$drawable: int notification_bg_normal
+androidx.loader.R$id: int tag_unhandled_key_listeners
+androidx.drawerlayout.R$drawable: int notification_action_background
+androidx.compose.material3.R$string: int m3c_date_picker_no_selection_description
+androidx.dynamicanimation.R$dimen: int compat_control_corner_material
+androidx.vectordrawable.animated.R$id: int icon
+androidx.vectordrawable.R$id: int action_divider
+androidx.drawerlayout.R$id: int accessibility_custom_action_11
+com.nidyaber.fuckdsmanger.R$styleable: int[] FontFamily
+androidx.compose.material3.R$string: int m3c_date_picker_year_picker_pane_title
+androidx.drawerlayout.R$layout: int notification_template_custom_big
+androidx.core.R$color: int androidx_core_ripple_material_light
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_am
+androidx.vectordrawable.animated.R$id: int action_image
+androidx.autofill.R$id: int dialog_button
+com.nidyaber.fuckdsmanger.R$drawable: int ic_call_decline_low
+androidx.coordinatorlayout.R$style: int TextAppearance_Compat_Notification_Info
+androidx.vectordrawable.R$layout: int notification_action
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_startX
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_input_invalid_not_allowed
+androidx.drawerlayout.R$id: int accessibility_custom_action_2
+com.nidyaber.fuckdsmanger.R$string: int m3c_suggestions_available
+androidx.compose.ui.R$id: int accessibility_custom_action_0
+androidx.customview.R$id: int accessibility_custom_action_28
+androidx.vectordrawable.animated.R$dimen: int compat_button_inset_horizontal_material
+androidx.loader.R$dimen: int compat_notification_large_icon_max_height
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_3
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_font
+androidx.core.R$id: int tag_accessibility_heading
+androidx.vectordrawable.animated.R$id: int action_divider
+androidx.autofill.R$id: int accessibility_custom_action_24
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_hour_24h_suffix
+androidx.autofill.R$drawable: int notification_bg
+androidx.viewpager.R$attr: int fontVariationSettings
+androidx.compose.material3.R$string: int m3c_date_picker_switch_to_previous_month
+kotlinx.coroutines.internal.ConcurrentLinkedListNode: java.lang.Object _next$volatile
+androidx.core.R$dimen: int compat_button_padding_vertical_material
+androidx.vectordrawable.R$layout: int notification_template_custom_big
+com.nidyaber.fuckdsmanger.R$drawable: int ic_close
+com.nidyaber.fuckdsmanger.R$drawable: int notification_bg_normal
+androidx.customview.R$id: int time
+androidx.loader.R$dimen: int compat_notification_large_icon_max_width
+androidx.customview.R$layout: int notification_template_custom_big
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_19
+androidx.customview.R$drawable: int notification_tile_bg
+androidx.core.R$id: int accessibility_custom_action_14
+androidx.dynamicanimation.R$drawable: int notification_icon_background
+com.nidyaber.fuckdsmanger.R$id: int hide_in_inspector_tag
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_14
+androidx.compose.material3.R$string: int m3c_time_picker_hour_suffix
+androidx.core.R$drawable: int notification_icon_background
+androidx.customview.R$id: int dialog_button
+androidx.customview.poolingcontainer.PoolingContainer: int PoolingContainerListenerHolderTag
+androidx.vectordrawable.R$id: int accessibility_custom_action_0
+kotlin.SafePublicationLazyImpl: java.lang.Object _value
+androidx.vectordrawable.animated.R$drawable: int notification_bg_normal
+com.nidyaber.fuckdsmanger.R$string: int m3c_bottom_sheet_collapse_description
+androidx.viewpager.R$layout: int notification_template_part_time
+androidx.autofill.R$id: int accessibility_custom_action_19
+androidx.drawerlayout.R$id: int icon_group
+androidx.compose.material3.R$string: int m3c_dialog
+androidx.customview.R$dimen: int notification_main_column_padding_top
+androidx.vectordrawable.R$id: int accessibility_custom_action_11
+androidx.autofill.R$attr: int font
+androidx.vectordrawable.animated.R$attr: int ttcIndex
+androidx.vectordrawable.R$attr: int fontProviderQuery
+androidx.core.R$attr: int fontWeight
+androidx.coordinatorlayout.R$drawable: int notify_panel_notification_icon_bg
+com.nidyaber.fuckdsmanger.R$drawable: int ic_search
+androidx.vectordrawable.animated.R$dimen: int notification_subtext_size
+com.nidyaber.fuckdsmanger.R$string: int m3c_snackbar_pane_title
+com.nidyaber.fuckdsmanger.R$id: int notification_main_column
+androidx.core.R$id: int chronometer
+androidx.drawerlayout.R$id: int line3
+androidx.autofill.R$dimen: int notification_subtext_size
+androidx.coordinatorlayout.R$id: int tag_accessibility_clickable_spans
+androidx.vectordrawable.R$id: int tag_accessibility_actions
+androidx.coordinatorlayout.R$layout: int notification_template_part_time
+androidx.customview.R$id: int actions
+androidx.coordinatorlayout.R$id: int text2
+androidx.appcompat.R$id: int icon
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_20
+com.nidyaber.fuckdsmanger.R$string: int m3c_tooltip_long_press_label
+androidx.vectordrawable.animated.R$dimen: int notification_small_icon_background_padding
+androidx.compose.material3.R$string: int m3c_date_range_input_title
+androidx.coordinatorlayout.R$id: int accessibility_action_clickable_span
+androidx.vectordrawable.R$attr: int fontStyle
+com.nidyaber.fuckdsmanger.R$style: int EdgeToEdgeFloatingDialogTheme
+androidx.vectordrawable.animated.R$dimen: int compat_button_padding_horizontal_material
+com.nidyaber.fuckdsmanger.R$string: int m3c_floating_toolbar_expand
+androidx.vectordrawable.R$id: int accessibility_custom_action_7
+androidx.drawerlayout.R$attr: int fontProviderCerts
+androidx.core.R$style: int TextAppearance_Compat_Notification_Info
+androidx.compose.foundation.R$id: int compose_prefetch_scheduler
+androidx.drawerlayout.R$id: int notification_main_column
+androidx.drawerlayout.R$drawable: int notify_panel_notification_icon_bg
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_toggle_touch
+androidx.autofill.R$id: int tag_accessibility_heading
+com.nidyaber.fuckdsmanger.R$drawable: int notification_bg_normal_pressed
+androidx.vectordrawable.animated.R$drawable: int notification_bg_low_normal
+androidx.dynamicanimation.R$dimen: int notification_right_side_padding_top
+androidx.core.R$id: int accessibility_custom_action_25
+androidx.core.R$color: int call_notification_answer_color
+androidx.loader.R$attr: int fontStyle
+com.nidyaber.fuckdsmanger.R$drawable: int notification_bg
+androidx.customview.R$dimen: int notification_subtext_size
+com.nidyaber.fuckdsmanger.R$dimen: int compat_button_padding_horizontal_material
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_scroll_to_later_years
+androidx.customview.R$dimen: int compat_control_corner_material
+androidx.vectordrawable.R$id: int tag_accessibility_heading
+androidx.drawerlayout.R$layout: int notification_template_part_time
+com.nidyaber.fuckdsmanger.R$drawable: int ic_star
+androidx.drawerlayout.R$style: int TextAppearance_Compat_Notification_Time
+androidx.viewpager.R$attr: int alpha
+androidx.customview.R$id: int accessibility_custom_action_2
+androidx.customview.R$layout: int notification_action
+com.nidyaber.fuckdsmanger.R$string: int m3c_bottom_sheet_pane_title
+androidx.viewpager.R$dimen: int compat_button_padding_horizontal_material
+androidx.core.R$id: int title
+androidx.vectordrawable.R$id: int icon
+androidx.autofill.R$dimen: int notification_media_narrow_margin
+androidx.vectordrawable.animated.R$dimen: int notification_small_icon_size_as_large
+com.nidyaber.fuckdsmanger.R$string: int call_notification_ongoing_text
+androidx.customview.R$id: int action_container
+androidx.drawerlayout.R$id: int accessibility_custom_action_18
+androidx.autofill.R$id: int blocking
+androidx.lifecycle.runtime.R$id: int view_tree_lifecycle_owner
+kotlinx.coroutines.InvokeOnCancelling: int _invoked$volatile
+androidx.core.R$id: int hide_ime_id
+androidx.vectordrawable.R$drawable: int notification_action_background
+androidx.autofill.R$id: int accessibility_custom_action_31
+com.nidyaber.fuckdsmanger.R$drawable: int ic_admin_panel_settings
+com.nidyaber.fuckdsmanger.R$id: int icon
+androidx.core.R$id: int accessibility_custom_action_10
+androidx.viewpager.R$style: int TextAppearance_Compat_Notification_Title
+androidx.compose.ui.R$string: int not_selected
+androidx.loader.R$drawable: int notification_tile_bg
+com.nidyaber.fuckdsmanger.R$string: int state_empty
+androidx.coordinatorlayout.R$attr: int ttcIndex
+androidx.vectordrawable.R$drawable: int notification_bg
+androidx.vectordrawable.animated.R$id: int tag_accessibility_actions
+androidx.loader.R$id: int blocking
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_android_font
+androidx.drawerlayout.R$id: int tag_accessibility_heading
+com.nidyaber.fuckdsmanger.R$string: int call_notification_answer_video_action
+com.nidyaber.fuckdsmanger.R$string: int m3c_snackbar_dismiss
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_21
+com.nidyaber.fuckdsmanger.R$id: int info
+androidx.compose.material3.R$string: int m3c_time_picker_pm
+androidx.drawerlayout.R$id: int accessibility_custom_action_25
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_29
+com.nidyaber.fuckdsmanger.R$string: int m3_adaptive_default_pane_expansion_drag_handle_content_description
+androidx.customview.R$dimen: int compat_button_padding_horizontal_material
+androidx.drawerlayout.R$dimen: int compat_button_padding_horizontal_material
+androidx.viewpager.R$id: int info
+androidx.autofill.R$id: int notification_main_column_container
+androidx.core.R$attr: int fontProviderQuery
+com.nidyaber.fuckdsmanger.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.customview.R$layout: int notification_template_icon_group
+androidx.drawerlayout.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.dynamicanimation.R$id: int right_side
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_18
+androidx.coordinatorlayout.R$id: int notification_main_column_container
+androidx.core.R$attr: int fontProviderCerts
+androidx.customview.R$id: int accessibility_custom_action_12
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: kotlin.jvm.functions.Function2 lambda$1947663485
+androidx.loader.R$id: int info
+androidx.core.R$color: int notification_action_color_filter
+androidx.viewpager.R$dimen: int notification_right_icon_size
+androidx.vectordrawable.R$dimen: int compat_button_padding_vertical_material
+androidx.viewpager.R$style: int TextAppearance_Compat_Notification_Time
+androidx.core.R$layout: int notification_template_icon_group
+androidx.coordinatorlayout.R$id: int tag_unhandled_key_listeners
+com.nidyaber.fuckdsmanger.R$id: int tag_unhandled_key_event_manager
+androidx.vectordrawable.R$dimen: int compat_button_padding_horizontal_material
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_11
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_3
+androidx.vectordrawable.R$id: int accessibility_custom_action_31
+androidx.dynamicanimation.R$id: int notification_background
+androidx.coordinatorlayout.R$dimen: int notification_large_icon_height
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_18
+androidx.customview.R$dimen: int notification_top_pad
+androidx.core.R$id: int time
+androidx.viewpager.R$drawable: int notification_template_icon_bg
+androidx.compose.material3.R$string: int m3c_date_range_picker_scroll_to_previous_month
+kotlinx.coroutines.CancellableContinuationImpl: java.lang.Object _parentHandle$volatile
+androidx.vectordrawable.R$dimen: int notification_content_margin_start
+androidx.dynamicanimation.R$id: int line1
+androidx.viewpager.R$id: int line1
+androidx.coordinatorlayout.R$layout: int custom_dialog
+androidx.appcompat.R$id: int normal
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_27
+com.nidyaber.fuckdsmanger.R$id: int tag_on_receive_content_listener
+com.nidyaber.fuckdsmanger.R$string: int m3c_bottom_sheet_expand_description
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_input_dialog_title
+com.nidyaber.fuckdsmanger.R$id: int chronometer
+androidx.dynamicanimation.R$dimen: int notification_content_margin_start
+androidx.drawerlayout.R$id: int tag_screen_reader_focusable
+androidx.drawerlayout.R$id: int accessibility_custom_action_17
+androidx.customview.R$id: int accessibility_custom_action_25
+androidx.compose.ui.R$id: int accessibility_custom_action_26
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_type
+com.nidyaber.fuckdsmanger.R$styleable: int ColorStateListItem_android_lStar
+com.nidyaber.fuckdsmanger.R$drawable: int ic_call_decline
+com.nidyaber.fuckdsmanger.R$dimen: int notification_large_icon_width
+androidx.drawerlayout.R$attr: int fontProviderPackage
+androidx.viewpager.R$dimen: int compat_control_corner_material
+androidx.loader.R$id: int text2
+androidx.coordinatorlayout.R$dimen: int compat_control_corner_material
+androidx.loader.R$layout: int notification_action
+androidx.customview.R$id: int notification_main_column
+androidx.autofill.R$id: int actions
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_21
+com.nidyaber.fuckdsmanger.R$attr: int font
+androidx.customview.R$attr: int ttcIndex
+kotlinx.coroutines.EventLoopImplBase: java.lang.Object _queue$volatile
+androidx.autofill.R$layout: int notification_action
+androidx.core.R$id: int tag_state_description
+androidx.compose.material3.R$string: int m3c_date_input_invalid_year_range
+androidx.core.R$drawable: int notification_bg_normal
+androidx.drawerlayout.R$id: int right_side
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_27
+androidx.autofill.R$attr: int fontWeight
+androidx.loader.R$dimen: int notification_top_pad
+androidx.compose.material3.R$string: int m3c_time_input_dialog_title
+androidx.compose.material3.R$string: int m3c_date_input_no_input_description
+androidx.coordinatorlayout.R$id: int blocking
+com.nidyaber.fuckdsmanger.R$id: int dialog_button
+androidx.dynamicanimation.R$id: int action_image
+com.nidyaber.fuckdsmanger.R$drawable: int ic_person
+androidx.core.R$id: int accessibility_custom_action_26
+androidx.vectordrawable.animated.R$id: int accessibility_action_clickable_span
+androidx.autofill.R$id: int tag_unhandled_key_event_manager
+androidx.appcompat.R$id: int title
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_pm
+androidx.viewpager.R$dimen: int notification_small_icon_size_as_large
+androidx.autofill.R$id: int accessibility_custom_action_15
+androidx.autofill.R$id: int accessibility_custom_action_27
+androidx.compose.material3.R$string: int m3c_date_range_picker_end_headline
+androidx.customview.R$drawable: int notification_bg_low
+androidx.autofill.R$attr: int fontProviderFetchStrategy
+com.nidyaber.fuckdsmanger.R$dimen: int compat_button_inset_vertical_material
+androidx.loader.R$dimen: int notification_big_circle_margin
+com.nidyaber.fuckdsmanger.R$id: int hide_ime_id
+com.nidyaber.fuckdsmanger.R$id: int report_drawn
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_5
+com.nidyaber.fuckdsmanger.R$drawable: int ic_chevron_right
+androidx.core.R$dimen: int notification_media_narrow_margin
+androidx.vectordrawable.R$id: int accessibility_custom_action_4
+androidx.viewpager.R$id: int tag_unhandled_key_listeners
+androidx.vectordrawable.animated.R$style: int Widget_Compat_NotificationActionContainer
+androidx.customview.R$style: int Widget_Compat_NotificationActionText
+com.nidyaber.fuckdsmanger.R$string: int default_popup_window_title
+androidx.customview.R$id: int accessibility_custom_action_9
+androidx.compose.ui.R$string: int state_empty
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_switch_to_input_mode
+androidx.viewpager.R$dimen: int notification_subtext_size
+androidx.vectordrawable.animated.R$id: int tag_accessibility_heading
+androidx.viewpager.R$dimen: int notification_large_icon_width
+androidx.vectordrawable.animated.R$id: int info
+com.nidyaber.fuckdsmanger.R$id: int compose_view_saveable_id_tag
+androidx.vectordrawable.R$id: int accessibility_custom_action_21
+com.nidyaber.fuckdsmanger.R$string: int m3c_dialog
+androidx.compose.ui.R$string: int switch_role
+androidx.loader.R$attr: int fontVariationSettings
+kotlinx.coroutines.CancelledContinuation: int _resumed$volatile
+androidx.autofill.R$id: int accessibility_custom_action_13
+kotlinx.coroutines.EventLoopImplBase$DelayedTask: java.lang.Object _heap
+androidx.loader.R$id: int forever
+androidx.vectordrawable.animated.R$dimen: int compat_notification_large_icon_max_height
+androidx.vectordrawable.R$dimen: int notification_right_side_padding_top
+androidx.vectordrawable.animated.R$color: int notification_action_color_filter
+androidx.compose.ui.R$id: int accessibility_custom_action_7
+androidx.core.R$dimen: int notification_small_icon_size_as_large
+androidx.viewpager.R$id: int async
+com.nidyaber.fuckdsmanger.R$dimen: int notification_large_icon_height
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_13
+androidx.core.R$dimen: int compat_notification_large_icon_max_width
+androidx.loader.R$dimen: int notification_action_icon_size
+androidx.vectordrawable.R$color: int notification_icon_bg_color
+androidx.loader.R$style: int Widget_Compat_NotificationActionText
+androidx.drawerlayout.R$id: int accessibility_custom_action_12
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_31
+androidx.vectordrawable.animated.R$id: int tag_unhandled_key_listeners
+androidx.core.R$id: int notification_main_column
+androidx.vectordrawable.R$id: int accessibility_custom_action_1
+androidx.vectordrawable.animated.R$attr: int font
+androidx.customview.R$id: int accessibility_custom_action_26
+androidx.coordinatorlayout.R$attr: int fontStyle
+androidx.compose.material3.R$string: int m3c_date_range_input_invalid_range_input
+androidx.compose.ui.R$string: int range_start
+androidx.core.R$attr: int nestedScrollViewStyle
+kotlinx.coroutines.internal.LockFreeTaskQueueCore: java.lang.Object _next$volatile
+androidx.compose.material3.R$string: int m3c_snackbar_pane_title
+androidx.vectordrawable.R$id: int async
+androidx.core.R$id: int notification_background
+androidx.loader.R$layout: int notification_template_part_time
+com.nidyaber.fuckdsmanger.R$color: int notification_action_color_filter
+com.nidyaber.fuckdsmanger.R$dimen: int notification_top_pad_large_text
+com.nidyaber.fuckdsmanger.R$drawable: int ic_call_answer_low
+androidx.loader.R$drawable: int notification_bg_normal
+androidx.core.R$dimen: int compat_button_inset_horizontal_material
+androidx.core.R$style: int Widget_Compat_NotificationActionText
+androidx.customview.R$dimen: int notification_action_text_size
+androidx.compose.ui.R$id: int accessibility_custom_action_15
+com.nidyaber.fuckdsmanger.R$drawable: int ic_check
+androidx.core.R$drawable: int ic_call_answer_video_low
+androidx.autofill.R$id: int title
+com.nidyaber.fuckdsmanger.R$dimen: int compat_notification_large_icon_max_width
+androidx.vectordrawable.animated.R$id: int normal
+androidx.coordinatorlayout.R$id: int line1
+androidx.drawerlayout.R$id: int tag_accessibility_actions
+androidx.dynamicanimation.R$id: int action_container
+androidx.loader.R$dimen: int notification_main_column_padding_top
+androidx.core.R$attr: int font
+androidx.vectordrawable.animated.R$attr: int fontVariationSettings
+com.nidyaber.fuckdsmanger.R$style: int TextAppearance_Compat_Notification
+androidx.customview.R$id: int accessibility_custom_action_3
+androidx.core.R$string: int status_bar_notification_info_overflow
+com.nidyaber.fuckdsmanger.R$dimen: int compat_button_padding_vertical_material
+androidx.compose.ui.R$string: int default_error_message
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamily_fontProviderPackage
+androidx.customview.R$style: int TextAppearance_Compat_Notification_Title
+androidx.dynamicanimation.R$id: int blocking
+com.nidyaber.fuckdsmanger.R$id: int title
+androidx.customview.R$id: int accessibility_custom_action_21
+androidx.core.R$drawable: int notification_tile_bg
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_9
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_navigate_to_year_description
+com.nidyaber.fuckdsmanger.R$string: int call_notification_answer_action
+androidx.vectordrawable.R$id: int time
+androidx.dynamicanimation.R$drawable: int notification_bg_low
+androidx.coordinatorlayout.R$attr: int fontProviderAuthority
+androidx.viewpager.R$integer: int status_bar_notification_info_maxnum
+androidx.compose.ui.R$id: int accessibility_custom_action_19
+androidx.viewpager.R$attr: int fontProviderPackage
+androidx.dynamicanimation.R$dimen: int notification_small_icon_size_as_large
+com.nidyaber.fuckdsmanger.R$id: int tag_accessibility_heading
+androidx.drawerlayout.R$drawable: int notification_template_icon_low_bg
+com.nidyaber.fuckdsmanger.R$id: int tag_state_description
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_input_no_input_description
+androidx.coordinatorlayout.R$dimen: int compat_notification_large_icon_max_width
+androidx.coordinatorlayout.R$style: int TextAppearance_Compat_Notification_Time
+kotlinx.coroutines.CancellableContinuationImpl: java.lang.Object _state$volatile
+com.nidyaber.fuckdsmanger.R$drawable: int notification_bg_low_normal
+androidx.viewpager.R$drawable: int notification_bg
+androidx.dynamicanimation.R$attr: int fontVariationSettings
+androidx.viewpager.R$drawable: int notification_bg_low_pressed
+kotlinx.coroutines.EventLoopImplBase: int _isCompleted$volatile
+androidx.customview.R$integer: int status_bar_notification_info_maxnum
+androidx.core.R$id: int accessibility_custom_action_9
+com.nidyaber.fuckdsmanger.R$style: int Widget_Compat_NotificationActionContainer
+com.nidyaber.fuckdsmanger.R$drawable: int ic_photo_camera
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_26
+androidx.vectordrawable.animated.R$layout: int notification_action_tombstone
+androidx.compose.material3.R$string: int m3c_dropdown_menu_toggle
+androidx.compose.ui.R$string: int range_end
+androidx.autofill.R$id: int accessibility_custom_action_7
+androidx.loader.R$drawable: int notification_icon_background
+androidx.compose.ui.R$color: int vector_tint_theme_color
+androidx.loader.R$color: int notification_action_color_filter
+androidx.loader.R$layout: int notification_template_icon_group
+androidx.vectordrawable.animated.R$drawable: int notification_template_icon_low_bg
+androidx.coordinatorlayout.R$attr: int fontProviderPackage
+androidx.compose.material3.R$string: int m3c_date_picker_title
+androidx.autofill.R$id: int action_image
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_period_toggle_description
+com.nidyaber.fuckdsmanger.R$string: int switch_role
+androidx.customview.R$drawable: int notification_icon_background
+androidx.core.R$attr: int ttcIndex
+androidx.loader.R$id: int right_side
+androidx.compose.material3.R$string: int m3c_date_range_picker_day_in_range
+androidx.coordinatorlayout.R$dimen: int notification_right_side_padding_top
+com.nidyaber.fuckdsmanger.R$id: int compose_prefetch_scheduler
+androidx.coordinatorlayout.R$layout: int notification_action
+androidx.viewpager.R$layout: int notification_template_custom_big
+kotlinx.coroutines.internal.Segment: int cleanedAndPointers$volatile
+com.nidyaber.fuckdsmanger.R$dimen: int notification_action_icon_size
+androidx.vectordrawable.R$dimen: int notification_large_icon_height
+androidx.vectordrawable.R$dimen: int compat_control_corner_material
+androidx.loader.R$drawable: int notification_bg_low_normal
+androidx.dynamicanimation.R$id: int text2
+com.nidyaber.fuckdsmanger.R$id: int actions
+androidx.compose.material3.R$string: int m3c_search_bar_search
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_android_fontStyle
+androidx.autofill.R$attr: int fontVariationSettings
+androidx.compose.material3.R$string: int m3c_time_picker_hour_text_field
+androidx.drawerlayout.R$attr: int fontProviderFetchStrategy
+androidx.autofill.R$dimen: int notification_right_icon_size
+androidx.vectordrawable.R$id: int info
+androidx.viewpager.R$id: int icon
+androidx.vectordrawable.R$layout: int custom_dialog
+com.nidyaber.fuckdsmanger.R$dimen: int notification_top_pad
+androidx.vectordrawable.animated.R$id: int text2
+androidx.loader.R$id: int action_text
+com.nidyaber.fuckdsmanger.R$id: int tag_window_insets_animation_callback
+androidx.vectordrawable.R$dimen: int notification_big_circle_margin
+androidx.coordinatorlayout.R$drawable: int notification_bg_normal
+androidx.dynamicanimation.R$dimen: int notification_subtext_size
+androidx.drawerlayout.R$dimen: int compat_button_inset_vertical_material
+androidx.customview.R$style: int TextAppearance_Compat_Notification
+androidx.drawerlayout.R$id: int accessibility_custom_action_6
+androidx.vectordrawable.animated.R$id: int tag_transition_group
+androidx.autofill.R$drawable: int notification_bg_low_normal
+androidx.core.R$attr: int fontProviderPackage
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_minute_selection
+androidx.customview.R$id: int accessibility_custom_action_23
+androidx.dynamicanimation.R$attr: int fontProviderQuery
+com.nidyaber.fuckdsmanger.R$id: int right_side
+androidx.customview.R$id: int title
+androidx.vectordrawable.R$dimen: int notification_large_icon_width
+com.nidyaber.fuckdsmanger.R$id: int forever
+androidx.coordinatorlayout.R$attr: int fontProviderQuery
+androidx.loader.R$drawable: int notify_panel_notification_icon_bg
+androidx.customview.R$id: int accessibility_custom_action_6
+com.nidyaber.fuckdsmanger.R$dimen: int notification_content_margin_start
+androidx.drawerlayout.R$id: int async
+androidx.vectordrawable.R$id: int text
+androidx.viewpager.R$id: int tag_unhandled_key_event_manager
+androidx.core.R$drawable: int ic_call_answer
+androidx.compose.material3.R$string: int m3c_bottom_sheet_drag_handle_description
+androidx.drawerlayout.R$dimen: int compat_button_inset_horizontal_material
+androidx.drawerlayout.R$dimen: int notification_large_icon_height
+androidx.customview.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.dynamicanimation.R$layout: int notification_template_part_time
+androidx.loader.R$drawable: int notification_bg_low
+androidx.drawerlayout.R$style: int Widget_Compat_NotificationActionText
+androidx.drawerlayout.R$dimen: int notification_main_column_padding_top
+androidx.autofill.R$id: int accessibility_custom_action_11
+androidx.vectordrawable.R$attr: int fontProviderAuthority
+androidx.autofill.R$id: int accessibility_custom_action_14
+com.nidyaber.fuckdsmanger.R$styleable: int[] GradientColorItem
+com.nidyaber.fuckdsmanger.R$drawable: int ic_call_answer_video
+com.nidyaber.fuckdsmanger.R$dimen: int notification_big_circle_margin
+com.nidyaber.fuckdsmanger.R$string: int default_error_message
+androidx.core.R$id: int accessibility_custom_action_6
+androidx.vectordrawable.R$id: int right_icon
+androidx.drawerlayout.R$id: int title
+androidx.dynamicanimation.R$id: int text
+androidx.coordinatorlayout.R$id: int right_side
+kotlinx.coroutines.channels.BufferedChannel: long sendersAndCloseStatus$volatile
+com.nidyaber.fuckdsmanger.R$styleable: int[] GradientColor
+androidx.vectordrawable.R$dimen: int notification_right_icon_size
+androidx.vectordrawable.animated.R$id: int tag_accessibility_clickable_spans
+androidx.dynamicanimation.R$id: int normal
+com.nidyaber.fuckdsmanger.R$drawable: int ic_refresh
+androidx.loader.R$id: int normal
+androidx.viewpager.R$dimen: int notification_big_circle_margin
+androidx.drawerlayout.R$dimen: int notification_media_narrow_margin
+androidx.dynamicanimation.R$id: int icon_group
+androidx.customview.R$id: int accessibility_custom_action_18
+androidx.vectordrawable.R$attr: int fontVariationSettings
+androidx.autofill.R$id: int accessibility_custom_action_12
+androidx.customview.R$dimen: int notification_large_icon_height
+androidx.dynamicanimation.R$id: int right_icon
+androidx.autofill.R$dimen: int notification_content_margin_start
+androidx.vectordrawable.animated.R$attr: int fontProviderFetchTimeout
+androidx.compose.material3.R$string: int m3c_dropdown_menu_expanded
+androidx.autofill.R$attr: int fontProviderAuthority
+androidx.drawerlayout.R$id: int normal
+androidx.vectordrawable.R$dimen: int notification_small_icon_background_padding
+androidx.customview.R$dimen: int notification_small_icon_size_as_large
+androidx.drawerlayout.R$id: int accessibility_custom_action_3
+com.nidyaber.fuckdsmanger.R$string: int tooltip_label
+androidx.compose.ui.R$string: int close_drawer
+androidx.vectordrawable.R$id: int title
+androidx.dynamicanimation.R$dimen: int compat_notification_large_icon_max_width
+androidx.vectordrawable.R$layout: int notification_template_icon_group
+androidx.drawerlayout.R$attr: int fontProviderQuery
+androidx.core.R$id: int accessibility_custom_action_8
+androidx.vectordrawable.animated.R$drawable: int notification_bg_normal_pressed
+androidx.drawerlayout.R$dimen: int notification_top_pad_large_text
+androidx.autofill.R$dimen: int notification_large_icon_height
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_hour_suffix
+androidx.autofill.R$drawable: int notify_panel_notification_icon_bg
+androidx.drawerlayout.R$id: int forever
+androidx.customview.R$id: int text2
+androidx.dynamicanimation.R$id: int time
+androidx.customview.R$id: int line3
+androidx.core.R$id: int action_container
+com.nidyaber.fuckdsmanger.R$id: int tag_on_receive_content_mime_types
+androidx.customview.R$layout: int custom_dialog
+androidx.viewpager.R$id: int action_container
+com.nidyaber.fuckdsmanger.R$id: int view_tree_lifecycle_owner
+androidx.compose.material3.R$string: int m3c_snackbar_dismiss
+androidx.vectordrawable.animated.R$dimen: int notification_top_pad
+androidx.loader.R$id: int notification_main_column
+androidx.viewpager.R$id: int line3
+androidx.loader.R$id: int tag_unhandled_key_event_manager
+androidx.viewpager.R$id: int action_text
+androidx.dynamicanimation.R$id: int line3
+androidx.coordinatorlayout.R$attr: int fontVariationSettings
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_7
+androidx.viewpager.R$attr: int fontStyle
+androidx.dynamicanimation.R$drawable: int notification_template_icon_bg
+androidx.core.R$string: int call_notification_ongoing_text
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_endColor
+androidx.vectordrawable.R$drawable: int notification_tile_bg
+com.nidyaber.fuckdsmanger.R$dimen: int notification_media_narrow_margin
+androidx.compose.ui.R$string: int default_popup_window_title
+com.nidyaber.fuckdsmanger.R$styleable: int ColorStateListItem_alpha
+androidx.compose.ui.R$id: int accessibility_custom_action_2
+androidx.drawerlayout.R$dimen: int notification_right_icon_size
+androidx.coordinatorlayout.R$dimen: int notification_small_icon_size_as_large
+androidx.compose.material3.R$string: int m3c_time_picker_am
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_14
+androidx.vectordrawable.R$id: int tag_accessibility_pane_title
+androidx.viewpager.R$dimen: int compat_button_inset_vertical_material
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_startY
+androidx.core.R$id: int action_divider
+com.nidyaber.fuckdsmanger.R$string: int state_off
+com.nidyaber.fuckdsmanger.R$attr: int lStar
+androidx.customview.R$id: int right_icon
+androidx.customview.R$id: int line1
+androidx.compose.material3.R$string: int m3c_date_picker_switch_to_year_selection
+androidx.core.R$attr: int lStar
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_10
+androidx.loader.R$attr: int fontProviderFetchTimeout
+androidx.core.R$attr: int shortcutMatchRequired
+androidx.autofill.R$id: int accessibility_custom_action_17
+androidx.vectordrawable.animated.R$dimen: int notification_content_margin_start
+androidx.drawerlayout.R$color: int notification_action_color_filter
+com.nidyaber.fuckdsmanger.R$string: int tooltip_description
+androidx.vectordrawable.animated.R$style: int TextAppearance_Compat_Notification
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_switch_to_day_selection
+com.nidyaber.fuckdsmanger.R$id: int italic
+androidx.dynamicanimation.R$drawable: int notification_bg
+com.nidyaber.fuckdsmanger.R$layout: int ime_secondary_split_test_activity
+androidx.core.R$id: int text
+androidx.autofill.R$dimen: int compat_button_inset_vertical_material
+com.nidyaber.fuckdsmanger.R$drawable: int ic_edit_note
+kotlinx.coroutines.channels.BufferedChannel: java.lang.Object sendSegment$volatile
+androidx.dynamicanimation.R$string: int status_bar_notification_info_overflow
+androidx.dynamicanimation.R$dimen: int compat_button_padding_vertical_material
+com.nidyaber.fuckdsmanger.R$string: int m3_adaptive_default_pane_expansion_drag_handle_action_description
+androidx.compose.ui.R$id: int accessibility_custom_action_5
+com.nidyaber.fuckdsmanger.R$attr: int shortcutMatchRequired
+androidx.compose.foundation.R$string: int tooltip_label
+com.nidyaber.fuckdsmanger.R$string: int m3c_floating_toolbar_collapse
+com.nidyaber.fuckdsmanger.R$attr: int alpha
+androidx.vectordrawable.R$id: int accessibility_custom_action_18
+androidx.coordinatorlayout.R$id: int tag_accessibility_pane_title
+androidx.drawerlayout.R$id: int accessibility_custom_action_1
+androidx.dynamicanimation.R$dimen: int notification_media_narrow_margin
+androidx.loader.R$style: int TextAppearance_Compat_Notification_Info
+kotlinx.coroutines.flow.StateFlowImpl: java.lang.Object _state$volatile
+androidx.coordinatorlayout.R$dimen: int notification_top_pad_large_text
+com.nidyaber.fuckdsmanger.R$layout: int notification_template_custom_big
+androidx.loader.R$drawable: int notification_template_icon_low_bg
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_1
+androidx.customview.R$id: int accessibility_custom_action_27
+androidx.compose.foundation.R$string: int tooltip_description
+androidx.compose.material3.R$string: int m3c_time_picker_hour_24h_suffix
+androidx.vectordrawable.R$id: int accessibility_custom_action_23
+androidx.customview.R$id: int accessibility_action_clickable_span
+androidx.loader.R$style: int TextAppearance_Compat_Notification_Line2
+androidx.autofill.R$id: int tag_accessibility_pane_title
+androidx.core.R$dimen: int notification_right_icon_size
+androidx.vectordrawable.animated.R$id: int italic
+kotlinx.coroutines.CancellableContinuationImpl: int _decisionAndIndex$volatile
+androidx.vectordrawable.R$attr: int fontProviderFetchStrategy
+androidx.customview.R$attr: int fontProviderCerts
+androidx.dynamicanimation.R$dimen: int notification_action_text_size
+androidx.loader.R$id: int line3
+com.nidyaber.fuckdsmanger.R$drawable: int ic_delete
+androidx.core.R$id: int accessibility_custom_action_0
+androidx.coordinatorlayout.R$id: int icon_group
+androidx.coordinatorlayout.R$dimen: int compat_button_padding_horizontal_material
+androidx.customview.R$id: int tag_accessibility_actions
+androidx.loader.R$id: int actions
+androidx.loader.R$color: int notification_icon_bg_color
+androidx.drawerlayout.R$color: int notification_icon_bg_color
+androidx.loader.R$dimen: int notification_small_icon_size_as_large
+androidx.vectordrawable.R$id: int notification_main_column_container
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_26
+androidx.loader.R$dimen: int notification_top_pad_large_text
+androidx.core.R$layout: int notification_template_part_chronometer
+com.nidyaber.fuckdsmanger.R$id: int tag_accessibility_actions
+androidx.coordinatorlayout.R$attr: int alpha
+androidx.dynamicanimation.R$attr: int font
+androidx.core.R$style: int TextAppearance_Compat_Notification_Title
+androidx.loader.R$drawable: int notification_action_background
+com.nidyaber.fuckdsmanger.R$attr: int fontProviderFetchStrategy
+androidx.dynamicanimation.R$id: int action_divider
+androidx.compose.ui.R$string: int state_off
+androidx.autofill.R$drawable: int notification_bg_low
+androidx.vectordrawable.R$id: int line1
+androidx.viewpager.R$attr: int fontProviderFetchStrategy
+androidx.vectordrawable.animated.R$layout: int notification_template_part_time
+com.nidyaber.fuckdsmanger.R$drawable: int ic_palette
+androidx.drawerlayout.R$id: int accessibility_custom_action_28
+androidx.coordinatorlayout.R$id: int title
+androidx.viewpager.R$layout: int notification_action
+androidx.vectordrawable.R$id: int chronometer
+com.nidyaber.fuckdsmanger.R$string: int m3c_wide_navigation_rail_close_rail
+androidx.customview.R$layout: int notification_action_tombstone
+com.nidyaber.fuckdsmanger.R$styleable: int[] FontFamilyFont
+androidx.compose.material3.R$string: int m3c_time_picker_minute
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_22
+androidx.viewpager.R$id: int notification_background
+androidx.vectordrawable.animated.R$dimen: int notification_action_text_size
+androidx.dynamicanimation.R$style: int TextAppearance_Compat_Notification_Info
+com.nidyaber.fuckdsmanger.R$id: int auto_clear_focus_behavior_tag
+androidx.drawerlayout.R$drawable: int notification_bg_low_pressed
+androidx.coordinatorlayout.R$dimen: int notification_action_text_size
+androidx.vectordrawable.R$drawable: int notification_bg_low_pressed
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_today_description
+androidx.loader.R$drawable: int notification_bg_normal_pressed
+androidx.autofill.R$string: int status_bar_notification_info_overflow
+androidx.drawerlayout.R$dimen: int notification_small_icon_size_as_large
+androidx.viewpager.R$attr: int fontProviderAuthority
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_10
+com.nidyaber.fuckdsmanger.R$string: int call_notification_screening_text
+androidx.loader.R$style: int TextAppearance_Compat_Notification_Time
+androidx.coordinatorlayout.R$id: int right_icon
+com.nidyaber.fuckdsmanger.R$string: int call_notification_incoming_text
+androidx.customview.R$style: int TextAppearance_Compat_Notification_Info
+androidx.autofill.R$id: int accessibility_custom_action_30
+androidx.compose.material3.R$integer: int m3c_window_layout_in_display_cutout_mode
+androidx.vectordrawable.R$drawable: int notification_template_icon_low_bg
+androidx.viewpager.R$id: int blocking
+androidx.dynamicanimation.R$layout: int notification_action_tombstone
+androidx.autofill.R$drawable: int notification_action_background
+androidx.core.R$id: int edit_text_id
+androidx.vectordrawable.animated.R$id: int tag_accessibility_pane_title
+androidx.customview.R$dimen: int notification_media_narrow_margin
+com.nidyaber.fuckdsmanger.R$drawable: int notification_oversize_large_icon_bg
+androidx.customview.R$id: int accessibility_custom_action_10
+androidx.coordinatorlayout.R$id: int action_container
+com.nidyaber.fuckdsmanger.R$string: int m3c_dropdown_menu_toggle
+androidx.customview.R$id: int accessibility_custom_action_0
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_2
+androidx.vectordrawable.animated.R$id: int tag_screen_reader_focusable
+com.nidyaber.fuckdsmanger.R$id: int blocking
+androidx.compose.material3.R$string: int m3c_time_picker_minute_suffix
+androidx.core.R$drawable: int notification_oversize_large_icon_bg
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_startColor
+androidx.loader.R$id: int italic
+androidx.loader.R$layout: int notification_template_part_chronometer
+androidx.drawerlayout.R$attr: int fontVariationSettings
+androidx.drawerlayout.R$id: int action_divider
+androidx.compose.ui.R$id: int accessibility_custom_action_28
+androidx.compose.material3.R$string: int m3c_tooltip_pane_description
+androidx.compose.material3.R$string: int m3c_bottom_sheet_expand_description
+androidx.vectordrawable.R$id: int action_image
+androidx.compose.material3.R$string: int m3c_date_input_title
+androidx.coordinatorlayout.R$layout: int notification_template_icon_group
+androidx.customview.R$id: int tag_accessibility_pane_title
+com.nidyaber.fuckdsmanger.R$drawable: int ic_shield
+androidx.drawerlayout.R$layout: int notification_template_icon_group
+androidx.drawerlayout.R$id: int accessibility_custom_action_15
+androidx.compose.ui.R$id: int accessibility_custom_action_6
+com.nidyaber.fuckdsmanger.R$styleable: int[] FontFamilyProviderFallback
+androidx.loader.R$attr: int font
+androidx.compose.material3.R$string: int m3c_time_picker_hour_selection
+androidx.autofill.R$layout: int notification_action_tombstone
+kotlinx.coroutines.EventLoopImplBase: java.lang.Object _delayed$volatile
+androidx.compose.ui.R$id: int accessibility_custom_action_23
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_android_ttcIndex
+androidx.core.R$id: int tag_accessibility_pane_title
+androidx.viewpager.R$id: int action_divider
+androidx.vectordrawable.animated.R$id: int time
+androidx.autofill.R$layout: int notification_template_custom_big
+androidx.customview.R$dimen: int compat_notification_large_icon_max_height
+androidx.core.R$dimen: int compat_button_padding_horizontal_material
+com.nidyaber.fuckdsmanger.R$id: int text2
+androidx.dynamicanimation.R$drawable: int notification_bg_low_pressed
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_1
+com.nidyaber.fuckdsmanger.R$string: int m3_adaptive_default_pane_expansion_end_offset_anchor_description
+androidx.dynamicanimation.R$dimen: int notification_small_icon_background_padding
+androidx.autofill.R$layout: int notification_template_icon_group
+androidx.vectordrawable.R$dimen: int notification_action_icon_size
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_switch_to_calendar_mode
+com.nidyaber.fuckdsmanger.R$string: int m3c_search_bar_search
+androidx.drawerlayout.R$color: int androidx_core_ripple_material_light
+androidx.dynamicanimation.R$style: int TextAppearance_Compat_Notification_Title
+androidx.core.R$color: int androidx_core_secondary_text_default_material_light
+kotlinx.coroutines.internal.ConcurrentLinkedListNode: java.lang.Object _prev$volatile
+androidx.core.R$attr: int fontProviderFetchTimeout
+com.nidyaber.fuckdsmanger.R$string: int m3c_bottom_sheet_drag_handle_description
+androidx.compose.material3.R$string: int m3c_date_range_picker_start_headline
+com.nidyaber.fuckdsmanger.R$string: int dropdown_menu
+androidx.drawerlayout.R$style: int Widget_Compat_NotificationActionContainer
+com.nidyaber.fuckdsmanger.gm.GmZygote: int $stable
+com.nidyaber.fuckdsmanger.R$string: int call_notification_hang_up_action
+androidx.customview.R$attr: int fontStyle
+androidx.compose.material3.R$string: int m3c_date_input_invalid_not_allowed
+androidx.coordinatorlayout.R$id: int tag_screen_reader_focusable
+androidx.customview.poolingcontainer.PoolingContainerListenerHolder: java.util.ArrayList listeners
+androidx.drawerlayout.R$attr: int font
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_5
+androidx.drawerlayout.R$id: int accessibility_custom_action_24
+androidx.dynamicanimation.R$attr: int fontProviderFetchStrategy
+com.nidyaber.fuckdsmanger.R$attr: int queryPatterns
+androidx.vectordrawable.R$id: int actions
+androidx.loader.R$dimen: int notification_right_side_padding_top
+androidx.vectordrawable.R$dimen: int notification_top_pad_large_text
+androidx.vectordrawable.R$drawable: int notification_bg_normal
+com.nidyaber.fuckdsmanger.R$drawable: int ic_translate
+androidx.core.R$layout: int notification_action
+androidx.compose.ui.R$id: int accessibility_custom_action_11
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_23
+androidx.dynamicanimation.R$style: int TextAppearance_Compat_Notification_Time
+androidx.vectordrawable.R$id: int accessibility_custom_action_29
+androidx.viewpager.R$attr: int ttcIndex
+androidx.compose.ui.R$style: int DialogWindowTheme
+androidx.customview.R$id: int accessibility_custom_action_22
+androidx.compose.material3.R$string: int m3c_date_picker_switch_to_next_month
+kotlinx.coroutines.internal.DispatchedContinuation: java.lang.Object _reusableCancellableContinuation$volatile
+androidx.core.R$string: int call_notification_answer_video_action
+androidx.drawerlayout.R$drawable: int notification_bg
+androidx.vectordrawable.animated.R$attr: int fontProviderAuthority
+androidx.dynamicanimation.R$id: int tag_unhandled_key_event_manager
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamilyFont_android_fontVariationSettings
+androidx.vectordrawable.R$id: int accessibility_custom_action_9
+androidx.customview.R$attr: int fontProviderQuery
+kotlinx.coroutines.internal.ThreadSafeHeap: int _size$volatile
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_15
+androidx.loader.R$dimen: int notification_small_icon_background_padding
+androidx.vectordrawable.R$drawable: int notification_bg_low
+androidx.coordinatorlayout.R$id: int italic
+androidx.vectordrawable.animated.R$id: int forever
+androidx.coordinatorlayout.R$attr: int font
+androidx.compose.material3.R$string: int m3c_date_input_headline_description
+androidx.drawerlayout.R$dimen: int notification_small_icon_background_padding
+androidx.vectordrawable.R$id: int accessibility_custom_action_8
+androidx.core.R$id: int accessibility_custom_action_4
+com.nidyaber.fuckdsmanger.R$attr: int fontProviderPackage
+androidx.coordinatorlayout.R$layout: int notification_template_custom_big
+com.nidyaber.fuckdsmanger.R$drawable: int ic_call_answer_video_low
+androidx.vectordrawable.animated.R$id: int action_container
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_hour_text_field
+com.nidyaber.fuckdsmanger.R$drawable: int ic_terminal
+androidx.coordinatorlayout.R$id: int accessibility_custom_action_11
+androidx.coordinatorlayout.R$id: int action_divider
+androidx.drawerlayout.R$id: int accessibility_custom_action_4
+androidx.vectordrawable.R$attr: int fontProviderPackage
+androidx.viewpager.R$dimen: int compat_notification_large_icon_max_height
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_22
+androidx.core.R$id: int accessibility_custom_action_17
+androidx.vectordrawable.animated.R$id: int accessibility_custom_action_31
+androidx.vectordrawable.R$id: int tag_unhandled_key_listeners
+androidx.loader.R$id: int time
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_4
+androidx.core.R$string: int call_notification_hang_up_action
+androidx.core.R$id: int right_icon
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_range_input_invalid_range_input
+androidx.viewpager.R$attr: int fontProviderQuery
+androidx.drawerlayout.R$id: int action_image
+androidx.core.R$attr: int fontStyle
+androidx.core.R$id: int tag_window_insets_animation_callback
+com.nidyaber.fuckdsmanger.R$string: int m3c_time_picker_hour
+androidx.core.R$style: int TextAppearance_Compat_Notification
+androidx.vectordrawable.animated.R$dimen: int compat_notification_large_icon_max_width
+androidx.core.R$drawable: int notification_bg_low_normal
+androidx.core.R$id: int accessibility_custom_action_15
+androidx.vectordrawable.R$id: int accessibility_custom_action_22
+androidx.compose.material3.R$string: int m3c_bottom_sheet_dismiss_description
+com.nidyaber.fuckdsmanger.R$color: int call_notification_decline_color
+androidx.viewpager.R$id: int action_image
+androidx.compose.material3.R$string: int m3c_time_picker_hour
+com.nidyaber.fuckdsmanger.R$styleable: int GradientColor_android_centerX
+androidx.coordinatorlayout.R$id: int normal
+androidx.drawerlayout.R$attr: int fontProviderFetchTimeout
+com.nidyaber.fuckdsmanger.R$styleable: int FontFamily_fontProviderAuthority
+com.nidyaber.fuckdsmanger.R$string: int m3c_date_picker_title
+androidx.drawerlayout.R$style: int TextAppearance_Compat_Notification
+androidx.vectordrawable.R$dimen: int notification_small_icon_size_as_large
+androidx.autofill.R$id: int info
+androidx.vectordrawable.R$id: int notification_background
+androidx.autofill.R$id: int icon_group
+androidx.core.R$id: int tag_accessibility_clickable_spans
+androidx.vectordrawable.R$color: int notification_action_color_filter
+androidx.drawerlayout.R$id: int blocking
+com.nidyaber.fuckdsmanger.R$layout: int custom_dialog
+androidx.dynamicanimation.R$id: int tag_transition_group
+androidx.loader.R$id: int tag_transition_group
+androidx.customview.R$id: int async
+com.nidyaber.fuckdsmanger.R$id: int inspection_slot_table_set
+kotlinx.coroutines.internal.LockFreeLinkedListNode: java.lang.Object _removedRef$volatile
+androidx.compose.ui.R$id: int accessibility_custom_action_14
+androidx.core.R$id: int accessibility_custom_action_19
+androidx.loader.R$id: int action_divider
+com.nidyaber.fuckdsmanger.R$drawable: int ic_bug_report
+androidx.autofill.R$id: int accessibility_custom_action_18
+com.nidyaber.fuckdsmanger.R$id: int action_divider
+androidx.compose.ui.R$id: int accessibility_custom_action_1
+androidx.coordinatorlayout.R$id: int forever
+androidx.loader.R$layout: int notification_action_tombstone
+com.nidyaber.fuckdsmanger.R$id: int wrapped_composition_tag
+androidx.vectordrawable.R$layout: int notification_template_part_time
+com.nidyaber.fuckdsmanger.R$id: int accessibility_custom_action_12
+androidx.viewpager.R$id: int text2
+com.nidyaber.fuckdsmanger.R$attr: int ttcIndex
+androidx.loader.R$attr: int fontProviderFetchStrategy
+androidx.dynamicanimation.R$drawable: int notification_tile_bg
+androidx.compose.material3.R$string: int m3c_time_picker_dialog_title
+androidx.coordinatorlayout.R$id: int chronometer
+kotlinx.coroutines.JobSupport$Finishing: java.lang.Object _exceptionsHolder$volatile
+androidx.core.R$drawable: int notification_action_background
+androidx.coordinatorlayout.R$drawable: int notification_bg_low_pressed
+com.nidyaber.fuckdsmanger.R$drawable: int ic_favorite
+androidx.autofill.R$id: int italic
+androidx.dynamicanimation.R$id: int notification_main_column
+androidx.vectordrawable.R$attr: int font
+androidx.autofill.R$id: int tag_unhandled_key_listeners
+com.nidyaber.fuckdsmanger.R$id: int androidx_compose_ui_view_compose_view_context
+androidx.vectordrawable.animated.R$dimen: int notification_big_circle_margin
+androidx.autofill.R$attr: int fontProviderCerts
+com.nidyaber.fuckdsmanger.R: R()
+androidx.customview.R$integer: R$integer()
+androidx.dynamicanimation.R$string: R$string()
+androidx.vectordrawable.animated.R$color: R$color()
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: kotlin.Unit lambda__2122329070$lambda$0(androidx.compose.runtime.Composer,int)
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: kotlin.jvm.functions.Function2 getLambda$-2122329070$main()
+androidx.viewpager.R: R()
+androidx.activity.R: R()
+androidx.viewpager.R$drawable: R$drawable()
+androidx.customview.poolingcontainer.PoolingContainerListenerHolder: PoolingContainerListenerHolder()
+androidx.drawerlayout.R$dimen: R$dimen()
+androidx.vectordrawable.animated.R$layout: R$layout()
+com.nidyaber.fuckdsmanger.R$layout: R$layout()
+androidx.core.R$layout: R$layout()
+androidx.compose.ui.graphics.R$id: R$id()
+androidx.coordinatorlayout.R$style: R$style()
+com.nidyaber.fuckdsmanger.gm.HostMount: void logLine(android.app.Activity,java.lang.String)
+com.nidyaber.fuckdsmanger.R$color: R$color()
+com.nidyaber.fuckdsmanger.R$dimen: R$dimen()
+androidx.autofill.R$layout: R$layout()
+androidx.core.R$drawable: R$drawable()
+androidx.vectordrawable.R$layout: R$layout()
+androidx.vectordrawable.R$drawable: R$drawable()
+androidx.autofill.R$id: R$id()
+androidx.autofill.R$dimen: R$dimen()
+com.nidyaber.fuckdsmanger.gm.HostMount: void setModulePath(java.lang.String)
+androidx.coordinatorlayout.R: R()
+androidx.dynamicanimation.R$layout: R$layout()
+androidx.coordinatorlayout.R$attr: R$attr()
+androidx.customview.R$id: R$id()
+androidx.autofill.R$drawable: R$drawable()
+androidx.lifecycle.runtime.R$id: R$id()
+androidx.compose.material3.R: R()
+com.nidyaber.fuckdsmanger.gm.HostMount: void open()
+androidx.drawerlayout.R$color: R$color()
+androidx.vectordrawable.R$dimen: R$dimen()
+androidx.viewpager.R$dimen: R$dimen()
+androidx.loader.R$style: R$style()
+androidx.viewpager.R$attr: R$attr()
+androidx.loader.R$attr: R$attr()
+androidx.customview.poolingcontainer.PoolingContainer: void callPoolingContainerOnReleaseForChildren(android.view.ViewGroup)
+androidx.coordinatorlayout.R$integer: R$integer()
+androidx.lifecycle.viewmodel.R: R()
+androidx.viewpager.R$string: R$string()
+kotlinx.coroutines.android.AndroidExceptionPreHandler: AndroidExceptionPreHandler()
+androidx.dynamicanimation.R$color: R$color()
+androidx.customview.poolingcontainer.PoolingContainerListenerHolder: void removeListener(androidx.customview.poolingcontainer.PoolingContainerListener)
+androidx.compose.foundation.R$id: R$id()
+androidx.loader.R$dimen: R$dimen()
+androidx.vectordrawable.R$style: R$style()
+androidx.lifecycle.runtime.R: R()
+com.nidyaber.fuckdsmanger.gm.HostMount: java.lang.String moduleApk(android.app.Activity)
+androidx.autofill.R$style: R$style()
+androidx.core.R$string: R$string()
+androidx.compose.ui.R$color: R$color()
+com.nidyaber.fuckdsmanger.R$styleable: R$styleable()
+com.nidyaber.fuckdsmanger.R$attr: R$attr()
+com.nidyaber.fuckdsmanger.gm.HostMount: void open(android.app.Activity)
+androidx.customview.R$attr: R$attr()
+androidx.autofill.R$string: R$string()
+androidx.vectordrawable.R$attr: R$attr()
+androidx.customview.R$drawable: R$drawable()
+androidx.vectordrawable.R: R()
+androidx.customview.R$dimen: R$dimen()
+androidx.customview.R$string: R$string()
+com.nidyaber.fuckdsmanger.R$drawable: R$drawable()
+androidx.coordinatorlayout.R$string: R$string()
+androidx.customview.R: R()
+androidx.customview.poolingcontainer.PoolingContainer: void removePoolingContainerListener(android.view.View,androidx.customview.poolingcontainer.PoolingContainerListener)
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: kotlin.jvm.functions.Function2 getLambda$1947663485$main()
+androidx.core.R$style: R$style()
+com.nidyaber.fuckdsmanger.gm.GmZygote: void initZygote(de.robv.android.xposed.IXposedHookZygoteInit$StartupParam)
+androidx.loader.R$integer: R$integer()
+com.nidyaber.fuckdsmanger.gm.HostMount$open$ctx$1: android.content.res.AssetManager getAssets()
+androidx.customview.poolingcontainer.PoolingContainerListenerHolder: void onRelease()
+androidx.drawerlayout.R$id: R$id()
+com.nidyaber.fuckdsmanger.gm.HostMountKt: void FdmApp(androidx.compose.runtime.Composer,int)
+androidx.viewpager.R$style: R$style()
+androidx.vectordrawable.animated.R$drawable: R$drawable()
+androidx.vectordrawable.R$color: R$color()
+com.nidyaber.fuckdsmanger.gm.HostMount$open$ctx$1: android.content.res.Resources getResources()
+androidx.compose.material3.adaptive.layout.R$string: R$string()
+androidx.customview.poolingcontainer.R: R()
+androidx.navigationevent.R$id: R$id()
+com.nidyaber.fuckdsmanger.R$style: R$style()
+kotlinx.coroutines.internal.Segment: void onCancellation(int,java.lang.Throwable,kotlin.coroutines.CoroutineContext)
+androidx.loader.R$string: R$string()
+androidx.vectordrawable.animated.R$id: R$id()
+androidx.core.R: R()
+androidx.viewpager.R$id: R$id()
+androidx.core.R$integer: R$integer()
+androidx.savedstate.R$id: R$id()
+androidx.loader.R$id: R$id()
+androidx.customview.R$layout: R$layout()
+com.nidyaber.fuckdsmanger.gm.HostMount$open$ctx$1: HostMount$open$ctx$1(android.app.Activity,android.content.res.Resources,android.content.res.AssetManager)
+androidx.autofill.R$integer: R$integer()
+com.nidyaber.fuckdsmanger.R$integer: R$integer()
+androidx.customview.R$color: R$color()
+com.nidyaber.fuckdsmanger.gm.HostMount: void getModulePath$annotations()
+androidx.vectordrawable.animated.R$integer: R$integer()
+androidx.appcompat.R$attr: R$attr()
+androidx.vectordrawable.animated.R$style: R$style()
+com.nidyaber.fuckdsmanger.R$string: R$string()
+kotlinx.coroutines.android.AndroidDispatcherFactory: AndroidDispatcherFactory()
+androidx.loader.R: R()
+androidx.coordinatorlayout.R$layout: R$layout()
+androidx.savedstate.R: R()
+androidx.navigationevent.R: R()
+kotlin.collections.AbstractList: AbstractList()
+com.nidyaber.fuckdsmanger.gm.HostMount: HostMount()
+androidx.compose.ui.R$style: R$style()
+androidx.coordinatorlayout.R$dimen: R$dimen()
+kotlinx.coroutines.EventLoopImplPlatform: java.lang.Thread getThread()
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: kotlin.Unit lambda_1947663485$lambda$0(androidx.compose.runtime.Composer,int)
+androidx.dynamicanimation.R$drawable: R$drawable()
+kotlin.collections.AbstractMutableList: AbstractMutableList()
+androidx.drawerlayout.R$style: R$style()
+androidx.core.R$id: R$id()
+androidx.coordinatorlayout.R$id: R$id()
+androidx.dynamicanimation.R$dimen: R$dimen()
+androidx.appcompat.R$id: R$id()
+androidx.customview.poolingcontainer.PoolingContainer: void callPoolingContainerOnRelease(android.view.View)
+androidx.drawerlayout.R$attr: R$attr()
+androidx.core.R$color: R$color()
+androidx.compose.material3.adaptive.layout.R: R()
+androidx.loader.R$drawable: R$drawable()
+androidx.compose.ui.R$string: R$string()
+androidx.customview.R$style: R$style()
+androidx.coordinatorlayout.R$color: R$color()
+androidx.vectordrawable.R$string: R$string()
+androidx.vectordrawable.animated.R$attr: R$attr()
+com.nidyaber.fuckdsmanger.gm.HostMountKt: kotlin.Unit FdmApp$lambda$0(int,androidx.compose.runtime.Composer,int)
+androidx.vectordrawable.animated.R$dimen: R$dimen()
+androidx.appcompat.R: R()
+androidx.customview.poolingcontainer.PoolingContainer: void setPoolingContainer(android.view.View,boolean)
+androidx.drawerlayout.R$layout: R$layout()
+androidx.dynamicanimation.R$integer: R$integer()
+androidx.customview.poolingcontainer.PoolingContainer: boolean isWithinPoolingContainer(android.view.View)
+androidx.core.R$dimen: R$dimen()
+androidx.compose.material3.R$string: R$string()
+androidx.compose.material3.R$style: R$style()
+androidx.compose.material3.R$integer: R$integer()
+androidx.vectordrawable.animated.R$string: R$string()
+kotlinx.coroutines.internal.Segment: int getNumberOfSlots()
+androidx.viewpager.R$color: R$color()
+com.nidyaber.fuckdsmanger.R$id: R$id()
+androidx.viewpager.R$layout: R$layout()
+androidx.compose.foundation.R: R()
+androidx.loader.R$layout: R$layout()
+androidx.coordinatorlayout.R$drawable: R$drawable()
+androidx.autofill.R$attr: R$attr()
+androidx.loader.R$color: R$color()
+androidx.dynamicanimation.R: R()
+kotlinx.coroutines.internal.ConcurrentLinkedListNode: boolean isRemoved()
+androidx.compose.ui.graphics.R: R()
+androidx.drawerlayout.R$string: R$string()
+androidx.core.R$attr: R$attr()
+androidx.viewpager.R$integer: R$integer()
+androidx.autofill.R: R()
+androidx.activity.R$id: R$id()
+androidx.compose.ui.R: R()
+androidx.customview.poolingcontainer.PoolingContainerListenerHolder: void addListener(androidx.customview.poolingcontainer.PoolingContainerListener)
+androidx.drawerlayout.R$integer: R$integer()
+androidx.customview.poolingcontainer.PoolingContainerListener: void onRelease()
+androidx.customview.poolingcontainer.PoolingContainer: boolean isPoolingContainer(android.view.View)
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: ComposableSingletons$HostMountKt()
+androidx.dynamicanimation.R$style: R$style()
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: kotlin.Unit lambda__2095128264$lambda$0(androidx.compose.runtime.Composer,int)
+androidx.compose.ui.R$id: R$id()
+androidx.customview.poolingcontainer.PoolingContainer: androidx.customview.poolingcontainer.PoolingContainerListenerHolder getPoolingContainerListenerHolder(android.view.View)
+androidx.vectordrawable.R$id: R$id()
+androidx.drawerlayout.R: R()
+com.nidyaber.fuckdsmanger.gm.ComposableSingletons$HostMountKt: kotlin.jvm.functions.Function2 getLambda$-2095128264$main()
+androidx.dynamicanimation.R$attr: R$attr()
+androidx.vectordrawable.R$integer: R$integer()
+androidx.dynamicanimation.R$id: R$id()
+com.nidyaber.fuckdsmanger.gm.GmZygote: GmZygote()
+androidx.lifecycle.viewmodel.R$id: R$id()
+com.nidyaber.fuckdsmanger.gm.HostMount: java.lang.String getModulePath()
+androidx.customview.poolingcontainer.PoolingContainer: void addPoolingContainerListener(android.view.View,androidx.customview.poolingcontainer.PoolingContainerListener)
+androidx.compose.foundation.R$string: R$string()
+androidx.vectordrawable.animated.R: R()
+androidx.autofill.R$color: R$color()
+androidx.drawerlayout.R$drawable: R$drawable()
