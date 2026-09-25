@@ -6,8 +6,18 @@
 |---|---|---|
 | `MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf` (15 MB) | GitHub `google/material-design-icons/variablefont` | 官方**变量字体**（连字式图标），Android 直接可用 |
 | `MaterialSymbolsOutlined[...].ttf` (11 MB) | 同上 | 同上，Outlined 风格 |
-| **`fdm-symbols.ttf`** | 上面那个切出来的**子集** | 只留我们用的 ~50 个图标 + ASCII ⇒ 进 assets 很小 |
+| `fdm-symbols.ttf` | 上面那个切出来的（**实测没切小！见下**） | ⚠️ **14.3 MB / 6644 字形 —— 等于原样** |
 | `svg-rounded/` (7858 个 SVG) | npm `@material-symbols/svg-400` (npmmirror) | **精确路径** ⇒ 可生成 VectorDrawable XML / Compose ImageVector |
+
+## ⚠️ 关键实测：连字字体**切不动子集**
+
+我用 `pyftsubset --glyphs=<50 个图标> --layout-features='*'` 切过，结果 **14.3 MB / 6644 字形**（原 15 MB / 6646）—— **几乎没变**。
+
+原因：**GSUB 连字表把 6600 个图标字形全都引用上了**，而 `--layout-features='*'` 要求保留连字特性
+⇒ fontTools 的**字形闭包**把这些目标字形全保住了。
+
+结论：**连字式图标字体天生不能按图标裁剪**（除非自己重写 GSUB）。
+⇒ 所以模块里**不要走字体路线**，**走 SVG → 矢量图**这条（省体积、渲染最稳）。
 
 ## 两种用法
 
