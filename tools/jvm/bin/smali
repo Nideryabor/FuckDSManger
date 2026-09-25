@@ -1,0 +1,6 @@
+#!/bin/sh
+# smali —— .smali 目录 → .dex（手写 smali 的自检利器）
+# 用法: smali assemble <smali目录> -o out.dex
+. "$(dirname "$0")/_env.sh"
+check_tools
+exec "$JAVA" -cp "$SMALI_CP" "$SMALI_CLI_MAIN" "$@"

@@ -1,0 +1,7 @@
+#!/bin/sh
+# d8 —— .class / .jar → .dex
+# 用法: d8 [d8 原生参数...]
+#   例: d8 --min-api 21 --lib "$ANDROID_JAR" --output out/ a.class
+. "$(dirname "$0")/_env.sh"
+check_tools
+exec "$JAVA" -cp "$R8_JAR" "$D8_MAIN" "$@"

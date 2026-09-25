@@ -1,0 +1,6 @@
+#!/bin/sh
+# dex2jar —— .dex / .apk → .jar（拿到 .class 桩，就能对着宿主写 Java）
+# 用法: dex2jar <classes.dex|app.apk> [-o out.jar]
+. "$(dirname "$0")/_env.sh"
+[ -d "$DEX2JAR_HOME/lib" ] || die "缺 dex2jar（见 README）"
+exec "$JAVA" -Xms512m -Xmx2g -cp "$DEX2JAR_CP" com.googlecode.dex2jar.tools.Dex2jarCmd "$@"

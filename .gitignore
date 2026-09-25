@@ -7,3 +7,21 @@ Thumbs.db
 *.db-shm
 *.db-wal
 *.bundle
+
+# —— JVM 工具链的大件：本机 apt/下载装的，不入库 ——
+#    目录与安装步骤见 tools/jvm/README.md（脚本会入库，jar 不会）
+tools/jvm/lib/
+tools/jvm/dex-tools/
+tools/jvm/kotlinc/
+tools/jvm/work/
+
+# —— mod-src（真编译工程）——
+# javac/d8 中间产物
+mod-src/build/
+# 编译出的 smali / apk
+mod-src/out/
+# 基础 APK：从手机拷进来的（*.apk 已在上面统一忽略）
+mod-src/base/
+# AOSP testkey：公开钥匙，但没必要入库（下载地址见 mod-src/README.md）
+mod-src/pack/keys/
+mod-src/pack/__pycache__/

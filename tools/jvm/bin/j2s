@@ -1,0 +1,105 @@
+#!/bin/sh
+# ============================================================
+#  j2s ——  Java 源码 → smali   （javac → d8 → baksmali）
+# ============================================================
+#  这是这套工具链的主角：终于不用手搓 smali 了。
+#  写个小 Java 辅助类，一条命令拿到 100% 正确的 smali，
+#  再把方法体搬进目标类 / 换成真正的 hook 逻辑。
+#
+#  用法:
+#    j2s Foo.java                       # → ./smali-out/Foo.smali
+#    j2s -o out/ src/                   # 整个目录
+#    j2s -cp host.jar:other.jar Foo.java   # 对着宿主 / 第三方类写
+#    j2s --no-xposed Foo.java           # 不要 Xposed API
+#    j2s -k Foo.java                    # 留着中间产物 classes/ dex/
+#
+#  选项:
+#    -o DIR        输出目录（默认 ./smali-out）
+#    -cp PATH      额外 classpath（冒号分隔，可多次）
+#    -lib JAR      换 android.jar（默认 $JVM_LIB/android.jar）
+#    -api N        min-api（默认 21；21→dex 035，baksmali 2.5.2 吃得下）
+#    -r N          javac --release（默认 8，Android 最稳）
+#    -k            保留中间产物
+#    --no-android  不自动挂 android.jar
+#    --no-xposed   不自动挂 Xposed API
+# ============================================================
+set -e
+. "$(dirname "$0")/_env.sh"
+check_tools
+
+OUT=smali-out
+EXTRACP=
+KEEP=0
+USE_ANDROID=1
+USE_XPOSED=1
+SRCS=
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o|--out)          OUT="$2"; shift 2 ;;
+    -cp|--classpath)   EXTRACP="$EXTRACP:$2"; shift 2 ;;
+    -lib)              ANDROID_JAR="$2"; shift 2 ;;
+    -api)              D8_MIN_API="$2"; shift 2 ;;
+    -r|--release)      JAVA_RELEASE="$2"; shift 2 ;;
+    -k|--keep)         KEEP=1; shift ;;
+    --no-android)      USE_ANDROID=0; shift ;;
+    --no-xposed)       USE_XPOSED=0; shift ;;
+    -h|--help)         sed -n '2,30p' "$0"; exit 0 ;;
+    -*)                die "不认识的参数: $1" ;;
+    *)                 SRCS="$SRCS $1"; shift ;;
+  esac
+done
+[ -n "$SRCS" ] || die "用法: j2s [-o 输出目录] <Foo.java|目录> ..."
+
+CP=
+[ "$USE_ANDROID" = 1 ] && CP="$ANDROID_JAR"
+[ "$USE_XPOSED"  = 1 ] && CP="$CP:$XPOSED_JAR"
+CP="$CP$EXTRACP"
+
+mkdir -p "$JVM_HOME/work"
+WORK=$(mktemp -d "$JVM_HOME/work/j2s.XXXXXX")
+mkdir -p "$WORK/classes" "$WORK/dex"
+
+# ---- 1/3 javac ----
+info "javac --release $JAVA_RELEASE  (classpath: $CP)"
+"$JAVAC" --release "$JAVA_RELEASE" -encoding UTF-8 -nowarn -Xlint:-options \
+         -classpath "$CP" -d "$WORK/classes" $SRCS
+
+N_CLASS=$(find "$WORK/classes" -name '*.class' | wc -l)
+[ "$N_CLASS" -gt 0 ] || die "javac 一个 class 都没产出"
+ok "javac → $N_CLASS 个 .class"
+
+# ---- 2/3 d8 ----
+CLASSES=$(find "$WORK/classes" -name '*.class')
+info "d8 --min-api $D8_MIN_API"
+# --lib: 平台类（android.jar）；--classpath: 其余编译期桩（Xposed 等），
+# 不挂它们 d8 会警告 "Type xxx was not found ... desugaring"，虽出包但脏。
+# d8 的 --classpath 只吃「一个路径」，冒号串会被当成文件名 ⇒ 拆开重复传
+D8_CP_ARGS=
+OLDIFS=$IFS; IFS=:
+for p in $CP; do
+  [ -n "$p" ] && D8_CP_ARGS="$D8_CP_ARGS --classpath $p"
+done
+IFS=$OLDIFS
+"$JAVA" -cp "$R8_JAR" "$D8_MAIN" --release --min-api "$D8_MIN_API" \
+        --lib "$ANDROID_JAR" $D8_CP_ARGS \
+        --output "$WORK/dex" $CLASSES 2>&1 | grep -vE "^Warning|was not found|required for default" || true
+[ -f "$WORK/dex/classes.dex" ] || die "d8 没出 dex（日志见上）"
+ok "d8 → classes.dex ($(wc -c < "$WORK/dex/classes.dex") B)"
+
+# ---- 3/3 baksmali ----
+rm -rf "$OUT"
+mkdir -p "$OUT"
+info "baksmali → $OUT"
+"$JAVA" -cp "$SMALI_CP" "$BAKSMALI_CLI_MAIN" disassemble "$WORK/dex/classes.dex" -o "$OUT"
+ok "baksmali 完成"
+
+echo
+echo "—— 产物 ——"
+find "$OUT" -name '*.smali' | sed "s|^|  |"
+
+if [ "$KEEP" = 1 ]; then
+  echo
+  info "中间产物留着: $WORK"
+else
+  rm -rf "$WORK"
+fi

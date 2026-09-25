@@ -1,0 +1,6 @@
+#!/bin/sh
+# baksmali —— .dex / .apk → .smali
+# 用法: baksmali disassemble <classes.dex> -o out/
+. "$(dirname "$0")/_env.sh"
+check_tools
+exec "$JAVA" -cp "$SMALI_CP" "$BAKSMALI_CLI_MAIN" "$@"

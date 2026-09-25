@@ -1,0 +1,121 @@
+#!/bin/sh
+# ============================================================
+#  k2s ——  Kotlin 源码 → smali   （kotlinc → d8 → baksmali）
+# ============================================================
+#  比 j2s 多一层意义：宿主 (deepseek) 本身就是 Kotlin 写的，
+#  写 Kotlin 出来的产物，形态最贴近目标类，搬方法体时最省事。
+#
+#  用法:
+#    k2s Foo.kt                       # → ./smali-out/com/xx/Foo.smali
+#    k2s -o out/ src/                 # 整个目录
+#    k2s -cp host.jar Foo.kt          # 对着宿主写
+#    k2s -stdlib lib/kotlin-stdlib-1.9.24.jar Foo.kt   # 压 stdlib 版本
+#    k2s --no-param-assertions Foo.kt # 去掉 Intrinsics.checkNotNullParameter
+#
+#  选项:
+#    -o DIR         输出目录（默认 ./smali-out）
+#    -cp PATH       额外 classpath（冒号分隔，可多次）
+#    -lib JAR       换 android.jar
+#    -stdlib JAR    用指定的 kotlin-stdlib（默认用 kotlinc 自带的）
+#    -jvm TARGET    -jvm-target（默认 1.8）
+#    -api N         min-api（默认 21）
+#    -k             保留中间产物
+#    --no-param-assertions  关掉参数非空断言
+#    --no-android / --no-xposed
+# ============================================================
+set -e
+. "$(dirname "$0")/_env.sh"
+check_tools
+
+KOTLINC="$JVM_HOME/kotlinc/bin/kotlinc"
+[ -x "$KOTLINC" ] || die "没装 kotlinc（见 README「Kotlin」一节）"
+
+OUT=smali-out
+EXTRACP=
+KEEP=0
+USE_ANDROID=1
+USE_XPOSED=1
+USE_STDLIB=
+JVM_TARGET=1.8
+PARAM_ASSERT=1
+SRCS=
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o|--out)               OUT="$2"; shift 2 ;;
+    -cp|--classpath)        EXTRACP="$EXTRACP:$2"; shift 2 ;;
+    -lib)                   ANDROID_JAR="$2"; shift 2 ;;
+    -stdlib)                USE_STDLIB="$2"; shift 2 ;;
+    -jvm)                   JVM_TARGET="$2"; shift 2 ;;
+    -api)                   D8_MIN_API="$2"; shift 2 ;;
+    -k|--keep)              KEEP=1; shift ;;
+    --no-param-assertions)  PARAM_ASSERT=0; shift ;;
+    --no-android)           USE_ANDROID=0; shift ;;
+    --no-xposed)            USE_XPOSED=0; shift ;;
+    -h|--help)              sed -n '2,30p' "$0"; exit 0 ;;
+    -*)                     die "不认识的参数: $1" ;;
+    *)                      SRCS="$SRCS $1"; shift ;;
+  esac
+done
+[ -n "$SRCS" ] || die "用法: k2s [-o 输出目录] <Foo.kt|目录> ..."
+
+CP=
+[ "$USE_ANDROID" = 1 ] && CP="$ANDROID_JAR"
+[ "$USE_XPOSED"  = 1 ] && CP="$CP:$XPOSED_JAR"
+# stdlib：编译时用（显式指定才 -no-stdlib），d8 侧一律挂在 --classpath 上，
+# 免得 d8 报 "Type kotlin.jvm.internal.Intrinsics was not found"。
+STDLIB_JAR="$JVM_HOME/kotlinc/lib/kotlin-stdlib.jar"
+STD_ARGS=
+if [ -n "$USE_STDLIB" ]; then
+  [ -f "$USE_STDLIB" ] || die "找不到 stdlib: $USE_STDLIB"
+  CP="$CP:$USE_STDLIB"
+  STD_ARGS="-no-stdlib"
+  STDLIB_JAR="$USE_STDLIB"
+fi
+CP="$CP$EXTRACP"
+[ "$PARAM_ASSERT" = 0 ] && STD_ARGS="$STD_ARGS -Xno-param-assertions"
+
+mkdir -p "$JVM_HOME/work"
+WORK=$(mktemp -d "$JVM_HOME/work/k2s.XXXXXX")
+mkdir -p "$WORK/classes" "$WORK/dex"
+
+# ---- 1/3 kotlinc ----
+info "kotlinc -jvm-target $JVM_TARGET  (classpath: $CP)"
+JAVA_OPTS="${JAVA_OPTS:--Xmx1500m}" "$KOTLINC" \
+  -nowarn -jvm-target "$JVM_TARGET" $STD_ARGS \
+  -classpath "$CP" -d "$WORK/classes" $SRCS
+
+N_CLASS=$(find "$WORK/classes" -name '*.class' | wc -l)
+[ "$N_CLASS" -gt 0 ] || die "kotlinc 一个 class 都没产出"
+ok "kotlinc → $N_CLASS 个 .class"
+
+# ---- 2/3 d8 ----
+CLASSES=$(find "$WORK/classes" -name '*.class')
+info "d8 --min-api $D8_MIN_API"
+D8_CP_ARGS=
+OLDIFS=$IFS; IFS=:
+for p in $CP $STDLIB_JAR; do
+  [ -n "$p" ] && D8_CP_ARGS="$D8_CP_ARGS --classpath $p"
+done
+IFS=$OLDIFS
+"$JAVA" -cp "$R8_JAR" "$D8_MAIN" --release --min-api "$D8_MIN_API" \
+        --lib "$ANDROID_JAR" $D8_CP_ARGS \
+        --output "$WORK/dex" $CLASSES 2>&1 | grep -vE "^Warning|was not found|required for default" || true
+[ -f "$WORK/dex/classes.dex" ] || die "d8 没出 dex（日志见上）"
+ok "d8 → classes.dex ($(wc -c < "$WORK/dex/classes.dex") B)"
+
+# ---- 3/3 baksmali ----
+rm -rf "$OUT"
+mkdir -p "$OUT"
+info "baksmali → $OUT"
+"$JAVA" -cp "$SMALI_CP" "$BAKSMALI_CLI_MAIN" disassemble "$WORK/dex/classes.dex" -o "$OUT"
+ok "baksmali 完成"
+
+echo
+echo "—— 产物 ——"
+find "$OUT" -name '*.smali' | sed "s|^|  |"
+
+if [ "$KEEP" = 1 ]; then
+  echo; info "中间产物留着: $WORK"
+else
+  rm -rf "$WORK"
+fi
