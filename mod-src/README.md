@@ -22,7 +22,8 @@ mod-src/
 ├── pack/                   自己造 APK 的家伙
 │   ├── axml.py             自己写的 Android 二进制 XML 编解码器
 │   ├── build_apk.py        封包：manifest + dex + init + resources + 签名
-│   └── keys/               AOSP testkey（与现网模块同证书 ⇒ 能原地升级）
+│   └── keys/               🔑 我们自己的私钥（fuckdsmanger.*）＋ 备用的 AOSP testkey
+│                           ⚠️ 已 gitignore；副本在 /workspace/签名钥匙备份-2026-09-25/
 ├── build.sh                真编译：桩 → javac → d8 → baksmali
 └── package.sh              一键：build.sh + build_apk.py
 ```
@@ -68,7 +69,7 @@ hookM(cl, "wr", "z", GM + "GmSuggestAi");     // ← 就一行
 | **AXML 编码器** | 拿真实的 2.9.7 `AndroidManifest.xml` 解码 → 重新编码 → 逐字节比对 | **1548 字节完全一致** |
 | **AXML 能改版本** | 同上，只改 versionCode/versionName 后重新比对 | **只差 2 个字节**，正是那两处 |
 | **封包结构** | `apksigner verify` + 自己解析 zip | V2+V3 通过；`resources.arsc` STORED 且 `offset%4==0` |
-| **签名** | `apksigner verify --print-certs` | SHA-1 `61ed377e…` = 现网模块证书，**可原地升级** |
+| **签名** | `apksigner verify --print-certs` | 已换成**我们自己的私钥**，SHA-1 `32c8b057…`；旧包是 AOSP testkey（`61ed377e…`），靠核心破解覆盖 |
 
 ---
 
@@ -90,7 +91,26 @@ invoke-virtual {v0, v1}, StringBuilder->append(String)
 
 ---
 
-## 六、还没做的
+## 六、签名
+
+从 2.22.111 起，模块用**我们自己的私钥**签（2026-09-25 生，4096-bit RSA，30 年）：
+
+| 项 | 值 |
+|---|---|
+| Subject | `CN=FuckDSManger, OU=Nidyaber, O=dxyabab, C=CN` |
+| SHA-1 | `32:C8:B0:57:9D:BE:41:E7:65:FB:25:F5:63:5B:73:3D:B9:FD:24:25` |
+| SHA-256 | `9C:2D:D7:4D:F0:09:FA:57:43:D1:16:F3:A4:7F:EE:CE:29:30:F5:31:C3:09:2A:B5:91:09:16:14:5C:A3:78:05` |
+
+- 正本：`pack/keys/fuckdsmanger.{jks,p12,pk8,x509.pem}`（密码 `***REMOVED***`，别名 `fuckdsmanger`）
+- 给主人带走的副本：`/workspace/签名钥匙备份-2026-09-25/`（含 zip，已 gitignore）
+- **丢了就再也签不出能覆盖安装的包** ⇒ 至少存两处
+
+> 旧包是 MT管理器 用 **AOSP testkey** 签的（`pack/keys/testkey.*` 保留着当备用）。
+> 证书变了，正常要卸载重装 —— 主人用**核心破解**，直接覆盖即可。
+
+---
+
+## 七、还没做的
 
 - [ ] **用 2.22.110 真包出一版 2.22.111**（等基础 APK 进沙箱）
 - [ ] **把模板那两个 `DisableFlagSecure` 类从 dex 里彻底删掉**：

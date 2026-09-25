@@ -30,8 +30,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import axml  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_KEY = os.path.join(HERE, "keys", "testkey.pk8")
-DEFAULT_CERT = os.path.join(HERE, "keys", "testkey.x509.pem")
+# 默认用我们自己的私钥（2026-09-25 生成，4096-bit RSA，30 年）
+DEFAULT_KEY = os.path.join(HERE, "keys", "fuckdsmanger.pk8")
+DEFAULT_CERT = os.path.join(HERE, "keys", "fuckdsmanger.x509.pem")
+# 备用：AOSP testkey（= 现网旧包的证书；只在需要"同证书覆盖"时用）
+FALLBACK_KEY = os.path.join(HERE, "keys", "testkey.pk8")
+FALLBACK_CERT = os.path.join(HERE, "keys", "testkey.x509.pem")
 
 
 # ------------------------------------------------------------------ 读基础包

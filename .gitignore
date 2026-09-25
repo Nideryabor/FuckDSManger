@@ -25,3 +25,7 @@ mod-src/base/
 # AOSP testkey：公开钥匙，但没必要入库（下载地址见 mod-src/README.md）
 mod-src/pack/keys/
 mod-src/pack/__pycache__/
+
+# —— 私钥备份：绝对不入库 ——
+# 私钥（fuckdsmanger.jks / .pk8 …）与给主人带走的副本
+签名钥匙备份-2026-09-25/
