@@ -118,3 +118,40 @@ invoke-virtual {v0, v1}, StringBuilder->append(String)
       要硬删得走 R8：`--pg-conf` 里 `-keep` 整个 `gm.**` + 我们的入口，其余不可达即被裁。
       （`gm.**` 全是 `Class.forName` 反射加载，keep 规则少不得）
 - [ ] 后续把别的 `gm/` 类也陆续搬进 `src/`（一次一个，用 `verify/` 同样的法子验等价）
+
+---
+
+## 八、Resource pipeline（2026-09-25 更新：**arm64 有 aapt2 了**）
+
+主人搞来了一份 **arm64 原生** aapt2（`Android Asset Packaging Tool 2.19-V.55bc87c`），
+**不再需要 qemu**。工具在 `/workspace/tools/aapt2/{aapt2_64, aapt_64}`。
+
+> 之前那句「arm64 上没有 aapt2，所以只能手绘/不能加资源」**作废**。
+
+标准流程（= AGP 的做法，我们手工照做）：
+
+```sh
+cd /workspace
+
+# ① 编每一份 res（我们的 + 每个 AAR 的）
+tools/aapt2/aapt2_64 compile --dir res -o work/res.zip
+for a in fdm-app/libs/*.aar; do unzip -o "$a" 'res/*' -d work/aar_res/$(basename $a .aar)/ ; done
+# 每份 AAR 的 res 也 compile，产物一起 link
+
+# ② 把所有 AAR 的 R.txt 变成 stable-ids，钉死库期望的资源 ID
+#    格式: <包名>:<type>/<name> = 0x7f0x0000
+python3 tools/…/make_stable_ids.py > work/stable-ids.txt
+
+# ③ link：出 resources.arsc + AXML + R.java（ID 与库一致 ⇒ 库代码能取到自己的资源）
+tools/aapt2/aapt2_64 link -o work/base.apk -I tools/jvm/lib/android.jar \
+    --manifest AndroidManifest.xml --java work/rjava \
+    --stable-ids work/stable-ids.txt --min-sdk-version 26 \
+    work/res.zip work/aar_res/*.zip
+
+# ④ 之后照旧：d8/r8 出 dex → 自己组 zip（arsc STORED+4 对齐）→ apksigner 签
+```
+
+**影响**：
+- 我们的 UI **可以上真矢量图**（Material Symbols 的 VectorDrawable XML），不用再拿 Unicode 字符糊
+- 那个"独立 Compose App 秒崩"的根（资源表空）**已经可修**
+- Compose 路线成立：捆 Compose + **R8 `-repackageclasses` 全量改名** ⇒ 不会和宿主的 Compose 撞车
