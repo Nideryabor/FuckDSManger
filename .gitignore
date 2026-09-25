@@ -29,3 +29,8 @@ mod-src/pack/__pycache__/
 # —— 私钥备份：绝对不入库 ——
 # 私钥（fuckdsmanger.jks / .pk8 …）与给主人带走的副本
 签名钥匙备份-2026-09-25/
+
+# —— m3e-canvas（主人丢进来的 web 项目，不属于本仓）——
+tmp/m3e-src/
+tmp/m3e-canvas-main*.zip
+tmp/m3e-canvas-*.patch
