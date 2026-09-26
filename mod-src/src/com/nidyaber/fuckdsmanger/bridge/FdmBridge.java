@@ -198,12 +198,16 @@ public final class FdmBridge {
         h.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (sGotConfig) {
-                    GmUtil.log("【FdmBridge】配置已到手，停止索要");
+                // ★ 每次顺手推进一次 pin 表同步 ——
+                //   宿主调用 MMKV.initialize() 比 Application.onCreate 晚，
+                //   所以 probe() 那一次注定拿不到存储（详见 syncPins 的注释）。
+                boolean pinsOk = syncPins(ctx);
+                if (pinsOk && sGotConfig) {
+                    GmUtil.log("【FdmBridge】配置已到手 · pin 表已同步 ⇒ 停止周期任务");
                     return;
                 }
                 if (n[0]++ >= 30) {
-                    GmUtil.log("【FdmBridge】索要配置满 30 次仍未应答（UI 一直没起来过）");
+                    GmUtil.log("【FdmBridge】周期任务收摊（配置=" + sGotConfig + " · pin 表=" + pinsOk + "）");
                     return;
                 }
                 try {
@@ -213,7 +217,7 @@ public final class FdmBridge {
                 h.postDelayed(this, 4000);
             }
         }, 3000);
-        GmUtil.log("【FdmBridge】开始周期性索要配置（每 4 秒一次，最多 30 次）");
+        GmUtil.log("【FdmBridge】开始周期任务（每 4 秒一次：索要配置 + 推进 pin 表同步，最多 30 次）");
     }
 
     /**
@@ -433,6 +437,9 @@ public final class FdmBridge {
         }
     }
 
+    /** pin 表是否已经从存储里全量同步过（幂等标记）。 */
+    private static volatile boolean sPinsSynced = false;
+
     /** 内存 pin 表（**同一个实例**交给底座 `GmMmkvHook.setPins`，之后 put 立刻可见）。 */
     private static volatile java.util.HashMap<String, String> sPins = null;
 
@@ -455,12 +462,24 @@ public final class FdmBridge {
     /**
      * 把**已经存在的影子键**全量同步进内存表。
      *
-     * 为什么需要：pin 是持久化的（写在宿主存储里），而内存表是进程级的 ——
-     * 宿主一重启，表就空了；不同步的话"上次改过的灰度值"会突然失效。
+     * ⚠️ **必须容忍"宿主的存储还没就绪"**：
+     *   本方法最早由 `probe()`（挂在 `Application.onCreate` 之后）调用，
+     *   而宿主**调用 `MMKV.initialize()` 比那更晚** ——
+     *   实测这时 `GmStore.get()` 返回 null，对着它调 `getAll()` 直接
+     *   `NullPointerException: 'SharedPreferences.getAll()' on a null object reference`
+     *   （3.16.0 真机就是这么失败的：表注册上了，但**一条都没灌进去**⇒表是空的⇒永远不命中）。
+     *   ⇒ 返回 false，交给"每 4 秒一次"的周期任务**重试**。
+     *
+     * @return true = 已经同步过（或本次同步成功）
      */
-    private static void syncPins(Context ctx) {
+    private static boolean syncPins(Context ctx) {
+        if (sPinsSynced) return true;
         try {
             SharedPreferences sp = GmStore.get(ctx);
+            if (sp == null) {
+                GmUtil.log("【FdmBridge】pin 表同步：宿主存储还没就绪（MMKV 未初始化）⇒ 稍后重试");
+                return false;
+            }
             java.util.HashMap<String, String> m = pins();
             int n = 0;
             for (java.util.Map.Entry<String, ?> e : sp.getAll().entrySet()) {
@@ -469,9 +488,12 @@ public final class FdmBridge {
                 m.put(k.substring("fuckds_pin_".length()), String.valueOf(e.getValue()));
                 n++;
             }
+            sPinsSynced = true;
             GmUtil.log("【FdmBridge】pin 表全量同步 " + n + " 条（内存表共 " + m.size() + "）");
+            return true;
         } catch (Throwable t) {
             GmUtil.logFail("【FdmBridge】pin 表同步失败", t);
+            return false;
         }
     }
 
