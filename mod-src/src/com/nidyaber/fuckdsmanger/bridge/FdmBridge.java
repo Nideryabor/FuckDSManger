@@ -239,6 +239,8 @@ public final class FdmBridge {
             }
             sToken = tok;
         }
+        // ★ 顺手把已有的影子键全量同步进内存 pin 表（宿主重启后内存表是空的）
+        syncPins(ctx);
         GmUtil.log("【FdmBridge】📨 收到 UI 推来的配置：rev=" + rev + " json=" + raw);
         if (raw == null || raw.length() == 0 || "{}".equals(raw.trim())) {
             GmUtil.log("【FdmBridge】配置是空的，跳过（不改宿主任何东西）");
@@ -397,16 +399,76 @@ public final class FdmBridge {
      */
     private static void grayWrite(Context ctx, String bare, String type, String val) {
         SharedPreferences sp = GmStore.get(ctx);
-        String hostKey = "kv_remote_settings_" + bare;
+        String full = "kv_remote_settings_" + bare;
+        String loc = "kv_settings_" + bare;
         try {
-            String cur = sp.getString(hostKey, null);
-            if (cur == null) cur = sp.getString("kv_settings_" + bare, null);
+            String cur = sp.getString(full, null);
+            if (cur == null) cur = sp.getString(loc, null);
             if (cur != null && !cur.isEmpty()) {
-                sp.edit().putString("fuckds_bak_" + hostKey, cur).apply();
+                sp.edit().putString("fuckds_bak_" + full, cur).apply();
             }
         } catch (Throwable ignore) {
         }
-        sp.edit().putString("fuckds_pin_" + hostKey, val).apply();
+        // ★ 影子键：**三种键形都写一份**
+        //   底座的读侧替换是"拿宿主读的 key 去查 pin 表" ⇒ 我们不知道宿主读哪个形式，
+        //   那就三种全写（`kv_settings_` / `kv_remote_settings_` / 裸名）。
+        //   2.5.2 实测：63 项走 kv_settings_ · 18 项走 kv_remote_settings_ · 2 项走裸名。
+        sp.edit().putString("fuckds_pin_" + full, val)
+          .putString("fuckds_pin_" + loc, val)
+          .putString("fuckds_pin_" + bare, val)
+          .apply();
+        // ★★ 同时塞进**内存 pin 表**（底座读侧替换就是查它）
+        try {
+            java.util.HashMap<String, String> m = pins();
+            m.put(full, val);
+            m.put(loc, val);
+            m.put(bare, val);
+            GmUtil.log("【FdmBridge】pin 表 +3（" + bare + " = " + val + "）");
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】pin 表写入失败（只靠影子键了）", t);
+        }
+    }
+
+    /** 内存 pin 表（**同一个实例**交给底座 `GmMmkvHook.setPins`，之后 put 立刻可见）。 */
+    private static volatile java.util.HashMap<String, String> sPins = null;
+
+    private static java.util.HashMap<String, String> pins() {
+        if (sPins != null) return sPins;
+        java.util.HashMap<String, String> m = new java.util.HashMap<String, String>();
+        try {
+            Class<?> c = XposedHelpers.findClass("com.nidyaber.fuckdsmanger.gm.GmMmkvHook",
+                    FdmBridge.class.getClassLoader());
+            // 反射调用：桥在 `bridge` 包、`GmMmkvHook` 在 `gm` 包，直接调会 IllegalAccessError
+            XposedHelpers.callStaticMethod(c, "setPins", m);
+            GmUtil.log("【FdmBridge】🔗 pin 表已交给底座（读侧替换生效）");
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】pin 表注册失败（退回只写影子键）", t);
+        }
+        sPins = m;
+        return m;
+    }
+
+    /**
+     * 把**已经存在的影子键**全量同步进内存表。
+     *
+     * 为什么需要：pin 是持久化的（写在宿主存储里），而内存表是进程级的 ——
+     * 宿主一重启，表就空了；不同步的话"上次改过的灰度值"会突然失效。
+     */
+    private static void syncPins(Context ctx) {
+        try {
+            SharedPreferences sp = GmStore.get(ctx);
+            java.util.HashMap<String, String> m = pins();
+            int n = 0;
+            for (java.util.Map.Entry<String, ?> e : sp.getAll().entrySet()) {
+                String k = e.getKey();
+                if (k == null || !k.startsWith("fuckds_pin_") || e.getValue() == null) continue;
+                m.put(k.substring("fuckds_pin_".length()), String.valueOf(e.getValue()));
+                n++;
+            }
+            GmUtil.log("【FdmBridge】pin 表全量同步 " + n + " 条（内存表共 " + m.size() + "）");
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】pin 表同步失败", t);
+        }
     }
 
     /**

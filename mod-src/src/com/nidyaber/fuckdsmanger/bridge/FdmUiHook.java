@@ -38,8 +38,12 @@ public final class FdmUiHook {
 
     /** 底座里那个旧 View 主页（换乘对象）。 */
     private static final String OLD_UI = "com.nidyaber.fuckdsmanger.gm.GmHomeUi";
-    /** 底座里存着「当前宿主 Activity」的那个类。 */
-    private static final String BASE_ENTRY = "com.nidyaber.fuckdsmanger.GmEntry";
+    /** 底座 dex 里存着「当前宿主 Activity」的那个类。
+     *  ⚠️ 注意：底座里有**两个** `GmEntry` ——
+     *    · `com.nidyaber.fuckdsmanger.GmEntry`     = 入口（handleLoadPackage）
+     *    · `com.nidyaber.fuckdsmanger.gm.GmEntry`  = **存 `sAct` 的是这个**
+     *  3.13.0 我写错过一次，日志里是 `NoSuchFieldError`，靠兜底 `ActivityThread.currentApplication()` 才起来。 */
+    private static final String BASE_ENTRY = "com.nidyaber.fuckdsmanger.gm.GmEntry";
 
     /** 我们的 Compose UI。 */
     private static final String UI_ACT = "com.nidyaber.fuckdsmanger.MainActivity";

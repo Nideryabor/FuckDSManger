@@ -20,9 +20,11 @@ VC="${2:-482}"
 ROOT=/workspace
 # 底座 APK：自动找（可能在 /workspace 下，也可能在 mod-src/out 里）
 BASE=""
-# ★ 2.22.121 起：底座已去掉「依赖宿主包名」的三处（总闸 / onResume / onActivityResult）
+# ★ 2.22.121：底座去掉「依赖宿主包名」三处；2.22.122：底座加 pin 表（读侧替换）
 #   见 `专题/铁律-不依赖宿主包名.md`
-for c in "$ROOT/FuckDSManger_NL_2.22.121_for_ds2.5.2-signed.apk" \
+for c in "$ROOT/FuckDSManger_NL_2.22.122_for_ds2.5.2-signed.apk" \
+         "$ROOT/mod-src/out/FuckDSManger_NL_2.22.122_for_ds2.5.2-signed.apk" \
+         "$ROOT/FuckDSManger_NL_2.22.121_for_ds2.5.2-signed.apk" \
          "$ROOT/mod-src/out/FuckDSManger_NL_2.22.121_for_ds2.5.2-signed.apk" \
          "$ROOT/FuckDSManger_NL_2.22.120_for_ds2.5.2-signed.apk" \
          "$ROOT/mod-src/out/FuckDSManger_NL_2.22.120_for_ds2.5.2-signed.apk"; do
