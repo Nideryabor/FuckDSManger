@@ -31,30 +31,56 @@ public final class FdmEntry implements IXposedHookLoadPackage {
     /** 底座 dex 里的真入口。 */
     private static final String BASE_ENTRY = "com.nidyaber.fuckdsmanger.GmEntry";
 
-    private static final String HOST = "com.deepseek.chat";
+    /**
+     * 「是不是宿主」的判据 —— **看锚点在不在，不看它叫什么包**。
+     *
+     * 这些是宿主自己的（混淆）类名，本来就是我们整套 hook 的锚点；
+     * 宿主升级时它们跟其它锚点一起重新定位 ⇒ **不额外引入脆弱点**。
+     * 而包名判据（旧写法 `packageName.startsWith("com.deepseek.chat")`）坏起来是**静默**的：
+     * 宿主改个包名 ⇒ 一条钩子都不挂，连日志都进不去。
+     *
+     * 取名依据：`kf5` / `uia` / `fh6` 都是底座第一梯队挂的宿主类（见 `GmEntry.handleLoadPackage`）。
+     */
+    private static final String[] HOST_ANCHORS = {"kf5", "uia", "fh6"};
+
+    /** 任一锚点能找到 ⇒ 这就是宿主。名字无关；全找不到才判非宿主。 */
+    private static boolean isHost(ClassLoader cl) {
+        for (String a : HOST_ANCHORS) {
+            try {
+                XposedHelpers.findClass(a, cl);
+                return true;
+            } catch (Throwable ignore) {
+                // 试下一个锚点
+            }
+        }
+        return false;
+    }
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lp) {
         XposedBridge.log("[FDM] FdmEntry.handleLoadPackage pkg=" + lp.packageName);
 
-        if (lp.packageName != null && lp.packageName.startsWith(HOST)) {
-            // 主锚点：宿主的入口 Activity
+        if (isHost(lp.classLoader)) {
+            // ★ 落点用**框架类**：`android.app.Application` 的名字永远不变。
+            //   旧写法锚的是 `com.deepseek.chat.MainActivity`，宿主一换包名/类名就静默哑掉。
+            //   顺带一个好处：Application.onCreate **只跑一次** ⇒ 拿 Context 比逐 Activity 更早、更省。
             try {
-                XposedHelpers.findAndHookMethod("com.deepseek.chat.MainActivity", lp.classLoader,
-                        "onCreate", Bundle.class, new FdmHostReadyHook());
-                XposedBridge.log("[FDM] 探桥钩子已挂（MainActivity.onCreate）");
+                XposedHelpers.findAndHookMethod("android.app.Application", lp.classLoader,
+                        "onCreate", new FdmHostReadyHook());
+                XposedBridge.log("[FDM] 探桥钩子已挂（Application.onCreate）");
             } catch (Throwable t) {
-                XposedBridge.log("[FDM] 探桥钩子（MainActivity）挂载失败：" + t);
+                // 类名永不变的框架类都挂不上，那就退到 Activity（同样是框架类，多一层保险）
+                XposedBridge.log("[FDM] 探桥钩子（Application）挂载失败，退到 Activity：" + t);
+                try {
+                    XposedHelpers.findAndHookMethod("android.app.Activity", lp.classLoader,
+                            "onCreate", Bundle.class, new FdmHostReadyHook());
+                    XposedBridge.log("[FDM] 探桥备用钩子已挂（Activity.onCreate）");
+                } catch (Throwable t2) {
+                    XposedBridge.log("[FDM] 探桥备用钩子挂载失败：" + t2);
+                }
             }
-            // 备用锚点：所有 Activity —— 宿主要是换了入口类，靠这个也能拿到 Context。
-            // （FdmBridge 内部只做一次，所以这里多挂一个几乎零成本）
-            try {
-                XposedHelpers.findAndHookMethod("android.app.Activity", lp.classLoader,
-                        "onCreate", Bundle.class, new FdmHostReadyHook());
-                XposedBridge.log("[FDM] 探桥备用钩子已挂（Activity.onCreate）");
-            } catch (Throwable t) {
-                XposedBridge.log("[FDM] 探桥备用钩子挂载失败：" + t);
-            }
+        } else {
+            XposedBridge.log("[FDM] 锚点不在 ⇒ 不是宿主，跳过探桥（pkg=" + lp.packageName + "）");
         }
 
         try {
