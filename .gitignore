@@ -34,3 +34,6 @@ mod-src/pack/__pycache__/
 tmp/m3e-src/
 tmp/m3e-canvas-main*.zip
 tmp/m3e-canvas-*.patch
+
+# —— 出笼隧道：端口缓存是运行时产物 ——
+tools/出笼隧道/.adbport
