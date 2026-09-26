@@ -188,3 +188,27 @@ sh tools/出笼隧道/ro.sh 'head -c 200 /data/data/<包>/shared_prefs/fdm_ui.xm
 2. 无线调试**重启手机会关**，需要主人重新打开；**配对不用重做**。
 3. 掉线时先跑 `sh adb.sh shell id`，它会自己扫端口重连。
 4. `tmp/adb.sh` 是转发壳，老路径也能用。
+
+### 「只读」实测证据（2026-09-27 凌晨 · 主人睡前点的验）
+
+身份：`uid=0(root) gid=0(root)` · `groups=0,1007,1011,1028,1036,3009` · `u:r:ksu:s0` · **`CapEff=0000000000000004`**
+
+| # | 动作 | 结果 | 谁挡的 |
+|---|---|---|---|
+| ① | `touch /_龙龙测试` | `Read-only file system` | 挂载（**不算证据**） |
+| ② | `touch /data/_龙龙测试` | **`Permission denied`** | ✅ 能力 |
+| ③ | `touch /system/_龙龙测试` | `Read-only file system` | 挂载（**不算证据**） |
+| ④ | `touch /data/local/tmp/_龙龙测试`（可写挂载 · 0771 shell:shell） | **`Permission denied`** | ✅ 能力（干净对照） |
+| ⑤ | `echo hi > /dev/null`（0666） | **成功** | — ★ 关键 |
+| ⑥ | `mkdir /data/龙龙目录` | **`Permission denied`** | ✅ 能力 |
+| ⑦ | `chmod 777 /system/bin/sh` / `chown` | 拒 | — |
+| ⑧ | 读 `shared_prefs/fdm_ui.xml` | **成功** | — |
+
+**★ ⑤ 是决定性对照**：写 `/dev/null` 成功 ⇒ **不是"全盘禁止写"**，而是
+**完全按 9 位权限位判**（等同普通游客）。
+
+⇒ **除了「读」，一个字节的特权都没多拿。** 界限就在 `CapEff=…04` 这一位上。
+
+> ⚠️ 注意 ①③ 不能拿来当证据 —— rootfs 本来就是 ro 挂载，
+> 换成完整 root 也一样报 `Read-only file system`。
+> **只有 ②④⑥ 是真正在验「能力」。**
