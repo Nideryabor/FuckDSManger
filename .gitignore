@@ -35,5 +35,38 @@ tmp/m3e-src/
 tmp/m3e-canvas-main*.zip
 tmp/m3e-canvas-*.patch
 
+# ============================================================
+#  2026-09-27 归档整理：大件临时产物隔离
+#  ⚠️ `/out/` 必须带前导斜杠 —— 否则会误伤已入库的 `pipeline/out/`
+# ============================================================
+/out/
+/fdm-app/
+ksud
+fdm-diag-*.txt
+
+# 反编译 dump / 上游包（tmp 里那些 GB 级的东西）
+tmp/lsp*/
+tmp/host*/
+tmp/base*/
+tmp/_orig/
+tmp/m3e-out/
+tmp/LSPosed_*.zip
+
+# 工具链二进制（跟 tools/jvm/lib/ 一个道理：本机下载装，不入库）
+tools/node/
+tools/aapt2/
+
+# Python 字节码
+__pycache__/
+
+# mod-src 编译中间产物（源码 / smali 产物仍然入库）
+mod-src/work/*.dex
+mod-src/work/merged/
+mod-src/work/patch_base/
+mod-src/work/patch_base_122/
+mod-src/work/patch_base_123/
+mod-src/work/sm_final/
+mod-src/work/sm_ui/
+
 # —— 出笼隧道：端口缓存是运行时产物 ——
 tools/出笼隧道/.adbport

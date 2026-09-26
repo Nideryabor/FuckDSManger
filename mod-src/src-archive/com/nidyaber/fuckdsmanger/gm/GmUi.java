@@ -1,7 +1,8 @@
-package com.nidyaber.fuckdsmanger.ui;
+package com.nidyaber.fuckdsmanger.gm;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -215,6 +216,158 @@ public final class GmUi {
         v.setOnClickListener(l);
         return v;
     }
+
+
+    // ═══════════════ 新 UI 组件（M3 Expressive 那套，纯代码画） ═══════════════
+
+    /** 分组列表圆角：整组外层 28dp、相邻内侧 8dp（M3 Expressive 的列表样式） */
+    public static GradientDrawable groupBg(Context c, int index, int count, int fill) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(fill);
+        float o = GmUtil.dp(c, 28), i = GmUtil.dp(c, 8);
+        float tl = index == 0 ? o : i, tr = tl;
+        float bl = index == count - 1 ? o : i, br = bl;
+        d.setCornerRadii(new float[]{tl, tl, tr, tr, br, br, bl, bl});
+        return d;
+    }
+
+    /** 顶部应用栏：标题 titleLarge，左侧可选返回钮 */
+    public static LinearLayout topBar(Context c, String title, View.OnClickListener onBack) {
+        LinearLayout row = new LinearLayout(c);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        int h = GmUtil.dp(c, 64);
+        row.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, h));
+        row.setPadding(GmUtil.dp(c, 4), 0, GmUtil.dp(c, 16), 0);
+        if (onBack != null) {
+            TextView back = glyph(c, "\u2190", 22, GmUtil.tx(c));
+            back.setGravity(Gravity.CENTER);
+            back.setLayoutParams(new LinearLayout.LayoutParams(GmUtil.dp(c, 48), GmUtil.dp(c, 48)));
+            back.setOnClickListener(onBack);
+            back.setBackground(round(c, Color.TRANSPARENT, 24));
+            row.addView(back);
+        } else {
+            row.addView(space(c, 0), new LinearLayout.LayoutParams(GmUtil.dp(c, 12), 1));
+        }
+        TextView t = new TextView(c);
+        t.setText(title);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f);
+        t.setTextColor(GmUtil.tx(c));
+        t.getPaint().setFakeBoldText(false);
+        t.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        row.addView(t);
+        return row;
+    }
+
+    /** 段落小标题：16sp */
+    public static TextView sectionLabel(Context c, String s) {
+        TextView t = new TextView(c);
+        t.setText(s);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+        t.setTextColor(GmUtil.tx(c));
+        t.setPadding(GmUtil.dp(c, 4), GmUtil.dp(c, 6), 0, GmUtil.dp(c, 8));
+        return t;
+    }
+
+    /** 一个字符当图标（不引任何资源/字体库） */
+    public static TextView glyph(Context c, String ch, int sp, int color) {
+        TextView t = new TextView(c);
+        t.setText(ch);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
+        t.setTextColor(color);
+        t.setGravity(Gravity.CENTER);
+        return t;
+    }
+
+    /** 列表项：72dp，前置图标放在 40dp primaryContainer 圆上，右侧 chevron */
+    public static View listRow(Context c, String glyphCh, String title, String supporting,
+                               boolean chevron, int index, int count, View.OnClickListener l) {
+        LinearLayout row = new LinearLayout(c);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, GmUtil.dp(c, 72)));
+        row.setBackground(groupBg(c, index, count, GmUtil.bg(c)));
+        row.setPadding(GmUtil.dp(c, 16), 0, GmUtil.dp(c, 12), 0);
+        if (l != null) row.setOnClickListener(l);
+
+        if (glyphCh != null) {
+            LinearLayout box = new LinearLayout(c);
+            box.setGravity(Gravity.CENTER);
+            box.setBackground(round(c, ACCENT_SOFT, 20));
+            box.setLayoutParams(new LinearLayout.LayoutParams(GmUtil.dp(c, 40), GmUtil.dp(c, 40)));
+            box.addView(glyph(c, glyphCh, 18, ACCENT));
+            row.addView(box);
+            row.addView(space(c, 0), new LinearLayout.LayoutParams(GmUtil.dp(c, 16), 1));
+        }
+        LinearLayout col = new LinearLayout(c);
+        col.setOrientation(LinearLayout.VERTICAL);
+        col.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        TextView t = new TextView(c);
+        t.setText(title);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+        t.setTextColor(GmUtil.tx(c));
+        col.addView(t);
+        if (supporting != null) {
+            TextView s2 = new TextView(c);
+            s2.setText(supporting);
+            s2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+            s2.setTextColor(GmUtil.sub(c));
+            s2.setLineSpacing(0f, 1.3f);
+            col.addView(s2);
+        }
+        row.addView(col);
+        if (chevron) {
+            row.addView(glyph(c, "\u203A", 20, GmUtil.sub(c)));
+        }
+        return row;
+    }
+
+    /** 底部导航栏：80dp，选中项用胶囊底色 */
+    public static LinearLayout navBar(Context c, String[] labels, String[] glyphs, int selected,
+                                      View.OnClickListener l) {
+        LinearLayout bar = new LinearLayout(c);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setGravity(Gravity.CENTER);
+        bar.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, GmUtil.dp(c, 80)));
+        bar.setBackgroundColor(GmUtil.bg(c));
+        for (int i = 0; i < labels.length; i++) {
+            LinearLayout item = new LinearLayout(c);
+            item.setOrientation(LinearLayout.VERTICAL);
+            item.setGravity(Gravity.CENTER);
+            item.setPadding(GmUtil.dp(c, 12), GmUtil.dp(c, 6), GmUtil.dp(c, 12), GmUtil.dp(c, 6));
+            item.setBackground(round(c, i == selected ? ACCENT_SOFT : Color.TRANSPARENT, 16));
+            item.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+            item.addView(glyph(c, glyphs[i], 20, i == selected ? ACCENT : GmUtil.sub(c)));
+            TextView t = new TextView(c);
+            t.setText(labels[i]);
+            t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+            t.setTextColor(i == selected ? GmUtil.tx(c) : GmUtil.sub(c));
+            item.addView(t);
+            final int idx = i;
+            item.setOnClickListener(v -> { if (l != null) l.onClick(v); });
+            item.setTag(idx);
+            bar.addView(item);
+        }
+        return bar;
+    }
+
+    /** 容器框：只有底色和圆角，本身没有行为 */
+    public static LinearLayout box(Context c, int heightDp, int color, int radiusDp) {
+        LinearLayout l = new LinearLayout(c);
+        l.setOrientation(LinearLayout.VERTICAL);
+        l.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, GmUtil.dp(c, heightDp)));
+        l.setBackground(round(c, color, radiusDp));
+        return l;
+    }
+
+    /** 强调深色（M3 的 onPrimaryContainer 那一档） */
+    public static final int ACCENT_DARK = 0xFF041E49;
+
+    /** 强调色的浅底（约等于 M3 的 primaryContainer） */
+    public static final int ACCENT_SOFT = 0xFFD3E3FD;
 
     // ------------------------------------------------------------ 对话框
 

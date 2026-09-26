@@ -206,12 +206,12 @@ def main():
         if base_dex:
             entries.append({"name": "classes.dex", "data": base_dex})
             print("classes.dex : %d 字节（基础包原样）" % len(base_dex))
-        if a.entry_dex:
-            with open(a.entry_dex, "rb") as f:
-                our = f.read()
-            name = "classes2.dex" if base_dex else "classes.dex"
-            entries.append({"name": name, "data": our})
-            print("%s : %d 字节（我们真编译的入口）" % (name, len(our)))
+    if a.entry_dex:
+        with open(a.entry_dex, "rb") as f:
+            our = f.read()
+        name = "classes2.dex" if (a.dex or base_dex) else "classes.dex"
+        entries.append({"name": name, "data": our})
+        print("%s : %d 字节（我们真编译的）" % (name, len(our)))
 
     init = (a.entry_class + "\n").encode("utf-8")
     entries.append({"name": "assets/xposed_init", "data": init})
@@ -240,7 +240,7 @@ def main():
         cmd = ["apksigner", "sign", "--key", a.keystore, "--cert", a.cert,
                "--v1-signing-enabled", "true",
                "--v2-signing-enabled", "true",
-               "--v3-signing-enabled", "true",
+               "--v3-signing-enabled", "true", "--v4-signing-enabled", "false",
                "--out", signed, a.out]
         subprocess.run(cmd, check=True)
         print("→ 已签名: %s (%d 字节)" % (signed, os.path.getsize(signed)))

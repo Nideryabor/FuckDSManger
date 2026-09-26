@@ -55,6 +55,15 @@ public final class GmEntry implements IXposedHookLoadPackage {
             GmUtil.logFail("hook onResume FAIL", t);
         }
 
+        // —— 🐲 单包双层：桥的第一次尝试（等宿主第一个 Activity.onCreate 拿到 Context）——
+        try {
+            XposedHelpers.findAndHookMethod("com.deepseek.chat.MainActivity", cl, "onCreate",
+                    android.os.Bundle.class, new com.nidyaber.fuckdsmanger.bridge.FdmHostReadyHook());
+            GmUtil.log("hooked MainActivity.onCreate (FdmBridge 探桥) OK");
+        } catch (Throwable t) {
+            GmUtil.logFail("hook FdmHostReadyHook FAIL", t);
+        }
+
         // —— 资源 / MMKV / 触摸 ——
         hookM(cl, "android.content.res.Resources", "getString", GM + "GmResTextHook");
         hookM(cl, "android.content.res.Resources", "getText", GM + "GmResTextHook");

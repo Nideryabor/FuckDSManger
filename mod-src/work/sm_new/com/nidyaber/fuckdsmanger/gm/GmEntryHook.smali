@@ -84,7 +84,7 @@
     invoke-static {v2, v3}, Lcom/nidyaber/fuckdsmanger/gm/GmUtil;->toast(Landroid/content/Context;Ljava/lang/String;)V
 
     :cond_19
-    invoke-static {}, Lcom/nidyaber/fuckdsmanger/gm/GmMenuDialog;->open()V
+    invoke-static {}, Lcom/nidyaber/fuckdsmanger/gm/GmHomeUi;->open()V
 
     invoke-static {v2}, Lcom/nidyaber/fuckdsmanger/gm/GmEntryHook;->unit(Landroid/content/Context;)Ljava/lang/Object;
 

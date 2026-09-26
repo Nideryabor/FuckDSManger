@@ -71,8 +71,16 @@ zip 里补 META-INF/services/*                                    # 协程调度
 
 ## 下一步
 
-1. **数据桥**：App 用 root 读写宿主配置（参照物用 Shizuku ✓ 我们有 root）
-2. **模块入口**：宿主里点「检查更新」→ `startActivity` 拉起本 App（参照物的 `deekseep-module://` trampoline 那套）
+1. **数据桥**：~~App 用 root 读写宿主配置（参照物用 Shizuku ✓ 我们有 root）~~
+   ❌ **2026-09-26 更正（主人指出 + 已核实）**：
+   参照物的 **Shizuku 是给 AI Agent 的本地工具（文件/Shell/截屏）当权限后端**，
+   **和 UI ↔ 宿主通信毫无关系**（证据见 `专题/参照物-Deekseep-架构核实.md` 第一节）。
+   它真正的桥是 **`XposedActivationProvider`（ContentProvider `call()` + Bundle + callingUid 白名单）**，
+   **不需要 root**。⇒ 本项改为「搭 provider 桥」，详见
+   `专题/双层架构-UI与hook分离.md`。
+2. **模块入口**：宿主里点「检查更新」→ `startActivity` 拉起本 App
+   （参照物的 `deekseep-module://` trampoline 那套 —— 已核实：hook 层类 `Main` 里
+   `requestPublicTunnelBridge` / `requestLocalApiKeepAlive` 等都在用这个 scheme）
 3. **瘦身**：改用我们自己的 42 个 Material Symbols 矢量图（可去掉 material-icons-extended ⇒ ~20MB）
 4. **搬二级页**：旧 UI 的 17 个页面逐个搬进 Compose
 
@@ -84,5 +92,4 @@ tools/symbols/                       Material Symbols 官方 TTF + 7854 个 SVG 
 tools/respipe/gen_r.py               各库 R 类生成器
 pipeline/r8-app.pro / maindex.pro    可用的 R8 配置（不改名版）
 pipeline/out/mapping.txt             51 万行映射表（模块那条路用）
-gatech/…                             hmm
 ```

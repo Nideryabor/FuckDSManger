@@ -101,7 +101,7 @@
     long-to-float v6, v6
 
     .line 62
-    const v7, 0x4e6e6b28  # 1.0E9f
+    const v7, 0x4e6e6b28
 
     .line 65
     div-float/2addr v6, v7
@@ -128,10 +128,10 @@
     div-float/2addr v7, v6
 
     .line 80
-    const/high16 v6, -0x3f000000  # -8.0f
+    const/high16 v6, -0x3f000000
 
     .line 82
-    const/high16 v8, 0x41000000  # 8.0f
+    const/high16 v8, 0x41000000
 
     .line 84
     invoke-static {v7, v6, v8}, Lge5;->p(FFF)F

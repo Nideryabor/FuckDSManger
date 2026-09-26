@@ -22,9 +22,9 @@
 -dontwarn androidx.annotation.**
 -dontwarn androidx.collection.**
 -dontwarn kotlinx.**
--dontwarn androidx.compose.runtime.Immutable
--dontwarn androidx.compose.runtime.Stable
 -dontwarn androidx.compose.runtime.annotation.**
+-keep,allowshrinking class androidx.compose.runtime.Immutable
+-keep,allowshrinking class androidx.compose.runtime.Stable
 -dontwarn **
 -keep class androidx.customview.poolingcontainer.** { *; }
 -keep class androidx.customview.poolingcontainer.R { *; }

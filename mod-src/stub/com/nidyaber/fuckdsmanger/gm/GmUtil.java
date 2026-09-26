@@ -19,6 +19,9 @@ public final class GmUtil {
 
     public static int bg(Context ctx) { return 0; }
 
+    /** 卡片底色（= surfaceContainerLow 那一档；真身里没有，用 bg 兜底） */
+    public static int card(Context ctx) { return bg(ctx); }
+
     public static String caller() { return null; }
 
     public static int dp(Context ctx, int v) { return 0; }

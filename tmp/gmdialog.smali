@@ -1,9 +1,6 @@
 {"ok":true,"data":{"workspaceId":"bpii9fup","editSessionId":"","locator":"dex_class:Lcom/varuns2002/disable_flag_secure/gm/GmDialog;","name":"Lcom/varuns2002/disable_flag_secure/gm/GmDialog;","textSourceKind":"class_smali","targetVersion":"sha256:06e454644ce6c9cc657b63808e84166930e258ae8f938c12772850bdd2e53afa","limit":2000,"truncated":true,"truncatedReason":"window","textWindow":{"text":".class public final Lcom/varuns2002/disable_flag_secure/gm/GmDialog;
 .super Ljava/lang/Object;
 .source "GmDialog.java"
-
-
-# static fields
 .field static DESCS:[Ljava/lang/String;
 
 .field static KEYS:[Ljava/lang/String;
@@ -25,9 +22,6 @@
 .field static sTypes:Ljava/util/ArrayList;
 
 .field static sViews:Ljava/util/ArrayList;
-
-
-# direct methods
 .method static constructor <clinit>()V
     .registers 6
 
@@ -1452,7 +1446,7 @@ TTS 欠载超时毫秒，默认 1000\
 
     invoke-virtual {v5, v6}, Landroid/widget/TextView;->setTextColor(I)V
 
-    const/high16 v6, 0x41200000  # 10.0f
+    const/high16 v6, 0x41200000
 
     invoke-virtual {v5, v6}, Landroid/widget/TextView;->setTextSize(F)V
 
@@ -1464,7 +1458,7 @@ TTS 欠载超时毫秒，默认 1000\
 
     const/4 v7, -0x2
 
-    const/high16 v8, 0x3f800000  # 1.0f
+    const/high16 v8, 0x3f800000
 
     invoke-direct {v5, v6, v7, v8}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
 
@@ -1513,7 +1507,7 @@ TTS 欠载超时毫秒，默认 1000\
 
     const/4 v8, -0x2
 
-    const/high16 v9, 0x3f800000  # 1.0f
+    const/high16 v9, 0x3f800000
 
     invoke-direct {v6, v7, v8, v9}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
 
@@ -1828,7 +1822,7 @@ TTS 欠载超时毫秒，默认 1000\
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    const/high16 v3, 0x41a00000  # 20.0f
+    const/high16 v3, 0x41a00000
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextSize(F)V
 
@@ -1856,7 +1850,7 @@ TTS 欠载超时毫秒，默认 1000\
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    const/high16 v3, 0x41400000  # 12.0f
+    const/high16 v3, 0x41400000
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextSize(F)V
 
@@ -1912,7 +1906,7 @@ TTS 欠载超时毫秒，默认 1000\
 
     const/4 v6, 0x0
 
-    const/high16 v7, 0x3f800000  # 1.0f
+    const/high16 v7, 0x3f800000
 
     invoke-direct {v4, v5, v6, v7}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
 

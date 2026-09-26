@@ -2,12 +2,7 @@
 .class public final Lcom/varuns2002/disable_flag_secure/gm/GmCallDialog;
 .super Ljava/lang/Object;
 .source "GmCallDialog.java"
-
-# interfaces
 .implements Landroid/view/View$OnLongClickListener;
-
-
-# static fields
 .field static sAct:Landroid/app/Activity;
 
 .field static sAo1:Ljava/lang/Object;
@@ -23,9 +18,6 @@
 .field static sStat:Landroid/widget/TextView;
 
 .field static sText:Landroid/widget/TextView;
-
-
-# direct methods
 .method public constructor <init>()V
     .registers 1
 
@@ -197,7 +189,7 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
 
-    const/high16 v3, 0x41a00000  # 20.0f
+    const/high16 v3, 0x41a00000
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextSize(F)V
 
@@ -215,7 +207,7 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    const/high16 v3, 0x41900000  # 18.0f
+    const/high16 v3, 0x41900000
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextSize(F)V
 
@@ -251,7 +243,7 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    const/high16 v3, 0x41400000  # 12.0f
+    const/high16 v3, 0x41400000
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextSize(F)V
 
@@ -323,7 +315,7 @@
 
     const/4 v6, -0x2
 
-    const/high16 v7, 0x3f800000  # 1.0f
+    const/high16 v7, 0x3f800000
 
     invoke-direct {v4, v5, v6, v7}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
 
@@ -355,7 +347,7 @@
 
     const/4 v6, -0x2
 
-    const/high16 v7, 0x3f800000  # 1.0f
+    const/high16 v7, 0x3f800000
 
     invoke-direct {v4, v5, v6, v7}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
 
@@ -389,7 +381,7 @@
 
     const/4 v6, -0x2
 
-    const/high16 v7, 0x3f800000  # 1.0f
+    const/high16 v7, 0x3f800000
 
     invoke-direct {v4, v5, v6, v7}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
 
@@ -647,18 +639,10 @@
 .class public final Lcom/varuns2002/disable_flag_secure/gm/GmCallRun;
 .super Ljava/lang/Object;
 .source "GmCallRun.java"
-
-# interfaces
 .implements Ljava/lang/Runnable;
-
-
-# instance fields
 .field private a:I
 
 .field private b:Ljava/lang/String;
-
-
-# direct methods
 .method public constructor <init>(ILjava/lang/String;)V
     .registers 3
 
@@ -670,9 +654,6 @@
 
     return-void
 .end method
-
-
-# virtual methods
 .method public run()V
     .registers 3
 

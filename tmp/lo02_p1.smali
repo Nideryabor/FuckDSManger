@@ -1,13 +1,7 @@
 {"ok":true,"data":{"workspaceId":"smjygppz","editSessionId":"","locator":"dex_class:Lo02;","name":"Lo02;","textSourceKind":"class_smali","targetVersion":"sha256:fc2f64af1eb1bf638c6216e2da112df1b6780bf9a62b80cc9d1d7e5e54a03b9b","limit":2000,"truncated":true,"truncatedReason":"window","textWindow":{"text":".class public final Lo02;
 .super Ll0a;
 .source "r8-map-id-24591713727e7837693cdfec6d15fe2ce5f4987b5aba1f4bab3573f0d74a433d"
-
-
-# instance fields
 .field public final b:Lcom/tencent/mmkv/MMKV;
-
-
-# direct methods
 .method public constructor <init>()V
     .registers 72
 

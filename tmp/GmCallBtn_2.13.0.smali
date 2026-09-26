@@ -2,12 +2,7 @@
 .class public final Lcom/varuns2002/disable_flag_secure/gm/GmCallBtn;
 .super Ljava/lang/Object;
 .source "GmCallBtn.java"
-
-# interfaces
 .implements Landroid/view/View$OnTouchListener;
-
-
-# static fields
 .field static sAct:Landroid/app/Activity;
 
 .field static sDownX:I
@@ -25,9 +20,6 @@
 .field static sX:I
 
 .field static sY:I
-
-
-# direct methods
 .method public constructor <init>()V
     .registers 1
 
@@ -317,7 +309,7 @@
 
     invoke-virtual {v1, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    const/high16 v2, 0x41a00000  # 20.0f
+    const/high16 v2, 0x41a00000
 
     invoke-virtual {v1, v2}, Landroid/widget/TextView;->setTextSize(F)V
 
@@ -403,9 +395,6 @@
 .class public final Lcom/varuns2002/disable_flag_secure/gm/GmCallHook;
 .super Lde/robv/android/xposed/XC_MethodHook;
 .source "GmCallHook.java"
-
-
-# direct methods
 .method public constructor <init>()V
     .registers 1
 
@@ -413,9 +402,6 @@
 
     return-void
 .end method
-
-
-# virtual methods
 .method protected beforeHookedMethod(Lde/robv/android/xposed/XC_MethodHook$MethodHookParam;)V
     .registers 4
 

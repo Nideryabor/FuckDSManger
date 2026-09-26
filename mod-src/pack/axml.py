@@ -114,6 +114,112 @@ def build(pool, rm_ids, nodes):
     return struct.pack("<HHI", RES_XML_TYPE, 8, 8 + len(body)) + body
 
 
+# --------------------------------------------------------- 通用重建（改任意 APK 的清单）
+
+ANDROID_NS = "http://schemas.android.com/apk/res/android"
+
+# android 属性的资源 id。**重建 resourceMap 时只认这张表里的名字**（不认识的会直接报错，
+# 绝不静默写坏一个清单）。不够用就往这里加。
+ANDROID_ATTR_ID = {
+    "theme": 0x01010000, "label": 0x01010001, "icon": 0x01010002, "name": 0x01010003,
+    "permission": 0x01010006, "enabled": 0x0101000E, "debuggable": 0x0101000F,
+    "exported": 0x01010010, "process": 0x01010011, "taskAffinity": 0x01010012,
+    "excludeFromRecents": 0x01010017, "authorities": 0x01010018,
+    "grantUriPermissions": 0x0101001B, "launchMode": 0x0101001D,
+    "targetPackage": 0x01010021, "targetActivity": 0x01010022,
+    "value": 0x01010024, "resource": 0x01010025,
+    "minSdkVersion": 0x0101020C, "versionCode": 0x0101021B, "versionName": 0x0101021C,
+    "targetSdkVersion": 0x01010270, "allowBackup": 0x01010280, "supportsRtl": 0x010103AF,
+    "extractNativeLibs": 0x010104EA, "compileSdkVersion": 0x01010572,
+    "compileSdkVersionCodename": 0x01010573, "appComponentFactory": 0x0101057A,
+}
+
+
+def collect_attr_ids(pool, ev):
+    """从「已解码的清单」里回收 `属性名 → android 资源 id`（resourceMap 只覆盖池子开头）。
+
+    注意：拿回来的 id 里，**不在 ANDROID_ATTR_ID 表内的名字也会被收进来**（来源文件自己带），
+    所以「原样重建」不会被表不全卡住；只有「新加一个表里没有的属性」才会报错。
+    """
+    out = dict(ANDROID_ATTR_ID)
+    for e in ev:
+        if e[0] == "resmap":
+            for i, rid in enumerate(e[1]):
+                if i < len(pool):
+                    out[pool[i]] = rid
+    return out
+
+
+def rebuild(pool, ev, attr_ids):
+    """把 decode() 出来的事件列表重新编码成 AXML（结构可以任意改：加节点、加属性都行）。
+
+    ★ resourceMap 只能覆盖池子**开头连续一段**字符串 ⇒ 这里先把所有 android 属性名
+      排在池子最前面，再按同样顺序写 resourceMap。
+
+    ★ 字符串型属性（TYPE_STRING）的 data 是**池子下标**，换了池子必须重新映射
+      —— 漏了这一步，清单会「看着对、装上去全错」。
+    """
+    attr_order = []
+    for e in ev:
+        if e[0] == "start":
+            for (ans, aname, araw, atype, adata) in e[4]:
+                if ans == ANDROID_NS and aname not in attr_order:
+                    attr_order.append(aname)
+    missing = [n for n in attr_order if n not in attr_ids]
+    if missing:
+        raise KeyError("缺这些 android 属性的资源 id，无法重建 resourceMap：%s" % missing)
+
+    # ★★★ resourceMap **必须按资源 id 升序**（aapt2 一直这么写）。
+    # 按"属性出现顺序"写会得到一个乱序的 resmap ⇒ 平台查属性时**有的查得到、有的查不到**，
+    # 查不到的那个就静默掉回默认值 —— 实测症状：provider 的 android:exported="true" 变成 exported=false。
+    # （aapt2 dump 看不出来：它是拿名字反查 resmap，顺序无关。）
+    attr_order.sort(key=lambda n: attr_ids[n])
+
+    p = Pool()
+    for n in attr_order:
+        p.add(n)
+    rm_ids = [attr_ids[n] for n in attr_order]
+    assert rm_ids == sorted(rm_ids), "resmap 不是升序，重建逻辑错了"
+
+    remap = {i: p.add(s) for i, s in enumerate(pool)}
+
+    nodes = []
+    for e in ev:
+        k = e[0]
+        if k == "resmap":
+            continue
+        if k in ("ns+", "ns-"):
+            _, line, prefix, uri = e
+            fn = start_ns if k == "ns+" else end_ns
+            nodes.append(fn(line, p.add(prefix), p.add(uri)))
+        elif k == "start":
+            _, line, ns, name, attrs = e
+            # ★★★ 元素内的属性**按资源 id 升序**（aapt2 一直这么写）。
+            # 平台是按 id 顺序扫属性表的 —— 顺序一乱就整段错位、**漏掉属性**，
+            # 漏掉的那个就变成"没定义"（实测：provider 的 android:exported 被读成 false、
+            # 设置页的 android:exported 直接让安装失败）。
+            #   aapt2：name(…03) exported(…10) authorities(…18) grantUriPermissions(…1b)  ← 升序
+            #   我们：name(…03) authorities(…18) exported(…10) grantUriPermissions(…1b)  ← 乱序 ⇒ 炸
+            # 没有资源 id 的属性（如 manifest 上的 package）排在最后，保持原相对顺序。
+            ordered = sorted(attrs, key=lambda t: attr_ids[t[1]] if t[0] == ANDROID_NS
+                             and t[1] in attr_ids else 0xFFFFFFFF)
+            out = []
+            for (ans, aname, araw, atype, adata) in ordered:
+                if atype == TYPE_STRING and adata != NO_INDEX:
+                    adata = remap[adata]
+                out.append((p.add(ans) if ans else NO_INDEX,
+                            p.add(aname) if aname else NO_INDEX,
+                            p.add(araw) if araw is not None else NO_INDEX,
+                            atype, adata))
+            nodes.append(start_element(line, p.add(ns) if ns else NO_INDEX, p.add(name), out))
+        elif k == "end":
+            _, line, ns, name = e
+            nodes.append(end_element(line, p.add(ns) if ns else NO_INDEX, p.add(name)))
+        else:
+            raise AssertionError("不认识的 AXML 事件：%r" % (k,))
+    return build(p, rm_ids, nodes)
+
+
 # ----------------------------------------------------------------- 解码（校验用）
 
 def _read_len(buf, pos):
@@ -128,15 +234,25 @@ def decode_string_pool(buf, pos):
     assert ctype == RES_STRING_POOL_TYPE, hex(ctype)
     count, style_count, flags, sstart, ststart = struct.unpack_from("<IIIII", buf, pos + 8)
     utf8 = bool(flags & 0x100)
-    assert utf8, "本解码器只认 UTF-8 池"
     offsets = struct.unpack_from("<%dI" % count, buf, pos + 28)
     base = pos + sstart
     out = []
     for off in offsets:
         p = base + off
-        u16len, p = _read_len(buf, p)
-        u8len, p = _read_len(buf, p)
-        out.append(buf[p:p + u8len].decode("utf-8"))
+        if utf8:
+            u16len, p = _read_len(buf, p)
+            u8len, p = _read_len(buf, p)
+            out.append(buf[p:p + u8len].decode("utf-8"))
+        else:
+            # UTF-16 池：长度单位是「UTF-16 码元」，长度字段**固定 2 字节**
+            # （不是 UTF-8 那种 1/2 字节变长；写错就会整体错位一个字节 ⇒ 全变成乱码）
+            n = struct.unpack_from("<H", buf, p)[0]
+            p += 2
+            if n & 0x8000:
+                n2 = struct.unpack_from("<H", buf, p)[0]
+                p += 2
+                n = ((n & 0x7FFF) << 16) | n2
+            out.append(buf[p:p + n * 2].decode("utf-16-le"))
     return out, pos + size
 
 

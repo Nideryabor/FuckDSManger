@@ -1,15 +1,9 @@
 .class public final Lcom/varuns2002/disable_flag_secure/gm/GmSuggestHook;
 .super Lde/robv/android/xposed/XC_MethodHook;
 .source "GmSuggestHook.java"
-
-
-# static fields
 .field static sList:Ljava/util/List;
 
 .field static sTost:Ljava/util/HashSet;
-
-
-# direct methods
 .method public constructor <init>()V
     .registers 1
 
@@ -70,8 +64,6 @@
 
     return-object v0
 .end method
-
-# 调用栈压缩成最多 8 帧：SimpleClass.method | ...
 .method private static shortStack()Ljava/lang/String;
     .registers 12
 
@@ -188,9 +180,6 @@
 
     return-object v0
 .end method
-
-
-# virtual methods
 .method protected beforeHookedMethod(Lde/robv/android/xposed/XC_MethodHook$MethodHookParam;)V
     .registers 16
 

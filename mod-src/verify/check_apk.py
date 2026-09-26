@@ -73,7 +73,7 @@ def main():
         check("dex 里旧包名清零（varuns2002）", b"varuns2002" not in dn)
         check("dex 里带上了新包名", dn.count(b"com/nidyaber/fuckdsmanger") > 100,
               "%d 处" % dn.count(b"com/nidyaber/fuckdsmanger"))
-        check("不再需要 classes2.dex", "classes2.dex" not in nn)
+        check("单一 dex（不跨 dex 引用）", "classes2.dex" not in nn)
         check("死类已删（旧转发壳不在）", b"the_big_won_whale" in dn or True)
     else:
         check("classes.dex 与基础包逐字节相同（一个字节没动）",
@@ -96,7 +96,7 @@ def main():
     check("dex 里有 GmEntry", "Lcom/nidyaber/fuckdsmanger/GmEntry;" in out)
     if dex_replaced:
         n_cls = out.strip().count(";")
-        check("类总数合理（128）", n_cls == 128, "%d 个" % n_cls)
+        check("类总数合理（137 = 模块 128 + UI 9）", n_cls == 137, "%d 个" % n_cls)
 
     print("═══ ⑥ 签名 ═══")
     r = subprocess.run(["apksigner", "verify", "--print-certs", "-v", new_path],
