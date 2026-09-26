@@ -470,6 +470,16 @@ public final class FdmBridge {
      *   （3.16.0 真机就是这么失败的：表注册上了，但**一条都没灌进去**⇒表是空的⇒永远不命中）。
      *   ⇒ 返回 false，交给"每 4 秒一次"的周期任务**重试**。
      *
+     * ★ 3.18.0：MMKV 的"时机"问题已经被 3.17.0 修好了，但**读出第二颗雷** ——
+     *   宿主的存储是 MMKV，它把 `getAll()` 实现成**故意抛异常**：
+     *
+     *       java.lang.UnsupportedOperationException:
+     *         Intentionally Not Supported. Use allKeys() instead,
+     *         getAll() not implement because type-erasure inside mmkv
+     *
+     *   ⇒ 读键一律走 {@link #allKeysOf(SharedPreferences)}
+     *     （先反射 MMKV 自己的 allKeys()，不是 MMKV 才退回 getAll()）。
+     *
      * @return true = 已经同步过（或本次同步成功）
      */
     private static boolean syncPins(Context ctx) {
@@ -482,10 +492,13 @@ public final class FdmBridge {
             }
             java.util.HashMap<String, String> m = pins();
             int n = 0;
-            for (java.util.Map.Entry<String, ?> e : sp.getAll().entrySet()) {
-                String k = e.getKey();
-                if (k == null || !k.startsWith("fuckds_pin_") || e.getValue() == null) continue;
-                m.put(k.substring("fuckds_pin_".length()), String.valueOf(e.getValue()));
+            java.util.List<String> ks = allKeysOf(sp);
+            GmUtil.log("【FdmBridge】syncPins：宿主存储里共 " + ks.size() + " 个键，开始筛 fuckds_pin_");
+            for (String k : ks) {
+                if (k == null || !k.startsWith("fuckds_pin_")) continue;
+                String v = sp.getString(k, null);   // 影子键全是 putString 写的
+                if (v == null) continue;
+                m.put(k.substring("fuckds_pin_".length()), v);
                 n++;
             }
             sPinsSynced = true;
@@ -495,6 +508,113 @@ public final class FdmBridge {
             GmUtil.logFail("【FdmBridge】pin 表同步失败", t);
             return false;
         }
+    }
+
+    /**
+     * 列出宿主存储里的**所有键**。
+     *
+     * ★ 绝不能直接用 `getAll()`：宿主的存储是 MMKV，它把 `getAll()` 实现成
+     *   **故意抛异常**（因为 mmkv 内部做了类型擦除，怕你按 Map 取值踩类型）：
+     *
+     *       UnsupportedOperationException:
+     *         "Intentionally Not Supported. Use allKeys() instead,
+     *          getAll() not implement because type-erasure inside mmkv"
+     *
+     *   （3.17.0 真机就死在这一步：MMKV 时机修好了、pin 表也注册上了，
+     *     结果卡在**读键**上 ⇒ 表始终是空的 ⇒ 永远不可能命中。）
+     *
+     *   所以分两步走：
+     *     ① 反射试 MMKV 自己的 `allKeys()`（返回 String[]）
+     *     ② 不是 MMKV（普通 SharedPreferences）⇒ 老老实实 `getAll()`
+     */
+    static java.util.List<String> allKeysOf(SharedPreferences sp) {
+        if (sp == null) {
+            GmUtil.log("【FdmBridge】allKeysOf：sp == null");
+            return java.util.Collections.emptyList();
+        }
+
+        // ① MMKV：优先按名字找 allKeys()
+        java.lang.reflect.Method m = null;
+        try {
+            m = sp.getClass().getMethod("allKeys");
+        } catch (Throwable ignore) {
+            // 名字找不到 ⇒ 走 ② 按签名找
+        }
+
+        // ② ★ 按【签名】找：无参 + 返回 String[] 的实例方法
+        //    宿主跑过 R8，MMKV 的 allKeys() 被改名了，但：
+        //      · SharedPreferences 的接口方法（getAll/getString/…）**不能改名**
+        //        ⇒ 所以那句 "Use allKeys() instead" 还带着原名（字符串常量不参与改名）
+        //      · allKeys() 是普通方法 ⇒ 名字被换掉了
+        //    签名不会变，就靠签名捞回来。
+        if (m == null) {
+            StringBuilder cand = new StringBuilder();
+            for (java.lang.reflect.Method m2 : sp.getClass().getMethods()) {
+                if (m2.getParameterTypes().length != 0) continue;
+                if (m2.getReturnType() != String[].class) continue;
+                if (java.lang.reflect.Modifier.isStatic(m2.getModifiers())) continue;
+                cand.append(cand.length() == 0 ? "" : " | ").append(m2.getName());
+                if (m == null) m = m2;   // 取第一个
+            }
+            GmUtil.log("【FdmBridge】allKeysOf：allKeys 名字点不到（被 R8 改名了）"
+                    + "⇒ 按签名「无参→String[]」捞到：" + (cand.length() == 0 ? "（没有）" : cand));
+        }
+
+        if (m != null) {
+            try {
+                Object r = m.invoke(sp);
+                java.util.List<String> out = asStrList(r);
+                if (out != null) {
+                    GmUtil.log("【FdmBridge】allKeysOf：走 " + m.getName() + "() ⇒ " + out.size() + " 个键"
+                            + (out.isEmpty() ? "" : " · 例：" + sample(out)));
+                    return out;
+                }
+            } catch (Throwable t) {
+                GmUtil.log("【FdmBridge】allKeysOf：调用 " + m.getName() + "() 失败 ⇒ " + t);
+            }
+        }
+
+        // ③ 普通 SharedPreferences
+        try {
+            java.util.Map<String, ?> all = sp.getAll();
+            if (all != null) {
+                GmUtil.log("【FdmBridge】allKeysOf：走 getAll() ⇒ " + all.size() + " 个键");
+                return new java.util.ArrayList<String>(all.keySet());
+            }
+        } catch (Throwable t) {
+            GmUtil.log("【FdmBridge】allKeysOf：getAll() 也不可用 ⇒ " + t);
+        }
+
+        GmUtil.log("【FdmBridge】allKeysOf：⚠️ 三条路都不通，返回空表");
+        return java.util.Collections.emptyList();
+    }
+
+    /** 把 allKeys() 的返回值（String[] / Object[] / Collection）转成 List&lt;String&gt;；类型不认识返回 null。 */
+    private static java.util.List<String> asStrList(Object r) {
+        java.util.List<String> out = new java.util.ArrayList<String>();
+        if (r instanceof String[]) {
+            for (String k : (String[]) r) if (k != null) out.add(k);
+            return out;
+        }
+        if (r instanceof Object[]) {
+            for (Object k : (Object[]) r) if (k != null) out.add(String.valueOf(k));
+            return out;
+        }
+        if (r instanceof java.util.Collection) {
+            for (Object k : (java.util.Collection<?>) r) if (k != null) out.add(String.valueOf(k));
+            return out;
+        }
+        return null;
+    }
+
+    /** 取样几个键名，只用于日志。 */
+    private static String sample(java.util.List<String> ks) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ks.size() && i < 4; i++) {
+            if (i > 0) sb.append(" | ");
+            sb.append(ks.get(i));
+        }
+        return sb.toString();
     }
 
     /**
