@@ -11,8 +11,13 @@
 | 文件 | 作用 |
 |---|---|
 | `adb.sh` | **唯一入口**。包一层 adb，自动起 server + 重连 + 端口自愈 |
+| `ro.sh` | **只读模式**下读 app 数据（`su -c`，只有 `CAP_DAC_READ_SEARCH`） |
 | `扫adb端口.py` | 全段扫本地开放端口（无线调试端口随机，缓存失效时用） |
 | `.adbport` | 上次成功的端口缓存（运行时生成） |
+
+> **两个身份，两条路：**
+> - 普通 `adb shell` = `uid=2000(shell)` ⇒ **装包 / force-stop / logcat / /sdcard**
+> - `ro.sh`（`su -c`）= `uid=0` + `CapEff=4` ⇒ **只能读**（`/data/data` 等）
 
 ## 用法
 

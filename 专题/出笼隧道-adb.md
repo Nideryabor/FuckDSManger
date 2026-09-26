@@ -94,19 +94,61 @@ sh /workspace/tools/出笼隧道/adb.sh shell id
 | **文件进出** | `sh adb.sh push / pull ...`（`/sdcard` 可读写） |
 | **进程 / 包列表** | `sh adb.sh shell 'ps -A \| grep deepseek'` · `pm list packages` |
 
-### 需要 root（主人已开过，2026-09-27）
+### 需要 root → 走【只读模式】（2026-09-27 定稿）
 
-`adb shell` 进去直接是 `uid=0(root) · CapEff=000001ffffffffff · NoNewPrivs=0 · u:r:ksu:s0`：
+**普通 `adb shell` 是 uid=2000(shell)**，读不了 `/data/data`。
+要读 app 数据必须 `su -c`，此时 KernelSU 的 profile 会给：
 
-| 能力 | 备注 |
+```
+uid=0(root) gid=0(root)
+groups=0(root),1007(log),1011(adb),1028(sdcard_r),1036(logd),3009(readproc)
+context=u:r:ksu:s0
+CapEff: 0000000000000004      ← 只有 CAP_DAC_READ_SEARCH
+CapBnd: 0000000000000004
+```
+
+**⇒ 能读任何文件；写、删、改一律被内核拒绝。**
+
+**KernelSU profile 配置（挂在 `com.android.shell` 上）：**
+
+| 字段 | 值 |
 |---|---|
-| `/data/data/*/files/mmkv/` | 宿主灰度键真值 |
-| `/data/data/*/shared_prefs/` | 我们的 SP |
-| `/data/adb/lspd` | LSPosed 作用域 |
-| `/data/adb/ksu/` | KSU 配置、日志 |
+| UID | `0` |
+| GID | `0` |
+| 组 | `1007`(log) · `1036`(logd) · `3009`(readproc) · `1028`(sdcard_r) |
+| 权能 | **只勾 `DAC_READ_SEARCH`** |
+| SELinux 上下文 | 留空（⇒ `u:r:ksu:s0`） |
+
+> ⚠️ **UID 必须填 `0`，填 `9999`(nobody) 会失效** ——
+> 非 root 进程 `execve` 时内核会**清空能力集**（CapBnd 对但 CapEff=0）。
+> 这是 Linux 天生机制，不是配置错。
+>
+> ⚠️ 但 `uid=0` 时**装包 / force-stop / settings 仍可用** ——
+> capabilities 只管文件系统，管不到 binder → system_server 那一层。
+> 且**普通 shell 本来就能装包**（`pm install-create` → Success），
+> 所以"堵住 su 的装包"是白堵：真正有效的只有**文件层面的只读**。
+
+**用法：**
+
+```sh
+sh tools/出笼隧道/ro.sh 'ls -la /data/data/com.deepseek.chat.a/files/mmkv/'
+sh tools/出笼隧道/ro.sh 'head -c 200 /data/data/<包>/shared_prefs/fdm_ui.xml'
+```
+
+**能读到的：**
+
+| 目标 | 路径 |
+|---|---|
+| 宿主 MMKV（灰度键真值） | `/data/data/com.deepseek.chat.a/files/mmkv/mmkv.default` |
+| 我们的 SP | `/data/data/com.little_femaleboy.*/shared_prefs/` |
+| LSPosed 作用域 | `/data/adb/lspd/` |
+| KSU 配置、日志 | `/data/adb/ksu/` |
 
 > ⚠️ 宿主的 `key_user_info` 里有**登录 token 和手机号**。
 > **不碰、不拷、不打印、不写进任何文档。**
+>
+> ⚠️ 只读模式下**装不了包**（`su -c pm ...` 会被拒）。
+> 装包走普通 shell / `adb install`（那条路本来就是 uid 2000，有权限）。
 
 ---
 
