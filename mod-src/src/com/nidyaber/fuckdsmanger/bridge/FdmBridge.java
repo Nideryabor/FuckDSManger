@@ -82,6 +82,10 @@ public final class FdmBridge {
     private static void probe(Context ctx) throws Throwable {
         String hostPkg = ctx.getPackageName();
 
+        // ★ 宿主一启动就把存储里的影子键灌进内存 pin 表 ——
+        //   不能只依赖"收到 UI 推送"（UI 可能一直没起来），否则重启后 pin 表是空的。
+        syncPins(ctx);
+
         // ★ 通道①：动态广播接收器（主用）
         installReceiver(ctx);
 
