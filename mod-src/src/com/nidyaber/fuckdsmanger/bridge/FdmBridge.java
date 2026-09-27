@@ -409,22 +409,78 @@ public final class FdmBridge {
         SharedPreferences sp = GmStore.get(ctx);
         String full = "kv_remote_settings_" + bare;
         String loc = "kv_settings_" + bare;
-        try {
-            String cur = sp.getString(full, null);
-            if (cur == null) cur = sp.getString(loc, null);
-            if (cur != null && !cur.isEmpty()) {
-                sp.edit().putString("fuckds_bak_" + full, cur).apply();
+
+        // ★★★ 3.23.0 · 主通道：写宿主的【真实键】 ★★★
+        //
+        //   旧 UI 走的就是这条路（底座 `GmStore.write` ⇒ `ed.putXxx(真键)` ⇒ `ed.apply()`），
+        //   宿主读自己的键当然读得到 ⇒ **立刻生效**。
+        //
+        //   影子键（`fuckds_pin_…`）是"另一条更优雅的路"，但它依赖底座的「读侧替换」，
+        //   而那个钩子只挂在了 MMKV 的**写**方法（`q` = `encodeString`）上，
+        //   宿主真正的读路径（`c/d/e/g/i/j/k` → 直连 native `decodeXxx`）**一个都没挂**
+        //   ⇒ 影子键永远没人来取。详见 `专题/pin机制-为什么没生效.md`。
+        //
+        //   ① 先探「宿主本来用哪个键形」：
+        //      `contains` 是 SharedPreferences 的**接口方法，R8 改不掉它的名字**，
+        //      所以这个探针在任何宿主版本上都有效。
+        //   ② 三个都不存在 ⇒ 默认落在 `kv_remote_settings_`（模块本来就管这一族）。
+        // ★ 3.24.0 · 【本地覆盖层】才是正主
+        //
+        //   反编译宿主 `qa5.smali` 拿到的真实读取优先级：
+        //     ① `kv_settings_<bare>`        ← 最高！有就直接返回（宿主的「本地覆盖层」）
+        //     ② 内存 ConcurrentHashMap      ← 本次会话读过的值（所以要重启宿主）
+        //     ③ `kv_remote_settings_<bare>` ← 服务器下发的缓存，最低
+        //
+        //   3.23.0 写的 key 探针把 ③ 排在前面，一探到存在就写那儿了
+        //   ⇒ 永远被 ① 压住 ⇒ 这就是"怎么写都没效果"的原因。
+        //
+        //   现在：**主写 ①**（不存在就创建 —— 宿主用 `contains` 判断，创建即生效）。
+        String realKey = loc;
+        // 顺带把 ③ 也更新一份（万一还有别的读取路径直接看它）
+        String cacheKey = full;
+
+        // 备份原值 —— "全部恢复"就是把它们写回去
+        for (String k : new String[]{loc, full}) {
+            try {
+                String cur = sp.getString(k, null);
+                if (cur != null && !cur.isEmpty()) {
+                    sp.edit().putString("fuckds_bak_" + k, cur).apply();
+                }
+            } catch (Throwable ignore) {
             }
-        } catch (Throwable ignore) {
+        }
+
+        // ★★ 主写：本地覆盖层（最高优先级）
+        //     底座按 type 选 putBoolean / putInt / putFloat / putLong / putString
+        try {
+            GmStore.write(ctx, realKey, type, val);
+            GmUtil.log("【FdmBridge】✅ 已写宿主覆盖层 " + realKey
+                    + " = " + val + "（type=" + type + "）");
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】写宿主覆盖层失败 " + realKey, t);
+        }
+
+        // 副写：缓存层（本来存在才动它，避免凭空多出无意义的键）
+        try {
+            if (sp.contains(cacheKey)) {
+                GmStore.write(ctx, cacheKey, type, val);
+                GmUtil.log("【FdmBridge】✅ 已写宿主缓存层 " + cacheKey + " = " + val);
+            }
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】写宿主缓存层失败 " + cacheKey, t);
         }
         // ★ 影子键：**三种键形都写一份**
         //   底座的读侧替换是"拿宿主读的 key 去查 pin 表" ⇒ 我们不知道宿主读哪个形式，
         //   那就三种全写（`kv_settings_` / `kv_remote_settings_` / 裸名）。
         //   2.5.2 实测：63 项走 kv_settings_ · 18 项走 kv_remote_settings_ · 2 项走裸名。
-        sp.edit().putString("fuckds_pin_" + full, val)
-          .putString("fuckds_pin_" + loc, val)
-          .putString("fuckds_pin_" + bare, val)
-          .apply();
+        try {
+            sp.edit().putString("fuckds_pin_" + full, val)
+              .putString("fuckds_pin_" + loc, val)
+              .putString("fuckds_pin_" + bare, val)
+              .apply();
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】写影子键失败（主通道已写真实键，不影响生效）", t);
+        }
         // ★★ 同时塞进**内存 pin 表**（底座读侧替换就是查它）
         try {
             java.util.HashMap<String, String> m = pins();
@@ -695,6 +751,53 @@ public final class FdmBridge {
         for (int i = 0; i < ks.size() && i < 4; i++) {
             if (i > 0) sb.append(" | ");
             sb.append(ks.get(i));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 把宿主存储 dump 成文本（界面里的「DS DATA · 服务器下发」那一块）。
+     *
+     * ★★★ 不能用底座的 `GmStore.dumpAll()` ★★★
+     *   它是这么写的（反编译所见）：先 `callMethod(sp, "allKeys")`（空参 —— 宿主里的
+     *   `allKeys` 是 `private native allKeys(long, boolean)`，点不到、抛），
+     *   然后退回 `sp.getAll()` —— MMKV 把它实现成**故意抛异常**。
+     *   ⇒ **这条路的产物永远是空的**（界面里 DS DATA 一片空白就是这个原因）。
+     *
+     *   这里改走桥自己那条**已经真机验通**的路：private native `allKeys(handle, true)`。
+     */
+    private static String dumpHostStore(Context ctx) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            SharedPreferences sp = GmStore.get(ctx);
+            if (sp == null) return "（宿主存储还没就绪）\n";
+
+            java.util.List<String> ks = allKeysOf(sp);
+            // 排序输出，跟界面上的阅读习惯一致
+            java.util.TreeSet<String> sorted = new java.util.TreeSet<String>(ks);
+
+            int nAll = 0, nOut = 0;
+            StringBuilder body = new StringBuilder();
+            for (String k : sorted) {
+                if (k == null) continue;
+                if (k.startsWith("fuckds_pin_") || k.startsWith("fuckds_bak_")) continue; // 我们自己的影子/备份，不混进来
+                nAll++;
+                String v;
+                try {
+                    v = sp.getString(k, null);   // getString 是 SharedPreferences 接口方法，R8 改不掉名
+                } catch (Throwable t) {
+                    v = null;
+                }
+                if (v == null) continue;         // 非字符串类型的键（bool/int/…）在这里取不到，跳过
+                if (v.length() > 500) v = v.substring(0, 500) + "…（共 " + v.length() + " 字）";
+                body.append(k).append(" = ").append(v).append('\n');
+                nOut++;
+            }
+            sb.append("宿主存储共 ").append(ks.size()).append(" 个键")
+              .append("，其中字符串型 ").append(nOut).append(" 条（已排除 fuckds_pin_/fuckds_bak_）\n")
+              .append("----\n").append(body);
+        } catch (Throwable t) {
+            sb.append("(DS DATA 读取失败：").append(t).append(")\n");
         }
         return sb.toString();
     }
@@ -1178,7 +1281,7 @@ public final class FdmBridge {
                 String type = p[1];
                 String val = p.length > 2 ? p[2] : "";
                 grayWrite(ctx, bare, type, val);
-                back = "已写 " + bare + " = " + val + "（原值已备份，宿主读时生效）";
+                back = "已写 " + bare + " = " + val + "（原值已备份 · 已直接写入宿主真实键）";
             } else if ("state_all".equals(cmd)) {
                 // ★ 把"模块接口项"的真值一次全部报回来（界面拿它当开关的当前态）
                 JSONObject o = new JSONObject();
@@ -1378,7 +1481,7 @@ public final class FdmBridge {
                     sb.append("(DIAG 读取失败：").append(t2).append(")\n");
                 }
                 try {
-                    sb.append("\n===== DS DATA（服务器下发）=====\n").append(GmStore.dumpAll(ctx));
+                    sb.append("\n===== DS DATA（服务器下发）=====\n").append(dumpHostStore(ctx));
                 } catch (Throwable t2) {
                     sb.append("\n(DS DATA 读取失败：").append(t2).append(")\n");
                 }
