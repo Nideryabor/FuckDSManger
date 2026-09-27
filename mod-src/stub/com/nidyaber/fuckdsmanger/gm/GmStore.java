@@ -31,6 +31,21 @@ public final class GmStore {
 
     public static void restore(Context ctx, String key, String type) {}
 
-    /** 写入。type：b / i / l / f / t */
-    public static void write(Context ctx, String key, String type, String val) {}
+    /**
+     * 写入。
+     *
+     * ⚠️⚠️ **参数顺序是「键 → 值 → 类型」，类型在最后！** ⚠️⚠️
+     *   底座真身（反编译 `GmStore.smali` 所见）：
+     *       write(Context p0, String key p1, String value p2, String type p3)V
+     *           if ("b".equals(p3)) ed.putBoolean(p1, parseBoolean(p2));
+     *           ...
+     *   铁证是 `bak()` 里的调用：`write(ctx, 备份键, 原值, "s")`。
+     *
+     *   **这里的 Java 签名（编译器看来都是 (Context,String,String,String)）不变，
+     *     但历史上注释写成过「(ctx,key,type,val)」，害得桥把值写成了 "s"（3.24/3.25 的真事故）。
+     *     照着参数名调，别再照着旧注释调。**
+     *
+     * type：`b` / `i` / `l` / `f` / `s`（`s` = string；不是 `t`）
+     */
+    public static void write(Context ctx, String key, String val, String type) {}
 }

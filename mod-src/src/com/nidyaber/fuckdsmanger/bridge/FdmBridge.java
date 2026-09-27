@@ -453,7 +453,7 @@ public final class FdmBridge {
         // ★★ 主写：本地覆盖层（最高优先级）
         //     底座按 type 选 putBoolean / putInt / putFloat / putLong / putString
         try {
-            GmStore.write(ctx, realKey, type, val);
+            GmStore.write(ctx, realKey, val, type);   // ★ 参数顺序：值在前、类型在后（跟底座真身）
             GmUtil.log("【FdmBridge】✅ 已写宿主覆盖层 " + realKey
                     + " = " + val + "（type=" + type + "）");
         } catch (Throwable t) {
@@ -463,7 +463,7 @@ public final class FdmBridge {
         // 副写：缓存层（本来存在才动它，避免凭空多出无意义的键）
         try {
             if (sp.contains(cacheKey)) {
-                GmStore.write(ctx, cacheKey, type, val);
+                GmStore.write(ctx, cacheKey, val, type);   // ★ 同上，值在前、类型在后
                 GmUtil.log("【FdmBridge】✅ 已写宿主缓存层 " + cacheKey + " = " + val);
             }
         } catch (Throwable t) {
