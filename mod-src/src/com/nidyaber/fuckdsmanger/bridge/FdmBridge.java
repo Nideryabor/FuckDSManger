@@ -533,6 +533,40 @@ public final class FdmBridge {
             return java.util.Collections.emptyList();
         }
 
+        // ①' ★★★ 真身在这里 ★★★
+        //     反编译宿主（R8 过）看到的 MMKV 是这样的：
+        //         .field  private final nativeHandle:J
+        //         .method private native allKeys(JZ)[Ljava/lang/String;
+        //
+        //     · native 方法**改不了名**（JNI 按名字绑定）⇒ 它一直叫 allKeys，没被混淆
+        //     · 但它被 R8 从 public 压成了 **private**
+        //     · 而 MMKV 原本那个 `public String[] allKeys()`（无参包装）因为
+        //       全类**没有任何调用点**（只剩 getAll() 里那句字符串常量提到它），
+        //       被 R8 **整段删掉了**
+        //     ⇒ 所以 getMethod("allKeys") / getMethods() 全找不到它。
+        //     只能 getDeclaredMethod 把 private 挖出来。
+        try {
+            java.lang.reflect.Field hf = findNativeHandle(sp.getClass());
+            if (hf == null) {
+                GmUtil.log("【FdmBridge】allKeysOf：找不到 nativeHandle 字段");
+            } else {
+                long handle = hf.getLong(sp);
+                java.lang.reflect.Method am = sp.getClass()
+                        .getDeclaredMethod("allKeys", long.class, boolean.class);
+                am.setAccessible(true);
+                Object r = am.invoke(sp, Long.valueOf(handle), Boolean.TRUE);
+                java.util.List<String> out = asStrList(r);
+                if (out != null) {
+                    GmUtil.log("【FdmBridge】allKeysOf：走 private allKeys(handle, true) ⇒ "
+                            + out.size() + " 个键"
+                            + (out.isEmpty() ? "" : " · 例：" + sample(out)));
+                    return out;
+                }
+            }
+        } catch (Throwable t) {
+            GmUtil.log("【FdmBridge】allKeysOf：private allKeys 这条路不通 ⇒ " + t);
+        }
+
         // ① MMKV：优先按名字找 allKeys()
         java.lang.reflect.Method m = null;
         try {
@@ -541,23 +575,71 @@ public final class FdmBridge {
             // 名字找不到 ⇒ 走 ② 按签名找
         }
 
-        // ② ★ 按【签名】找：无参 + 返回 String[] 的实例方法
-        //    宿主跑过 R8，MMKV 的 allKeys() 被改名了，但：
-        //      · SharedPreferences 的接口方法（getAll/getString/…）**不能改名**
-        //        ⇒ 所以那句 "Use allKeys() instead" 还带着原名（字符串常量不参与改名）
-        //      · allKeys() 是普通方法 ⇒ 名字被换掉了
-        //    签名不会变，就靠签名捞回来。
+        java.lang.reflect.Method[] ms;
+        try {
+            ms = sp.getClass().getMethods();
+        } catch (Throwable t) {
+            ms = new java.lang.reflect.Method[0];
+            GmUtil.log("【FdmBridge】allKeysOf：getMethods() 失败 ⇒ " + t);
+        }
+
+        // ② ★ 按【签名】捞（宿主跑过 R8，MMKV 的 allKeys 被改名了）
+        //    · SharedPreferences 的接口方法不能改名 ⇒ getAll() 还点得到、还会报那句话
+        //    · allKeys 是普通方法 ⇒ 名字被换掉了，但**签名换不掉**
         if (m == null) {
-            StringBuilder cand = new StringBuilder();
-            for (java.lang.reflect.Method m2 : sp.getClass().getMethods()) {
+            // ②a 无参 → String[]
+            for (java.lang.reflect.Method m2 : ms) {
                 if (m2.getParameterTypes().length != 0) continue;
                 if (m2.getReturnType() != String[].class) continue;
                 if (java.lang.reflect.Modifier.isStatic(m2.getModifiers())) continue;
-                cand.append(cand.length() == 0 ? "" : " | ").append(m2.getName());
-                if (m == null) m = m2;   // 取第一个
+                m = m2; break;
             }
-            GmUtil.log("【FdmBridge】allKeysOf：allKeys 名字点不到（被 R8 改名了）"
-                    + "⇒ 按签名「无参→String[]」捞到：" + (cand.length() == 0 ? "（没有）" : cand));
+        }
+        if (m == null) {
+            // ②b 一个 int/long 参数 → String[]（MMKV 的 allKeys(int flags)）⇒ 直接喂 0
+            for (java.lang.reflect.Method m2 : ms) {
+                Class<?>[] ps = m2.getParameterTypes();
+                if (ps.length != 1 || m2.getReturnType() != String[].class) continue;
+                if (java.lang.reflect.Modifier.isStatic(m2.getModifiers())) continue;
+                if (ps[0] != int.class && ps[0] != long.class) continue;
+                try {
+                    Object r = m2.invoke(sp, ps[0] == int.class
+                            ? (Object) Integer.valueOf(0) : (Object) Long.valueOf(0L));
+                    java.util.List<String> out = asStrList(r);
+                    if (out != null) {
+                        GmUtil.log("【FdmBridge】allKeysOf：走 " + sig(m2) + " ⇒ " + out.size() + " 个键"
+                                + (out.isEmpty() ? "" : " · 例：" + sample(out)));
+                        return out;
+                    }
+                } catch (Throwable t) {
+                    GmUtil.log("【FdmBridge】allKeysOf：试 " + sig(m2) + " 失败 ⇒ " + t);
+                }
+            }
+        }
+
+        // ②c 还找不到 ⇒ 把候选方法全摊开（给下一轮定位）
+        if (m == null) {
+            GmUtil.log("【FdmBridge】allKeysOf：MMKV 公开方法共 " + ms.length + " 个 · 返回 String[] 的：");
+            int c = 0;
+            for (java.lang.reflect.Method m2 : ms) {
+                if (m2.getReturnType() != String[].class) continue;
+                GmUtil.log("     · " + sig(m2));
+                c++;
+            }
+            if (c == 0) GmUtil.log("     ·（一个都没有）");
+            GmUtil.log("【FdmBridge】allKeysOf：无参 · 返回 String/Collection/Map 的：");
+            c = 0;
+            for (java.lang.reflect.Method m2 : ms) {
+                if (m2.getParameterTypes().length != 0) continue;
+                Class<?> rt = m2.getReturnType();
+                if (rt == String.class
+                        || java.util.Collection.class.isAssignableFrom(rt)
+                        || java.util.Map.class.isAssignableFrom(rt)) {
+                    GmUtil.log("     · " + sig(m2));
+                    c++;
+                }
+            }
+            if (c == 0) GmUtil.log("     ·（一个都没有）");
         }
 
         if (m != null) {
@@ -615,6 +697,45 @@ public final class FdmBridge {
             sb.append(ks.get(i));
         }
         return sb.toString();
+    }
+
+    /** 把反射方法排成可读签名：返回值 名字(参数…)。 */
+    private static String sig(java.lang.reflect.Method m) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(m.getReturnType().getSimpleName()).append(' ').append(m.getName()).append('(');
+        Class<?>[] ps = m.getParameterTypes();
+        for (int i = 0; i < ps.length; i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(ps[i].getSimpleName());
+        }
+        sb.append(')');
+        return sb.toString();
+    }
+
+    /**
+     * 找 MMKV 里那个存 native 指针的 long 实例字段。
+     *
+     * 反编译宿主看到它叫 `nativeHandle`（没被混淆）；
+     * 万一哪天改了名，就退而求其次找「唯一的 long 实例字段」；
+     * 若不止一个 long 字段（不敢猜哪个是），返回 null。
+     */
+    private static java.lang.reflect.Field findNativeHandle(Class<?> c) {
+        try {
+            java.lang.reflect.Field f = c.getDeclaredField("nativeHandle");
+            f.setAccessible(true);
+            return f;
+        } catch (Throwable ignore) {
+            // 名字变了 ⇒ 按类型猜
+        }
+        java.lang.reflect.Field cand = null;
+        for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+            if (f.getType() != long.class) continue;
+            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+            if (cand != null) return null;   // 多个 long ⇒ 不猜
+            cand = f;
+        }
+        if (cand != null) cand.setAccessible(true);
+        return cand;
     }
 
     /**
