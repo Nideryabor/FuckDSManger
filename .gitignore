@@ -40,7 +40,13 @@ tmp/m3e-canvas-*.patch
 #  ⚠️ `/out/` 必须带前导斜杠 —— 否则会误伤已入库的 `pipeline/out/`
 # ============================================================
 /out/
-/fdm-app/
+# ★ fdm-app（Compose UI）只忽略大件 —— 源码/res/脚本必须入库，否则换机器复现不了
+/fdm-app/work/
+/fdm-app/libs/
+/fdm-app/libs_new/
+/fdm-app/libs_extra/
+/fdm-app/libs_legacy/
+/fdm-app/libs_all/
 ksud
 fdm-diag-*.txt
 
@@ -70,3 +76,6 @@ mod-src/work/sm_ui/
 
 # —— 出笼隧道：端口缓存是运行时产物 ——
 tools/出笼隧道/.adbport
+
+# 签名辅助文件
+*.idsig
