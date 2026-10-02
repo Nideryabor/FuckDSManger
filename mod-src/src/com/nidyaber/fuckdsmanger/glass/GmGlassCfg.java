@@ -96,6 +96,12 @@ public final class GmGlassCfg {
     public static final String K_FORM = "fuckds_glass_form";
     /** 「仅边缘」的边缘带宽（dp）。 */
     public static final String K_EDGE = "fuckds_glass_edge";
+    /**
+     * **边缘过渡**（2026-10-02 主人：「颜色没有过渡也很生硬」）——
+     * 浓度从边缘往里柔和衰减（0 = 旧的平坦样；100 = 中心完全化开）。
+     * 「仅边缘」时过渡距离 = 边缘带宽；「正常」时按元素尺寸自动取。
+     */
+    public static final String K_FADE = "fuckds_glass_fade";
 
     // ─────────── 默认值（与 fdm-app/src/Conf.kt 一一对应，改一边记得改另一边）───────────
     public static final boolean D_ON = false;
@@ -153,13 +159,16 @@ public final class GmGlassCfg {
         public final int form;
         /** 「仅边缘」带宽（dp）。 */
         public final int edge;
+        /** 边缘过渡 0..100。 */
+        public final int fade;
 
         S(boolean on, int tint, int radiusDp, int blur, boolean drop, int scope, int color,
           int disp, int engine, boolean clean, int cleanTol, int src, int impl,
-          boolean fit, int form, int edge) {
+          boolean fit, int form, int edge, int fade) {
             this.fit = fit;
             this.form = form;
             this.edge = edge;
+            this.fade = fade;
             this.impl = impl;
             this.src = src;
             this.clean = clean;
@@ -187,7 +196,7 @@ public final class GmGlassCfg {
                     + " scope=" + (scope == SCOPE_ALL ? "全部" : "仅按钮")
                     + " fit=" + fit
                     + " form=" + (form == FORM_HOLLOW ? "镂空" : (form == FORM_EDGE ? "仅边缘" : "正常"))
-                    + "/" + edge + "}";
+                    + "/" + edge + " fade=" + fade + "}";
         }
     }
 
@@ -211,6 +220,8 @@ public final class GmGlassCfg {
     public static final int D_FORM = 0;
     /** 默认边缘宽度 = 20dp（要盖得住折射带 pad）。 */
     public static final int D_EDGE = 20;
+    /** 默认边缘过渡 = 50（柔和一半，先给个能看出来的默认）。 */
+    public static final int D_FADE = 50;
     /** 形态：正常（满铺玻璃）。 */
     public static final int FORM_FULL = 0;
     /** 形态：镂空（填充全透，只留元素自己的边框/内容）。 */
@@ -232,7 +243,8 @@ public final class GmGlassCfg {
     }
 
     private static volatile S sCur = new S(D_ON, D_TINT, D_RADIUS, D_BLUR, D_DROP, D_SCOPE,
-            D_COLOR, D_DISP, D_ENGINE, D_CLEAN, D_CLEAN_TOL, D_SRC, D_IMPL, D_FIT, D_FORM, D_EDGE);
+            D_COLOR, D_DISP, D_ENGINE, D_CLEAN, D_CLEAN_TOL, D_SRC, D_IMPL, D_FIT, D_FORM, D_EDGE,
+            D_FADE);
 
     public static S get() {
         return sCur;
@@ -256,7 +268,7 @@ public final class GmGlassCfg {
         int src = D_SRC;
         int impl = D_IMPL;
         boolean fit = D_FIT;
-        int form = D_FORM, edge = D_EDGE;
+        int form = D_FORM, edge = D_EDGE, fade = D_FADE;
         try {
             on = bool(ctx, K_ON, D_ON);
             tint = clamp(intOf(ctx, K_TINT, D_TINT), 0, 100);
@@ -274,11 +286,12 @@ public final class GmGlassCfg {
             fit = bool(ctx, K_FIT, D_FIT);
             form = clamp(intOf(ctx, K_FORM, D_FORM), 0, 2);
             edge = clamp(intOf(ctx, K_EDGE, D_EDGE), 0, 60);
+            fade = clamp(intOf(ctx, K_FADE, D_FADE), 0, 100);
         } catch (Throwable ignore) {
             // 读不到就用默认 —— 绝不能因为配置问题把宿主的绘制卡住
         }
         sCur = new S(on, tint, radius, blur, drop, scope, color, disp, engine, clean, cleanTol,
-                src, impl, fit, form, edge);
+                src, impl, fit, form, edge, fade);
         return sCur;
     }
 

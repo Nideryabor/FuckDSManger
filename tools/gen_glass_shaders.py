@@ -57,6 +57,18 @@ half4 fdmSample(float2 p) {
     // 离背景色太远 ⇒ 认为是文字/图标 ⇒ 换成背景色
     return (d > fdmCleanTol) ? half4(half3(fdmCleanColor.rgb), c.a) : c;
 }
+
+// ── 「边缘过渡」公共件（2026-10-02 主人：「颜色没有过渡也很生硬」）──
+//   sd = 有符号距离（负值 = 内部、0 = 边缘）⇒ 颜色从边缘往里柔和衰减。
+//   fdmFade   = 强度 0..1（滑杆）
+//   fdmFadePx = 过渡距离（px）；「仅边缘」= 边缘带宽；「正常」= 按元素尺寸取。
+uniform float fdmFade;
+uniform float fdmFadePx;
+
+float fdmFadeFac(float sd) {
+    float inner = clamp(-sd / max(fdmFadePx, 1.0), 0.0, 1.0);
+    return 1.0 - fdmFade * inner;
+}
 // ──────────────────────────────────────────────
 """
 

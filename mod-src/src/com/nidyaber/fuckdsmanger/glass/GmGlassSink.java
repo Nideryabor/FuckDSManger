@@ -684,7 +684,7 @@ public final class GmGlassSink {
                 if (cfg.fit && shape != null) fit = fitPathFrom(shape, drawScope, w, h);
                 if (edge) {
                     band = Math.max(1f, cfg.edge * GmGlassInstall.density());
-                    float lim = Math.min(w, h) / 2f - 1f;
+                    float lim = Math.min(w, h) * 0.34f;      // ★ 别让边缘带把小元素吞掉（中心至少留 ~1/3）
                     if (lim < 1f) lim = 1f;
                     if (band > lim) band = lim;
                     if (shape != null) {
@@ -706,6 +706,11 @@ public final class GmGlassSink {
                 sNodeFit.put(element, new Object[]{w, h, fit, inner});
             }
         }
+
+        // 「边缘过渡」（2026-10-02 · 主人：「颜色没有过渡也很生硬」）：
+        //   浓度从边缘往里柔和衰减；「仅边缘」时过渡距离 = 边缘带宽（内侧自然化开）。
+        final float fadeAmt = Math.max(0f, Math.min(1f, cfg.fade / 100f));
+        final float fadePx = edge ? Math.max(1f, band) : Math.max(1f, Math.min(w, h) * 0.45f);
 
         // 画布：先看本帧截获的，其次走方法链
         catchCanvas(drawScope.getClass());
@@ -803,7 +808,8 @@ public final class GmGlassSink {
         }
 
         // ① 画玻璃（这时候按钮的文字/图标还没画）
-        new Painter(cfg, w, h, r, ox, oy, back, stretch, fit, band > 0f ? inner : null, band).paint(c);
+        new Painter(cfg, w, h, r, ox, oy, back, stretch, fit, band > 0f ? inner : null, band,
+                fadeAmt, fadePx).paint(c);
 
         // ② ★★ 把内容画回去 ★★
         //    3.30.2 之前漏了这一步 ⇒ 文字/矢量图标全部消失。
@@ -868,9 +874,12 @@ public final class GmGlassSink {
         private final Path inner;
         /** 边缘带宽度；0 = 非「仅边缘」。 */
         private final float band;
+        /** 「边缘过渡」强度 0..1 与距离 px（颜色从边缘往里柔和衰减）。 */
+        private final float fadeAmt, fadePx;
 
         Painter(GmGlassCfg.S cfg, float w, float h, float r, int ox, int oy, Bitmap back,
-                boolean stretch, Path fit, Path inner, float band) {
+                boolean stretch, Path fit, Path inner, float band,
+                float fadeAmt, float fadePx) {
             this.cfg = cfg;
             this.w = w;
             this.h = h;
@@ -882,6 +891,8 @@ public final class GmGlassSink {
             this.fit = fit;
             this.inner = inner;
             this.band = band;
+            this.fadeAmt = fadeAmt;
+            this.fadePx = fadePx;
         }
 
         @Override
@@ -914,7 +925,10 @@ public final class GmGlassSink {
             //   0 浓度 = 全透（只剩高光边）；100 = 全不透。
             //   底图和蒙层**都**按浓度给 alpha —— 这才叫玻璃，
             //   3.29.x 把底图 setAlpha(255) 画上去，那是「贴纸」不是玻璃。
-            int a = Math.round(cfg.tint * 2.55f);
+            // ★ 2026-10-02 主人：「颜色选择器里调的透明度没区别」——
+            //   颜色自带的 alpha 现在**乘进**浓度里（默认 255 = 不变；调低即更透）。
+            int colA = (cfg.color >>> 24) & 0xFF;
+            int a = Math.round(cfg.tint * 2.55f * (colA / 255f));
             if (a < 0) a = 0;
             if (a > 255) a = 255;
 
@@ -941,14 +955,16 @@ public final class GmGlassSink {
                     && ox >= 0 && oy >= 0) {
                 float blurPx = Math.max(1f, cfg.blur * GmGlassInstall.density() * 0.5f);
                 lensed = GmGlassGpu.draw(c, back, ox, oy, cw, ch, r, pad, blurPx, 255,
-                        dispersion, tintArgb, cfg.engine, cfg.clean, cfg.cleanTol / 100f, stretch);
+                        dispersion, tintArgb, cfg.engine, cfg.clean, cfg.cleanTol / 100f, stretch,
+                        fadeAmt, fadePx);
             }
 
             if (!lensed && back != null && !back.isRecycled()
                     && (stretch || (ox >= 0 && oy >= 0))
                     && android.os.Build.VERSION.SDK_INT >= 33) {
                 Shader lens = GmGlassLens.make(back, ox, oy, cw, ch, r, pad, dispersion, tintArgb,
-                        cfg.engine, cfg.clean, cfg.cleanTol / 100f, 0xFFFFFFFF, stretch);
+                        cfg.engine, cfg.clean, cfg.cleanTol / 100f, 0xFFFFFFFF, stretch,
+                        fadeAmt, fadePx);
                 if (lens != null) {
                     try {
                         sLensPaint.setShader(lens);

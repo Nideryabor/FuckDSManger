@@ -89,7 +89,8 @@ final class GmGlassGpu {
     static boolean draw(Canvas c, Bitmap back, int ox, int oy,
                         float w, float h, float r, float pad,
                         float blurPx, int outAlpha, float dispersion, int tintArgb,
-                        int engine, boolean clean, float cleanTol, boolean stretch) {
+                        int engine, boolean clean, float cleanTol, boolean stretch,
+                        float fadeAmt, float fadePx) {
         if (back == null || back.isRecycled()) return false;
         if (w < 2f || h < 2f) return false;
         // ★ 软件画布不支持 drawRenderNode（真机报过 "Software rendering doesn't support
@@ -141,7 +142,8 @@ final class GmGlassGpu {
             // （Haze 的坐标模型：sampleSize / materialOrigin / materialSize）
             String key = engine + ":" + Math.round(w) + ":" + Math.round(h) + ":" + Math.round(r)
                     + ":" + Math.round(pad) + ":" + Math.round(dispersion * 100)
-                    + ":" + Integer.toHexString(tintArgb);
+                    + ":" + Integer.toHexString(tintArgb)
+                    + ":" + Math.round(fadeAmt * 100) + ":" + Math.round(fadePx);
             RuntimeShader rs;
             synchronized (SH_CACHE) {
                 rs = SH_CACHE.get(key);
@@ -149,7 +151,7 @@ final class GmGlassGpu {
                     rs = new RuntimeShader(GmGlassLens.sourceOf(engine));
                     // sampleSize = 采样源(node)尺寸；materialOrigin/Size = 玻璃本体在其中的位置与大小
                     GmGlassLens.setUniforms(rs, engine, nw, nh, pad, pad, w, h, r, pad,
-                            dispersion, tintArgb, clean, cleanTol, cleanArgb);
+                            dispersion, tintArgb, clean, cleanTol, cleanArgb, fadeAmt, fadePx);
                     if (SH_CACHE.size() < 96) SH_CACHE.put(key, rs);
                 }
             }

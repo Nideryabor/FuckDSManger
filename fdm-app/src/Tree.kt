@@ -118,6 +118,8 @@ object Tree {
                 choices = listOf("正常", "镂空", "仅边缘")),
             It("边缘宽度", "「仅边缘」时的玻璃边宽度（dp）；要盖得住折射带，20 起步",
                 K.SL, key = "fuckds_glass_edge", def = 20, min = 0, max = 60),
+            It("边缘过渡", "玻璃颜色从边缘往里柔和过渡（越大越柔、中心越透）——「生硬」就调它",
+                K.SL, key = "fuckds_glass_fade", def = 50, min = 0, max = 100),
             It("作用范围", "所有元素 = 只要画了底就套（含卡片/大条）；仅标准按钮 = 只认 App 按钮",
                 K.CH, key = "fuckds_glass_scope", def = 0,
                 choices = listOf("所有元素", "仅标准按钮")),

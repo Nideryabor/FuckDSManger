@@ -111,7 +111,7 @@ half4 main(float2 xy) {
         pixel = content.eval(xy);
     }
 
-    pixel.rgb = processColor(pixel.rgb, saturation, contrast, tint);
+    pixel.rgb = processColor(pixel.rgb, saturation, contrast, float4(tint.rgb, tint.a * fdmFadeFac(sdf)));
 
     // Specular highlight: 4 terms — focal pool (dual-axis moving hotspot) + body sheen + Blinn rim
     // glint + back-rim fill. The gate also tests specStrength, so NoGlow is bit-exact off.

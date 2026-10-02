@@ -68,7 +68,8 @@ final class GmGlassLens {
                             float sw, float sh,
                             float mx, float my, float mw, float mh,
                             float r, float pad, float disp, int tintArgb,
-                            boolean clean, float cleanTol, int cleanArgb) {
+                            boolean clean, float cleanTol, int cleanArgb,
+                            float fadeAmt, float fadePx) {
         // 「擦掉内容，只留背景」的三件套（前奏里声明，所有方案共用）
         rs.setFloatUniform("fdmCleanOn", clean ? 1f : 0f);
         rs.setFloatUniform("fdmCleanTol", cleanTol);
@@ -77,6 +78,14 @@ final class GmGlassLens {
                 ((cleanArgb >> 8) & 0xFF) / 255f,
                 (cleanArgb & 0xFF) / 255f,
                 1f);
+        // 「边缘过渡」（2026-10-02 · 主人：「颜色没有过渡也很生硬」）
+        //   ⚠️ 个别方案（如 RIPPLE）没用到它 —— AGSL 可能把未用 uniform 裁掉，
+        //   那样 setFloatUniform 会抛 ⇒ 单独兜住，别拖垮整个 shader。
+        try {
+            rs.setFloatUniform("fdmFade", fadeAmt);
+            rs.setFloatUniform("fdmFadePx", fadePx);
+        } catch (Throwable ignore) {
+        }
         setUniforms(rs, engine, sw, sh, mx, my, mw, mh, r, pad, disp, tintArgb);
     }
 
@@ -230,7 +239,8 @@ final class GmGlassLens {
      */
     static Shader make(Bitmap back, int ox, int oy, float w, float h, float r,
                        float pad, float dispersion, int tintArgb, int engine,
-                       boolean clean, float cleanTol, int cleanArgb, boolean stretch) {
+                       boolean clean, float cleanTol, int cleanArgb, boolean stretch,
+                       float fadeAmt, float fadePx) {
         if (back == null || back.isRecycled()) return null;
         if (w < 2f || h < 2f) return null;
         try {
@@ -253,7 +263,7 @@ final class GmGlassLens {
             RuntimeShader rs = new RuntimeShader(sourceOf(engine));
             rs.setInputBuffer("content", content);
             setUniforms(rs, engine, w + pad * 2f, h + pad * 2f, pad, pad, w, h, r, pad,
-                    dispersion, tintArgb, clean, cleanTol, cleanArgb);
+                    dispersion, tintArgb, clean, cleanTol, cleanArgb, fadeAmt, fadePx);
             return rs;
         } catch (Throwable t) {
             GmUtil.logOnce("glass.lens.err", "【GmGlass】折射 shader 造失败（退化为磨砂）：" + t);
