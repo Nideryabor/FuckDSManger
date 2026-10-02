@@ -137,7 +137,6 @@ public final class GmGlassSink {
     //  经 `qk7.C` 挂到气泡上。绘制期从 **Node 的 brush 字段**查"是不是 RuntimeShader 底"，
     //  ⇒ 是 ⇒ 玻璃**让行**（绝不接管，否则图片底会被玻璃顶掉 = 主人报的 bug）。
     private static volatile Class<?> sBrushCls = null;   // iq0（Brush 接口）
-    private static volatile boolean sReservedLogged = false;
 
     private static volatile int sPaintCount = 0;
     private static volatile int sFailStreak = 0;
@@ -193,6 +192,8 @@ public final class GmGlassSink {
                 return;
             }
             GmUtil.log("【GmGlass】画底原语已挂（" + BG_CLS + "->" + BG_METHOD + " × " + n + "）");
+            sDiagHeader = "GmGlass diag · 画底原语=" + n + " · shapeCls=" + sShapeCls
+                    + " · brushCls=" + sBrushCls;
         } catch (Throwable t) {
             GmUtil.logFail("【GmGlass】画底原语挂载失败", t);
         }
@@ -588,6 +589,59 @@ public final class GmGlassSink {
     /** 每次「为什么没画」都单独打一条（用不同 tag，不被 logOnce 吃掉）。 */
     private static void why(String k, String msg) {
         GmUtil.logOnce("glass.why." + k, "【GmGlass】没画：" + msg);
+        diag("why/" + k + " " + msg);
+    }
+
+    // ─────────── 「黑匣子」诊断（2026-10-03 · 免 root 可读）───────────
+    //
+    //  写到**宿主的外部文件目录**（`<extFiles>/fdm_glass_diag.txt`）——
+    //  adb（uid 2000）能直接读，主人不用开 root。
+    //  上限 900 行（防刷屏）；每次安装后的第一条会清空重写。
+    private static final Object sDiagLock = new Object();
+    private static final StringBuilder sDiagBuf = new StringBuilder();
+    private static int sDiagN = 0;
+    private static int sDiagPending = 0;
+    private static volatile boolean sDiagStarted = false;
+    private static volatile String sDiagHeader = null;
+
+    private static void diag(String line) {
+        synchronized (sDiagLock) {
+            if (sDiagN >= 900) return;
+            if (!sDiagStarted) {
+                android.content.Context app = GmUtil.app();
+                java.io.File d = app == null ? null : app.getExternalFilesDir(null);
+                if (d == null) return;                 // 环境没就绪 ⇒ 这条先不记（等下一次）
+                try {
+                    new java.io.File(d, "fdm_glass_diag.txt").delete();
+                } catch (Throwable ignore) {
+                }
+                sDiagStarted = true;
+                if (sDiagHeader != null) {
+                    sDiagBuf.append("=== ").append(sDiagHeader).append(" ===\n");
+                    sDiagHeader = null;
+                }
+            }
+            sDiagN++;
+            sDiagBuf.append(sDiagN).append(' ').append(line).append('\n');
+            if (++sDiagPending >= 10) flushDiag();
+        }
+    }
+
+    /** 落盘（调用前须持 sDiagLock）。 */
+    private static void flushDiag() {
+        sDiagPending = 0;
+        if (sDiagBuf.length() == 0) return;
+        try {
+            android.content.Context app = GmUtil.app();
+            java.io.File d = app == null ? null : app.getExternalFilesDir(null);
+            if (d == null) return;
+            java.io.FileOutputStream fo =
+                    new java.io.FileOutputStream(new java.io.File(d, "fdm_glass_diag.txt"), true);
+            fo.write(sDiagBuf.toString().getBytes("UTF-8"));
+            fo.close();
+            sDiagBuf.setLength(0);
+        } catch (Throwable ignore) {
+        }
     }
 
     private static final class GlassDrawHook extends XC_MethodHook {
@@ -606,11 +660,23 @@ public final class GmGlassSink {
                 Object scope = param.args[0];
                 if (scope == null) { why("nullscope", "scope 是 null"); return; }
                 if (!looksLikeDrawScope(scope)) return;   // 不是 DrawScope（生命周期/语义那类）⇒ 放行
-                // ★ 让行（2026-10-02 修）：这是我们模块自己画的「图底」Node（气泡图片底）——
-                //   它的 brush 里包着我们亲手 new 的 RuntimeShader ⇒ 玻璃绝不接管，
-                //   否则气泡图片底会被玻璃顶掉（主人报的 bug）。
-                if (nodeHasOurBrush(param.thisObject)) {
-                    why("reserved", "我们自己的图底元素 ⇒ 玻璃让行");
+
+                // ★ 让行（2026-10-03 修 · 主人：「开玻璃 + 用户气泡图片底 ⇒ 图片底不显示」）——
+                //   规则：**玻璃只接管「纯色底」；刷子底（渐变 / 我们自造的图底…）一律放行。**
+                //   气泡图片底 = 我们自造的 RuntimeShader 图刷子（挂在该 Node 的 brush 字段 `p` 上）
+                //   ⇒ brush != null 就让行 ⇒ 图片底照常显示。
+                Object br = nodeBrushOf(param.thisObject);
+                boolean ours = br != null && brushIsRuntimeBacked(br);
+                if (br != null || sDiagN < 150) {
+                    diag("draw cls=" + (param.thisObject == null ? "?"
+                                    : param.thisObject.getClass().getSimpleName())
+                            + " brush=" + (br == null ? "-" : br.getClass().getSimpleName())
+                            + " rt=" + (ours ? 1 : 0)
+                            + " scope=" + GmGlassCfg.get().scope + " form=" + GmGlassCfg.get().form
+                            + (br != null ? " => LET-THROUGH" : ""));
+                }
+                if (br != null) {
+                    why("reserved", (ours ? "我们的图底" : "刷子底") + " ⇒ 玻璃让行");
                     return;
                 }
                 // ★ 只给「打了按钮记号」的 Node 上玻璃。
@@ -1262,27 +1328,21 @@ public final class GmGlassSink {
 
     // ══════════════════════ ③.6 「让行」小工具 ══════════════════════
 
-    /** 这个 Node 的背景 brush 是不是「我们自己的图底 brush」（内藏 RuntimeShader）。 */
-    private static boolean nodeHasOurBrush(Object node) {
-        if (sBrushCls == null || node == null) return false;
+    /** 取这个 Node 的背景 brush 字段（类型 = `qk7.C` 第 2 参，即 Brush 接口）；没有就 null。 */
+    private static Object nodeBrushOf(Object node) {
+        if (sBrushCls == null || node == null) return null;
         try {
             for (Class<?> k = node.getClass(); k != null && k != Object.class; k = k.getSuperclass()) {
                 for (Field f : k.getDeclaredFields()) {
                     if (f.getType() != sBrushCls) continue;
                     f.setAccessible(true);
                     Object br = f.get(node);
-                    if (br != null && brushIsRuntimeBacked(br)) {
-                        if (!sReservedLogged) {
-                            sReservedLogged = true;
-                            GmUtil.log("【GmGlass】已认出「我们自己的图底」元素 ⇒ 玻璃让行（图片底不再被打断）");
-                        }
-                        return true;
-                    }
+                    if (br != null) return br;
                 }
             }
         } catch (Throwable ignore) {
         }
-        return false;
+        return null;
     }
 
     /** brush 的字段里是不是装着 RuntimeShader（= 我们自造图刷子的指纹）。 */
