@@ -1,0 +1,11 @@
+
+uniform shader content;
+uniform float2 size;
+uniform float strength;
+
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / size;
+    float dx = sin(uv.y * 18.0) * strength * 6.0;
+    float dy = cos(uv.x * 14.0) * strength * 4.0;
+    return content.eval(fragCoord + float2(dx, dy));
+}

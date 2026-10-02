@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 
 import com.nidyaber.fuckdsmanger.gm.GmAvatar;
+import com.nidyaber.fuckdsmanger.gm.GmBubble;
 import com.nidyaber.fuckdsmanger.gm.GmDb;
 import com.nidyaber.fuckdsmanger.gm.GmDevice;
 import com.nidyaber.fuckdsmanger.gm.GmDiag;
@@ -77,10 +78,95 @@ public final class FdmBridge {
         } catch (Throwable t) {
             GmUtil.logFail("【FdmBridge】桥失败（不影响宿主）", t);
         }
+        // ★ 2026-10-02：通话开关常驻。
+        //   宿主每次冷启动补一次 model_configs 里的 "call_feature":{} ——
+        //   哪怕被服务端下发覆盖，重启宿主也能自动补回（= 源头接管，教训 253）。
+        //   由 GmCall.on(ctx) 自己判断开关，关着时这里是空转。
+        try {
+            GmCall.ensure(ctx);
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】GmCall.ensure 失败（不影响宿主）", t);
+        }
     }
+
+    /**
+     * 把存储里的气泡开关**喂进底座的静态缓存**。
+     *
+     * <p>★ 2026-10-01 真凶（主人报「用户气泡颜色不生效」）：
+     * <pre>
+     *   GmBubble.uOn():
+     *       if (!sURead) { sURead = true; return store.getBoolean("fuckds_ububble_on", true); }
+     *       return sUOn;            // ← 第二次以后返回【静态缓存】sUOn，**默认 false**
+     *   sUOn 只有 setUOn() 被调用过才更新 —— 而模块 UI 不一定推这个键
+     *   ⇒ 第一次读对、之后全是 false ⇒ 用户气泡「拨了没反应」。
+     * </pre>
+     *
+     * <p>修法：宿主一起来就用**存储里的真值**喂一次 setter（顺带把 sRead/sURead 置位）。
+     * 键不存在时用底座自己的默认值（两个气泡开关默认都是<b>开</b>）。
+     */
+    private static void syncBubbleCache(Context ctx) {
+        try {
+            SharedPreferences sp = GmStore.get(ctx);
+            if (sp == null) return;
+            // ⚠️ 直接读 boolean，不走 read2 —— read2 的类型不符会**静默读回默认值**
+            //    （底座桩里写明了这条铁律），拿错值再写回去就会把人家设置覆盖掉。
+            boolean ub = sp.getBoolean("fuckds_ububble_on", true);
+            boolean ab = sp.getBoolean("fuckds_bubble_on", true);
+
+            Class<?> c = XposedHelpers.findClass(
+                    "com.nidyaber.fuckdsmanger.gm.GmBubble",
+                    FdmBridge.class.getClassLoader());
+            // ★★ 只改【内存里的静态缓存】，**绝不碰存储、绝不调 setUOn/setOn** ★★
+            //    为什么：setXxx() 除了写缓存还会**写存储** ——
+            //    我们上次就是"读到一个错值 → 无条件写回去"，
+            //    把主人开着的 AI 气泡覆盖成 false（主人报：「AI 气泡又出 bug，图片颜色都不行」）。
+            XposedHelpers.setStaticBooleanField(c, "sUOn", ub);
+            XposedHelpers.setStaticBooleanField(c, "sOn", ab);
+            XposedHelpers.setStaticBooleanField(c, "sURead", true);
+            XposedHelpers.setStaticBooleanField(c, "sRead", true);
+
+            if (!sBubbleCacheLogged) {
+                sBubbleCacheLogged = true;
+                GmUtil.log("【FdmBridge】气泡开关内存缓存已对齐（只改内存，不写存储）：用户="
+                        + ub + " AI=" + ab);
+            }
+        } catch (Throwable t) {
+            GmUtil.log("【FdmBridge】对齐气泡缓存失败（不影响其它）：" + t);
+        }
+    }
+
+    private static volatile boolean sBubbleCacheLogged = false;
 
     private static void probe(Context ctx) throws Throwable {
         String hostPkg = ctx.getPackageName();
+
+        // ★ 消掉 GmTouchHook 的异常噪声（2026-10-01 主人：「来都来了，GmTouchHook 给他干掉吧」）
+        //
+        //  现象：每次触摸都刷一条
+        //      W/LSPosedFramework  Exception in hooker
+        //        at ...GmTouchHook.beforeHookedMethod(Unknown Source:67)
+        //  它是**预编译进底座 APK** 的钩子，要真删就得重建底座（工程量大、底座有 11 道自检，风险高）。
+        //
+        //  但看反编译出来的 smali：那条方法的**前一半没有 try/catch**，
+        //  里面有两处 `GmProbe.sInst.setText(...)` —— 而它们**前面就有 null 检查**。
+        //  ⇒ 把 sInst 置空，这两处直接被跳过；方法后半段的 UI 调用本来就有 catchall 兜着。
+        //  副作用：探针不显示"按/放"了（那是调试用的，无所谓）。
+        //  ⚠️ 试过一条"便宜刀"：把 GmProbe.sInst 置空，指望那两处 setText 被 null 检查跳过。
+        //      **没用，已撤掉** —— 因为真正的异常发生在那之前的**读字段指令**上：
+        //          IllegalAccessError: Field 'GmProbe.sInst' is inaccessible to class 'GmTouchHook'
+        //          (declaration of 'GmTouchHook' appears in Anonymous-DexFile@…)
+        //      ⇒ GmProbe 和 GmTouchHook 被分到了**不同的 dex/类加载器**，
+        //        包级私有字段的跨包访问在**字节码层面**就抛，根本到不了 null 检查。
+        //
+        //  ⇒ 结论：**这个钩子早就死了**（从那条指令起就抛，后面的 sTouchOn/sTouchMs 全没执行），
+        //    它现在唯一的贡献就是刷日志。**要真干掉它，只能改底座 smali 重建底座。**
+
+        // ★ 对齐气泡开关的【内存缓存】（不写存储）——
+        //   底座陷阱：`uOn()` 第一次读存储、之后返回静态缓存 sUOn（**默认 false**）
+        //   ⇒ 用户气泡会「拨了不生效 / 干脆没了」。
+        //   上次我用 setUOn/setOn 去修，结果它们会**写存储**，把一个错值覆盖进去 ⇒
+        //   主人的 AI 气泡当场报废。这次只动内存。
+        syncBubbleCache(ctx);
 
         // ★ 宿主一启动就把存储里的影子键灌进内存 pin 表 ——
         //   不能只依赖"收到 UI 推送"（UI 可能一直没起来），否则重启后 pin 表是空的。
@@ -301,7 +387,27 @@ public final class FdmBridge {
         }
         boolean ok = ed.commit();
         GmUtil.log("【FdmBridge】✅ 已写入宿主配置 " + n + " 项（commit=" + ok + "）");
+
+        // ★ 真凶日志（2026-10-01）：主人报「用户气泡颜色不生效」，查出来是**开关被改成了 false**
+        //   但改它的人不明（UI 的 push 理论上只带 fuckds_ 前缀、且不带这个键）。
+        //   ⇒ 谁把这两个气泡开关写成什么值，都记一笔，下次一看就知道。
+        try {
+            SharedPreferences spNow = GmStore.get(ctx);
+            GmUtil.log("【FdmBridge】气泡开关现状：AI=" + GmStore.read2(ctx, "fuckds_bubble_on", "b")
+                    + " 用户=" + GmStore.read2(ctx, "fuckds_ububble_on", "b")
+                    + "（本次推送里的 bools 含 ububble_on=" + bools.has("fuckds_ububble_on")
+                    + " / bubble_on=" + bools.has("fuckds_bubble_on") + "）");
+        } catch (Throwable ignore) {
+        }
         sGotConfig = true;
+
+        // ★ 2026-09-30 · 液态玻璃：**整包推送**这条路也要刷新它。
+        //   3.29.0 只挂了 cfg_put（单项改动）那条 ⇒ UI 走 CONFIG_PUSH 整体推时
+        //   宿主侧的 GmGlassCfg 还是旧值（日志铁证：推送里 glass_on=true，宿主仍 on=false）。
+        try {
+            com.nidyaber.fuckdsmanger.glass.GmGlassInstall.refresh(ctx);
+        } catch (Throwable ignore) {
+        }
 
         // GmBubble 缓存了读取结果（实测有三个：sRead=AI气泡开关、sURead=用户气泡开关、
         // sReadCfg=颜色/圆角/图片/透明度那一堆）⇒ 全清掉，让它下次现读。
@@ -407,8 +513,12 @@ public final class FdmBridge {
      */
     private static void grayWrite(Context ctx, String bare, String type, String val) {
         SharedPreferences sp = GmStore.get(ctx);
-        String full = "kv_remote_settings_" + bare;
-        String loc = "kv_settings_" + bare;
+        // ★ 2026-10-02 修（Bug D）：`key_*` 是宿主的**本地键**（本来就不带 kv_ 前缀）——
+        //   原样写就行。原来无脑拼成 `kv_settings_key_auto_tts_enabled` ⇒ 写错地方
+        //   （靠 pin 表侥幸兜住，但不干净）。
+        boolean bareKey = bare.startsWith("key_");
+        String full = bareKey ? bare : "kv_remote_settings_" + bare;
+        String loc = bareKey ? bare : "kv_settings_" + bare;
 
         // ★★★ 3.23.0 · 主通道：写宿主的【真实键】 ★★★
         //
@@ -439,13 +549,20 @@ public final class FdmBridge {
         // 顺带把 ③ 也更新一份（万一还有别的读取路径直接看它）
         String cacheKey = full;
 
-        // 备份原值 —— "全部恢复"就是把它们写回去
+        // 备份原值 —— "全部恢复"就是靠它写回去
+        // ★★ 2026-10-02 修（Bug A2 三件套）：
+        //   ① 原用 `sp.getString(k)` 读 ⇒ int/bool/long/float 型**抛 ClassCastException**，
+        //      被 catch 静默吞掉 ⇒ 35I + 26B = **61 个键从没备份上**。改用 anyValue()（不抛）。
+        //   ② 原来无条件覆盖备份 ⇒ 改 3 次后备份是"第 2 次改的值"，**回不到最初**。
+        //      改成"只在第一次改这个键时备份"。
+        //   ③ 原来"空值/键不存在"就不备 ⇒ 恢复时无从判断，会留下残值。
+        //      改成**总写**，用 BAK_NONE 哨兵表示"原本压根没这个键"。
         for (String k : new String[]{loc, full}) {
             try {
-                String cur = sp.getString(k, null);
-                if (cur != null && !cur.isEmpty()) {
-                    sp.edit().putString("fuckds_bak_" + k, cur).apply();
-                }
+                if (sp.contains("fuckds_bak_" + k)) continue;              // ② 已备过就别动
+                Object cur = anyValue(sp, k);
+                sp.edit().putString("fuckds_bak_" + k,
+                        cur == null ? BAK_NONE : String.valueOf(cur)).apply();  // ③
             } catch (Throwable ignore) {
             }
         }
@@ -1076,6 +1193,158 @@ public final class FdmBridge {
         return false;
     }
 
+    /** ★ 2026-09-30：把招呼语的 JSON（{"messages":[{id,text}…]}）摊成"每行一条"给界面。 */
+    private static String helloLines(Context ctx) {
+        try {
+            String raw = null;
+            try {
+                Object v = callGm(GM + "GmHello", "get",
+                        new Class<?>[]{Context.class}, new Object[]{ctx});
+                if (v != null) raw = String.valueOf(v);
+            } catch (Throwable t) {
+                GmUtil.log("【FdmBridge】helloLines get 失败：" + t);
+            }
+            if (raw == null || raw.trim().isEmpty()) {
+                // 兜底：直接读宿主那个键（免得 GmHello.get 因某些原因拿不到）
+                Object v2 = callGm(GM + "GmStore", "read2",
+                        new Class<?>[]{Context.class, String.class, String.class},
+                        new Object[]{ctx, "kv_remote_settings_welcome_msg", "s"});
+                if (v2 != null) raw = String.valueOf(v2);
+                GmUtil.log("【FdmBridge】helloLines 兜底：raw=" + (raw == null ? "null" : raw.length() + " 字"));
+            }
+            if (raw == null) return "";
+            org.json.JSONArray arr = new org.json.JSONObject(String.valueOf(raw)).optJSONArray("messages");
+            if (arr == null) return "";
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < arr.length(); i++) {
+                org.json.JSONObject jo = arr.optJSONObject(i);
+                String t = jo == null ? "" : jo.optString("text", "");
+                if (t.isEmpty()) continue;
+                if (sb.length() > 0) sb.append("\n");
+                sb.append(t);
+            }
+            return sb.toString();
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    /** ★ 2026-09-30：提示词 JSON（[{id,scene,content}…]）→ "场景|内容" 每行一条。 */
+    private static String promptLines(Context ctx) {
+        try {
+            Object v = callGm(GM + "GmPrompt", "get",
+                    new Class<?>[]{Context.class}, new Object[]{ctx});
+            if (v == null) return "";
+            org.json.JSONArray arr = new org.json.JSONArray(String.valueOf(v));
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < arr.length(); i++) {
+                org.json.JSONObject jo = arr.optJSONObject(i);
+                if (jo == null) continue;
+                String sc = jo.optString("scene", "");
+                String ct = jo.optString("content", "");
+                if (ct.isEmpty()) continue;
+                if (sb.length() > 0) sb.append("\n");
+                sb.append(sc).append("|").append(ct);
+            }
+            return sb.toString();
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    /**
+     * ★ 2026-09-30：把"真换行"和"字面 \n"都当行分隔。
+     *   为什么要两种：UI 的老手写 JSON 解析器不还原转义 ⇒ 用户保存回去的就是 `\n` 两个字符的一坨；
+     *   这里做一次归一化，历史脏数据也能自愈。
+     */
+    private static java.util.List<String> splitLines(String s) {
+        java.util.List<String> out = new java.util.ArrayList<String>();
+        for (String line : String.valueOf(s).split("\\r?\\n|\\\\n")) {
+            if (!line.trim().isEmpty()) out.add(line.trim());
+        }
+        return out;
+    }
+
+    /** 把行拼回"真换行"的文本（存储形态）。 */
+    private static String joinLines(java.util.List<String> lines) {
+        StringBuilder sb = new StringBuilder();
+        for (String ln : lines) {
+            if (sb.length() > 0) sb.append("\n");
+            sb.append(ln);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * ★ 2026-09-30：文本键 → 模块自己的入口（**老 UI 的存法**）。
+     *
+     * 为什么不能裸写存储：招呼语的存储值是 `{"messages":[{"id":0,"text":"…"}]}`、
+     * 提示词是 `[{"id":0,"scene":"…","content":"…"}]` —— 都要用 `build(List<String[]>)` 组装。
+     * 而 UI 以前发的类型是 `i`（整数）⇒ `Integer.parseInt("你好")` 抛异常 ⇒ 一个字都写不进去。
+     */
+    private static boolean dispatchText(Context ctx, String key, String val) {
+        try {
+            if ("fuckds_welcome_msg".equals(key)) {
+                java.util.List<String> lines = splitLines(val);
+                // ★ 2026-09-30：**尽量沿用原条目的 id** —— 宿主是按 id 分时段挑招呼语的
+                //   （默认 8 条：早上/白天/深夜各几条），随便重新编号会让它挑不到 ⇒ 回落到默认。
+                java.util.List<Integer> ids = new java.util.ArrayList<Integer>();
+                try {
+                    Object cur = callGm(GM + "GmHello", "get",
+                            new Class<?>[]{Context.class}, new Object[]{ctx});
+                    org.json.JSONArray arr = cur == null ? null
+                            : new org.json.JSONObject(String.valueOf(cur)).optJSONArray("messages");
+                    if (arr != null) {
+                        for (int i = 0; i < arr.length(); i++) {
+                            org.json.JSONObject jo = arr.optJSONObject(i);
+                            if (jo != null) ids.add(jo.optInt("id", i));
+                        }
+                    }
+                } catch (Throwable ignore) {
+                }
+                java.util.List<String[]> rows = new java.util.ArrayList<>();
+                for (int i = 0; i < lines.size(); i++) {
+                    int id = i < ids.size() ? ids.get(i) : i;
+                    rows.add(new String[]{String.valueOf(id), lines.get(i)});
+                }
+                String json = (String) callGm(GM + "GmHello", "build",
+                        new Class<?>[]{java.util.List.class}, new Object[]{rows});
+                callGm(GM + "GmHello", "put", new Class<?>[]{Context.class, String.class},
+                        new Object[]{ctx, json});
+                callGm(GM + "GmHello", "apply", new Class<?>[]{Context.class, String.class},
+                        new Object[]{ctx, json});
+                GmUtil.log("【FdmBridge】招呼语 → build+put+apply（" + rows.size() + " 条）");
+                return true;
+            }
+            if ("fuckds_suggest_text".equals(key)) {
+                callGm(GM + "GmSuggest", "setText", new Class<?>[]{Context.class, String.class},
+                        new Object[]{ctx, joinLines(splitLines(val))});
+                GmUtil.log("【FdmBridge】回复建议 → GmSuggest.setText（已归一化换行，"
+                        + splitLines(val).size() + " 条）");
+                return true;
+            }
+            if ("fuckds_prompt_feature".equals(key)) {
+                java.util.List<String[]> rows = new java.util.ArrayList<>();
+                int id = 0;
+                for (String line : splitLines(val)) {
+                    String[] seg = line.split("\\|", -1);
+                    if (seg.length < 2) continue;
+                    rows.add(new String[]{String.valueOf(id++), seg[0], seg[1]});
+                }
+                String json = (String) callGm(GM + "GmPrompt", "build",
+                        new Class<?>[]{java.util.List.class}, new Object[]{rows});
+                callGm(GM + "GmPrompt", "put", new Class<?>[]{Context.class, String.class},
+                        new Object[]{ctx, json});
+                callGm(GM + "GmPrompt", "apply", new Class<?>[]{Context.class}, new Object[]{ctx});
+                GmUtil.log("【FdmBridge】提示词内容 → build+put+apply（" + rows.size() + " 条）");
+                return true;
+            }
+        } catch (Throwable t) {
+            GmUtil.log("【FdmBridge】dispatchText " + key + " 失败（退回裸写）：" + t);
+        }
+        return false;
+    }
+
     /** 动作要回传给 UI 的**数据**（JSON/长文本）—— 用广播，不能写本进程的 SP。 */
     private static String lastData = null;
 
@@ -1129,9 +1398,74 @@ public final class FdmBridge {
                 if (!src.canRead()) {
                     back = "宿主读不到那个文件（" + a[1] + "）⇒ 改用分块字节";
                     GmUtil.log("【FdmBridge】" + back);
+                } else if (!isDecodableImage(src)) {
+                    // ★ 2026-09-30：**先验源图能不能解码**（只读文件头，不耗内存）。
+                    //   实测踩过：中继文件是一坨 4041 字节的 0 ⇒ 写进去以后宿主解不出图
+                    //   ⇒ 头像那条链直接崩（VectorDrawable→BitmapDrawable 强转）。
+                    back = "源图不可解码（" + src.length() + " 字节 ⇒ 空文件/云图/坏图）⇒ 没有改动任何文件";
+                    GmUtil.log("【FdmBridge】" + back);
+                } else if ("bubble".equals(kind) || "ububble".equals(kind) || "bg".equals(kind)
+                        || "avatar".equals(kind) || "uavatar".equals(kind)) {
+                    // ★ 2026-09-30 修：图片**直接按字节拷进模块自己的 internal 文件**。
+                    //   不再走 saveImage：它用 ContentResolver.openInputStream()/loadThumbnail()，
+                    //   而 file:// URI 没有 content provider ⇒ FileNotFoundException: No content provider
+                    //   （症状：选了图没反应 / 背景退回渐变 / 甚至写错文件把别的功能覆盖掉）
+                    try {
+                        if ("bg".equals(kind)) {
+                            java.io.File dst = new java.io.File(ctx.getFilesDir(), "fuckds_bg.png");
+                            copyFile(src, dst);
+                            callGm(GM + "GmBg", "setOn",
+                                    new Class<?>[]{Context.class, boolean.class}, new Object[]{ctx, true});
+                            callGm(GM + "GmBg", "setMode",
+                                    new Class<?>[]{Context.class, int.class}, new Object[]{ctx, 0});
+                            back = "背景图已就地写入 " + dst.getAbsolutePath() + "（" + dst.length()
+                                    + " 字节）· 已开背景 + 切「图片」档";
+                        } else if ("avatar".equals(kind) || "uavatar".equals(kind)) {
+                            // ★ 头像也改直拷：老路 GmAvatar.saveImage 在 file:// 下会"返回 true 但写出坏文件"
+                            String cls = "avatar".equals(kind) ? "GmAvatar" : "GmUAvatar";
+                            Object f = callGm(GM + cls, "file",
+                                    new Class<?>[]{Context.class}, new Object[]{ctx});
+                            if (f instanceof java.io.File) {
+                                copyFile(src, (java.io.File) f);
+                                callGm(GM + cls, "setOn",
+                                        new Class<?>[]{Context.class, boolean.class},
+                                        new Object[]{ctx, true});
+                                back = "头像图已就地写入 " + ((java.io.File) f).getAbsolutePath()
+                                        + "（" + ((java.io.File) f).length() + " 字节）";
+                            } else {
+                                back = cls + ".file() 拿不到目标文件 ⇒ 未写入";
+                            }
+                        } else {
+                            String name = "ububble".equals(kind) ? "fuckds_ububble.png" : "fuckds_bubble.png";
+                            java.io.File dst = new java.io.File(ctx.getFilesDir(), name);
+                            copyFile(src, dst);
+                            clearBubbleCache();
+                            try {
+                                callGm(GM + "GmBubble", "ububble".equals(kind) ? "setUImgOn" : "setImgOn",
+                                        new Class<?>[]{Context.class, boolean.class}, new Object[]{ctx, true});
+                            } catch (Throwable ignore) {
+                            }
+                            back = "气泡图已就地写入 " + dst.getAbsolutePath() + "（" + dst.length() + " 字节）";
+                        }
+                    } catch (Throwable t) {
+                        back = "图片直拷失败：" + t;
+                    }
+                    GmUtil.log("【FdmBridge】" + back);
                 } else {
                     // ★ 优先交给**模块自己的 saveImage**：它才知道内部路径和原文件名 ✅
                     //   （主人明确要求落到 /data/user/0/<宿主>/files/ 下的原文件名 ✅）
+                    // ★ 选图前先把 sImgName 设对 —— saveImage()/imgBrush() 都看这个全局字段，
+                    //   不设的话「给 AI 选图」会被上一个用过的值带跑（实测：写进 fuckds_ububble.png）。
+                    try {
+                        Class<?> gb = XposedHelpers.findClass(GM + "GmBubble",
+                                FdmBridge.class.getClassLoader());
+                        if ("ububble".equals(kind)) {
+                            XposedHelpers.callStaticMethod(gb, "useUImgName");
+                        } else if ("bubble".equals(kind)) {
+                            XposedHelpers.setStaticObjectField(gb, "sImgName", "fuckds_bubble.png");
+                        }
+                    } catch (Throwable ignore) {
+                    }
                     String cls2 = "avatar".equals(kind) ? "GmAvatar"
                             : ("uavatar".equals(kind) ? "GmUAvatar"
                             : ("bg".equals(kind) ? "GmBg" : "GmBubble"));
@@ -1202,6 +1536,13 @@ public final class FdmBridge {
                         copyFile(src, (java.io.File) f);
                         target = ((java.io.File) f).getAbsolutePath();
                     }
+                } else if ("bubble".equals(kind) || "ububble".equals(kind)) {
+                    // ★ 同上：分块路径也直拷（原来是 Uri.fromFile + saveImage ⇒ 必然 FileNotFoundException）
+                    String name = "ububble".equals(kind) ? "fuckds_ububble.png" : "fuckds_bubble.png";
+                    java.io.File dst = new java.io.File(ctx.getFilesDir(), name);
+                    copyFile(src, dst);
+                    clearBubbleCache();
+                    target = dst.getAbsolutePath();
                 } else {
                     Object r = callGm(GM + "GmBubble", "saveImage",
                             new Class<?>[]{Context.class, android.net.Uri.class},
@@ -1294,6 +1635,24 @@ public final class FdmBridge {
                 lastData = o.toString();
                 back = "状态回读 " + o.length() + " 项";
                 GmUtil.log("【FdmBridge】state_all：" + o);
+            } else if ("glass_snap".equals(cmd)) {
+                // ★ 调试用：让宿主把自己当前画面写进自己的 files 目录
+                //   （外面用 root 拉出来 —— 绕过"截不到宿主前台"的老大难）
+                //   用法：am broadcast -a …CMD --es cmd glass_snap
+                try {
+                    Class<?> dbg = XposedHelpers.findClass(
+                            "com.nidyaber.fuckdsmanger.glass.GmDebug",
+                            FdmBridge.class.getClassLoader());
+                    Object on = XposedHelpers.getStaticObjectField(dbg, "ENABLED");
+                    if (Boolean.FALSE.equals(on)) {
+                        back = "自拍功能未收录（这是正式包）";
+                    } else {
+                        com.nidyaber.fuckdsmanger.glass.GmGlassInstall.snap();
+                        back = "已触发自拍，稍后看 【GmGlass】自拍 OK";
+                    }
+                } catch (Throwable t) {
+                    back = "自拍失败 " + t;
+                }
             } else if ("cfg_put".equals(cmd)) {
                 // arg = "键\x1ftype\x1f值" —— **所有控件都走这里**：
                 //   宿主优先调模块自己的 setter（跟原 UI 一模一样），没有对应入口才退回写存储。
@@ -1309,6 +1668,11 @@ public final class FdmBridge {
                 if (!viaSetting) {
                     viaSetting = uiSet(ctx, key, val);
                 }
+                // ★ 2026-09-30：文本类键（招呼语/回复建议/提示词）也走**模块自己的入口** ——
+                //   它们的值不是"裸文本"（招呼语/提示词要 build 成 JSON），老 UI 就是这么存的。
+                if (!viaSetting && "s".equals(type)) {
+                    viaSetting = dispatchText(ctx, key, val);
+                }
                 if (!viaSetting) {
                     try {
                         GmStore.bak(ctx, key, type);
@@ -1316,6 +1680,14 @@ public final class FdmBridge {
                     } catch (Throwable t) {
                         GmUtil.log("【FdmBridge】cfg_put 写存储失败 " + key + "：" + t);
                     }
+                }
+                // ★ 2026-09-30 · 液态玻璃：玻璃是【每帧现画】的，改完不用重启宿主，
+                //   下一帧就是新样子 ⇒ 这里直接刷一遍配置 + 重截底图。
+                try {
+                    if (key != null && key.startsWith("fuckds_glass_")) {
+                        com.nidyaber.fuckdsmanger.glass.GmGlassInstall.refresh(ctx);
+                    }
+                } catch (Throwable ignore) {
                 }
                 // 气泡那几项有读取缓存，改完要清（不然宿主还用旧值）
                 try {
@@ -1361,6 +1733,11 @@ public final class FdmBridge {
                         new Class<?>[]{}, new Object[]{})); } catch (Throwable ignore) { }
                 try { o.put("name", callGm("com.nidyaber.fuckdsmanger.gm.GmName", "getText",
                         new Class<?>[]{Context.class}, new Object[]{ctx})); } catch (Throwable ignore) { }
+                // ★ 2026-09-30：这三项也要能"读出来"（原来没报 ⇒ 界面上永远是空框）
+                try { o.put("welcome", helloLines(ctx)); } catch (Throwable ignore) { }
+                try { o.put("suggest_text", callGm("com.nidyaber.fuckdsmanger.gm.GmSuggest", "text",
+                        new Class<?>[]{Context.class}, new Object[]{ctx})); } catch (Throwable ignore) { }
+                try { o.put("prompt", promptLines(ctx)); } catch (Throwable ignore) { }
                 try { o.put("env_on", callGm("com.nidyaber.fuckdsmanger.gm.GmEnv", "isOn",
                         new Class<?>[]{Context.class}, new Object[]{ctx})); } catch (Throwable ignore) { }
                 try { o.put("env_api", callGm("com.nidyaber.fuckdsmanger.gm.GmEnv", "isApi",
@@ -1375,6 +1752,19 @@ public final class FdmBridge {
                 callGm("com.nidyaber.fuckdsmanger.gm.GmName", "setText",
                         new Class<?>[]{Context.class, String.class}, new Object[]{ctx, String.valueOf(arg)});
                 back = "账号名已写入模块（" + String.valueOf(arg).length() + " 字）";
+            } else if ("hello_reset".equals(cmd)) {
+                // ★ 2026-09-30：UI 一直有这个动作，但桥里没人接 ⇒ 点了没反应。
+                //   restore = 从备份键还原（那一刻宿主的真值）；reapply = 推回宿主。
+                callGm(GM + "GmHello", "restore", new Class<?>[]{Context.class}, new Object[]{ctx});
+                Object r = callGm(GM + "GmHello", "reapply", new Class<?>[]{Context.class}, new Object[]{ctx});
+                back = "招呼语已恢复默认（从备份还原）· reapply=" + r;
+            } else if ("suggest_reset".equals(cmd)) {
+                callGm(GM + "GmSuggest", "restore", new Class<?>[]{Context.class}, new Object[]{ctx});
+                back = "回复建议已恢复默认";
+            } else if ("prompt_reset".equals(cmd)) {
+                callGm(GM + "GmPrompt", "restore", new Class<?>[]{Context.class}, new Object[]{ctx});
+                callGm(GM + "GmPrompt", "apply", new Class<?>[]{Context.class}, new Object[]{ctx});
+                back = "提示词内容已恢复默认";
             } else if ("name_clear".equals(cmd)) {
                 callGm("com.nidyaber.fuckdsmanger.gm.GmName", "clear",
                         new Class<?>[]{Context.class}, new Object[]{ctx});
@@ -1460,19 +1850,71 @@ public final class FdmBridge {
                 back = "已回读 " + o.length() + " 个灰度值";
                 GmUtil.log("【FdmBridge】灰度样例：" + sample);
             } else if ("gray_restore_all".equals(cmd)) {
-                // 撤掉全部影子覆盖（原值就没被动过，撤了即还原）
+                // ★★ 2026-10-02 重写（Bug A1）：
+                //   旧写法只撤 `fuckds_pin_*` 影子键，注释还写着「原值就没被动过」——
+                //   可 `grayWrite` 从 3.24.0 起**主写的是宿主真实键**（`kv_settings_<bare>`）
+                //   ⇒ 真实键的改动永远回不去，这个按钮等于**假的**。
+                //   现在三件事一起做：① 撤影子键 ② 把备份写回真实键 ③ 清内存 pin 表。
                 SharedPreferences sp = GmStore.get(ctx);
                 SharedPreferences.Editor ed = sp.edit();
                 int n = 0;
+                int rest = 0;
                 for (String[] g : GRAY) {
                     String bare = g[0].startsWith("kv_remote_settings_")
                             ? g[0].substring("kv_remote_settings_".length()) : g[0];
+                    String type = g.length > 1 ? g[1] : "s";
+                    boolean bareKey = bare.startsWith("key_");        // 宿主本地键（不带前缀）
+                    // ① 撤影子键（三种键形都撤）
                     ed.remove("fuckds_pin_kv_remote_settings_" + bare);
                     ed.remove("fuckds_pin_kv_settings_" + bare);
+                    ed.remove("fuckds_pin_" + bare);
+                    // ② 还原真实键（从备份；**没备过就跳过** —— 绝不动手）
+                    //    ⚠️ 备份恒是**字符串**（grayWrite 存的就是 String）⇒ getString 安全；
+                    //    「原本压根没这个键」用 BAK_NONE 哨兵表示 ⇒ 这里 remove 回去
+                    for (String real : bareKey ? new String[]{bare}
+                            : new String[]{"kv_settings_" + bare, "kv_remote_settings_" + bare}) {
+                        String bak = sp.getString("fuckds_bak_" + real, null);
+                        if (bak == null) continue;
+                        try {
+                            if (BAK_NONE.equals(bak)) {
+                                GmStore.remove(ctx, real);            // 原本没有 ⇒ 删回去
+                            } else {
+                                // ★ 参数顺序：键 → 值 → 类型（跟底座真身一致）
+                                GmStore.write(ctx, real, bak, type);
+                            }
+                            rest++;
+                        } catch (Throwable ignore) {
+                        }
+                    }
                     n++;
                 }
                 ed.apply();
-                back = "已全部恢复灰度（撤掉 " + n + " 项覆盖）";
+                // ③ 清空内存 pin 表（否则底座的读侧替换还活着）
+                try {
+                    java.util.HashMap<String, String> m = pins();
+                    m.clear();
+                } catch (Throwable ignore) {
+                }
+                back = "已恢复灰度 " + n + " 项：撤影 " + n + " · 还原真值 " + rest;
+            } else if ("call_state".equals(cmd)) {
+                // ★ 通话开关（宿主 2.6.1）：ModelConfig.call_feature 空标记对象
+                //   返回 "开关|已生效"，例如 "1|1"
+                lastData = GmCall.state(ctx);
+                back = "通话开关：" + lastData;
+            } else if ("call_set".equals(cmd)) {
+                boolean want = "1".equals(String.valueOf(arg));
+                GmCall.setOn(ctx, want);
+                lastData = GmCall.state(ctx);
+                back = "通话功能已" + (want ? "开启" : "关闭") + "（" + lastData + "）";
+            } else if ("call_pin_state".equals(cmd)) {
+                // ★ 通话页留驻（2026-10-02）：hook CallPageViewModel.a() → 强制 true
+                lastData = GmCallPin.state(ctx);
+                back = "通话页留驻：" + lastData;
+            } else if ("call_pin_set".equals(cmd)) {
+                boolean want = "1".equals(String.valueOf(arg));
+                GmCallPin.setOn(ctx, want);
+                lastData = GmCallPin.state(ctx);
+                back = "通话页留驻已" + (want ? "开启" : "关闭") + "（" + lastData + "）";
             } else if ("dump_text".equals(cmd)) {
                 StringBuilder sb = new StringBuilder();
                 try {
@@ -1530,7 +1972,19 @@ public final class FdmBridge {
     };
 
     /** 宿主灰度开关表（= 原 UI 的「灰度选项管理」页）：{键, 类型}。由生成器产出，别手改。 */
+    /** 备份哨兵：表示「原本压根没有这个键」—— 恢复时要 `remove` 回去，而不是写空串
+     *  （宿主大量用 `contains` 判断，留个空串等于留了个"存在但空"的坑）。 */
+    private static final String BAK_NONE = "\u0000__gm_none__";
+
     private static final String[][] GRAY = {
+            // ★ 2026-10-02 新增：语音输入的**真闸门**
+            //   宿主 `pn5.<init>` 是这么判的：
+            //       voiceAvailable = MMKV.d("key_voice_available", ★false★)
+            //       if (contains("kv_settings_voice_input_enabled")) voiceInput = MMKV.c(那个键)
+            //   ⇒ **两个都要真**麦克风才出来；而 `key_voice_available` 默认 **false**（从没被设过）
+            //   ⇒ "只在设置里开了语音输入"是不够的（主人实测踩到）。
+            //   注意它是**裸键**（不带 kv_ 前缀）—— `grayWrite` 对 `key_` 开头的不加前缀。
+            {"key_voice_available", "b"},
             {"kv_remote_settings_voice_input_enabled", "b"},
             {"kv_remote_settings_input_default_voice", "b"},
             {"kv_remote_settings_input_view_voice_gesture_duration_ms", "i"},
@@ -1615,6 +2069,28 @@ public final class FdmBridge {
             {"kv_remote_settings_key_auto_tts_enabled", "b"},
             {"kv_remote_settings_key_tts_voice_id", "s"},
     };
+
+    /** ★ 2026-09-30：只读文件头，判断"这是不是一张能解码的图"（零内存代价）。 */
+    private static boolean isDecodableImage(java.io.File f) {
+        try {
+            android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath(), o);
+            return o.outWidth > 0 && o.outHeight > 0;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** ★ 2026-09-30：图片文件被重写 ⇒ 把模块的"原图解码缓存"清掉（否则还是旧图）。 */
+    private static void clearBubbleCache() {
+        try {
+            Class<?> gb = XposedHelpers.findClass(GM + "GmBubble",
+                    FdmBridge.class.getClassLoader());
+            XposedHelpers.setStaticObjectField(gb, "sBmpCache", null);
+        } catch (Throwable ignore) {
+        }
+    }
 
     private static void copyFile(java.io.File src, java.io.File dst) throws Exception {
         java.io.FileInputStream in = new java.io.FileInputStream(src);

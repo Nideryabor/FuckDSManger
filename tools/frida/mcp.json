@@ -1,0 +1,20 @@
+{
+  "_说明": "RikkaHub 用的是 streamable_http，不是 stdio！在 App 里「MCP 服务器 → 添加」按下面填（格式对齐你现有的 apk 那条：http://127.0.0.1:8787/mcp）。",
+  "_实测依据": "settings.preferences_pb 里 mcp_servers = [{type:streamable_http, url:http://127.0.0.1:8787/mcp}(apk), {…github}, {…http://127.0.0.1:3001/mcp}(wechat)] —— 全是 streamable_http。",
+
+  "type": "streamable_http",
+  "name": "frida",
+  "url": "http://127.0.0.1:8788/mcp",
+  "headers": [],
+  "enable": true,
+  "oauth": null,
+
+  "_起服务": "sh /workspace/tools/frida/serve.sh start   （8787 被 MT 的 apk MCP 占了，所以用 8788）",
+  "_验证": "curl -sS -X POST http://127.0.0.1:8788/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}'",
+  "_设备端一次性": [
+    "adb push /workspace/tools/frida/frida-server-17.19.0-arm64 /data/local/tmp/fs",
+    "adb shell 'su 0 cp /data/local/tmp/fs /data/adb/frida-server && su 0 chmod 755 /data/adb/frida-server'",
+    "adb shell 'su 0 rm -f /data/local/tmp/fs'",
+    "adb shell 'su 0 chmod 777 /data/local/tmp'   # ★ 不加这条 frida 的 helper dex 写不进去"
+  ]
+}

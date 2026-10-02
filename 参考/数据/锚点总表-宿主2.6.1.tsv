@@ -1,0 +1,45 @@
+域	角色	职责	锚点(2.5.2)	锚点(2.6.1)	旗舰指纹(S级)	失效后果	把握	本版核验
+入口	检查更新文案资源	替换设置页那一行文字	resource:0x7f0f021f	resource:0x7f0f0263	资源名 profile_check_for_updates	设置页看不到模块名	★★★	✅ 健在(ID平移)
+入口	备用文案资源	最新版文案	resource:0x7f0f0220	resource:0x7f0f0264	资源名 profile_check_for_updates_newest	无	★★★	✅ 健在(ID平移)
+入口	设置页容器	找行级 onClick	La18	(候选 La13/Lc13/Ld13/Lgl9/Lal0/Ljl9/Lk79)	SourceInfo SettingsPage.kt	找不到入口所在类	★★☆	⚠️ 待定
+入口	入口点击	点「检查更新」行 → 弹管理器	Lm5;->v() a==0x14	?	同形构造器 <init>(Lsv3;I)V + const/16 0x14	模块入口点不开（整模块不可用）	★★☆	❌ 未定位
+入口	Kotlin Unit	setResult 返回值来源	Llp9;->a	?	toString()=="kotlin.Unit"	入口静默失效	★★☆	❌ 未定位
+入口	宿主 MainActivity	onResume 触发重应用	com.deepseek.chat.MainActivity	同左	manifest launcher	重应用链路断	★★★	✅ 未混淆
+入口	触摸兜底	dispatchTouchEvent	android.app.Activity	同左	系统 API	手势入口失效	★★★	✅ 系统类
+入口	选图回调	onActivityResult	Activity 三处	同左	系统 API	选图回调失效	★★★	✅ 系统类
+灰度	MMKV 默认实例	拿宿主同一个 KV	MMKV.l()	同左	com.tencent.mmkv.MMKV 第三方	整个灰度失效	★★★	待查
+灰度	MMKV 写	putString 拦截	MMKV.q(String,String)Z	?	(String,String)Z	下发篡改失效	★★★	待查
+灰度	MMKV 读	getString	MMKV.k(String,String)String	?	(String,String)String	读覆盖失效	★★★	待查
+灰度	下发应用点(model 域)	拦服务端下发	Lp66;->h(Lbx4;I,String,String)V	Lm97?(暂定)	p66.a() 返回串 "model"	下发覆盖失效	★★★	⚠️ 待核
+灰度	下发应用点(main 域)	同上	Lh02;->u(...)	Lm97?(暂定)	h02.a() 返回串 "main"	同上	★★★	⚠️ 待核
+灰度	下发数据对象	遍历 dump	Lbx4	?	implements java.util.Map + 字段 a:Map	下发查看失效	★★☆	❌ 未定位
+灰度	灰度类型字典(总表)	63 项键类型	Lo02	?	键名+中文名+类型串+默认值+contains→decode	类型核验无从下手	★★★	❌ 未定位★命脉
+灰度	灰度类型字典(录音语音)	7 项	Ln2a	?	同上	同上	★★☆	❌ 未定位
+灰度	灰度类型字典(TTS)	2 项 pk9	?	同上	同上	★★☆	❌ 未定位
+灰度	配置源头	读/写 model_configs	p66.f() / p66.h()	Lm97?(暂定)	键串 kv_remote_settings_model_configs_v1	配置接管失效	★★★	⚠️ 待核
+美化	头像 Painter	替换助手图片	Lkf5;->K(IILey3;)Lku6;	Lkh7;->x(IILyx4;)Lmz7;	串 androidx.compose.ui.res.painterResource (PainterResources.android.kt:56)	助手头像替换失效	★★★	✅ 已定位
+美化	ImageBitmap 包装	Compose 位图	Lle	?	<init>(Bitmap)+implements	头像链路断	★★☆	❌
+美化	BitmapPainter	Compose 画笔	Lok0	?	toString() 含 BitmapPainter(image=	同上	★★☆	❌
+美化	Painter 基类	—	Lku6	Lmz7?(暂定)	由 painterResource 返回类型反推	同上	★★☆	⚠️
+美化	头像资源 id	定位助手头像	resource:0x7f070059	resource:0x7f07005a	资源名 assistant_message_avatar	同上	★★★	✅ 健在
+美化	矢量加载	逼走普通资源分支	Resources.getValue	同左	系统 API	矢量头像分支失效	★★★	✅
+美化	Drawable 出口	兜底	Resources.getDrawable	同左	系统 API	同上	★★★	✅
+美化	账号名	自定义名字	Ls5;->v() a==8	?	0x8 分支 → Lit9;->c	账号名功能失效	★★☆	❌
+美化	账号头像	自定义头像	Lp5;->v() a==0xf	?	0xf 分支 → Lit9;->e	账号头像失效	★★☆	❌
+美化	文案替换	反查设置条目	Resources.getString/getText	同左	系统 API	入口文案不显示	★★★	✅
+消息	消息列表 Composable	渲染参数注入	Lh91;->a(...10参)	Ld12;->a(sf6,lh7,o32,ns,dz9,gy7,Z,x97,Z,yx4,I)V	SourceInfo ChatMessageList.kt:77→78	防撤回失效	★★★	✅ 高置信
+消息	列表状态对象	取 List	Lpe5;->j()Lie5;	?	反射取，instance-of List 校验	防撤回取数失败	★★☆	❌
+消息	消息基类	D()=="USER" 等	Lvq	?	toString 含 MessageClickBehavior / UserMessage(text=	取文本取错字段	★★☆	⚠️ 候选 Lk21/Lyva
+消息	真·消息类	唯一具体子类	Lnx	?	.super Lvq; 唯一具体子类	抓不到消息事件	★★☆	❌
+消息	消息主存储	f:LinkedHashMap	Lwr;->f	?	字段 f:LinkedHashMap（wr.x() 是空壳）	读到空壳 ⇒ 恒空	★★☆	❌
+消息	渲染列表类型	SnapshotStateList	Lhp8	?	toArray/size/get 自身声明	反射取数坑	★★☆	❌
+通话	发送命令派发	发消息	Lao1;->J(Object)	?	参数类名即命令类型	发消息失效	★★☆	❌
+通话	打字发送命令	new cn1(text,0)	Lcn1	?	<init>(String,int)	打字发送失效	★★☆	❌
+通话	语音发送命令	ASR 文字	Lfn1	?	<init>(String,String)	语音识别抓不到	★★☆	❌
+通话	录音控制器	驱动宿主录音	Lxe1	?	由 Lao1;->j 持有	PTT 失效	★★☆	❌
+通话	录音器	原始录音	Lqra	?	AudioRecord 16k/MONO/PCM16	聆听信号丢失	★★★	❌
+环境	数美主类	root/模块探测	com.ishumei.smantifraud.l1111l111111Il	待查	第三方 SDK 包名不混淆	登录风控被拦	★★★	待查
+环境	数美 native	同上	libsmsdk.so	待查	文件大小 + 导出符号	同上	★★★	待查
+环境	字节 APM	root 检测	Lsr9;->w()	Lzx8	串 /sbin/su	上报 is_root=true	★★☆	✅ 高置信
+导航	路由承载类	枚举 route	(无 hook)	待查	正则 com\.deepseek\.chat\..*Route	（情报）	★★★	待查
+导航	NavHost	Compose 导航	(无 hook)	待查	SourceInfo androidx.navigation.compose.NavHost	（情报）	★★★	待查

@@ -17,12 +17,41 @@
 # ============================================================================
 V="${1:-3.9.2}"
 VC="${2:-482}"
+DEV="${3:-}"          # 传 dev 才允许带调试功能出包（自拍/细日志）
 ROOT=/workspace
+
+# ============================================================================
+#  ④.5 出包前自检 · 调试总闸
+#  主人 2026-09-30：「出正式包记得把自拍删掉」。
+#  靠记性不可靠 ⇒ 这里做机械闸门：GmDebug.ENABLED = true 时**拒绝出正式包**。
+# ============================================================================
+GmDebugFile="$ROOT/mod-src/src/com/nidyaber/fuckdsmanger/glass/GmDebug.java"
+if [ -f "$GmDebugFile" ] && grep -qE 'ENABLED[[:space:]]*=[[:space:]]*true' "$GmDebugFile"; then
+  if [ "$DEV" != "dev" ]; then
+    echo "✗ 调试总闸还开着（GmDebug.ENABLED = true）—— 正式包不许出。"
+    echo "    · 只是自己调： sh 做包.sh $V $VC dev"
+    echo "    · 要发版：     先把 GmDebug.java 里 ENABLED 改成 false，再原样跑"
+    exit 1
+  fi
+  echo "⚠️  调试包（GmDebug.ENABLED = true）：自拍 + 细日志都在里面，**别当正式包发**。"
+  echo
+fi
 # 底座 APK：自动找（可能在 /workspace 下，也可能在 mod-src/out 里）
 BASE=""
 # ★ 2.22.121：去掉「依赖宿主包名」三处 · 2.22.122：pin 表 · 2.22.123：B1' 修落点（contains + j）
 #   见 `专题/铁律-不依赖宿主包名.md`
-for c in "$ROOT/FuckDSManger_NL_2.22.123_for_ds2.5.2-signed.apk" \
+for c in "$ROOT/mod-src/out/FuckDSManger_NL_2.22.133_for_ds2.6.1.apk" \
+         "$ROOT/mod-src/out/FuckDSManger_NL_2.22.132_for_ds2.5.2-signed.apk" \
+         "$ROOT/FuckDSManger_NL_2.22.132_for_ds2.5.2-signed.apk" \
+         "$ROOT/mod-src/out/FuckDSManger_NL_2.22.131_for_ds2.5.2-signed.apk" \
+         "$ROOT/FuckDSManger_NL_2.22.131_for_ds2.5.2-signed.apk" \
+         "$ROOT/mod-src/out/FuckDSManger_NL_2.22.130_for_ds2.5.2-signed.apk" \
+         "$ROOT/FuckDSManger_NL_2.22.130_for_ds2.5.2-signed.apk" \
+         "$ROOT/FuckDSManger_NL_2.22.128_for_ds2.5.2-signed.apk" \
+         "$ROOT/mod-src/out/FuckDSManger_NL_2.22.128_for_ds2.5.2-signed.apk" \
+         "$ROOT/FuckDSManger_NL_2.22.124_for_ds2.5.2-signed.apk" \
+         "$ROOT/mod-src/out/FuckDSManger_NL_2.22.124_for_ds2.5.2-signed.apk" \
+         "$ROOT/FuckDSManger_NL_2.22.123_for_ds2.5.2-signed.apk" \
          "$ROOT/mod-src/out/FuckDSManger_NL_2.22.123_for_ds2.5.2-signed.apk" \
          "$ROOT/FuckDSManger_NL_2.22.122_for_ds2.5.2-signed.apk" \
          "$ROOT/mod-src/out/FuckDSManger_NL_2.22.122_for_ds2.5.2-signed.apk" \

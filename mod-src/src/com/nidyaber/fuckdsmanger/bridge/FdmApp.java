@@ -111,7 +111,15 @@ public final class FdmApp extends Application {
                             org.json.JSONObject o = new org.json.JSONObject(data);
                             String k = o.optString("key", "");
                             if (!k.isEmpty()) {
-                                ed.putString("cfg." + k, o.optString("value", ""));
+                                // ⚠️ 2026-10-01 修：**回执里没有 value 时不要写空**！
+                                //    原来无条件 `putString("cfg."+k, optString("value",""))`，
+                                //    回执缺 value 就把 `cfg.<key>` **抹成空字符串** ⇒
+                                //    界面读到空 → 退回旧格式顶层键 → 显示**残留的老值**
+                                //    （主人症状：「切回模块会变回 47 和 20」「浓度死活改不了」）。
+                                String val = o.has("value") ? o.optString("value", "") : null;
+                                if (val != null && !val.isEmpty()) {
+                                    ed.putString("cfg." + k, val);
+                                }
                                 ed.putBoolean("cfg." + k + ".ok", o.optBoolean("ok", false));
                                 ed.putLong("cfg." + k + ".at", System.currentTimeMillis());
                             }

@@ -22,6 +22,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -174,19 +175,57 @@ fun SettingChoice(
     }
 }
 
-/** 颜色行 */
+/**
+ * 颜色行 🐲
+ *
+ * 主人 2026-09-30：「我们不是单开新 APP 了吗，那干脆用 compose 的颜色轮盘
+ * 给用户让用户手动选值，选好把颜色发给宿主」
+ *
+ * ⇒ 固定色板降级成"快捷方式"，主力是 **颜色轮盘**（[ColorWheelDialog]）：
+ *   色相环 + 饱和度/明度方块 + 透明度 + 十六进制手打，选完走现成的 cfg_put 发宿主。
+ */
 @Composable
 fun SettingColor(
     label: String, value: Int, hostText: String?, hint: String?,
     onChange: (Int) -> Unit,
 ) {
+    var showWheel by remember { mutableStateOf(false) }
+
     RowShell {
         LabelLine(label, null)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+        // 当前色 + 打开轮盘
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier.size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color(value))
+                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                    .clickable { showWheel = true },
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                String.format("#%08X", value),
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.width(12.dp))
+            OutlinedButton(onClick = { showWheel = true }) { Text("选颜色…") }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // 快速色板（常用色一键选）
+        Text("快捷",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Conf.palette.forEach { c ->
                 val selected = c == value
                 Box(
-                    Modifier.size(if (selected) 36.dp else 30.dp)
+                    Modifier.size(if (selected) 30.dp else 26.dp)
                         .clip(CircleShape)
                         .background(Color(c))
                         .border(
@@ -199,6 +238,7 @@ fun SettingColor(
                 )
             }
         }
+
         HintLine(hint)
         if (hostText != null) {
             Text(
@@ -207,6 +247,18 @@ fun SettingColor(
                 color = MaterialTheme.colorScheme.tertiary,
             )
         }
+    }
+
+    if (showWheel) {
+        ColorWheelDialog(
+            title = label,
+            initial = value,
+            onDismiss = { showWheel = false },
+            onConfirm = { v ->
+                showWheel = false
+                onChange(v)
+            },
+        )
     }
 }
 
@@ -232,7 +284,12 @@ fun SettingText(
     LaunchedEffect(initial) { if (!touched && !focused && initial.isNotEmpty()) tv = initial }
     // 回执到了：同样只在"没动过 + 不在编辑"时才采纳
     LaunchedEffect(key, cfgAt) {
-        if (!touched && !focused && cfgAt > 0L) tv = sp.getString("cfg.$key", "") ?: ""
+        // ★ 2026-09-30 修：回执里 `cfg.<key>` 常常是**空串**（桥按原始键回一条空值），
+        //   原来无条件采纳 ⇒ 把"账号名=原神"这种真值反复冲成空白（现象：读出来是空的）。
+        if (!touched && !focused && cfgAt > 0L) {
+            val v = sp.getString("cfg.$key", "") ?: ""
+            if (v.isNotEmpty()) tv = v
+        }
     }
     // 离开页面也提交一次（防"还没失焦就退出去了"）
     val latest by rememberUpdatedState(tv)

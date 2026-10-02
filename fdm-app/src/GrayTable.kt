@@ -2,7 +2,13 @@ package com.nidyaber.fuckdsmanger
 
 /* 宿主灰度开关表（原 UI 的「灰度选项管理」页）——**生成物，别手改**
    来源：gm/GmDialog 的 (键, 标签, 类型) 三连 + 那条按 \n 分隔的说明串
-   键已带 kv_remote_settings_ 前缀的按原样用（看 pfx 标记） */
+   键已带 kv_remote_settings_ 前缀的按原样用（看 pfx 标记）
+
+   ⚠️⚠️ 2026-10-02 尼得亚伯：本文件有 **2 处手工修正**（原说明串与宿主类型矛盾）——
+       · input_default_voice ：原写「如 zh-CN」，但宿主 yib.smali 注册的是 Boolean
+       · volcengine_enabled  ：原写「开关」，但宿主注册的是 String
+       ⇒ **重新生成 GrayTable 时，这两条要保留成下面那样**（别被生成脚本冲掉）。
+         根因在 `gm/GmDialog` 的说明串本身 —— 下次一并修那里。 */
 enum class GrayType { B, I, S, L }
 
 data class Gray(val key: String, val label: String, val hint: String,
@@ -10,8 +16,12 @@ data class Gray(val key: String, val label: String, val hint: String,
 
 object GrayTable {
     val items = listOf(
+        // ★ 2026-10-02 新增：语音输入的**真闸门**。宿主 `pn5.<init>` 要**两个都真**才给麦克风：
+        //   `key_voice_available`（裸键，宿主默认 **false**！）+ `kv_settings_voice_input_enabled`
+        //   ⇒ 只开下面那条「语音输入」是不够的（主人实测踩到）。
+        Gray("key_voice_available", "语音可用（总闸）", "开关（Boolean，宿主默认 false）：语音输入总闸。**它 + 下面那条都要开**，麦克风才出来", GrayType.B, false),
         Gray("voice_input_enabled", "语音输入", "开关：输入框显示麦克风；关闭：完全隐藏语音入口", GrayType.B, false),
-        Gray("input_default_voice", "默认音色", "语音识别的默认语言/音色标识，如 zh-CN", GrayType.B, false),
+        Gray("input_default_voice", "默认语音输入", "开关（Boolean，宿主默认关）。⚠️2026-10-02 修正：原说明写「如 zh-CN」与宿主类型矛盾", GrayType.B, false),
         Gray("input_view_voice_gesture_duration_ms", "语音手势时长", "按住说话手势的识别时长，单位毫秒", GrayType.I, false),
         Gray("record_empty_detect_time_ms", "空录音检测", "录到多少毫秒静音就判定为“空录音”", GrayType.I, false),
         Gray("record_stop_delay_ms", "录音停止延迟", "松手后再录多久才停，防止截断尾音", GrayType.I, false),
@@ -66,7 +76,7 @@ object GrayTable {
         Gray("dead_link_detection", "死链检测", "开关：检测消息里的失效链接", GrayType.B, false),
         Gray("gcy_enabled", "观测云上报", "开关：埋点数据上报到观测云（第三方监控）", GrayType.B, false),
         Gray("ds_settings_enabled", "DS 设置开关", "DeepSeek 客户端设置模块总开关", GrayType.B, false),
-        Gray("volcengine_enabled", "火山引擎开关", "开关：使用火山引擎相关服务", GrayType.S, false),
+        Gray("volcengine_enabled", "火山引擎开关", "字符串（true/false）：使用火山引擎相关服务。⚠️2026-10-02 注：宿主类型是 String 不是 Boolean，所以这里是输入框", GrayType.S, false),
         Gray("sm_pass_code_type", "验证码类型", "短信验证码的样式/类型", GrayType.S, false),
         Gray("edit_menu_item_config", "编辑菜单配置", "编辑菜单项配置，JSON 字符串", GrayType.I, false),
         Gray("files_host", "文件服务域名", "文件服务接口域名", GrayType.S, false),

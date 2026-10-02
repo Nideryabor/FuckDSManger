@@ -1,0 +1,15 @@
+角色	源文件:行	旧(2.5.2)	新(2.6.1)	旗舰指纹	置信
+AppButton私有重载	AppButton.kt:298	uk8.a	xta.a	"…ui.components.button.AppButton (AppButton.kt:298)"	高
+AppButton公开重载	AppButton.kt:339	uk8.b	xta.b	"…AppButton (AppButton.kt:339)"	高
+AppFullWidthButton	AppButton.kt:412	uk8.c	xta.c	"…AppFullWidthButton (AppButton.kt:412)"	高
+AppIconButton(k80)	AppIconButton.kt:80	zc.c	l10.a	"…button.AppIconButton (AppIconButton.kt:80)"	高
+AppIconButton(k55)	AppIconButton.kt:55	zc.d	l10.b	"…AppIconButton (AppIconButton.kt:55)"	高
+AppIconToggleButton(k228)	AppIconButton.kt:228	zc.h	l10.c	"…AppIconToggleButton (AppIconButton.kt:228)"	高
+AppIconToggleButton(k203)	AppIconButton.kt:203	zc.l	l10.d	"…AppIconToggleButton (AppIconButton.kt:203)"	高
+AppSelectableChip	AppSelectableChip.kt:68	i52.e	v91.c	"…components.chip.AppSelectableChip (AppSelectableChip.kt:68)"	高
+PromptFeatureChip	PromptTemplateView.kt:341	yb5.c	hs7.c	"…prompt.PromptFeatureChip (PromptTemplateView.kt:341)"	高
+PromptFeatureSkeletonChip	PromptTemplateView.kt:309	yb5.d	hs7.d	"…prompt.PromptFeatureSkeletonChip (PromptTemplateView.kt:309)"	高
+InputModeToggleButton	InputModeToggleButton.kt:37	a18.q	l10.h	"…InputModeToggleButton (InputModeToggleButton.kt:37)"	高
+ChatInputToggleableToolView	ChatInputToggleableToolView.kt:90	zl9.H	k53.f	"…fixed_toolview.ChatInputToggleableToolView (ChatInputToggleableToolView.kt:90)"	高
+ToggleLottieIcon	ChatInputToggleableToolView.kt:206	zl9.Z	k53.o	"…fixed_toolview.ToggleLottieIcon (ChatInputToggleableToolView.kt:206)"	高
+画底原语(颜色背景)	—	uia.v(Lc76;JLmd8;)Lc76;	qk7.D(Lx97;JLgn9;)Lx97;	全dex唯一「3参/第2参long/第0参接口/返回第0参」静态方法；构造背景Element	高

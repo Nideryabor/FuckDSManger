@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 🐲 LSPosed「推荐作用域」：装完自动勾上，省掉"每次重装都要手动重勾" -->
+<resources>
+    <string-array name="xposedscope">
+        <item>com.deepseek.chat</item>
+        <item>com.deepseek.chat.a</item>
+    </string-array>
+</resources>

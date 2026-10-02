@@ -1,0 +1,15 @@
+类型	旧(2.5.2)	新(2.6.1)	用途	同步位置	状态
+资源id	0x7f0f0217	0x7f0f0263	设置页「检查更新」行文案（2.5.0 时代的老 id，历史遗留）	GmTextHook	✅ 已改
+资源id	0x7f0f021f	0x7f0f0263	设置页「检查更新」行文案 profile_check_for_updates	GmResTextHook	✅ 已改
+资源id	0x7f0f0220	0x7f0f0264	备用文案 profile_check_for_updates_newest（底座里实际未引用）	—	✅ 已备
+资源id	0x7f0f0221	0x0	⚠️ 当年"资源不存在⇒返回空串防 NotFoundException 崩溃"的防护；2.6.1 里这个 id **变成真资源** mobile_verification_account_exist_toast ⇒ 会把登录验证 toast 清空	GmResTextHook	✅ 已废掉（指向 0，分支死）
+资源id	0x7f0f0222	0x0	⚠️ 同上 mobile_verification_invalid_phone_number_toast	GmResTextHook	✅ 已废掉
+资源id	0x7f070059	0x7f07005a	助手头像 assistant_message_avatar（同一份矢量图 res/Fi.xml）	GmAvatar / GmAvatarHook / GmVectorHook / GmPainterHook（含日志文案）	✅ 已改（5 处）
+资源id	0x7f7f0000-0x7f7f0100	不变	模块**自造**的合成 id 区间（建议文案接管用）	GmResIdHook	✅ 无需改
+资源名	assistant_message_avatar	无写死	只以 id 形式引用	—	✅ 无
+资源名	profile_check_for_updates	无写死	只以 id 形式引用	—	✅ 无
+路径		res/Fi.xml	无写死	—	✅ 无
+版本号	"2.5.2" / 273	无写死	底座/桥/UI 全库无宿主版本号硬编码	—	✅ 无
+文件路径	/data/data/com.deepseek*	无写死	—	✅ 无
+包名	com.deepseek.chat	0 处（出包自检 ⑫ 强拦）	pipeline/build_single.py HOST_PKG_MARKERS	✅ 早已拔掉
+灰度键名	83 项 MMKV 键	键名稳定，**不用同步**	⚠️ 但**类型**要核（历史上 3 版里 2 版坏在这）	待办

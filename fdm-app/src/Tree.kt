@@ -74,7 +74,6 @@ object Tree {
             It("本地数据库管理", null, K.SUB, sub = "db"),
             It("回复建议 ›", "输入框上方显示一排可点击的回复建议，点一下直接发送（数量/文字可自定义）",
                 K.SUB, sub = "suggest"),
-            It("音频通话 (wip)", "持续聆听 → 转文字 → 发消息 → 朗读回复（循环）", K.SUB, sub = "call"),
         )),
 
         /* ───────── 美化（GmBeautyDialog）───────── */
@@ -92,6 +91,44 @@ object Tree {
             It("文件快捷选项 ›", "自定义上传文件后的快捷发送项（JSON）", K.SUB, sub = "prompt"),
             It("招呼用语 ›", "自定义新会话的开屏招呼语", K.SUB, sub = "hello"),
             It("修改背景 ›", "图片或动态渐变背景，透明度可调", K.SUB, sub = "bg"),
+            It("液态玻璃 ›", "给宿主所有按钮换上玻璃底（截底层→糊→折射）",
+                K.SUB, sub = "glass"),
+        )),
+
+        /* ───────── 液态玻璃（2026-09-30 · 参照「底栏液态玻璃」）───────── */
+        //  ★ 主人拍板做减法：圆角 / 水滴 / 亮边 / 斜向高光 全部拆掉，
+        //    只留「液态玻璃本体（糊 + 折射）+ 一个自定义颜色」。
+        Pg("glass", "液态玻璃", listOf(
+            It("✦ 做法：抄窗口像素 → 糊掉 → AGSL 折射 → 叠你要的那一层颜色",
+                "参照物：底栏液态玻璃 0.2.1（io.github.liuran001.mmliquidglass）", K.INFO),
+            It("开启液态玻璃", "给宿主所有元素套上玻璃（整页根节点除外）",
+                K.SW, key = "fuckds_glass_on", def = false, sk = "glass_on"),
+            It("玻璃颜色", "玻璃本体就这一层颜色；浓度当它的透明度",
+                K.CO, key = "fuckds_glass_color", def = 0xFFFFFFFF.toInt()),
+            It("浓度（= 透明度）", "0 = 全透只剩玻璃；100 = 完全不透",
+                K.SL, key = "fuckds_glass_tint", def = 45, min = 0, max = 100),
+            It("模糊度", "0–40，越大越磨砂", K.SL, key = "fuckds_glass_blur", def = 20, min = 0, max = 40),
+            It("色散", "边缘按 RGB 分离采样（×0.1px）—— 这是「液态」最像的那一下",
+                K.SL, key = "fuckds_glass_disp", def = 12, min = 0, max = 60),
+            It("作用范围", "所有元素 = 只要画了底就套（含卡片/大条）；仅标准按钮 = 只认 App 按钮",
+                K.CH, key = "fuckds_glass_scope", def = 0,
+                choices = listOf("所有元素", "仅标准按钮")),
+            It("方案", "三套独立实现的折射 shader，切着试（Haze / Cloudy / 轻量扰动）",
+                K.CH, key = "fuckds_glass_engine", def = 0,
+                choices = listOf("Haze 式", "Cloudy 式", "轻量扰动")),
+            It("擦掉内容（只留背景色）", "从元素边缘自动估背景色，把文字/图标从折射底图里擦掉",
+                K.SW, key = "fuckds_glass_clean", def = false),
+            It("擦除容差", "×0.01；越大擦得越狠（可能连浅色图标一起擦）",
+                K.SL, key = "fuckds_glass_clean_tol", def = 12, min = 0, max = 60),
+            It("底图来源", "元素底色 = 用元素自己的背景色合成（不透，但后台可用、零延迟、无叠影）；" +
+                    "屏幕截图 = 透出背后内容，但后台失效、有延迟、会截到文字；" +
+                    "★ 我的背景图 = 用「修改背景」那张图当玻璃内容（清晰、透明、有纹理可见折射）；" +
+                    "背景开关关了会自动回退到「元素底色」",
+                K.CH, key = "fuckds_glass_src", def = 0,
+                choices = listOf("元素底色", "屏幕截图", "我的背景图")),
+            It("实现方式", "自动 / 强制 GPU（画质最好）/ 强制 CPU（备用，兼容面更宽）",
+                K.CH, key = "fuckds_glass_impl", def = 0,
+                choices = listOf("自动", "强制 GPU", "强制 CPU")),
         )),
 
         /* ───────── 气泡（GmBubbleDialog）───────── */
@@ -111,7 +148,7 @@ object Tree {
             It("颜色（点选色块）", null, K.CO, key = "fuckds_ububble_color", def = 0),
             It("圆角", "单位 dp", K.SL, key = "fuckds_ububble_radius", def = 0, min = 0, max = 48),
             It("图片底", null, K.SW, key = "fuckds_ububble_img", def = false),
-            It("选择气泡图", null, K.PICK, cmd = "bubble"),
+            It("选择气泡图", null, K.PICK, cmd = "ububble"),
         )),
 
         /* ───────── 修改背景（GmBgDialog）───────── */
@@ -121,7 +158,7 @@ object Tree {
             It("开启背景", null, K.SW, key = "fuckds_bg_on", def = false),
             It("背景来源", null, K.CH, key = "fuckds_bg_mode", def = 0,
                 choices = listOf("图片", "渐变", "摄像头")),
-            It("选择图片", null, K.PICK, cmd = "avatar"),
+            It("选择图片", null, K.PICK, cmd = "bg"),
             It("摄像头方向", null, K.CH, key = "fuckds_bg_cam", def = 0,
                 choices = listOf("后置", "前置")),
             It("旋转", "单位：度", K.SL, key = "fuckds_bg_rot", def = 0, min = 0, max = 360),
@@ -174,14 +211,14 @@ object Tree {
             It("AI 生成 (wip)", "自动读取当前对话上下文，向 DS 单独发一次请求生成预回复",
                 K.SW, key = "fuckds_suggest_ai", def = false),
             It("显示数量", null, K.SL, key = "fuckds_suggest_count", def = 3, min = 1, max = 10),
-            It("模板池（每行一条，点按钮即发送）", null, K.TX, key = "fuckds_suggest_text", def = ""),
+            It("模板池（每行一条，点按钮即发送）", null, K.TX, key = "fuckds_suggest_text", def = "", sk = "suggest_text"),
             It("恢复默认模板", null, K.ACT, cmd = "suggest_reset"),
         )),
 
         /* ───────── 招呼语（GmHelloDialog）───────── */
         Pg("hello", "招呼用语", listOf(
             It("新会话开屏招呼语。清空即删除该条；新增条目会自动加入所有时段。", null, K.INFO),
-            It("招呼语", "每行一条", K.TX, key = "fuckds_welcome_msg", def = ""),
+            It("招呼语", "每行一条", K.TX, key = "fuckds_welcome_msg", def = "", sk = "welcome"),
             It("恢复默认", null, K.ACT, cmd = "hello_reset"),
         )),
 
@@ -189,7 +226,7 @@ object Tree {
         Pg("prompt", "文件快捷选项", listOf(
             It("上传文件后的快捷发送项。场景填 image 或 file；内容为点击后发送的文字，清空即删除该行。",
                 null, K.INFO),
-            It("内容", "每行一条：场景|内容", K.TX, key = "fuckds_prompt_feature", def = ""),
+            It("内容", "每行一条：场景|内容", K.TX, key = "fuckds_prompt_feature", def = "", sk = "prompt"),
             It("恢复默认", null, K.ACT, cmd = "prompt_reset"),
         )),
 
@@ -197,12 +234,6 @@ object Tree {
         Pg("db", "本地数据库", listOf(
             It("防撤回备份库：共 N 条 / 占用 N KB（宿主回读）", null, K.INFO),
             It("清空", null, K.ACT, cmd = "db_clear"),
-        )),
-
-        /* ───────── 音频通话（wip）───────── */
-        Pg("call", "音频通话 (wip)", listOf(
-            It("持续聆听 → 转文字 → 发消息 → 朗读回复（循环）", null, K.INFO),
-            It("TTS 播放探针", null, K.ACT, cmd = "tts_probe"),
         )),
     )
 

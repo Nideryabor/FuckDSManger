@@ -1,0 +1,17 @@
+项	内容	结论
+核验方法	tools/gray_check.py（寄存器跟踪解析宿主字典 + 比对模块 GmDialog 三数组）	—
+宿主字典源	fu2=总表(65) · yib=录音语音域(7) · wza=TTS域(7)	共 79 条
+模块表	GmDialog.KEYS/NAMES/TYPES（原 83）	本版 86
+① 类型不符	search_state_on_login	⚠️ 模块=t、宿主按 String(j) 读 —— 2.5.2 核验表当年判定 **OK**，非回归
+① 类型不符	search_state_on_launch	同上（OK）
+① 类型不符	search_state_on_manually_created_chat	同上（OK）
+① 类型不符	search_state_on_automatically_created_chat	同上（OK）
+① 其它	key_tts_voice_id	✅ 宿主用 MMKV->q(String) 读（decodeString）= String ⇒ 模块 s 正确（是我解码表缺 q）
+① 真实类型不符	**0 个**	✅ 命脉无恙
+② 新键纳管	edit_canvas_brush_enabled	Boolean	多模态相机是否提供圈选画笔 → **已纳管**（索引 0x53）
+② 新键纳管	enable_wechat_upload	Boolean	是否显示微信上传文件入口 → **已纳管**（0x54）
+② 新键纳管	key_tts_voice_list	String	TTS 可选音色列表 → **已纳管**（0x55）
+③ 未收录	11 个 kv_remote_settings_*	✅ 属**下发域**（不在类型字典里）；逐个搜过，**新宿主全部存在**
+③ 未收录	key_auto_tts_enabled	✅ 属 TTS 域，宿主存在
+实证	宿主解码方法 → 模块类型码	c(String)Z→b · g(String)I→i · e(String)F→f · j(String)String→s · k/q(String)String→s/t
+备注	宿主 MMKV 读法在新版**没变**（仍是 c/g/e/j/k/q）⇒ 历史高发的 M1 故障模式本轮**未命中**

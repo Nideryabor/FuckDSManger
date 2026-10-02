@@ -1,0 +1,103 @@
+文件	行号	类	形态	字面量	类别	新值	依据
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	520	GmBubble	findClass	zc	类名	pr6	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	526	GmBubble	getStaticObjectField	o	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	667	GmBubble	findClass	tn0	类名	jq0	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1662	GmBubble	findClass	tt7	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1676	GmBubble	callStaticMethod	b	方法?	b	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1699	GmBubble	findClass	zc	类名	pr6	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1705	GmBubble	getStaticObjectField	o	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1883	GmBubble	findClass	uia	类名	qk7	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1889	GmBubble	callStaticMethod	u	方法?	v	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1928	GmBubble	findClass	uia	类名	qk7	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1934	GmBubble	callStaticMethod	v	方法?	w	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2062	GmBubble	findClass	uia	类名	qk7	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2068	GmBubble	callStaticMethod	v	方法?	w	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2155	GmBubble	findClass	uia	类名	qk7	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2161	GmBubble	callStaticMethod	u	方法?	v	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	77	GmBubbleCellHook	callMethod	D	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	245	GmBubbleCellHook	findClass	vq	类名	mr	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	315	GmBubbleCellHook	callMethod	D	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	337	GmBubbleCellHook	callMethod	D	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	458	GmBubbleCellHook	findClass	c76	类名	x97	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmBubbleFitHook.smali	27	GmBubbleFitHook	getObjectField	d	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	78	GmCallDialog	callMethod	D	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	113	GmCallDialog	callMethod	l	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	506	GmCallDialog	findClass	cn1	类名	g27	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	566	GmCallDialog	callMethod	J	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	610	GmCallDialog	callMethod	M	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	618	GmCallDialog	getObjectField	f	方法?	e	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	645	GmCallDialog	callMethod	x	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	923	GmCallDialog	callMethod	h	方法?	h	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	966	GmCallDialog	findClass	ao1	类名	gh2	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	972	GmCallDialog	findClass	pr8	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	978	GmCallDialog	findClass	java.lang.String	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	984	GmCallDialog	findClass	java.util.List	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	990	GmCallDialog	findClass	wr	类名	ns	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1672	GmCallDialog	getObjectField	j	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1722	GmCallDialog	callMethod	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1827	GmCallDialog	findClass	gz3	类名	bz4	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1853	GmCallDialog	callMethod	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1959	GmCallDialog	callMethod	H	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1994	GmCallDialog	findClass	gz3	类名	bz4	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	2020	GmCallDialog	callMethod	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	2266	GmCallDialog	callMethod	c	方法?	i	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	2278	GmCallDialog	callMethod	I	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	2335	GmCallDialog	callMethod	M	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	2371	GmCallDialog	callMethod	N	方法?	Y	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmCallHook.smali	149	GmCallHook	getObjectField	a	方法?	a	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmCallHook.smali	196	GmCallHook	getObjectField	b	方法?	b	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmCallHook.smali	219	GmCallHook	getObjectField	g	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallHook.smali	245	GmCallHook	getObjectField	i	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmCallHook.smali	253	GmCallHook	getObjectField	m	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmDevice.smali	195	GmDevice	findClass	android.provider.Settings$Secure	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmDsHook2.smali	30	GmDsHook2	getObjectField	a	方法?	a	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/GmEntry.smali	84	GmEntry	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/GmEntry.smali	154	GmEntry	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/GmEntry.smali	249	GmEntry	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/GmEntry.smali	338	GmEntry	findClass	com.deepseek.chat.MainActivity	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/GmEntry.smali	734	GmEntry	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/GmEntry.smali	763	GmEntry	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/GmEntry.smali	780	GmEntry	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/GmEntry.smali	930	GmEntry	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/GmEntry.smali	998	GmEntry	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/gm/GmEntryHook.smali	32	GmEntryHook	findClass	lp9	类名	s4b	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmEntryHook.smali	38	GmEntryHook	getStaticObjectField	a	方法?	a	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmEnv.smali	684	GmEnv	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/gm/GmEnv.smali	834	GmEnv	findClass	android.os.Build	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmHello.smali	641	GmHello	callMethod	allKeys	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmPaintModHook.smali	55	GmPaintModHook	findClass	vk0	类名	jn0	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmPainterHook.smali	248	GmPainterHook	findClass	le	类名	af	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmPainterHook.smali	266	GmPainterHook	findClass	ok0	类名	an0	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	293	GmPrompt	findClass	com.tencent.mmkv.MMKV	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	303	GmPrompt	callStaticMethod	l	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	341	GmPrompt	callMethod	decodeString	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	386	GmPrompt	findClass	com.tencent.mmkv.MMKV	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	396	GmPrompt	callStaticMethod	l	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	432	GmPrompt	callMethod	encodeString	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmReplyHook.smali	39	GmReplyHook	findClass	we5	类名	pz7	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmReplyHook.smali	45	GmReplyHook	getStaticObjectField	F	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmResumeHook.smali	66	GmResumeHook	findClass	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/gm/GmResumeHook.smali	169	GmResumeHook	findClass	kf5	类名	kh7	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmResumeHook.smali	192	GmResumeHook	findClass	ok0	类名	an0	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmRevokeHook.smali	49	GmRevokeHook	callMethod	j	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmStore.smali	91	GmStore	callMethod	allKeys	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmStore.smali	185	GmStore	findClass	com.tencent.mmkv.MMKV	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmStore.smali	195	GmStore	callStaticMethod	l	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmSuggestAi.smali	1730	GmSuggestAi	findClass	wr	类名	ns	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmSuggestAi.smali	1882	GmSuggestAi	findClass	hp8	类名	dz9	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	74	GmSuggestHook	findClass	g56	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	322	GmSuggestHook	findClass	g56	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	527	GmSuggestHook	findClass	g56	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	563	GmSuggestHook	getObjectField	b	方法?	b	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	905	GmSuggestHook	getObjectField	b	方法?	b	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	913	GmSuggestHook	callMethod	setValue	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	918	GmSuggestHook	callMethod	c1	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	922	GmSuggestHook	callMethod	i1	方法/字段		⚠ 待 frida 活体审计
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	960	GmSuggestHook	callMethod	b	方法?	b	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	1218	GmSuggestHook	findClass	g56	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	1295	GmSuggestHook	setObjectField	(非字面量/未找到)	需人工		非字面量
+com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	1562	GmSuggestHook	getObjectField	c	方法?	i	重定位表-方法映射(需核对对象类)
+com/nidyaber/fuckdsmanger/gm/GmSync.smali	47	GmSync	findClass	p66	类名	m97	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmSync.smali	61	GmSync	findClass	h02	类名	yt2	重定位表-类映射
+com/nidyaber/fuckdsmanger/gm/GmSync.smali	75	GmSync	findClass	com.tencent.mmkv.MMKV	类名		⚠ 未重定位（本轮不注册）
+com/nidyaber/fuckdsmanger/gm/GmVectorHook.smali	109	GmVectorHook	setObjectField	string	方法/字段		⚠ 待 frida 活体审计

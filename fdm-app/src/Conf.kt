@@ -59,6 +59,44 @@ object Conf {
         Key("fuckds_suggest_text", "自定义建议文本", KType.T, "", hint = "留空 = 不用固定文本"),
     )
 
+    // ───────── 液态玻璃（4 键 · 2026-09-30）─────────
+    //  宿主侧读法见 mod-src/.../glass/GmGlassCfg.java —— 两边默认值必须一致
+    //
+    //  ★ 2026-09-30 主人拍板做减法：「把圆角高光去了，只保留液态玻璃和可自定义玻璃颜色本身」
+    //    ⇒ 圆角 / 水滴高光 / 亮边 / 斜向高光 **全部拆掉**，键也一并撤掉
+    val glass = listOf(
+        Key("fuckds_glass_on", "液态玻璃", KType.B, false, hint = "给宿主所有元素套上玻璃"),
+        Key("fuckds_glass_color", "玻璃颜色", KType.C, 0xFFFFFFFF.toInt(),
+            hint = "玻璃本体就这一层颜色；浓度当它的透明度"),
+        Key("fuckds_glass_tint", "浓度（= 透明度）", KType.I, 45, 0, 100,
+            hint = "0 = 全透只剩玻璃，100 = 完全不透"),
+        Key("fuckds_glass_blur", "模糊度", KType.I, 20, 0, 40, hint = "越大越磨砂"),
+        Key("fuckds_glass_disp", "色散", KType.I, 12, 0, 60,
+            hint = "边缘按 RGB 分离采样（×0.1px）—— 这是「液态」最像的那一下"),
+        Key("fuckds_glass_scope", "作用范围", KType.E, 0,
+            choices = listOf("所有元素", "仅标准按钮")),
+        // ★ 主人 2026-09-30：「再疯一点：多方案切换」
+        //   shader 正文在 参考/液态玻璃多方案/*.agsl，由 tools/gen_glass_shaders.py 逐字生成
+        Key("fuckds_glass_engine", "方案", KType.E, 0,
+            choices = listOf("Haze 式", "Cloudy 式", "轻量扰动")),
+        // ★ 主人：「还是会抓到别的文字……」——底图是整屏截图，连字一起截进去了。
+        //   打开后从元素边缘估背景色，把离它太远的像素（文字/图标）替换掉 ⇒ 底图干净
+        Key("fuckds_glass_clean", "擦掉内容（只留背景色）", KType.B, false,
+            hint = "解决「玻璃里糊出字、和上层文字叠影」"),
+        Key("fuckds_glass_clean_tol", "擦除容差", KType.I, 12, 0, 60,
+            hint = "×0.01；越大擦得越狠（可能连浅色图标一起擦）"),
+        // ★ 底图来源（2026-09-30 主人拍板走「底色」）
+        // ★ 第三种（2026-10-01 主人：「糊了就不叫玻璃了」）——
+        //   玻璃要的是「看清 + 边缘掰弯」，不是糊。而背景图正好给"清晰 + 有纹理"
+        Key("fuckds_glass_src", "底图来源", KType.E, 0,
+            choices = listOf("元素底色", "屏幕截图", "我的背景图")),
+        // ★ 主人：「顺便实现方式加一个 cpu 模拟做备用」
+        //   GPU = RenderNode + RenderEffect（画质好、性能好，但要硬件画布）
+        //   CPU = 纯 Canvas 绘制（BitmapShader 当 Paint 的 shader），兼容面更宽
+        Key("fuckds_glass_impl", "实现方式", KType.E, 0,
+            choices = listOf("自动", "强制 GPU", "强制 CPU")),
+    )
+
     // ───────── 其它文本（2 键）─────────
     val texts = listOf(
         Key("fuckds_welcome_msg", "招呼语", KType.T, "", hint = "打开 App 时显示的那句话"),
@@ -75,12 +113,19 @@ object Conf {
     )
 
     /** 调试页用：全部键（含只读的） */
-    val all: List<Key> = bg + bubble + suggest + texts + pass
+    val all: List<Key> = bg + bubble + suggest + glass + texts + pass
 
     fun find(key: String): Key? = all.firstOrNull { it.key == key }
 
-    /** 气泡可选颜色（界面用；值本身是 ARGB int） */
+    /**
+     * 可选颜色（界面用；值本身是 ARGB int）。
+     *
+     * 前面 5 个是给**液态玻璃**用的中性色（玻璃是磨砂质感，中性色才对味），
+     * 后面是气泡一直用的那批彩色。
+     */
     val palette = listOf(
+        0xFFFFFFFF.toInt(), 0xFFE8E8E8.toInt(), 0xFF9E9E9E.toInt(),
+        0xFF3A3A3A.toInt(), 0xFF000000.toInt(),
         0x00000000, 0xFFEF5350.toInt(), 0xFFFFA726.toInt(), 0xFFFFEE58.toInt(),
         0xFF66BB6A.toInt(), 0xFF42A5F5.toInt(), 0xFF7E57C2.toInt(), 0xFFEC407A.toInt(),
     )

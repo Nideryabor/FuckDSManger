@@ -10,6 +10,8 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -117,8 +119,72 @@ public final class FdmPush {
 
             SharedPreferences sp = sp(ctx);
             int n = 0;
+
+            // ═══════════════════════════════════════════════════════════════════
+            //  ★★ 2026-10-01 重大修复：UI 存了**两套格式**，我们只读了旧的那套 ★★
+            //
+            //  现象：主人开着的「用户气泡」在宿主侧永远是 false，颜色/图片全不生效。
+            //        （宿主日志铁证：`fuckds_ububble_on=false → GmBubble.setUOn`）
+            //
+            //  真因：UI 的 SharedPreferences 里同一个键存了两份 ——
+            //        · 【旧格式】顶层 `<boolean name="fuckds_ububble_on" value="false"/>` ← 残留
+            //        · 【新格式】`<string name="cfg.fuckds_ububble_on">1</string>` + `.at` + `.ok`
+            //        而下面那个循环**只认顶层 fuckds_***，于是永远读到旧格式的残留值。
+            //
+            //  修法：**新格式优先**（cfg.<key>），旧格式只用来"兜底"和推断类型。
+            // ═══════════════════════════════════════════════════════════════════
+            Map<String, Object> legacy = new HashMap<String, Object>();
             for (Map.Entry<String, ?> e : sp.getAll().entrySet()) {
+                String k = e.getKey();
+                if (k != null && k.startsWith("fuckds_")) legacy.put(k, e.getValue());
+            }
+
+            java.util.Set<String> taken = new HashSet<String>();
+            for (Map.Entry<String, ?> e : sp.getAll().entrySet()) {
+                String k = e.getKey();
+                if (k == null || !k.startsWith("cfg.fuckds_")) continue;
+                String key = k.substring(4);                 // 去掉 "cfg."
+                if (key.endsWith(".at") || key.endsWith(".ok")) continue;
+                Object v = e.getValue();
+                if (!(v instanceof String)) continue;
+                String s = (String) v;
+                if (s.length() == 0) { taken.add(key); continue; }   // 空 = 没设过
+                Object hint = legacy.get(key);               // 旧格式的原类型用来定类型
+                n += putTyped(bools, ints, longs, floats, strings, key, s, hint);
+                taken.add(key);
+            }
+
+            // 旧格式兜底：只补新格式**没有**的键（这样残留的 false 不会再盖住新值）
+            for (Map.Entry<String, Object> e : legacy.entrySet()) {
+                if (taken.contains(e.getKey())) continue;
                 n += putAuto(bools, ints, longs, floats, strings, e.getKey(), e.getValue());
+            }
+
+            // ★★ 自愈：把「迁移遗留」的旧格式键清掉 ★★
+            //
+            //  主人 2026-10-01：「没想到迁移个 UI 会有这么多 bug」—— 一针见血。
+            //  UI 从"顶层 fuckds_xxx"迁到"cfg.fuckds_xxx"之后，**旧键留在 SP 里发霉**，
+            //  而任何还按旧格式读的代码都会拿到**残留值**（今晚的用户气泡就是这么废的）。
+            //
+            //  与其等下一个坑冒头，不如：**只要新格式有值，就把旧键删掉**。
+            //  删掉之后，旧读取路径自然读到"没有" ⇒ 走默认值 ⇒ 也不会再盖住新值。
+            //  这是幂等的：第二次跑就没有可删的了。
+            try {
+                SharedPreferences.Editor ed0 = null;
+                int cleaned = 0;
+                for (String k : taken) {
+                    if (legacy.containsKey(k)) {
+                        if (ed0 == null) ed0 = sp.edit();
+                        ed0.remove(k);
+                        cleaned++;
+                    }
+                }
+                if (ed0 != null) {
+                    ed0.apply();
+                    Log.i(TAG, "🧹 清理迁移遗留的旧格式键 " + cleaned + " 个（新格式已有值）");
+                }
+            } catch (Throwable t) {
+                Log.e(TAG, "清理旧格式键失败（不影响推送）", t);
             }
 
             File ext = ctx.getExternalFilesDir(null);
@@ -171,6 +237,40 @@ public final class FdmPush {
      * ★ 只认 `fuckds_` 前缀 —— 我们自己的记账键（`rev` / `applied_rev` / `applied_at`）
      *   绝不能推给宿主（实测漏过一次：宿主存储里多出 `applied_rev`、`applied_at` 这种垃圾键）。
      */
+    /**
+     * 按【字符串值 + 旧格式的类型提示】放进对应的 JSON 组。
+     *
+     * <p>UI 的 `cfg.<key>` 一律存成字符串（"true" / "-27787" / "你好"），
+     * 所以类型得靠两件事推：① 旧格式那份的 Java 类型；② 字符串本身的样子。
+     * 类型错了宿主会**静默读回默认值**（底座桩里写明的铁律）—— 所以这一步必须准。
+     */
+    private static int putTyped(JSONObject bools, JSONObject ints, JSONObject longs,
+                                JSONObject floats, JSONObject strings,
+                                String k, String s, Object hint) throws Exception {
+        String t = s.trim();
+        try {
+            if (hint instanceof Boolean) {
+                bools.put(k, Boolean.parseBoolean(t) || "1".equals(t)); return 1;
+            }
+            if (hint instanceof Long)    { longs.put(k, Long.parseLong(t)); return 1; }
+            if (hint instanceof Float || hint instanceof Double) {
+                floats.put(k, Float.parseFloat(t)); return 1;
+            }
+            if (hint instanceof Integer) { ints.put(k, Integer.parseInt(t)); return 1; }
+
+            // 没有类型提示 ⇒ 照字符串的样子猜
+            if ("true".equalsIgnoreCase(t))  { bools.put(k, true);  return 1; }
+            if ("false".equalsIgnoreCase(t)) { bools.put(k, false); return 1; }
+            Long l = Long.parseLong(t);      // 会抛 ⇒ 说明不是数字
+            if (l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) ints.put(k, l.intValue());
+            else longs.put(k, l);
+            return 1;
+        } catch (Throwable notNumber) {
+            strings.put(k, s);
+            return 1;
+        }
+    }
+
     private static int putAuto(JSONObject bools, JSONObject ints, JSONObject longs,
                                JSONObject floats, JSONObject strings,
                                String k, Object v) throws Exception {

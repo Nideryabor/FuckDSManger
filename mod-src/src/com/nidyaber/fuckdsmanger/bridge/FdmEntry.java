@@ -41,7 +41,7 @@ public final class FdmEntry implements IXposedHookLoadPackage {
      *
      * 取名依据：`kf5` / `uia` / `fh6` 都是底座第一梯队挂的宿主类（见 `GmEntry.handleLoadPackage`）。
      */
-    private static final String[] HOST_ANCHORS = {"kf5", "uia", "fh6"};
+    private static final String[] HOST_ANCHORS = {"kh7", "qk7", "w2b"};   // 2.6.1 重定位（旧名 kf5/uia/fh6 在新宿主里是【别的类】）
 
     /** 任一锚点能找到 ⇒ 这就是宿主。名字无关；全找不到才判非宿主。 */
     private static boolean isHost(ClassLoader cl) {
@@ -99,6 +99,39 @@ public final class FdmEntry implements IXposedHookLoadPackage {
             FdmUiHook.install(FdmEntry.class.getClassLoader());
         } catch (Throwable t) {
             XposedBridge.log("[FDM] FdmUiHook.install 抛了（不影响其它钩子）：" + t);
+        }
+
+        // ④.5 运行时自证探针（临时，找 2.6.1 的设置行锚点用）
+        if (isHost(lp.classLoader)) {
+            try {
+                GmProbe.install(lp.classLoader);
+                XposedBridge.log("[FDM] GmProbe 已安装");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] GmProbe 安装失败：" + t);
+            }
+        }
+
+        // ④.6 通话页留驻（2026-10-02）：hook CallPageViewModel 的「要不要渲染通话页」闸门。
+        //      放在这里是因为**只有这里能拿到 lp.classLoader（宿主自己的 ClassLoader）**，
+        //      用桥的 loader 去 findClass("oq1") 不一定找得到。
+        //      锚点找不到就自己 catch（宿主升级改名 ⇒ 等于没装，绝不连累宿主）。
+        if (isHost(lp.classLoader)) {
+            try {
+                GmCallPin.install(lp.classLoader);
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] GmCallPin.install 抛了（不影响其它钩子）：" + t);
+            }
+        }
+
+        // ④ 液态玻璃（2026-09-30）：给宿主所有按钮上玻璃。
+        //    只在宿主进程装（isHost 判过）；里面全是 try/catch，坏也坏不到宿主身上。
+        if (isHost(lp.classLoader)) {
+            try {
+                com.nidyaber.fuckdsmanger.glass.GmGlassInstall.install(lp.classLoader);
+                XposedBridge.log("[FDM] 液态玻璃已安装");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] 液态玻璃安装失败（不影响其它钩子）：" + t);
+            }
         }
     }
 }

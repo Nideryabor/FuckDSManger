@@ -84,6 +84,10 @@ MANIFEST = """<?xml version="1.0" encoding="utf-8"?>
                android:icon="@drawable/ic_launcher" android:allowBackup="false"
                android:debuggable="true"
                android:forceQueryable="true">
+    <!-- ★ 2026-09-30：LSPosed「推荐作用域」—— 装完自动勾上这两个宿主包名，
+         省掉"每次重装都要进 LSPosed 手动重勾"（重装会重置作用域，踩了三次）。
+         aapt2 会把 @array/xposedscope 解析成资源 id 写进二进制清单 ✓ -->
+    <meta-data android:name="xposedscope" android:resource="@array/xposedscope"/>
     <activity android:name="com.nidyaber.fuckdsmanger.MainActivity" android:exported="true"
               android:configChanges="orientation|screenSize|keyboardHidden|uiMode">
       <intent-filter>

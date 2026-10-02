@@ -62,6 +62,10 @@ tmp/LSPosed_*.zip
 tools/node/
 tools/aapt2/
 
+# frida 服务端二进制 / Python16 虚拟环境：本机下载装，不入库（共 ~190MB）
+tools/frida/frida-server-*-arm64
+tools/frida/py16/
+
 # Python 字节码
 __pycache__/
 
@@ -79,3 +83,22 @@ tools/出笼隧道/.adbport
 
 # 签名辅助文件
 *.idsig
+
+# ============================================================
+#  ⚠️ 抓包 / 原始流量：**含活 Token，绝不容许入库**
+#     远端是 https://github.com/dxyabab/FuckDSManger.git
+#     一旦 commit/push 出去，token 就等于公开了 —— 只能靠这里拦住
+#     （尼得亚伯 2026-10-01 晚）
+# ============================================================
+/抓包/
+/流量/
+*.pcap
+*.pcapng
+*.cap
+*.har
+*.chls
+*.saz
+*.mitm
+*token*.txt
+*_token*
+*tokendump*

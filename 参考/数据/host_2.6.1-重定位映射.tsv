@@ -1,0 +1,52 @@
+域	角色	旧(2.5.2)	新(2.6.1)	旧方法	新方法	置信	证据
+入口	设置行→路由桶	m5	ew1	v	w	高	3个packed-switch/2方法同构 + 默认分支 new Route("message_overlay") 完全一致
+入口	Kotlin Unit 单例	lp9	s4b	a	a	高	ew1.w() 返回 sget s4b->a（与旧 m5.v() 同）；且 s4b 带 "kotlin.Unit" 串
+灰度	配置源头model域	p66	m97	h	h	高	串100%(20/20)；h->h 对齐分84(4参)
+灰度	配置源头main域	h02	yt2	u	v	高	串100%(239/239)；u->v 对齐分705(4参)
+灰度	类型字典总表63项	o02	fu2	—	—	高	串100%(160/160)+形状4.00全同
+灰度	类型字典录音语音7项	n2a	yib	—	—	高	串100%(18/18)+形状全同
+灰度	类型字典TTS 2项	pk9	wza	—	—	高	串93.9%+形状3/4
+灰度	下发数据对象	bx4	py5	get	get	高	串100%(4/4)+形状全同；get->get 对齐分9
+美化	头像Painter	kf5	kh7	K	x	高	串 painterResource；对齐分207
+美化	Painter基类	ku6	mz7	—	—	高	形状4.00；且=kh7->x() 返回类型
+美化	图像包装	le	af	a	a	高	<init>(Bitmap)+1字段2方法同构；对齐分9
+美化	BitmapPainter	ok0	an0	toString	toString	高	串100%(10/10)+形状全同
+美化	账号名桶	s5	a6	v	w	高	串100%(21/21)
+美化	账号头像桶	p5	x5	v	w	高	形状同构+引用 d9b；v->w 对齐分27
+美化	账号数据类	it9	d9b	—	—	高	形状4.00(4方法7字段静态2)
+美化	图标Hook锚	me4	pe5	a	a	高	串100%(1/1)+形状全同；对齐分12
+美化	Modifier.paint锚	fh6	w2b	N	Y	高	N(Lx97;Lmz7;Laa;Lw73;FLjn0;I) 七位逐一对齐(含 vk0->jn0)
+美化	Modifier 扩展桶	uia	qk7	u/v	C/D	高	全dex唯一构造背景Element；C/D 签名与 u/v 完全一致
+美化	背景Element	se0	eh0	c/ctor	c/ctor	高	全dex唯一 ctor(J,iq0,gn9,I)；5方法4字段吻合
+美化	ShaderBrush实现	tn0	jq0	b	b	高	b(J)Shader 同名同形；final/3方法2字段
+美化	气泡阴影	jd8	dn9	ctor	ctor	高	串100%(5/5)+形状全同
+消息	消息列表Composable	h91	d12	a	a	高	SourceInfo ChatMessageList.kt；形参逐位对齐
+消息	列表状态对象	pe5	sf6	—	—	高	串100%(4/4)+形状全同；d12 形参第1位
+消息	消息主存储	wr	ns	x/z	D/F	高	串100%(14/14)；f:LinkedHashMap 名未变；z->F 分36
+消息	渲染列表	hp8	dz9	isEmpty	isEmpty	高	串100%(3/3)；d12 形参第5位
+消息	真·消息类	nx	fy	—	—	高	串100%(3/3)+方法/字段数全同
+消息	消息基类	vq	mr	—	—	中高	形状3.96(45->46方法/6字段)
+消息	气泡单元Composable	pn9	i93	c	i	高	SourceInfo ChatMessageCell；形参八位逐位对齐
+消息	提示词文本	pd5	i93	H/I	R/S	高	SourceInfo ModelSettingsDefaults；签名逐位对齐
+消息	消息气泡作用域	zc	pr6	s	j	高	SourceInfo ChatPage.kt；6参同形
+消息	气泡作用域状态	ls9	ua0	f	e	高	SourceInfo UserChatMessageBubble.kt×3；f->e 分33
+消息	建议Prompt视图	yb5	hs7	e/f	e/f	高	SourceInfo PromptTemplateView/Impl；方法名未变
+消息	会话提供接口	ao1	gh2	I/J/M	k/l0/W	高	串96.7%；I->k 分18、J->l0 分30
+消息	通话命令(打字)	cn1	g27	ctor	ctor	中	final+ctor(String,int)+1方法；call域wip
+通话	ASR/门控	yp1	(未定位)	c/b/ctor	—	低	5方法2字段带 hp8 字段；满树未找到唯一候选 → 本轮【不注册】
+通话	状态机信号	um1	(未定位)	—	—	低	implements 命令接口；本轮【不注册】
+环境	字节APM root	sr9	zx8	w	(w)	高	串100%(101/101)；/sbin/su
+类型	Compose Composer	ey3	yx4	—	—	高	入度 42742->41173 排位第2；painter 签名佐证
+类型	Modifier	c76	x97	—	—	高	接口含 x(Lx97;)Lx97;(then)；d12 形参第8位；投票
+类型	Brush	sn0	iq0	—	—	高	eh0 ctor 第2参（老 se0 ctor 第2参同位置）
+类型	ShaderBrush	dd8	im9	—	—	高	abstract 3方法；jq0 引用之
+类型	Shape	md8	gn9	—	—	高	eh0 ctor 第3参；投票 md8->gn9
+类型	Painter	ku6	mz7	—	—	高	见美化行
+类型	We5	we5	pz7	F	?	中	入度 5844->5586 排位一致；GmReplyHook 用
+类型	Vk0	vk0	jn0	—	—	高	类型投票3票；fh6.N 签名第6位
+类型	Gz3	gz3	bz4	—	—	高	类型投票2票；GmCallDialog 用
+资源	检查更新文案	0x7f0f021f	0x7f0f0263	—	—	高	名 profile_check_for_updates
+资源	最新版文案	0x7f0f0220	0x7f0f0264	—	—	高	名 profile_check_for_updates_newest
+资源	助手头像	0x7f070059	0x7f07005a	—	—	高	名 assistant_message_avatar
+入口	宿主MainActivity	com.deepseek.chat.MainActivity	同左	—	—	高	未混淆
+——	未定位(c73/tt7/pr8/g56/c1/i1)	—	—	—	—	低	本轮【不注册】，避免挂错类

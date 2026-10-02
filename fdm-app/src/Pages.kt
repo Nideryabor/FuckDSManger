@@ -63,11 +63,43 @@ private fun readScaledBase64(ctx: Context, uri: Uri, maxPx: Int = 384): String? 
     return android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
 }
 
-private fun readValue(ctx: Context, it: It): Any = when (it.k) {
-    K.SW -> hostBool(ctx, it.key!!) ?: ctxSp(ctx).getBoolean(it.key!!, it.def as? Boolean ?: false)
-    K.SL, K.CH, K.CO -> ctxSp(ctx).getInt(it.key!!, (it.def as? Int) ?: 0)
-    K.TX -> hostStr(ctx, it.key!!) ?: (ctxSp(ctx).getString(it.key!!, it.def as? String ?: "") ?: "")
-    else -> ""
+/**
+ * 读一个配置项的当前值 🐲
+ *
+ * <p>★ 2026-10-01 修：「**液态玻璃总是自动变回 Haze**」的真因 ——
+ * 界面**写的是新格式 `cfg.<key>`、读的却是旧格式顶层键**，两套对不上 ⇒
+ * 读不到就走默认值 ⇒ 显示成 Haze（**而宿主那边一直是对的**，日志 `engine=1`，被界面骗了）。
+ *
+ * <p>⇒ 规则改成：**新格式优先（`cfg.<key>`）**，读不到再退回旧格式顶层键。
+ * 旧格式只当兜底，不再作为主路径。
+ */
+private fun readValue(ctx: Context, row: It): Any {
+    val key = row.key ?: return ""
+    // ① 新格式：cfg.<key>（一律存成字符串，按行的类型转回来）
+    val raw = ctxSp(ctx).getString("cfg.$key", null)
+    if (raw != null && raw.isNotEmpty()) {
+        when (row.k) {
+            K.SW -> return raw.equals("true", true) || raw == "1"
+            K.SL, K.CH, K.CO -> raw.toIntOrNull()?.let { return it }
+            K.TX -> return raw
+            else -> {}          // 类型对不上 ⇒ 继续往下兜底
+        }
+    }
+    // ② ★ 2026-10-01 修：**不再退回旧格式顶层键！**
+    //
+    //   原来这里会退回读顶层 `fuckds_<key>`，结果——
+    //   `cfg.<key>` 一旦被写成空（宿主回执缺 value），就会**读到旧格式的残留值**：
+    //   主人症状：「切回模块会变回 **47 和 20**」「浓度和模糊度死活改不了」。
+    //   而那个残留值又会被 push 回宿主 ⇒ 死循环，怎么改都没用。
+    //
+    //   ⇒ 现在只认 `cfg.<key>`；读不到就直接用**行定义的默认值**。
+    //     旧格式键交给桥的**自愈**去清理（见 FdmPush.push），不再参与读取。
+    return when (row.k) {
+        K.SW -> hostBool(ctx, key) ?: (row.def as? Boolean ?: false)
+        K.SL, K.CH, K.CO -> (row.def as? Int) ?: 0
+        K.TX -> hostStr(ctx, key) ?: (row.def as? String ?: "")
+        else -> ""
+    }
 }
 
 /** 宿主报回来的"模块接口项"真值（cmd.state_all 的 JSON）—— 有就以它为准 */
@@ -153,7 +185,9 @@ private fun ItemRow(
         }
         K.TX -> SettingText(it.label, valueParam as String, it.key, host, it.hint) { v ->
             poke(bump)
-            FdmPush.sendCmd(ctx, "cfg_put", it.key!! + "\u001f" + "i" + "\u001f" + v); bump()
+            // ★ 2026-09-30 修：文本项原来发的是 "i"（整数）⇒ 桥里 Integer.parseInt("你好") 直接抛
+            //   ⇒ 招呼语/回复建议/提示词这些**一个字都写不进去**。文本必须发 "s"。
+            FdmPush.sendCmd(ctx, "cfg_put", it.key!! + "\u001f" + "s" + "\u001f" + v); bump()
         }
         K.SUB -> SettingNav(it.label, it.hint) { onNav(it.sub!!) }
         K.ACT -> SettingAction(it.label, it.hint ?: "走模块自己的入口执行") {
@@ -175,15 +209,20 @@ private fun ItemRow(
 }
 
 /** 按类型把值存到本地（界面显示 + 重进回显都靠它）。 */
-private fun saveLocal(ctx: Context, it: It, v: Any) {
-    val k = it.key ?: return
-    val ed = ctxSp(ctx).edit()
-    when (v) {
-        is Boolean -> ed.putBoolean(k, v)
-        is Int -> ed.putInt(k, v)
-        else -> ed.putString(k, v.toString())
-    }
-    ed.apply()
+/**
+ * 本地存一个配置项。
+ *
+ * <p>★ 2026-10-01 修：原来写的是**旧格式顶层键**，而读取路径（现在）以 `cfg.<key>` 为主 ⇒
+ * 读写又对不上。统一成**只写新格式** `cfg.<key>`：
+ * <ul>
+ *   <li>读取（[readValue]）→ 新格式优先 ✅</li>
+ *   <li>桥（`FdmPush.push`）→ 新格式优先 ✅</li>
+ *   <li>桥的**自愈**会把残留的旧格式键删掉 ⇒ 老存档自然消亡 ✅</li>
+ * </ul>
+ */
+private fun saveLocal(ctx: Context, row: It, v: Any) {
+    val k = row.key ?: return
+    ctxSp(ctx).edit().putString("cfg.$k", v.toString()).apply()
 }
 
 /* ─────────────── 页面 ─────────────── */
@@ -317,6 +356,8 @@ fun GrayPage(onBack: () -> Unit) {
     // 页面一进来就让宿主回读，并**等它回来**（数据是广播回来的，界面得主动重算）
     LaunchedEffect(Unit) {
         FdmPush.sendCmd(ctx, "gray_all", null)
+        FdmPush.sendCmd(ctx, "call_state", null)     // ★ 通话开关状态（宿主回 cmd.call_state）
+        FdmPush.sendCmd(ctx, "call_pin_state", null) // ★ 通话页留驻状态（cmd.call_pin_state）
         repeat(8) {
             kotlinx.coroutines.delay(1200)
             tick++
@@ -335,16 +376,25 @@ fun GrayPage(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(top = 8.dp, bottom = 24.dp),
         ) {
+            // ★★ 2026-10-02「通话功能（实验）」
+            //    这一项**不是**宿主灰度键 —— 它是往宿主的 model_configs 里补
+            //    "call_feature":{}，对应宿主 2.6.1 的通话入口判据（ChatPageTopBar.kt:105）。
+            //    ⇒ 单独摆在最上面，跟下面那堆 kv_remote_settings_* 区分开。
+            CallFeatureRow { tick++ }
+            Spacer(Modifier.height(6.dp))
+            CallPinRow { tick++ }
+            Spacer(Modifier.height(14.dp))
             SectionLabel("改完点保存，重启 App 生效；均会自动备份原值，点全部恢复可还原")
             GrayTable.items.forEachIndexed { i, g ->
                 if (i > 0) Spacer(Modifier.height(6.dp))
                 GrayRow(g, hostVals[g.key]) { tick++ }
             }
             Spacer(Modifier.height(16.dp))
-            SettingAction("保存并推给宿主", "逐项写入宿主的 kv_remote_settings_*（先备份原值）") {
-                FdmPush.sendCmd(ctx, "gray_all", null); tick++
-            }
-            SettingAction("全部恢复灰度", "把之前备份的原值还原回去") {
+            // ★ 2026-10-02 修（Bug B）：这里原来有个「保存并推给宿主」按钮，
+            //   实际只发了 `gray_all`（**回读**），**什么都没推** ——
+            //   而每项改动在 GrayRow 里已经**实时写进宿主**了。
+            //   ⇒ 删掉这个安慰剂（下面那个「重新读取」才是真的回读）。
+            SettingAction("全部恢复灰度", "撤掉影子覆盖 + 把备份的原值写回真实键") {
                 FdmPush.sendCmd(ctx, "gray_restore_all", null); tick++
             }
             SettingAction("重新读取宿主当前值", "让宿主再回读一遍") {
@@ -353,6 +403,69 @@ fun GrayPage(onBack: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             SettingInfo("最近一次动作", ctxSp(ctx).getString("last_result", "（无）") ?: "（无）")
         }
+    }
+}
+
+/**
+ * 「通话功能（实验）」开关行 🐲 2026-10-02
+ *
+ * 它**不是**宿主灰度键，所以不参与 GrayTable / gray_put 那一套。
+ * 做法：让宿主进程往 `kv_remote_settings_model_configs_v1` 的每个 model 里
+ * 补一个 `"call_feature":{}` —— 宿主 2.6.1 的通话入口判据就是
+ * `ChatPageTopBar.kt:105` 读 `ModelConfig.call_feature != null`。
+ *
+ * 状态串由宿主回传：`cmd.call_state = "开关|已生效"`（如 `"1|1"`）。
+ * 两位不一致 ⇒ "开了但没生效"（model_configs 还没被宿主写过）。
+ */
+@Composable
+private fun CallFeatureRow(bump: () -> Unit) {
+    val ctx = LocalContext.current
+    val raw = ctxSp(ctx).getString("cmd.call_state", "") ?: ""
+    val on = raw.startsWith("1")
+    val feat = raw.endsWith("1")
+    val label = when {
+        raw.isEmpty() -> "通话功能（实验）：—"
+        !on -> "通话功能（实验）：已关闭"
+        feat -> "通话功能（实验）：已开启 · 已生效"
+        else -> "通话功能（实验）：已开启 · 未生效"
+    }
+    SettingAction(
+        label,
+        "往 model_configs 补 \"call_feature\":{} ⇒ 聊天页顶部栏出现「打电话」图标（宿主 2.6.1）",
+    ) {
+        FdmPush.sendCmd(ctx, "call_set", if (on) "0" else "1")
+        bump()
+    }
+}
+
+/**
+ * 「通话页留驻」开关行 🐲 2026-10-02
+ *
+ * 宿主渲染通话页的闸门 = `ChatCallHost` 里那句 `if (callPageViewModel.a()) CallPage(...)`
+ * （`ChatCallHost.kt:32`）。服务端一还错误（`call mode disabled`）状态就回落到空闲，
+ * 闸门立刻变 false ⇒ **通话页被摘掉**，根本来不及看清它长什么样。
+ *
+ * 本开关钩住那个返回值并强制 true ⇒ 通话页**留在那儿**。
+ *
+ * ⚠️ 副作用（已知）：`a()` 也被聊天页（`hq` = ChatCallState）调用 ⇒
+ *    开着时聊天页可能也认为"正在通话中"（多一条横幅）。不崩，关掉即还原。
+ */
+@Composable
+private fun CallPinRow(bump: () -> Unit) {
+    val ctx = LocalContext.current
+    val raw = ctxSp(ctx).getString("cmd.call_pin_state", "") ?: ""
+    val on = raw.startsWith("1")
+    val label = when {
+        raw.isEmpty() -> "通话页留驻：—"
+        on -> "通话页留驻：已开启"
+        else -> "通话页留驻：已关闭"
+    }
+    SettingAction(
+        label,
+        "服务端报错时不让通话页自动消失 —— 钩住 ChatCallHost 的渲染闸门（CallPageViewModel.a）",
+    ) {
+        FdmPush.sendCmd(ctx, "call_pin_set", if (on) "0" else "1")
+        bump()
     }
 }
 
@@ -405,9 +518,24 @@ private fun GrayRow(g: Gray, hostValIn: String?, bump: () -> Unit) {
 /** 极简 JSON 解析（value 都是字符串） */
 private fun jsonToMap(s: String): Map<String, String> {
     val m = mutableMapOf<String, String>()
-    val re = Regex("\"([^\"]+)\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"")
-    re.findAll(s).forEach { m[it.groupValues[1]] = it.groupValues[2] }
-    return m
+    // ★ 2026-09-30 修：原来用手写正则，只"匹配"转义但不"还原" ⇒ 带换行的值（模板池/招呼语）
+    //   回读出来是字面 `\n` 的一坨，用户一保存还把转义版写回存储 ✗。
+    //   正解：用真 JSON 解析器（它负责还原 \n \" \uXXXX）。
+    try {
+        val o = org.json.JSONObject(s)
+        val ks = o.keys()
+        while (ks.hasNext()) {
+            val k = ks.next()
+            val v = o.opt(k)
+            if (v != null && v !is org.json.JSONObject) m[k] = v.toString()
+        }
+        return m
+    } catch (t: Throwable) {
+        // 兜底：还是解析不了就退回老正则（至少别让整页空白）
+        val re = Regex("\"([^\"]+)\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"")
+        re.findAll(s).forEach { m[it.groupValues[1]] = it.groupValues[2] }
+        return m
+    }
 }
 
 private fun fmt(ms: Long): String =
