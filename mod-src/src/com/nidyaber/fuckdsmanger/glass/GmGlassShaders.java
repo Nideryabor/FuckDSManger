@@ -98,9 +98,13 @@ final class GmGlassShaders {
             + "    half4 cg = fdmSample(clampSample(base));\n"
             + "    half4 cb = fdmSample(clampSample(base - dispersion * grad));\n"
             + "    float3 rgb = float3(float(cr.r), float(cg.g), float(cb.b));\n"
-            + "    float aEff = tintColor.a * fdmFadeFac(sd);\n"
+            + "    float aFac = fdmFadeFac(sd);\n"
+            + "    float aEff = tintColor.a * aFac;\n"
             + "    float3 outRgb = tintColor.rgb * aEff + rgb * (1.0 - aEff);\n"
-            + "    return half4(half(outRgb.r), half(outRgb.g), half(outRgb.b), half(1.0));\n"
+            + "    // ★ 输出 alpha 也带上“向内减色”（2026-10-02 夜，主人：“所有元素都是背景半透明的墙”）——\n"
+            + "    //   只减 tint 的话，中心会露出“原内容 = 一堵实色墙”；alpha 一起减，才是真的“向里化掉”。\n"
+            + "    //   预乘输出：rgb 同乘 aFac（边缘 aFac≈1 处观感与旧版一致）。\n"
+            + "    return half4(half(outRgb.r * aFac), half(outRgb.g * aFac), half(outRgb.b * aFac), half(aFac));\n"
             + "}"
             ;
 
@@ -319,7 +323,10 @@ final class GmGlassShaders {
             + "    // Anti-aliased edge transition\n"
             + "    float alpha = 1.0 - smoothstep(-SMOOTH_EDGE_PX * 0.5, SMOOTH_EDGE_PX * 0.5, sdf);\n"
             + "    half4 bg = fdmSample(xy);\n"
-            + "    return mix(bg, pixel, alpha);\n"
+            + "    half4 outPix = mix(bg, pixel, alpha);\n"
+            + "    // ★ 输出 alpha 带上“向内减色”（理由同 haze —— 只减 tint 会留一堵墙）\n"
+            + "    float aF = fdmFadeFac(sdf);\n"
+            + "    return half4(half(outPix.r * aF), half(outPix.g * aF), half(outPix.b * aF), half(aF));\n"
             + "}"
             ;
 

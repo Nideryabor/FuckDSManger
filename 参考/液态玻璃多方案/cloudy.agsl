@@ -186,5 +186,8 @@ half4 main(float2 xy) {
     // Anti-aliased edge transition
     float alpha = 1.0 - smoothstep(-SMOOTH_EDGE_PX * 0.5, SMOOTH_EDGE_PX * 0.5, sdf);
     half4 bg = content.eval(xy);
-    return mix(bg, pixel, alpha);
+    half4 outPix = mix(bg, pixel, alpha);
+    // ★ 输出 alpha 带上“向内减色”（理由同 haze —— 只减 tint 会留一堵墙）
+    float aF = fdmFadeFac(sdf);
+    return half4(half(outPix.r * aF), half(outPix.g * aF), half(outPix.b * aF), half(aF));
 }

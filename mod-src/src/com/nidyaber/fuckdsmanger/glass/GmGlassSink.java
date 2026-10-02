@@ -690,7 +690,18 @@ public final class GmGlassSink {
             if (fresh) {
                 fit = (Path) cc[2];
             } else {
-                if (cfg.fit && shape != null) fit = fitPathFrom(shape, drawScope, w, h);
+                if ((cfg.fit || edge) && shape != null) fit = fitPathFrom(shape, drawScope, w, h);
+                if (fit != null) {
+                    // ★ 轮廓体检：退化的路径（空/太小）宁可当"拿不到"——
+                    //   否则裁剪会剪出各种怪相（"玻璃跑外面 / 元素变空白"都属于这一类）。
+                    RectF fb = new RectF();
+                    fit.computeBounds(fb, true);
+                    if (fb.width() < w * 0.55f || fb.height() < h * 0.55f) {
+                        why("fit.bad", "轮廓路径异常(" + (int) fb.width() + "x" + (int) fb.height()
+                                + " vs 元素 " + (int) w + "x" + (int) h + ") ⇒ 当拿不到处理");
+                        fit = null;
+                    }
+                }
                 sNodeFit.put(element, new Object[]{w, h, fit});
             }
         }
