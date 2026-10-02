@@ -667,49 +667,47 @@ public final class GmGlassSink {
         }
 
         //   A 贴合 / C 仅边缘：拿「元素轮廓」（Shape 接力 → createOutline → Path）
-        Path fit = null, inner = null;
+        //   ★ v3（2026-10-02 夜，主人：「你是往元素外面套一层玻璃……改成元素内部边缘绘制边框，
+        //     过渡是向里一点点减去颜色」）：
+        //     仅边缘**不再"硬挖内圈"**——改成"从元素内边缘往里，颜色/折射按距离淡出、直到减到 0"
+        //     （由 shader 的 fdmFadeFac(sd) 完成；整个边缘不存在任何硬边界）。
+        Path fit = null;
         float band = 0f;
         final boolean edge = (cfg.form == GmGlassCfg.FORM_EDGE);
+        if (edge) {
+            // 化开深度：从内边缘往里的距离（px）——随元素大小限幅，别把元素吞掉
+            band = Math.max(1f, cfg.edge * GmGlassInstall.density());
+            float lim = Math.min(w, h) * 0.34f;
+            if (lim < 1f) lim = 1f;
+            if (band > lim) band = lim;
+        }
         if (cfg.fit || edge) {
             Object shape = sNodeShape.get(element);
             Object[] cc = sNodeFit.get(element);
             boolean fresh = cc != null
                     && ((Float) cc[0]).floatValue() == w && ((Float) cc[1]).floatValue() == h
-                    && (cc[2] != null || !cfg.fit)
-                    && (!edge || cc[3] != null);
+                    && (cc[2] != null || !cfg.fit);
             if (fresh) {
                 fit = (Path) cc[2];
-                inner = (Path) cc[3];
             } else {
                 if (cfg.fit && shape != null) fit = fitPathFrom(shape, drawScope, w, h);
-                if (edge) {
-                    band = Math.max(1f, cfg.edge * GmGlassInstall.density());
-                    float lim = Math.min(w, h) * 0.34f;      // ★ 别让边缘带把小元素吞掉（中心至少留 ~1/3）
-                    if (lim < 1f) lim = 1f;
-                    if (band > lim) band = lim;
-                    if (shape != null) {
-                        Path ip = fitPathFrom(shape, drawScope, w - 2f * band, h - 2f * band);
-                        if (ip != null) {
-                            ip.offset(band, band);            // 内缩轮廓居中：外圈留出的就是"边缘带"
-                            inner = ip;
-                        }
-                    }
-                    if (inner == null) {
-                        // 兜底：按我们自己的圆角矩形内缩（形状拿不到时）
-                        Path ip = new Path();
-                        ip.addRoundRect(new RectF(band, band, w - band, h - band),
-                                Math.max(0f, r - band), Math.max(0f, r - band),
-                                Path.Direction.CW);
-                        inner = ip;
-                    }
-                }
-                sNodeFit.put(element, new Object[]{w, h, fit, inner});
+                sNodeFit.put(element, new Object[]{w, h, fit});
             }
         }
 
-        // 「边缘过渡」（2026-10-02 · 主人：「颜色没有过渡也很生硬」）：
-        //   浓度从边缘往里柔和衰减；「仅边缘」时过渡距离 = 边缘带宽（内侧自然化开）。
-        final float fadeAmt = Math.max(0f, Math.min(1f, cfg.fade / 100f));
+        // ★「仅边缘」的硬前提：拿得到元素轮廓才画。
+        //   没有轮廓就只能按兜底圆角矩形画 —— 而"兜底圆角"和元素真实形状不一致时，
+        //   看起来就是"玻璃套在元素外面"。⇒ **宁可不动（放行原绘制），也不画错**
+        //   （和"底色模式拿不到颜色就不画"同一条纪律）。
+        if (edge && fit == null) {
+            why("edge.nofit", "仅边缘：拿不到元素轮廓 ⇒ 不画（避免跑到元素外面）");
+            return false;
+        }
+
+        // 「边缘过渡」：
+        //   · 「正常」：颜色向中心柔化的程度（滑杆；0 = 旧平铺样）
+        //   · 「仅边缘」：**固定完全化开** —— 从内边缘往"边缘宽度"深处减到 0（主人的"一点点减去颜色"）
+        final float fadeAmt = edge ? 1f : Math.max(0f, Math.min(1f, cfg.fade / 100f));
         final float fadePx = edge ? Math.max(1f, band) : Math.max(1f, Math.min(w, h) * 0.45f);
 
         // 画布：先看本帧截获的，其次走方法链
@@ -808,8 +806,7 @@ public final class GmGlassSink {
         }
 
         // ① 画玻璃（这时候按钮的文字/图标还没画）
-        new Painter(cfg, w, h, r, ox, oy, back, stretch, fit, band > 0f ? inner : null, band,
-                fadeAmt, fadePx).paint(c);
+        new Painter(cfg, w, h, r, ox, oy, back, stretch, fit, fadeAmt, fadePx).paint(c);
 
         // ② ★★ 把内容画回去 ★★
         //    3.30.2 之前漏了这一步 ⇒ 文字/矢量图标全部消失。
@@ -870,16 +867,11 @@ public final class GmGlassSink {
         private final boolean stretch;
         /** 贴合形状（A 档）：元素真实轮廓路径；null = 退回圆角矩形。 */
         private final Path fit;
-        /** 「仅边缘」（C 档）：要挖掉的内缩路径；null = 满铺。 */
-        private final Path inner;
-        /** 边缘带宽度；0 = 非「仅边缘」。 */
-        private final float band;
-        /** 「边缘过渡」强度 0..1 与距离 px（颜色从边缘往里柔和衰减）。 */
+        /** 「边缘过渡」强度 0..1 与距离 px（颜色从边缘往里柔和衰减，减到 0 为止）。 */
         private final float fadeAmt, fadePx;
 
         Painter(GmGlassCfg.S cfg, float w, float h, float r, int ox, int oy, Bitmap back,
-                boolean stretch, Path fit, Path inner, float band,
-                float fadeAmt, float fadePx) {
+                boolean stretch, Path fit, float fadeAmt, float fadePx) {
             this.cfg = cfg;
             this.w = w;
             this.h = h;
@@ -889,8 +881,6 @@ public final class GmGlassSink {
             this.back = back;
             this.stretch = stretch;
             this.fit = fit;
-            this.inner = inner;
-            this.band = band;
             this.fadeAmt = fadeAmt;
             this.fadePx = fadePx;
         }
@@ -915,11 +905,13 @@ public final class GmGlassSink {
                 c.scale(k, k, cw / 2f, ch / 2f);
             }
 
+            // ★ 双保险（v3）：先裁「节点矩形」——矩形裁剪永远可靠；
+            //   哪怕形状路径裁剪因任何原因失效，也绝不可能画出节点矩形之外去
+            //   （对付「往元素外面套一层玻璃」的最终兜底）。
+            c.clipRect(0f, 0f, cw, ch);
             c.clipPath(outer);
-            // ★「仅边缘」（C 档）：再挖掉内缩轮廓 ⇒ 只剩一圈"边缘带"画玻璃，中间透明
-            if (band > 0f && inner != null) {
-                c.clipOutPath(inner);
-            }
+            // ★ v3：不再"硬挖内圈"——「仅边缘」完全交给 shader 的 fdmFadeFac(sd)：
+            //   从内边缘往里、按距离把颜色/折射一点点减到 0（没有任何硬边界）。
 
             // ── 玻璃的「透」怎么来 ──────────────────────────────
             //   0 浓度 = 全透（只剩高光边）；100 = 全不透。
