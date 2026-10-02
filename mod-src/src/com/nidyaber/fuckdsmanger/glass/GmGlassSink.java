@@ -174,15 +174,17 @@ public final class GmGlassSink {
                 n++;
             }
             // ★ 顺带从「刷子版」画底原语 `qk7.C(Modifier, Brush, Shape, int)` 的签名里
-            //   读出 Brush 接口类型（**只读签名、不挂钩子**）——
+            //   读出 Brush 类型（**只读签名、不挂钩子**）——
             //   绘制期用来识别"我们自己的图底 brush"（让行名单）。
+            //   ⚠️ 2026-10-03 修正：宿主里 Brush（iq0）是 **abstract class 不是 interface**，
+            //      原来那道 `isInterface()` 过滤会把它挡掉 ⇒ brushCls 恒为 null ⇒ 让行全是死代码！
             if (sShapeCls != null && sBrushCls == null) {
                 for (Method m : bg.getDeclaredMethods()) {
                     Class<?>[] p = m.getParameterTypes();
                     if (p.length != 4) continue;
                     if (!p[0].isInterface()) continue;
                     if (p[2] != sShapeCls) continue;
-                    if (!p[1].isInterface()) continue;
+                    if (p[1].isPrimitive() || p[1].isArray()) continue;
                     sBrushCls = p[1];
                     break;
                 }
@@ -192,8 +194,6 @@ public final class GmGlassSink {
                 return;
             }
             GmUtil.log("【GmGlass】画底原语已挂（" + BG_CLS + "->" + BG_METHOD + " × " + n + "）");
-            sDiagHeader = "GmGlass diag · 画底原语=" + n + " · shapeCls=" + sShapeCls
-                    + " · brushCls=" + sBrushCls;
         } catch (Throwable t) {
             GmUtil.logFail("【GmGlass】画底原语挂载失败", t);
         }
@@ -421,7 +421,7 @@ public final class GmGlassSink {
                             boolean hasShape = false, hasLong = false;
                             // ★ 直接从元素字段读（比 pending 更准）：
                             //   · long 字段 = 颜色（eh0.a:J）
-                            //   · Shape 接口类型的字段 = 形状（eh0.d:Lgn9）
+                            //   · Shape 类型的字段 = 形状（eh0.d:Lgn9）
                             for (Field f : el.getClass().getDeclaredFields()) {
                                 try {
                                     f.setAccessible(true);
@@ -589,59 +589,6 @@ public final class GmGlassSink {
     /** 每次「为什么没画」都单独打一条（用不同 tag，不被 logOnce 吃掉）。 */
     private static void why(String k, String msg) {
         GmUtil.logOnce("glass.why." + k, "【GmGlass】没画：" + msg);
-        diag("why/" + k + " " + msg);
-    }
-
-    // ─────────── 「黑匣子」诊断（2026-10-03 · 免 root 可读）───────────
-    //
-    //  写到**宿主的外部文件目录**（`<extFiles>/fdm_glass_diag.txt`）——
-    //  adb（uid 2000）能直接读，主人不用开 root。
-    //  上限 900 行（防刷屏）；每次安装后的第一条会清空重写。
-    private static final Object sDiagLock = new Object();
-    private static final StringBuilder sDiagBuf = new StringBuilder();
-    private static int sDiagN = 0;
-    private static int sDiagPending = 0;
-    private static volatile boolean sDiagStarted = false;
-    private static volatile String sDiagHeader = null;
-
-    private static void diag(String line) {
-        synchronized (sDiagLock) {
-            if (sDiagN >= 900) return;
-            if (!sDiagStarted) {
-                android.content.Context app = GmUtil.app();
-                java.io.File d = app == null ? null : app.getExternalFilesDir(null);
-                if (d == null) return;                 // 环境没就绪 ⇒ 这条先不记（等下一次）
-                try {
-                    new java.io.File(d, "fdm_glass_diag.txt").delete();
-                } catch (Throwable ignore) {
-                }
-                sDiagStarted = true;
-                if (sDiagHeader != null) {
-                    sDiagBuf.append("=== ").append(sDiagHeader).append(" ===\n");
-                    sDiagHeader = null;
-                }
-            }
-            sDiagN++;
-            sDiagBuf.append(sDiagN).append(' ').append(line).append('\n');
-            if (++sDiagPending >= 10) flushDiag();
-        }
-    }
-
-    /** 落盘（调用前须持 sDiagLock）。 */
-    private static void flushDiag() {
-        sDiagPending = 0;
-        if (sDiagBuf.length() == 0) return;
-        try {
-            android.content.Context app = GmUtil.app();
-            java.io.File d = app == null ? null : app.getExternalFilesDir(null);
-            if (d == null) return;
-            java.io.FileOutputStream fo =
-                    new java.io.FileOutputStream(new java.io.File(d, "fdm_glass_diag.txt"), true);
-            fo.write(sDiagBuf.toString().getBytes("UTF-8"));
-            fo.close();
-            sDiagBuf.setLength(0);
-        } catch (Throwable ignore) {
-        }
     }
 
     private static final class GlassDrawHook extends XC_MethodHook {
@@ -667,14 +614,6 @@ public final class GmGlassSink {
                 //   ⇒ brush != null 就让行 ⇒ 图片底照常显示。
                 Object br = nodeBrushOf(param.thisObject);
                 boolean ours = br != null && brushIsRuntimeBacked(br);
-                if (br != null || sDiagN < 150) {
-                    diag("draw cls=" + (param.thisObject == null ? "?"
-                                    : param.thisObject.getClass().getSimpleName())
-                            + " brush=" + (br == null ? "-" : br.getClass().getSimpleName())
-                            + " rt=" + (ours ? 1 : 0)
-                            + " scope=" + GmGlassCfg.get().scope + " form=" + GmGlassCfg.get().form
-                            + (br != null ? " => LET-THROUGH" : ""));
-                }
                 if (br != null) {
                     why("reserved", (ours ? "我们的图底" : "刷子底") + " ⇒ 玻璃让行");
                     return;

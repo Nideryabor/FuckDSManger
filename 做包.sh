@@ -63,6 +63,21 @@ for c in "$ROOT/mod-src/out/FuckDSManger_NL_2.22.133_for_ds2.6.1.apk" \
 done
 [ -z "$BASE" ] && { echo "✗ 找不到底座 APK（2.22.120-signed）"; exit 1; }
 echo "底座：$BASE"
+
+# ============================================================================
+#  ⓪ 底座/树 同步检查（2026-10-03 加）
+#  血案：树里的修复没回灌底座 ⇒ 「AI 气泡缩放完全不会缩放」（FitHook 落后 125 行）。
+#  靠记性会再犯 ⇒ 机械闸门：不同步就拒绝出包（确要强出： ALLOW_STALE_BASE=1）。
+# ============================================================================
+echo "═══ ⓪ 底座/树 同步检查 ═══"
+if ! python3 "$ROOT/tools/check_base_sync.py" --smali "$ROOT/tmp/base130_261/sm" --base "$BASE" --max-list 12; then
+  if [ "${ALLOW_STALE_BASE:-0}" != "1" ]; then
+    echo "✗ 底座落后于 smali 树 —— 先回灌底座，再重跑本脚本。"
+    exit 1
+  fi
+  echo "⚠️ 底座/树不同步，但 ALLOW_STALE_BASE=1 ⇒ 继续出包（后果自负）。"
+fi
+echo
 LOG="$ROOT/out/做包-$V.log"
 mkdir -p "$ROOT/out"
 
