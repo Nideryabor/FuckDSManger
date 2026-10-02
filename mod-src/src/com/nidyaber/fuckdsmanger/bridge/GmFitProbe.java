@@ -28,6 +28,44 @@ public final class GmFitProbe {
     private GmFitProbe() {
     }
 
+    /** 第二通道（im9.a）真正生效：贴上了铺满矩阵。 */
+    public static void applied(float scale, int tw, int th, Bitmap bmp) {
+        line("APPLY im9.a 生效 scale=" + scale + " target=" + tw + "x" + th
+                + " bmp=" + (bmp == null ? "?" : bmp.getWidth() + "x" + bmp.getHeight()));
+    }
+
+    /** 第二通道认出了图，但找不到"输入 BitmapShader"。 */
+    public static void appliedNoInput(float scale) {
+        line("APPLY 认出图但没找到输入 BitmapShader（scale=" + scale + "）");
+    }
+
+    /** 自证①：装钩时写一条 —— 证明「新模块在跑 + 写盘通」。 */
+    public static void alive() {
+        line("ALIVE probe 已装载（装钩时写入）");
+    }
+
+    /** 自证②：imgBrush 建图刷子时写一条 —— 证明"我们这张图"这条链在跑。 */
+    public static void imgBrush() {
+        try {
+            Object bmp = staticField("com.nidyaber.fuckdsmanger.gm.GmBubble", "sBmp");
+            line("IMGBRUSH sBmp=" + (bmp instanceof Bitmap
+                    ? ((Bitmap) bmp).getWidth() + "x" + ((Bitmap) bmp).getHeight() : String.valueOf(bmp)));
+        } catch (Throwable t) {
+            line("IMGBRUSH ERR " + t);
+        }
+    }
+
+    private static Object staticField(String cls, String name) {
+        try {
+            Class<?> c = Class.forName(cls);
+            Field f = c.getField(name);
+            f.setAccessible(true);
+            return f.get(null);
+        } catch (Throwable ignore) {
+            return null;
+        }
+    }
+
     /** 进钩子：brush 类 / d 类 / tag。 */
     public static void enter(Object brush) {
         try {
@@ -116,14 +154,41 @@ public final class GmFitProbe {
         }
     }
 
-    /** 宿主 Application（只用来拿外部目录；不依赖底座任何类）。 */
+    /** 宿主 Context（只为拿外部目录）。
+     *
+     * <p>★ 2026-10-03：原来只走 {@code ActivityThread.currentApplication()} —— 结果文件一直不出现
+     * （探针"哑"了，白白浪费一轮）。现在**先走底座自己的 {@code GmUtil.app()}**
+     * （玻璃黑匣子验证过这条路能写、能读），再兜 ActivityThread，最后兜静态 ActivityThread 字段。 */
     private static android.content.Context context() {
+        // ① 底座 GmUtil.app()（已验证）
         try {
-            Class<?> at = Class.forName("android.app.ActivityThread");
-            Method m = at.getMethod("currentApplication");
-            Object app = m.invoke(null);
+            Class<?> u = Class.forName("com.nidyaber.fuckdsmanger.gm.GmUtil");
+            Object app = u.getMethod("app").invoke(null);
             if (app instanceof android.content.Context) {
                 return (android.content.Context) app;
+            }
+        } catch (Throwable ignore) {
+        }
+        // ② ActivityThread.currentApplication()
+        try {
+            Class<?> at = Class.forName("android.app.ActivityThread");
+            Object app = at.getMethod("currentApplication").invoke(null);
+            if (app instanceof android.content.Context) {
+                return (android.content.Context) app;
+            }
+        } catch (Throwable ignore) {
+        }
+        // ③ ActivityThread 静态字段 mInitialApplication
+        try {
+            Class<?> at = Class.forName("android.app.ActivityThread");
+            for (Field f : at.getDeclaredFields()) {
+                if (android.content.Context.class.isAssignableFrom(f.getType())) {
+                    f.setAccessible(true);
+                    Object app = f.get(null);
+                    if (app instanceof android.content.Context) {
+                        return (android.content.Context) app;
+                    }
+                }
             }
         } catch (Throwable ignore) {
         }
