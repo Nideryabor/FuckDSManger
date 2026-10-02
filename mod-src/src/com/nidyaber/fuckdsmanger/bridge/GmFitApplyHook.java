@@ -47,13 +47,25 @@ public final class GmFitApplyHook extends XC_MethodHook {
             if (!(d instanceof Shader)) {
                 return;                                  // 不是 shader 类 brush ⇒ 放行
             }
-            if (!(p.args[0] instanceof Long)) {
+            // ★ 2026-10-03 修正：签名是 a(F J Lsf;)V —— **浮点在前、尺寸是第 2 个参数**！
+            //   原来读 args[0]（浮点）⇒ instanceof Long 永远 false ⇒ 静默放行
+            //   ⇒ 装了钩也永远不动（真机 IMGBRUSH 有了、APPLY 一条没有，就是这行害的）
+            Object size = null;
+            for (int i = 0; i < p.args.length && i < 3; i++) {
+                if (p.args[i] instanceof Long) {
+                    size = p.args[i];
+                    break;
+                }
+            }
+            if (size == null) {
                 return;
             }
-            long j = (Long) p.args[0];
-            int tw = (int) (j >>> 32);
-            int th = (int) j;
-            if (tw <= 0 || th <= 0) {
+            long j = (Long) size;
+            // ★ 2026-10-03 二修：这是 **Size 的打包**（高 32 位=宽的浮点位模式，低 32 位=高）
+            //   真机实测：1440.0f 的位模式 = 1152647168 —— 当整数读就会算出 1.7e6 倍的鬼缩放
+            float tw = Float.intBitsToFloat((int) (j >>> 32));
+            float th = Float.intBitsToFloat((int) j);
+            if (!(tw > 1f && th > 1f)) {
                 return;
             }
 
@@ -63,11 +75,12 @@ public final class GmFitApplyHook extends XC_MethodHook {
                 bmp = (Bitmap) mapGet(staticMap("sBmpMap"), brush);
             }
             if (bmp == null) {
+                GmFitProbe.notOurs(d);                   // 记一条（限次）便于定位
                 return;                                  // 不是我们的刷子 ⇒ 一个字都不动
             }
 
             // ② 铺满矩阵（与旧版 FitHook 同一套数学：按宽度铺满、水平居中、顶部对齐）
-            float scale = (float) tw / (float) bmp.getWidth() * zf(zoomF());
+            float scale = tw / (float) bmp.getWidth() * zf(zoomF());
             Matrix m = new Matrix();
             m.setScale(scale, scale);
             m.postTranslate(-((float) bmp.getWidth() * scale - tw) / 2f, 0f);
@@ -76,7 +89,7 @@ public final class GmFitApplyHook extends XC_MethodHook {
             Shader input = (Shader) mapGet(staticMap("sInShaderMap"), d);
             if (input != null) {
                 input.setLocalMatrix(m);
-                GmFitProbe.applied(scale, tw, th, bmp);
+                GmFitProbe.applied(scale, (int) tw, (int) th, bmp);
             } else if (bmp != null) {
                 GmFitProbe.appliedNoInput(scale);
             }
