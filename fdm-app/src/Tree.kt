@@ -78,11 +78,9 @@ object Tree {
 
         /* ───────── 美化（GmBeautyDialog）───────── */
         Pg("beauty", "美化", listOf(
-            It("修改助手图片", "开启后可自定义 AI 回复旁的头像",
-                K.SW, key = "ui_avatar_on", def = false, cmd = "avatar_on", sk = "avatar_on"),
-            It("选择图片", null, K.PICK, cmd = "avatar"),
-            It("AI 气泡美化", "颜色 / 圆角 / 图片底（点进设置）", K.SUB, sub = "bubble_ai"),
-            It("用户气泡美化", "颜色 / 圆角 / 图片底（点进设置）", K.SUB, sub = "bubble_u"),
+            It("修改助手图片 ›", "AI 回复旁的头像：开关 + 选图", K.SUB, sub = "avatar_img"),
+            It("对话气泡设置 ›", "AI / 我的气泡：颜色、圆角、图片底、缩放、图片锚点",
+                K.SUB, sub = "bubble_conv"),
             It("自定义账号名", "留空 = 隐藏账号名；修改后重启宿主生效",
                 K.TX, key = "ui_nick", def = "", cmd = "name_put", sk = "name"),
             It("修改账号头像", "开启后可自定义侧边栏底部的账号头像",
@@ -142,6 +140,22 @@ object Tree {
         )),
 
         /* ───────── 气泡（GmBubbleDialog）───────── */
+        /* ───────── 修改助手图片（二级菜单 · 2026-10-03 主人要求）───────── */
+        Pg("avatar_img", "修改助手图片", listOf(
+            It("修改助手图片", "开启后可自定义 AI 回复旁的头像",
+                K.SW, key = "ui_avatar_on", def = false, cmd = "avatar_on", sk = "avatar_on"),
+            It("选择图片", null, K.PICK, cmd = "avatar"),
+        )),
+
+        /* ───────── 对话气泡设置（二级菜单 · AI/我的气泡 + 通用锚点）───────── */
+        Pg("bubble_conv", "对话气泡设置", listOf(
+            It("AI 气泡美化 ›", "颜色 / 圆角 / 图片底 / 缩放（点进设置）", K.SUB, sub = "bubble_ai"),
+            It("用户气泡美化 ›", "颜色 / 圆角 / 图片底（点进设置）", K.SUB, sub = "bubble_u"),
+            It("图片锚点", "图贴气泡的哪一角（左上/上中/…/右下）；AI 与我的气泡通用，默认上中",
+                K.CH, key = "fuckds_bubble_anchor", def = 1,
+                choices = listOf("左上", "上中", "右上", "左中", "居中", "右中", "左下", "下中", "右下")),
+        )),
+
         Pg("bubble_ai", "AI 气泡美化", listOf(
             It("开启 AI 气泡美化", "给 AI 回复加深色底 + 紫青渐变（默认开启）",
                 K.SW, key = "fuckds_bubble_on", def = true, sk = "bubble_on"),

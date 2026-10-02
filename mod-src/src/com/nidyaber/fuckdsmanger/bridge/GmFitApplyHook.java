@@ -1,7 +1,6 @@
 package com.nidyaber.fuckdsmanger.bridge;
 
 import android.graphics.Bitmap;
-import android.graphics.Matrix;
 import android.graphics.Shader;
 
 import java.lang.reflect.Field;
@@ -79,20 +78,26 @@ public final class GmFitApplyHook extends XC_MethodHook {
                 return;                                  // 不是我们的刷子 ⇒ 一个字都不动
             }
 
-            // ② 铺满矩阵（与旧版 FitHook 同一套数学：按宽度铺满、水平居中、顶部对齐）
+            // ② 铺满倍数（与旧版 FitHook 同一套数学：按宽度铺满、水平居中、顶部对齐）
             float scale = tw / (float) bmp.getWidth() * zf(zoomF());
-            Matrix m = new Matrix();
-            m.setScale(scale, scale);
-            m.postTranslate(-((float) bmp.getWidth() * scale - tw) / 2f, 0f);
 
-            // ③ 贴到真正被采样的"输入 BitmapShader"上
-            Shader input = (Shader) mapGet(staticMap("sInShaderMap"), d);
-            if (input != null) {
-                input.setLocalMatrix(m);
-                GmFitProbe.applied(scale, (int) tw, (int) th, bmp);
-            } else if (bmp != null) {
+            // ③ ★ 2026-10-03：写进**我们自己的直通 shader 的制服**（宿主碰不到）；
+            //    不走"输入 BitmapShader 的 localMatrix"——实测它不参与 RuntimeShader 的采样。
+            if (!(d instanceof android.graphics.RuntimeShader)) {
                 GmFitProbe.appliedNoInput(scale);
+                return;
             }
+            float mul = (scale > 1.0e-4f) ? (1f / scale) : 1f;
+            // ★ 2026-10-03：锚点（9 宫格）——主人要"消息相对位置左上右下"可切换
+            int a = anchor();                       // 0..8
+            int ax = a % 3;                         // 0=左 1=中 2=右
+            int ay = a / 3;                         // 0=上 1=中 2=下
+            float offX = -((float) bmp.getWidth() * scale - tw) * (ax * 0.5f);
+            float offY = -((float) bmp.getHeight() * scale - th) * (ay * 0.5f);
+            android.graphics.RuntimeShader rs = (android.graphics.RuntimeShader) d;
+            rs.setFloatUniform("fdmMul", mul, mul);
+            rs.setFloatUniform("fdmAdd", -offX * mul, -offY * mul);
+            GmFitProbe.appliedCtx(scale, (int) tw, (int) th, bmp, a);
         } catch (Throwable ignore) {
         }
     }
@@ -157,5 +162,58 @@ public final class GmFitApplyHook extends XC_MethodHook {
     /** 倍率钳位（与 GmFitProbe.zf 同义）。 */
     private static float zf(float z) {
         return (z <= 0.05f) ? 1f : z;
+    }
+
+    // ───────────────── 锚点配置（fuckds_bubble_anchor：0..8 九宫格，默认 1 = 上中）─────────────────
+
+    private static long sAnchorAt = 0L;
+    private static int sAnchorVal = 1;
+
+    /** 读宿主配置里的锚点；1 秒缓存 ⇒ 改设置基本立刻生效，又不至于每次绘制都读盘。 */
+    private static int anchor() {
+        long now = System.currentTimeMillis();
+        if (now - sAnchorAt < 1000L) {
+            return sAnchorVal;
+        }
+        sAnchorAt = now;
+        try {
+            android.content.Context c = app();
+            if (c == null) {
+                return sAnchorVal;
+            }
+            Class<?> store = Class.forName("com.nidyaber.fuckdsmanger.gm.GmStore");
+            Object sp = store.getMethod("get", android.content.Context.class).invoke(null, c);
+            if (sp instanceof android.content.SharedPreferences) {
+                int v = ((android.content.SharedPreferences) sp)
+                        .getInt("fuckds_bubble_anchor", 1);
+                if (v < 0 || v > 8) {
+                    v = 1;
+                }
+                sAnchorVal = v;
+            }
+        } catch (Throwable ignore) {
+        }
+        return sAnchorVal;
+    }
+
+    /** 宿主 Context（拿配置用）。 */
+    private static android.content.Context app() {
+        try {
+            Class<?> at = Class.forName("android.app.ActivityThread");
+            Object o = at.getMethod("currentApplication").invoke(null);
+            if (o instanceof android.content.Context) {
+                return (android.content.Context) o;
+            }
+        } catch (Throwable ignore) {
+        }
+        try {
+            Class<?> u = Class.forName("com.nidyaber.fuckdsmanger.gm.GmUtil");
+            Object o = u.getMethod("app").invoke(null);
+            if (o instanceof android.content.Context) {
+                return (android.content.Context) o;
+            }
+        } catch (Throwable ignore) {
+        }
+        return null;
     }
 }
