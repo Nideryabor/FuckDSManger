@@ -77,6 +77,25 @@ public final class GmGlassCfg {
      * </ul>
      */
     public static final String K_IMPL = "fuckds_glass_impl";
+    /**
+     * **贴合元素形状**（2026-10-02 主人「都要」的 A 档）——
+     * 玻璃按元素的<b>真实形状</b>绘制（圆角/胶囊/异形都贴合），而不是统一拿圆角矩形硬套。
+     *
+     * <p>形状从画底原语的<b>第 3 个参数</b>接力：Shape → 元素 → Node → 绘制期
+     * ⇒ {@code createOutline(尺寸,…) → Outline → Path} ⇒ 按 Path 裁切/绘制。
+     */
+    public static final String K_FIT = "fuckds_glass_fit";
+    /**
+     * **玻璃形态**（2026-10-02 主人「都要」的 B/C 档）——
+     * <ul>
+     *   <li>{@link #FORM_FULL}（0）正常：满铺玻璃；</li>
+     *   <li>{@link #FORM_HOLLOW}（1）镂空：填充全透（只留元素自己的边框/内容）；</li>
+     *   <li>{@link #FORM_EDGE}（2）仅边缘：只在边缘一圈做折射/高光、中间透明。</li>
+     * </ul>
+     */
+    public static final String K_FORM = "fuckds_glass_form";
+    /** 「仅边缘」的边缘带宽（dp）。 */
+    public static final String K_EDGE = "fuckds_glass_edge";
 
     // ─────────── 默认值（与 fdm-app/src/Conf.kt 一一对应，改一边记得改另一边）───────────
     public static final boolean D_ON = false;
@@ -128,9 +147,19 @@ public final class GmGlassCfg {
         public final int src;
         /** 实现方式 0=自动 / 1=强制GPU / 2=强制CPU。 */
         public final int impl;
+        /** 贴合元素真实形状（A 档）。 */
+        public final boolean fit;
+        /** 形态：0 正常 / 1 镂空 / 2 仅边缘（B/C 档）。 */
+        public final int form;
+        /** 「仅边缘」带宽（dp）。 */
+        public final int edge;
 
         S(boolean on, int tint, int radiusDp, int blur, boolean drop, int scope, int color,
-          int disp, int engine, boolean clean, int cleanTol, int src, int impl) {
+          int disp, int engine, boolean clean, int cleanTol, int src, int impl,
+          boolean fit, int form, int edge) {
+            this.fit = fit;
+            this.form = form;
+            this.edge = edge;
             this.impl = impl;
             this.src = src;
             this.clean = clean;
@@ -155,7 +184,10 @@ public final class GmGlassCfg {
                     + " clean=" + clean + "/" + cleanTol
                     + " src=" + (src == 0 ? "底色" : (src == 1 ? "截图" : "背景图"))
                     + " impl=" + (impl == 0 ? "自动" : (impl == 1 ? "GPU" : "CPU"))
-                    + " scope=" + (scope == SCOPE_ALL ? "全部" : "仅按钮") + "}";
+                    + " scope=" + (scope == SCOPE_ALL ? "全部" : "仅按钮")
+                    + " fit=" + fit
+                    + " form=" + (form == FORM_HOLLOW ? "镂空" : (form == FORM_EDGE ? "仅边缘" : "正常"))
+                    + "/" + edge + "}";
         }
     }
 
@@ -173,6 +205,19 @@ public final class GmGlassCfg {
     /** 默认实现方式 = 0（自动）。 */
     public static final int D_IMPL = 0;
 
+    /** 默认贴合元素形状 = 开（本身就是纯改进）。 */
+    public static final boolean D_FIT = true;
+    /** 默认形态 = 正常（满铺）。 */
+    public static final int D_FORM = 0;
+    /** 默认边缘宽度 = 20dp（要盖得住折射带 pad）。 */
+    public static final int D_EDGE = 20;
+    /** 形态：正常（满铺玻璃）。 */
+    public static final int FORM_FULL = 0;
+    /** 形态：镂空（填充全透，只留元素自己的边框/内容）。 */
+    public static final int FORM_HOLLOW = 1;
+    /** 形态：仅边缘（边缘一圈折射/高光，中间透明）。 */
+    public static final int FORM_EDGE = 2;
+
     /** 该不该走 GPU 管线（按实现方式 + 可用性判断）。 */
     public static boolean wantGpu() {
         int i = sCur.impl;
@@ -187,7 +232,7 @@ public final class GmGlassCfg {
     }
 
     private static volatile S sCur = new S(D_ON, D_TINT, D_RADIUS, D_BLUR, D_DROP, D_SCOPE,
-            D_COLOR, D_DISP, D_ENGINE, D_CLEAN, D_CLEAN_TOL, D_SRC, D_IMPL);
+            D_COLOR, D_DISP, D_ENGINE, D_CLEAN, D_CLEAN_TOL, D_SRC, D_IMPL, D_FIT, D_FORM, D_EDGE);
 
     public static S get() {
         return sCur;
@@ -210,6 +255,8 @@ public final class GmGlassCfg {
         int cleanTol = D_CLEAN_TOL;
         int src = D_SRC;
         int impl = D_IMPL;
+        boolean fit = D_FIT;
+        int form = D_FORM, edge = D_EDGE;
         try {
             on = bool(ctx, K_ON, D_ON);
             tint = clamp(intOf(ctx, K_TINT, D_TINT), 0, 100);
@@ -224,11 +271,14 @@ public final class GmGlassCfg {
             cleanTol = clamp(intOf(ctx, K_CLEAN_TOL, D_CLEAN_TOL), 0, 60);
             src = clamp(intOf(ctx, K_SRC, D_SRC), 0, 2);
             impl = clamp(intOf(ctx, K_IMPL, D_IMPL), 0, 2);
+            fit = bool(ctx, K_FIT, D_FIT);
+            form = clamp(intOf(ctx, K_FORM, D_FORM), 0, 2);
+            edge = clamp(intOf(ctx, K_EDGE, D_EDGE), 0, 60);
         } catch (Throwable ignore) {
             // 读不到就用默认 —— 绝不能因为配置问题把宿主的绘制卡住
         }
         sCur = new S(on, tint, radius, blur, drop, scope, color, disp, engine, clean, cleanTol,
-                src, impl);
+                src, impl, fit, form, edge);
         return sCur;
     }
 

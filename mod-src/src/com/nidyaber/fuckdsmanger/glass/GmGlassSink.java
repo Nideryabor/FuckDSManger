@@ -12,8 +12,10 @@ import android.graphics.Shader;
 
 import com.nidyaber.fuckdsmanger.gm.GmUtil;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -101,6 +103,33 @@ public final class GmGlassSink {
     private static final java.util.Map<Object, Integer> sNodeColor =
             java.util.Collections.synchronizedMap(new java.util.WeakHashMap<Object, Integer>());
 
+    // ─────────── 「元素轮廓」接力（2026-10-02 · 主人「都要」的 A/B/C 档）───────────
+    //
+    //  形状从哪来：画底原语 `qk7.D` 的**第 3 个参数**就是元素的 Shape
+    //  （实测：芯片传的是 RoundedCornerShape(24,24,4,4)）；
+    //  元素（eh0）把它存进字段（如 d:Lgn9）⇒ 构造完成后从字段里读，随「元素→Node」接力。
+    //
+    //  绘制期：Shape → createOutline(尺寸, 方向, 密度) → Outline → android.graphics.Path
+    //    · 贴合（A）：玻璃按真实轮廓裁切/绘制（圆角/胶囊/异形都行）；
+    //    · 仅边缘（C）：外轮廓 ∖ 内缩轮廓 = 边缘带，只在带里画玻璃。
+    private static volatile Class<?> sShapeCls = null;          // gn9（Shape 接口）
+    private static volatile Object sPendingShape = null;
+    private static final java.util.Map<Object, Object> sElementShape =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<Object, Object>());
+    private static final java.util.Map<Object, Object> sNodeShape =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<Object, Object>());
+    /** 轮廓→路径 的配方缓存（按 Outline 类）：[包着 android Path 的字段, 它的 android Path 字段]。 */
+    private static final java.util.Map<Class<?>, Object[]> sRecipe =
+            java.util.Collections.synchronizedMap(new java.util.HashMap<Class<?>, Object[]>());
+    /** 贴合路径缓存：node → [w, h, Path outer, Path inner]（尺寸不变就复用，别每帧算）。 */
+    private static final java.util.Map<Object, Object[]> sNodeFit =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<Object, Object[]>());
+    private static volatile Method sOutlineM = null;            // gn9.a(J,Lwa6,Lpq3;)Lwv7;
+    private static volatile Class<?> sOutlineCls = null;        // wv7（Outline）
+    private static volatile Method sOutlineA = null;            // wv7.a()Lrr8;（边界/矩形兜底）
+    private static volatile boolean sFitLogged = false;
+    private static volatile boolean sFitFail = false;
+
     private static volatile int sPaintCount = 0;
     private static volatile int sFailStreak = 0;
     private static volatile boolean sAutoOff = false;
@@ -132,6 +161,7 @@ public final class GmGlassSink {
                 if (p.length != 3) continue;
                 if (p[1] != long.class) continue;         // 颜色
                 if (!p[0].isInterface()) continue;        // Modifier 是接口
+                if (sShapeCls == null) sShapeCls = p[2];  // ★ Shape 接口（第 3 参）——「贴合形状」的源头
                 XposedBridge.hookMethod(m, new PrimitiveHook(p[0]));
                 n++;
             }
@@ -156,6 +186,24 @@ public final class GmGlassSink {
         }
 
         private volatile int attempts = 0;
+
+        @Override
+        protected void beforeHookedMethod(MethodHookParam param) {
+            // ★ 组合期：先于元素构造，把这次画底的「颜色 / 形状」记下来（构造钩子随后会读）
+            try {
+                Object[] args = param.args;
+                if (args != null) {
+                    for (Object a : args) {
+                        if (a instanceof Long) {
+                            sPendingColor = (Long) a;
+                        } else if (sShapeCls != null && sShapeCls.isInstance(a)) {
+                            sPendingShape = a;
+                        }
+                    }
+                }
+            } catch (Throwable ignore) {
+            }
+        }
 
         @Override
         protected void afterHookedMethod(MethodHookParam param) {
@@ -343,7 +391,32 @@ public final class GmGlassSink {
                     @Override
                     protected void afterHookedMethod(MethodHookParam p) {
                         try {
-                            sElementColor.put(p.thisObject, (int) sPendingColor);
+                            Object el = p.thisObject;
+                            int col = (int) sPendingColor;
+                            Object shp = null;
+                            boolean hasShape = false, hasLong = false;
+                            // ★ 直接从元素字段读（比 pending 更准）：
+                            //   · long 字段 = 颜色（eh0.a:J）
+                            //   · Shape 接口类型的字段 = 形状（eh0.d:Lgn9）
+                            for (Field f : el.getClass().getDeclaredFields()) {
+                                try {
+                                    f.setAccessible(true);
+                                    if (f.getType() == long.class) {
+                                        col = (int) f.getLong(el);
+                                        hasLong = true;
+                                    } else if (sShapeCls != null && f.getType() == sShapeCls) {
+                                        Object v = f.get(el);
+                                        if (v != null) {
+                                            shp = v;
+                                            hasShape = true;
+                                        }
+                                    }
+                                } catch (Throwable ignore) {
+                                }
+                            }
+                            if (!hasShape && hasLong) shp = sPendingShape;   // 兜底：构造函数带出来的形状
+                            sElementColor.put(el, col);
+                            if (shp != null) sElementShape.put(el, shp);
                         } catch (Throwable ignore) {
                         }
                     }
@@ -402,6 +475,12 @@ public final class GmGlassSink {
                 Integer col = sElementColor.get(param.thisObject);
                 if (col != null) {
                     sNodeColor.put(node, col);
+                }
+
+                // ★ 形状接力（贴合形状 A 档）：元素 → Node
+                Object shp = sElementShape.get(param.thisObject);
+                if (shp != null) {
+                    sNodeShape.put(node, shp);
                 }
 
                 Class<?> nc = node.getClass();
@@ -579,6 +658,55 @@ public final class GmGlassSink {
         float r = cfg.radiusDp * GmGlassInstall.density();
         r = Math.min(r, Math.min(w, h) / 2f);
 
+        // ── 「形态」与「贴合形状」（2026-10-02 · 主人「都要」的 A/B/C 档）──────
+        //   B 镂空 = 不画玻璃（把元素填充掏空；内容照画）——
+        //   直接返回 true ⇒ GlassDrawHook 会把原绘制 setResult 掉 ⇒ 背景就空了。
+        if (cfg.form == GmGlassCfg.FORM_HOLLOW) {
+            drawContentOf(drawScope);
+            return true;
+        }
+
+        //   A 贴合 / C 仅边缘：拿「元素轮廓」（Shape 接力 → createOutline → Path）
+        Path fit = null, inner = null;
+        float band = 0f;
+        final boolean edge = (cfg.form == GmGlassCfg.FORM_EDGE);
+        if (cfg.fit || edge) {
+            Object shape = sNodeShape.get(element);
+            Object[] cc = sNodeFit.get(element);
+            boolean fresh = cc != null
+                    && ((Float) cc[0]).floatValue() == w && ((Float) cc[1]).floatValue() == h
+                    && (cc[2] != null || !cfg.fit)
+                    && (!edge || cc[3] != null);
+            if (fresh) {
+                fit = (Path) cc[2];
+                inner = (Path) cc[3];
+            } else {
+                if (cfg.fit && shape != null) fit = fitPathFrom(shape, drawScope, w, h);
+                if (edge) {
+                    band = Math.max(1f, cfg.edge * GmGlassInstall.density());
+                    float lim = Math.min(w, h) / 2f - 1f;
+                    if (lim < 1f) lim = 1f;
+                    if (band > lim) band = lim;
+                    if (shape != null) {
+                        Path ip = fitPathFrom(shape, drawScope, w - 2f * band, h - 2f * band);
+                        if (ip != null) {
+                            ip.offset(band, band);            // 内缩轮廓居中：外圈留出的就是"边缘带"
+                            inner = ip;
+                        }
+                    }
+                    if (inner == null) {
+                        // 兜底：按我们自己的圆角矩形内缩（形状拿不到时）
+                        Path ip = new Path();
+                        ip.addRoundRect(new RectF(band, band, w - band, h - band),
+                                Math.max(0f, r - band), Math.max(0f, r - band),
+                                Path.Direction.CW);
+                        inner = ip;
+                    }
+                }
+                sNodeFit.put(element, new Object[]{w, h, fit, inner});
+            }
+        }
+
         // 画布：先看本帧截获的，其次走方法链
         catchCanvas(drawScope.getClass());
         Canvas c = sCurCanvas.get();
@@ -675,7 +803,7 @@ public final class GmGlassSink {
         }
 
         // ① 画玻璃（这时候按钮的文字/图标还没画）
-        new Painter(cfg, w, h, r, ox, oy, back, stretch).paint(c);
+        new Painter(cfg, w, h, r, ox, oy, back, stretch, fit, band > 0f ? inner : null, band).paint(c);
 
         // ② ★★ 把内容画回去 ★★
         //    3.30.2 之前漏了这一步 ⇒ 文字/矢量图标全部消失。
@@ -734,9 +862,15 @@ public final class GmGlassSink {
         private final Bitmap back;
         /** true = 底图是"合成小图"，直接拉伸铺满（A 方案）。 */
         private final boolean stretch;
+        /** 贴合形状（A 档）：元素真实轮廓路径；null = 退回圆角矩形。 */
+        private final Path fit;
+        /** 「仅边缘」（C 档）：要挖掉的内缩路径；null = 满铺。 */
+        private final Path inner;
+        /** 边缘带宽度；0 = 非「仅边缘」。 */
+        private final float band;
 
         Painter(GmGlassCfg.S cfg, float w, float h, float r, int ox, int oy, Bitmap back,
-                boolean stretch) {
+                boolean stretch, Path fit, Path inner, float band) {
             this.cfg = cfg;
             this.w = w;
             this.h = h;
@@ -745,6 +879,9 @@ public final class GmGlassSink {
             this.oy = oy;
             this.back = back;
             this.stretch = stretch;
+            this.fit = fit;
+            this.inner = inner;
+            this.band = band;
         }
 
         @Override
@@ -755,6 +892,8 @@ public final class GmGlassSink {
             sRect.set(0, 0, cw, ch);
             sPath.reset();
             sPath.addRoundRect(sRect, r, r, Path.Direction.CW);
+            // ★ 贴合（A 档）：有真实轮廓就用它（圆角/胶囊/异形都贴合），没有就退回圆角矩形
+            final Path outer = (fit != null) ? fit : sPath;
 
             int save = c.save();
 
@@ -765,7 +904,11 @@ public final class GmGlassSink {
                 c.scale(k, k, cw / 2f, ch / 2f);
             }
 
-            c.clipPath(sPath);
+            c.clipPath(outer);
+            // ★「仅边缘」（C 档）：再挖掉内缩轮廓 ⇒ 只剩一圈"边缘带"画玻璃，中间透明
+            if (band > 0f && inner != null) {
+                c.clipOutPath(inner);
+            }
 
             // ── 玻璃的「透」怎么来 ──────────────────────────────
             //   0 浓度 = 全透（只剩高光边）；100 = 全不透。
@@ -810,7 +953,7 @@ public final class GmGlassSink {
                     try {
                         sLensPaint.setShader(lens);
                         sLensPaint.setAlpha(255);
-                        c.drawRoundRect(sRect, r, r, sLensPaint);
+                        c.drawPath(outer, sLensPaint);      // ★ 按轮廓画（贴合 A 档同一条路）
                         lensed = true;
                         if (!sLensLogged) {
                             sLensLogged = true;
@@ -855,6 +998,217 @@ public final class GmGlassSink {
 
             c.restoreToCount(save);
         }
+    }
+
+    // ══════════════════════ ③.5 「形状 → 路径」 ══════════════════════
+    //
+    //  Shape(gn9) → createOutline(尺寸, 方向, 密度) → Outline(wv7) → android.graphics.Path
+    //
+    //  宿主真身（2026-10-02 静态核实）：
+    //    · 接口 gn9 全身上下只有 1 个方法：a(J,Lwa6,Lpq3;)Lwv7;（= createOutline）——
+    //      J 是打包的 Size（高 32 位宽、低 32 位高）；wa6 是枚举（a=Ltr / b=Rtl）；
+    //      pq3 = Density（DrawScope 本身就实现了它）。
+    //    · Outline 子类：vv7（圆角，字段 b:Lag 里就是 android Path）/ tv7（任意路径，a:Lag）
+    //      / uv7（矩形，a:rr8 四个 float）—— Lag 的真身字段 a 就是 android.graphics.Path。
+    //    · ⚠️ 路径可能是宿主"池化复用"的对象 ⇒ 一律拷一份带走（new Path(src)）。
+
+    private static Path fitPathFrom(Object shape, Object scope, float w, float h) {
+        try {
+            Method m = sOutlineM;
+            if (m == null) {
+                if (sShapeCls == null) return null;
+                for (Method c : sShapeCls.getMethods()) {
+                    Class<?>[] pp = c.getParameterTypes();
+                    if (pp.length == 3 && pp[0] == long.class && c.getReturnType() != void.class) {
+                        m = c;
+                        break;
+                    }
+                }
+                if (m == null) return null;
+                sOutlineM = m;
+                sOutlineCls = m.getReturnType();
+            }
+            m.setAccessible(true);
+            Class<?>[] pp = m.getParameterTypes();
+            long packed = (((long) Float.floatToRawIntBits(w)) << 32)
+                    | (Float.floatToRawIntBits(h) & 0xffffffffL);
+            Object ld = layoutDirOf(scope, pp[1]);
+            Object dens = pp[2].isInstance(scope) ? scope : null;
+            if (dens == null) dens = densityOf(scope, pp[2]);
+            if (dens == null) dens = densityProxy(pp[2]);   // 最后兜底：给接口造个"假人"
+            if (dens == null) dens = scope;
+            Object outline = m.invoke(shape, packed, ld, dens);
+            if (outline == null) return null;
+            Path got = androidPathOf(outline);
+            if (got == null) return null;
+            if (!sFitLogged) {
+                sFitLogged = true;
+                GmUtil.log("【GmGlass】轮廓接力 ✓（createOutline → Path，贴合形状已就绪）");
+            }
+            return new Path(got);
+        } catch (Throwable t) {
+            if (!sFitFail) {
+                sFitFail = true;
+                Throwable c = (t instanceof java.lang.reflect.InvocationTargetException
+                        && t.getCause() != null) ? t.getCause() : t;
+                GmUtil.logFail("【GmGlass】贴合形状失败（已自动跳过，玻璃照常）", c);
+            }
+            return null;
+        }
+    }
+
+    /** LayoutDirection：先问 DrawScope 要（尊重 RTL），退回枚举第一项。 */
+    private static Object layoutDirOf(Object scope, Class<?> ldCls) {
+        try {
+            for (Method sm : scope.getClass().getMethods()) {
+                if (sm.getParameterCount() != 0) continue;
+                if (sm.getReturnType() != ldCls) continue;
+                sm.setAccessible(true);
+                Object v = sm.invoke(scope);
+                if (v != null) return v;
+            }
+        } catch (Throwable ignore) {
+        }
+        try {
+            if (ldCls.isEnum()) {
+                Object[] vs = ldCls.getEnumConstants();
+                if (vs != null && vs.length > 0) return vs[0];
+            }
+        } catch (Throwable ignore) {
+        }
+        return null;
+    }
+
+    /** Density：先找 DrawScope 里的 getter，再退回 null（调用处会兜 scope 自己）。 */
+    private static Object densityOf(Object scope, Class<?> densCls) {
+        try {
+            for (Method sm : scope.getClass().getMethods()) {
+                if (sm.getParameterCount() != 0) continue;
+                if (sm.getReturnType() != densCls) continue;
+                sm.setAccessible(true);
+                Object v = sm.invoke(scope);
+                if (v != null) return v;
+            }
+        } catch (Throwable ignore) {
+        }
+        return null;
+    }
+
+    /** 最后兜底：Density 是个接口 ⇒ 用 Proxy 造一个"什么都能答"的假人（数值只影响 dp 换算精度）。 */
+    private static Object densityProxy(Class<?> densCls) {
+        try {
+            if (!densCls.isInterface()) return null;
+            final float d = GmGlassInstall.density();
+            return Proxy.newProxyInstance(densCls.getClassLoader(), new Class<?>[]{densCls},
+                    new InvocationHandler() {
+                        @Override
+                        public Object invoke(Object proxy, Method method, Object[] args) {
+                            Class<?> rt = method.getReturnType();
+                            if (rt == float.class) return d;
+                            if (rt == long.class) return 0L;
+                            if (rt == int.class) return 0;
+                            if (rt == boolean.class) return false;
+                            return null;
+                        }
+                    });
+        } catch (Throwable ignore) {
+            return null;
+        }
+    }
+
+    /** Outline → android.graphics.Path：① 扫"包着 android Path 的字段"（vv7.b / tv7.a）；
+     *  ② 退回边界矩形（Outline.a() → 4 个 float 的 Rect）。返回的对象调用方自行拷贝。 */
+    private static Path androidPathOf(Object outline) {
+        try {
+            Class<?> oc = outline.getClass();
+            Object[] rec = sRecipe.get(oc);
+            if (rec == null) {
+                Object[] r = recipeFor(oc);
+                rec = (r == null) ? new Object[0] : r;
+                sRecipe.put(oc, rec);
+            }
+            if (rec.length == 2) {
+                Field wrapF = (Field) rec[0];
+                Field apF = (Field) rec[1];
+                wrapF.setAccessible(true);
+                apF.setAccessible(true);
+                Object wrap = wrapF.get(outline);
+                if (wrap != null) {
+                    Object ap = apF.get(wrap);
+                    if (ap instanceof Path) return (Path) ap;
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+        try {
+            Method am = sOutlineA;
+            if (am == null && sOutlineCls != null) {
+                for (Method c : sOutlineCls.getMethods()) {
+                    if (c.getParameterCount() != 0) continue;
+                    if (c.getReturnType() == void.class) continue;
+                    if (Modifier.isStatic(c.getModifiers())) continue;
+                    am = c;
+                    break;
+                }
+                sOutlineA = am;
+            }
+            if (am != null) {
+                am.setAccessible(true);
+                Object rect = am.invoke(outline);
+                if (rect != null) {
+                    float[] f = fourFloatsOf(rect);
+                    if (f != null) {
+                        Path p = new Path();
+                        p.addRect(f[0], f[1], f[2], f[3], Path.Direction.CW);
+                        return p;
+                    }
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+        return null;
+    }
+
+    /** 配方：在 outline 类（含父类）里找 [包装字段, 其类型上的 android Path 字段]。 */
+    private static Object[] recipeFor(Class<?> outlineCls) {
+        for (Class<?> k = outlineCls; k != null && k != Object.class; k = k.getSuperclass()) {
+            for (Field f : k.getDeclaredFields()) {
+                if (Modifier.isStatic(f.getModifiers())) continue;
+                Class<?> ft = f.getType();
+                if (ft.isPrimitive() || ft.isArray() || ft == String.class) continue;
+                Field ap = androidPathFieldOf(ft);
+                if (ap != null) return new Object[]{f, ap};
+            }
+        }
+        return null;
+    }
+
+    private static Field androidPathFieldOf(Class<?> c) {
+        for (Class<?> k = c; k != null && k != Object.class; k = k.getSuperclass()) {
+            for (Field f : k.getDeclaredFields()) {
+                if (f.getType() == Path.class) return f;
+            }
+        }
+        return null;
+    }
+
+    /** 从对象里读 4 个 float（按字段声明序）—— 用作矩形兜底（a,b,c,d = l,t,r,b）。 */
+    private static float[] fourFloatsOf(Object o) {
+        float[] out = new float[4];
+        int i = 0;
+        outer:
+        for (Class<?> k = o.getClass(); k != null && k != Object.class; k = k.getSuperclass()) {
+            for (Field f : k.getDeclaredFields()) {
+                if (f.getType() != float.class) continue;
+                if (i >= 4) break outer;
+                try {
+                    f.setAccessible(true);
+                    out[i++] = f.getFloat(o);
+                } catch (Throwable ignore) {
+                }
+            }
+        }
+        return i == 4 ? out : null;
     }
 
     // ══════════════════════ ④ 反射小工具 ══════════════════════
