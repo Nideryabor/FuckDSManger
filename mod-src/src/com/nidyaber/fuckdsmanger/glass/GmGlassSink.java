@@ -130,6 +130,15 @@ public final class GmGlassSink {
     private static volatile boolean sFitLogged = false;
     private static volatile boolean sFitFail = false;
 
+    // ─────────── 「让行」判定（2026-10-02 · 修「玻璃抢走气泡图片底」）───────────
+    //
+    //  气泡图片底 = **我们模块自己画的**：GmBubble 造一张 RuntimeShader 图刷子
+    //  （brush = 宿主 ShaderBrush `jq0`，其字段 `d` 里就是我们亲手 new 的 RuntimeShader），
+    //  经 `qk7.C` 挂到气泡上。绘制期从 **Node 的 brush 字段**查"是不是 RuntimeShader 底"，
+    //  ⇒ 是 ⇒ 玻璃**让行**（绝不接管，否则图片底会被玻璃顶掉 = 主人报的 bug）。
+    private static volatile Class<?> sBrushCls = null;   // iq0（Brush 接口）
+    private static volatile boolean sReservedLogged = false;
+
     private static volatile int sPaintCount = 0;
     private static volatile int sFailStreak = 0;
     private static volatile boolean sAutoOff = false;
@@ -164,6 +173,20 @@ public final class GmGlassSink {
                 if (sShapeCls == null) sShapeCls = p[2];  // ★ Shape 接口（第 3 参）——「贴合形状」的源头
                 XposedBridge.hookMethod(m, new PrimitiveHook(p[0]));
                 n++;
+            }
+            // ★ 顺带从「刷子版」画底原语 `qk7.C(Modifier, Brush, Shape, int)` 的签名里
+            //   读出 Brush 接口类型（**只读签名、不挂钩子**）——
+            //   绘制期用来识别"我们自己的图底 brush"（让行名单）。
+            if (sShapeCls != null && sBrushCls == null) {
+                for (Method m : bg.getDeclaredMethods()) {
+                    Class<?>[] p = m.getParameterTypes();
+                    if (p.length != 4) continue;
+                    if (!p[0].isInterface()) continue;
+                    if (p[2] != sShapeCls) continue;
+                    if (!p[1].isInterface()) continue;
+                    sBrushCls = p[1];
+                    break;
+                }
             }
             if (n == 0) {
                 GmUtil.logFail("【GmGlass】没找到画底原语 " + BG_CLS + "->" + BG_METHOD, null);
@@ -583,6 +606,13 @@ public final class GmGlassSink {
                 Object scope = param.args[0];
                 if (scope == null) { why("nullscope", "scope 是 null"); return; }
                 if (!looksLikeDrawScope(scope)) return;   // 不是 DrawScope（生命周期/语义那类）⇒ 放行
+                // ★ 让行（2026-10-02 修）：这是我们模块自己画的「图底」Node（气泡图片底）——
+                //   它的 brush 里包着我们亲手 new 的 RuntimeShader ⇒ 玻璃绝不接管，
+                //   否则气泡图片底会被玻璃顶掉（主人报的 bug）。
+                if (nodeHasOurBrush(param.thisObject)) {
+                    why("reserved", "我们自己的图底元素 ⇒ 玻璃让行");
+                    return;
+                }
                 // ★ 只给「打了按钮记号」的 Node 上玻璃。
                 //   组合期记的记号，绘制期才认得出 —— 这是 3.30.0 的关键一步。
                 if (GmGlassCfg.get().scope == GmGlassCfg.SCOPE_BUTTONS_ONLY
@@ -1228,6 +1258,49 @@ public final class GmGlassSink {
             }
         }
         return i == 4 ? out : null;
+    }
+
+    // ══════════════════════ ③.6 「让行」小工具 ══════════════════════
+
+    /** 这个 Node 的背景 brush 是不是「我们自己的图底 brush」（内藏 RuntimeShader）。 */
+    private static boolean nodeHasOurBrush(Object node) {
+        if (sBrushCls == null || node == null) return false;
+        try {
+            for (Class<?> k = node.getClass(); k != null && k != Object.class; k = k.getSuperclass()) {
+                for (Field f : k.getDeclaredFields()) {
+                    if (f.getType() != sBrushCls) continue;
+                    f.setAccessible(true);
+                    Object br = f.get(node);
+                    if (br != null && brushIsRuntimeBacked(br)) {
+                        if (!sReservedLogged) {
+                            sReservedLogged = true;
+                            GmUtil.log("【GmGlass】已认出「我们自己的图底」元素 ⇒ 玻璃让行（图片底不再被打断）");
+                        }
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+        return false;
+    }
+
+    /** brush 的字段里是不是装着 RuntimeShader（= 我们自造图刷子的指纹）。 */
+    private static boolean brushIsRuntimeBacked(Object br) {
+        try {
+            for (Class<?> k = br.getClass(); k != null && k != Object.class; k = k.getSuperclass()) {
+                for (Field f : k.getDeclaredFields()) {
+                    if (Modifier.isStatic(f.getModifiers())) continue;
+                    Class<?> ft = f.getType();
+                    if (ft.isPrimitive() || ft.isArray() || ft == String.class) continue;
+                    f.setAccessible(true);
+                    Object v = f.get(br);
+                    if (v instanceof android.graphics.RuntimeShader) return true;
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+        return false;
     }
 
     // ══════════════════════ ④ 反射小工具 ══════════════════════
