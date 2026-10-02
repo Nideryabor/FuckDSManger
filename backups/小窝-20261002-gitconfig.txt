@@ -1,0 +1,15 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	autocrlf = false
+	safecrlf = false
+[user]
+	name = dxyabab
+	email = 177535022+dxyabab@users.noreply.github.com
+[remote "origin"]
+	url = https://github.com/dxyabab/FuckDSManger.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[credential]
+	helper = 

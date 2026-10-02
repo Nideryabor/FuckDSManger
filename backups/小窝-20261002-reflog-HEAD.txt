@@ -1,0 +1,268 @@
+0000000000000000000000000000000000000000 6a9caff1ad4ff866d01d4cdf5db5b8a1b3e9a2d8 dxyabab <dxyabab@users.noreply.github.com> 1789273517 +0000	commit (initial): docs: FuckDSManger 项目文档全量归档 (1.0.7 → 2.9.7)
+6a9caff1ad4ff866d01d4cdf5db5b8a1b3e9a2d8 e090ddabe14a98a0b809f99d5b653c9d0fd0eb63 dxyabab <dxyabab@users.noreply.github.com> 1789273742 +0000	commit: docs: 大纲.md 记录 GitHub 归档地址与增量同步方式
+e090ddabe14a98a0b809f99d5b653c9d0fd0eb63 b15970ce16d99f0a9d6afbb4baa64c9bfac8b341 dxyabab <dxyabab@users.noreply.github.com> 1789273996 +0000	commit: docs: README 增加作者署名（尼得亚伯）与 Releases 发行版指引
+b15970ce16d99f0a9d6afbb4baa64c9bfac8b341 3d8ec3fdb5ec4ee5488d96a3311e90493f5c544b dxyabab <dxyabab@users.noreply.github.com> 1789275246 +0000	reset: moving to origin/main
+3d8ec3fdb5ec4ee5488d96a3311e90493f5c544b 07abf2e154eb8ba0a4a0ad86e097195161db9bd8 dxyabab <ningbowang003190@163.com> 1789275466 +0000	commit: docs: README 统一宿主匿名化，修正仓库形态描述
+07abf2e154eb8ba0a4a0ad86e097195161db9bd8 447f831d3cab85e9b968f2a1318c56e66f1cf61f dxyabab <177535022+dxyabab@users.noreply.github.com> 1789275489 +0000	commit (amend): docs: README 统一宿主匿名化，修正仓库形态描述
+447f831d3cab85e9b968f2a1318c56e66f1cf61f 13982a210457146981e5d2b9da4d2bda6cf9af99 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789275512 +0000	commit (amend): docs: README 统一宿主匿名化，修正仓库形态描述
+13982a210457146981e5d2b9da4d2bda6cf9af99 9e8c11c6a2751c957e218fff568e78c58db7d370 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789275534 +0000	commit: docs: 修正匿名化替换后的两处多余空格
+9e8c11c6a2751c957e218fff568e78c58db7d370 6eb8c34e256ee674758f1ccd0fe752c902f0e0f8 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789275702 +0000	commit: docs: 适配版本改为中性表述，新增「安装与使用」章节
+6eb8c34e256ee674758f1ccd0fe752c902f0e0f8 04b8027b2e0b5305fa438d5f5d29e34e94994b0f dxyabab <177535022+dxyabab@users.noreply.github.com> 1789275731 +0000	commit: docs: 新增「安装与使用」章节（补上适配版本与操作步骤）
+04b8027b2e0b5305fa438d5f5d29e34e94994b0f 06b33611964e17e432db31e1c385288637540294 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789275731 +0000	filter-branch: rewrite
+06b33611964e17e432db31e1c385288637540294 ab89a05f40e38522d7dea4a57e62fb485487c15f dxyabab <177535022+dxyabab@users.noreply.github.com> 1789284529 +0000	commit: docs: 2.9.8 —— 美化新增「隐藏账号名」「修改账号头像」；修改背景去 WIP、修改助手图片标 WIP
+ab89a05f40e38522d7dea4a57e62fb485487c15f c7b5fb992df4a61db585715f33dde28ea44f0ae1 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789285170 +0000	commit: fix: 2.9.9 —— 修 2.9.8 两功能完全无效（findClass 用 dex 名 / painterResource 不调 getDrawable）；账号名改为自定义文字（留空=隐藏）
+c7b5fb992df4a61db585715f33dde28ea44f0ae1 0cdbffeb7cf455bc946301ece8bc673d5ff8d4d9 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789285412 +0000	commit: fix: 2.9.10 —— 查明并修掉助手头像「蓝色方块」= Compose Icon 的 tint 把照片染成单色（新增 GmIconHook 中和 tint）
+0cdbffeb7cf455bc946301ece8bc673d5ff8d4d9 e5ac40544f284579cf34a80fb64b2381eaef4799 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789285925 +0000	commit: docs: 2.9.11 回退实验 + 助手头像「蓝方块→消失」排查全部存档（未完结，含已确证地图与两个候选修法）
+e5ac40544f284579cf34a80fb64b2381eaef4799 4daab1a07b39c1a3078e9c15d910a199113dd165 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789285937 +0000	commit: docs: 大纲待办按优先级重排（助手头像条目提到红色组）
+4daab1a07b39c1a3078e9c15d910a199113dd165 ddab7eac82b1d447d7363d254f0a5a23f300a8c4 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789716149 +0000	commit: docs: 大纲第5行笔误修正「私有仓」→「公开仓」（仓库实为公开）
+ddab7eac82b1d447d7363d254f0a5a23f300a8c4 883c0516806a7282aa1eb3dad0fa20e8a8ed2cd0 dxyabab <dxyabab@users.noreply.github.com> 1789721279 +0000	commit: feat(2.9.12): 适配宿主 DeepSeek 2.5.2（vc273）
+883c0516806a7282aa1eb3dad0fa20e8a8ed2cd0 ff465c9f0e16b546a09b1fdd9832aeddc9ed4b55 dxyabab <dxyabab@users.noreply.github.com> 1789721553 +0000	commit: docs(2.9.12): 宿主 2.5.2 环境检测适配复核 —— 零改动
+ff465c9f0e16b546a09b1fdd9832aeddc9ed4b55 90aff5eaa435f2938019d8af380e3109db1dd41d dxyabab <dxyabab@users.noreply.github.com> 1789722340 +0000	commit: feat(2.9.13): 设备身份伪装 —— 伪造 android_id 让服务端视为新设备
+90aff5eaa435f2938019d8af380e3109db1dd41d fa17cbc30188832e2e72c50d40148896adf167ea dxyabab <dxyabab@users.noreply.github.com> 1789722541 +0000	commit: feat(2.9.14): 设备身份伪装的免登录入口（治「设置页要登录」死锁）
+fa17cbc30188832e2e72c50d40148896adf167ea 42ef4c501e04cb01c530c5bd65873ab6f94b63cc dxyabab <dxyabab@users.noreply.github.com> 1789722921 +0000	commit: fix(2.9.15): 修免登录对话框「没弹出来」+ 入口三重保险
+42ef4c501e04cb01c530c5bd65873ab6f94b63cc 14c295ce9347cc305264c5543f0172865f3f031f dxyabab <dxyabab@users.noreply.github.com> 1789723179 +0000	commit: fix(2.9.16): 诊断日志可见性 + 标记不再锁死 + androidx hook 动态化
+14c295ce9347cc305264c5543f0172865f3f031f 9c05d0f9a519da33e109ee8d63b6f026627d7c0d dxyabab <dxyabab@users.noreply.github.com> 1789723378 +0000	commit: fix(2.9.17): 真凶 —— 环境不提供 AndroidAppHelper，取 Context 全链路失效
+9c05d0f9a519da33e109ee8d63b6f026627d7c0d 58310349b67782546e23a399bd1a280c5bf00d6a dxyabab <dxyabab@users.noreply.github.com> 1789723547 +0000	commit: chore(2.9.18): 纯诊断版 —— 入口必经日志 + 修僵尸版本号
+58310349b67782546e23a399bd1a280c5bf00d6a 49c103c94c1b34e3c059673d99128cf977353378 dxyabab <dxyabab@users.noreply.github.com> 1789723800 +0000	commit: fix(2.9.19): 修入口被 asked 挡掉 + 弹窗加可见反馈
+49c103c94c1b34e3c059673d99128cf977353378 886e4c93386ae7beca454e773f565267f8624aef dxyabab <dxyabab@users.noreply.github.com> 1789724480 +0000	commit: fix(2.9.20): 全分支诊断日志 + 手势门槛降到 3 次且直通弹窗
+886e4c93386ae7beca454e773f565267f8624aef 0f1d48a1302dde1dfefefc4286d4dbfaaf43c53d dxyabab <dxyabab@users.noreply.github.com> 1789724624 +0000	commit: fix(2.9.21): 根因 —— 一行写反的 if（sPrompted 守卫用了 if-eqz）
+0f1d48a1302dde1dfefefc4286d4dbfaaf43c53d 9eb95abc78c413ccd52fa236ea6c8e7a25420a63 dxyabab <dxyabab@users.noreply.github.com> 1789724733 +0000	commit: chore(2.9.22): 对话框显示环节补全日志 + 加回 Toast
+9eb95abc78c413ccd52fa236ea6c8e7a25420a63 f147a3feb883ed7f2455eacbb689c2157a5c2860 dxyabab <dxyabab@users.noreply.github.com> 1789725117 +0000	commit: fix(2.9.23): 对话框改用系统 AlertDialog（自绘 Dialog 会存在但看不见）
+f147a3feb883ed7f2455eacbb689c2157a5c2860 a8629d21a7eede9a953114e7be6ae9b7a051051d dxyabab <dxyabab@users.noreply.github.com> 1789725255 +0000	commit: feat(2.9.24): 设备身份伪装改为默认开启 —— 彻底绕过 UI 依赖
+a8629d21a7eede9a953114e7be6ae9b7a051051d edf47233b177609a7687e4dfbe2da220b48c78df dxyabab <dxyabab@users.noreply.github.com> 1789725280 +0000	commit: chore(2.9.25): GmDeviceHook 命中时补日志（confirm hook really fires）
+edf47233b177609a7687e4dfbe2da220b48c78df 12525c3b3abeb57584a3823f7474a94ebcb06f82 dxyabab <dxyabab@users.noreply.github.com> 1789725497 +0000	commit: docs: 新增「宿主上报方清单」+ 记录第 4 个上报方 FlyVerify
+12525c3b3abeb57584a3823f7474a94ebcb06f82 67a198bce9be35853c1e3f9a24e760f7f07a19cd dxyabab <dxyabab@users.noreply.github.com> 1789725657 +0000	commit: docs: 归档 2.9.20~2.9.25（设备身份伪装收工）
+67a198bce9be35853c1e3f9a24e760f7f07a19cd 10ceca79041642a78e8179baa018cbbbf5476752 尼得亚伯 <nideyabo@local> 1789731247 +0000	commit: 2.9.26 助手头像换修法：Modifier.paint 恒等 BlendMode.Dst（不动 tint / 不动 useLayer）
+10ceca79041642a78e8179baa018cbbbf5476752 44fdf5fa83224380e2374bf14d02bd9ac210cc60 尼得亚伯 <nideyabo@local> 1789731644 +0000	commit: 2.9.27 头像线兜底修复 + 全套可见诊断
+44fdf5fa83224380e2374bf14d02bd9ac210cc60 8f7a1e2d8c5a4be039ce61c2852b79b64b9b2592 尼得亚伯 <nideyabo@local> 1789732148 +0000	commit: 2.9.28 四步 Toast 自检 + 日志不截断
+8f7a1e2d8c5a4be039ce61c2852b79b64b9b2592 8e57cd0193a175e6203e3d77c4b60a0e93eb53bd 尼得亚伯 <nideyabo@local> 1789732379 +0000	commit: 2.9.29 头像线真凶：宿主键 hide_assistant_avatar 被置 true
+8e57cd0193a175e6203e3d77c4b60a0e93eb53bd f597f88746cbbe3acc8cc6e8ee489f86e16292e9 尼得亚伯 <nideyabo@local> 1789732516 +0000	commit: 2.9.29 验收收官：真凶＝服务端灰度把 hide_assistant_avatar 灰成 true
+f597f88746cbbe3acc8cc6e8ee489f86e16292e9 423a3bbbff0ca5ae4e0865a70195c636c1fe6ccd 尼得亚伯 <nideyabo@local> 1789732653 +0000	commit: chore(backup): 刷新兜底备份 + 说明推送现状
+423a3bbbff0ca5ae4e0865a70195c636c1fe6ccd 8a7ca15e8e812295eb386a5b4e630d40d3e34036 尼得亚伯 <noreply@example.com> 1789733191 +0000	commit: 2.9.30 收官清理：摘掉「修改助手图片」WIP + 蓝方块/真底图结案
+8a7ca15e8e812295eb386a5b4e630d40d3e34036 e0eacbac5e8fa7a0362bcabefb0c54541b64314e 尼得亚伯 <noreply@example.com> 1789733458 +0000	commit: feat(2.10.0-probe): 回复建议功能可行性探针
+e0eacbac5e8fa7a0362bcabefb0c54541b64314e 5e59d27b31804d55b3bd510d57d64f7b05216de3 尼得亚伯 <noreply@example.com> 1789733678 +0000	commit: probe(2.10.1): 回复建议第 2 轮探针（4 个 hook 点 + 通用空 List 注入）
+5e59d27b31804d55b3bd510d57d64f7b05216de3 dcaf476e90bbab485a79f19d53c42ae9e6532d5b 尼得亚伯 <noreply@example.com> 1789733681 +0000	commit (amend): probe(2.10.1): 回复建议第 2 轮探针（4 个 hook 点 + 通用空 List 注入）
+dcaf476e90bbab485a79f19d53c42ae9e6532d5b 698a1665511e6af4e6d76dc583290c644cd0d232 尼得亚伯 <noreply@example.com> 1789733684 +0000	commit (amend): probe(2.10.1): 回复建议第 2 轮探针（4 个 hook 点 + 通用空 List 注入）
+698a1665511e6af4e6d76dc583290c644cd0d232 87782edcc69b1aae5b99ffa887596853cdbb4aaf 尼得亚伯 <noreply@example.com> 1789733851 +0000	commit: probe(2.10.2): 回复建议第 3 轮探针 —— 改屏幕 Toast 自检
+87782edcc69b1aae5b99ffa887596853cdbb4aaf 89f2cf941fa1d49041b983c2e73eea174b420204 尼得亚伯 <noreply@example.com> 1789733965 +0000	commit: probe(2.10.3): 回复建议第 4 轮 —— 对照实验（区分「没调用」与「Toast 没生效」）
+89f2cf941fa1d49041b983c2e73eea174b420204 0b543f6fad32f388474b153073704eee9307619a 尼得亚伯 <noreply@example.com> 1789734050 +0000	commit: probe(2.10.4): 回复建议第 5 轮 —— 9 点全覆盖探针
+0b543f6fad32f388474b153073704eee9307619a e2df404822e004a48578f43125dec60ed5a2c0ba 尼得亚伯 <noreply@example.com> 1789737802 +0000	commit: probe(2.10.5): 回复建议第 6 轮 —— 定位真输入栏 + 堆栈追踪
+e2df404822e004a48578f43125dec60ed5a2c0ba 100d8d13e9aee01036c27915202567039bd8bb8c 尼得亚伯 <noreply@example.com> 1789738013 +0000	commit: probe(2.10.6): 回复建议第 7 轮 —— 调用栈上屏
+100d8d13e9aee01036c27915202567039bd8bb8c e0d728b731efc6cfddd19ac63779908db0f02ffe 尼得亚伯 <noreply@example.com> 1789738219 +0000	commit: probe(2.10.7): 回复建议第 8 轮 —— 调用栈改用可滚动对话框
+e0d728b731efc6cfddd19ac63779908db0f02ffe 578c538b5089a5320f315b5d04275bd61c824500 尼得亚伯 <noreply@example.com> 1789738416 +0000	commit: probe(2.10.8): 🎯 找到发送本体 ao1.I(yp1)，做自动发送验证
+578c538b5089a5320f315b5d04275bd61c824500 ecf2af534abd42ec0f97c122ba15db68bc6d5920 尼得亚伯 <noreply@example.com> 1789738633 +0000	commit: probe(2.10.9): 第 10 轮 —— 捕获源改为 ao1.I，异常上屏
+ecf2af534abd42ec0f97c122ba15db68bc6d5920 96ab9d23c13419939dc13863659d16cf3f095519 尼得亚伯 <noreply@example.com> 1789738843 +0000	commit: probe(2.10.10): 第 11 轮 —— 发送后延迟补发测试
+96ab9d23c13419939dc13863659d16cf3f095519 4ab3a65a376090ed1b59f42ff266a784c1966bde 尼得亚伯 <noreply@example.com> 1789739263 +0000	commit: probe(2.10.11): 第 12 轮 —— 正交对照探针（注册全绿但回调全哑）
+4ab3a65a376090ed1b59f42ff266a784c1966bde f6ba60c9c276e6e685ce48d3dfead515782cf049 尼得亚伯 <noreply@example.com> 1789739401 +0000	commit: probe(2.10.12): 第 13 轮 —— 命中清单一次性上屏
+f6ba60c9c276e6e685ce48d3dfead515782cf049 2c0130bce819f3942d5b1ee15d44c82dba2ee150 尼得亚伯 <noreply@example.com> 1789739683 +0000	commit: probe(2.10.13): 🎯 找到真发送命令 cn1，改用 ao1.J(cmd) 自动发送验证
+2c0130bce819f3942d5b1ee15d44c82dba2ee150 16bb9165eba5e7b4031197fac0c3826578e43ca4 尼得亚伯 <noreply@example.com> 1789739824 +0000	commit: docs: 「回复建议」暂停归档（2.10.13-probe 待验证）+ 刷新兜底备份
+16bb9165eba5e7b4031197fac0c3826578e43ca4 8e9e866b3468f581aed76f0c3501773929641754 尼得亚伯 <noreply@example.com> 1789739831 +0000	commit: docs(回复建议): 补充本次会话产物清单（2.9.30 + 2.10.0~2.10.13 探针，含 sha256）
+8e9e866b3468f581aed76f0c3501773929641754 60a004ef3e0df67896ece7f935dc98c168da7c4a 尼得亚伯 <nideyabo@local> 1789740282 +0000	commit: probe(2.10.14): 🎯 修掉 2.10.13 的 4 处反向判断 —— 推平重写 GmSuggestHook/GmSendRun
+60a004ef3e0df67896ece7f935dc98c168da7c4a 4f412a8dcbfbd7cf790c28cbe46c314b0a5e1ef6 尼得亚伯 <nideyabo@local> 1789740480 +0000	commit: docs(回复建议): ✅ 2.10.14 真机验证通过（发送链路成立）
+4f412a8dcbfbd7cf790c28cbe46c314b0a5e1ef6 21c87eca2b019c53495490c5502c38c78f52cf18 尼得亚伯 <nideyabo@local> 1789740614 +0000	commit: probe(2.10.15): 🔬 落点探针 —— decor 按钮条（GmSuggestView）
+21c87eca2b019c53495490c5502c38c78f52cf18 b681be1181767b142bd49cf2c62c1491e2f35113 尼得亚伯 <nideyabo@local> 1789740961 +0000	commit: probe(2.10.16): 🔬 落点微调器 + 点击接发送
+b681be1181767b142bd49cf2c62c1491e2f35113 ce12555bbde70d72c3f7b31d7075b69a7e698fd3 尼得亚伯 <nideyabo@local> 1789741223 +0000	commit: probe(2.10.17): 🔬 相对定位（可见区域锚定 + 遮挡补偿）
+ce12555bbde70d72c3f7b31d7075b69a7e698fd3 f00aa7d5bee7631366f00441d72f1dd83c1d287b 尼得亚伯 <nideyabo@local> 1789741513 +0000	commit: probe(2.10.18): 🔬 无障碍语义树定位输入框（跟随 + 切页自动隐藏）
+f00aa7d5bee7631366f00441d72f1dd83c1d287b b38bd3eca986cffae7aacae23dca0c9ee00d0eb7 尼得亚伯 <nideyabo@local> 1789741819 +0000	commit: probe(2.10.19): 🔬 收紧输入框筛选（可见性 + 下半屏）修「切页残留」
+b38bd3eca986cffae7aacae23dca0c9ee00d0eb7 1d3b71f799388d049e444b2cc7a737fa75f71c93 尼得亚伯 <nideyabo@local> 1789742044 +0000	commit: probe(2.10.20): 🎯 改用宿主原生 chip 行（注入 yb5.e），停用自绘 overlay
+1d3b71f799388d049e444b2cc7a737fa75f71c93 95c7b3540d9a371bd50d47451afcd5e794a4c231 尼得亚伯 <nideyabo@local> 1789742364 +0000	commit: probe(2.10.21): 🔧 修正 2.10.20 的两个错误参数（原生 chip 行注入）
+95c7b3540d9a371bd50d47451afcd5e794a4c231 8b8a22f137b945cdc6f61fdfd2bb497b32802796 尼得亚伯 <nideyabo@local> 1789742646 +0000	commit: probe(2.10.22): 🔧 绕开 hookM 二次注册失败（chip 注入合并进 GmSuggestHook）
+8b8a22f137b945cdc6f61fdfd2bb497b32802796 d05e571feaf2214e69b0fcb6d30ac0c1329324f7 尼得亚伯 <nideyabo@local> 1789742923 +0000	commit: probe(2.10.23): 🔧 修掉 VerifyError（varargs 误用）—— 30 个 hook 全灭的根因
+d05e571feaf2214e69b0fcb6d30ac0c1329324f7 ca03709506d9c92b9aaa5f2a8e9d520b3b81980c 尼得亚伯 <nideyabo@local> 1789743099 +0000	commit: probe(2.10.24): 🎯 改对可见性本体（Leb6 父类 o32.b 的 State）
+ca03709506d9c92b9aaa5f2a8e9d520b3b81980c 7d989c7365285b124f91cb23d1a2c013c9a7d90a 尼得亚伯 <nideyabo@local> 1789743225 +0000	commit: probe(2.10.25): 🔧 撬开三道 skip 闸门 + 直接注入 yb5.f 列表
+7d989c7365285b124f91cb23d1a2c013c9a7d90a a1e39e49a6d2e4b4154404189da9c1305d1087ee 尼得亚伯 <nideyabo@local> 1789743374 +0000	commit: probe(2.10.26): 🔧 诊断日志挪入口 + 撬最上游闸门 nb5.c
+a1e39e49a6d2e4b4154404189da9c1305d1087ee d86ab04e8504fab1e5a9ae957e770e8b20e7e03e 尼得亚伯 <nideyabo@local> 1789743731 +0000	commit: probe(2.10.27): 🔧 修 Toast NPE（它挡住了整条功能链）+ report 移到最后
+d86ab04e8504fab1e5a9ae957e770e8b20e7e03e 9b81131d6d1eb5c05dca29f65d684a441fc0f171 尼得亚伯 <nideyabo@local> 1789743965 +0000	commit: probe(2.10.28): 🎯 找到总闸 —— dm0.g 的第一个参数（有附件才显示提示词行）
+9b81131d6d1eb5c05dca29f65d684a441fc0f171 95d884281b443df2bae2d8f7ffb7a2663f4c9a23 尼得亚伯 <nideyabo@local> 1789744131 +0000	commit: probe(2.10.29): 🎉 闸门通了！改为无条件替换列表
+95d884281b443df2bae2d8f7ffb7a2663f4c9a23 576154f4a50d84794e9aea49af4348dc2542c62e 尼得亚伯 <nideyabo@local> 1789744230 +0000	commit: docs: 归档本会话成果（停在 2.10.29-probe，打通宿主原生 chip 行 90%）
+576154f4a50d84794e9aea49af4348dc2542c62e c6bb68eb1089e7229302c4593b2c88c4eebea6a1 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789744822 +0000	commit: probe(2.10.30): 🧹 静态复核落地 + 清 4 处探针遗留
+c6bb68eb1089e7229302c4593b2c88c4eebea6a1 f4d7dece9f42aad009fe4e46025a3085a1da49f6 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789745105 +0000	commit: probe(2.10.31): 🐛 日志破案 —— 修 inject() 的 if-lt/if-ge 写反（零参方法必抛 AIOOBE）
+f4d7dece9f42aad009fe4e46025a3085a1da49f6 1c34197b0d37f49766cb2ec05fcee64d18eaa0e6 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789745495 +0000	commit: probe(2.10.32): 🔧 修 2.10.31 的 VerifyError（inject 少传寄存器 ⇒ 整类被否、30 注册全灭）
+1c34197b0d37f49766cb2ec05fcee64d18eaa0e6 87a920ef1ebcec27dd189483d4d2b131ce3eb4f6 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789745902 +0000	commit: probe(2.10.33): 🎉 整条链跑通 + 修宿主类直连（NoClassDefFoundError: Lg56）
+87a920ef1ebcec27dd189483d4d2b131ce3eb4f6 45a5c5a99ef1efc7ad85ec79147d92cc52cc8136 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789746157 +0000	commit: docs: 「回复建议」整档归档（2.10.0-probe vc118 → 2.10.33-probe vc151，共 34 版）
+45a5c5a99ef1efc7ad85ec79147d92cc52cc8136 57bddef6a0b20bed4ef0050cf0d02e5bd356c5e9 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789778022 +0000	commit: feat(2.10.1): 「回复建议」重开 —— Phase 1 正式版骨架（配置层+设置界面+双注入点）
+57bddef6a0b20bed4ef0050cf0d02e5bd356c5e9 08d3ce33d9d763eb7495f61a2a8a946648523c13 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789778440 +0000	commit: fix(2.10.2): 修「造不出 g56」—— 构造器扫描 + 自验证 + 诊断日志
+08d3ce33d9d763eb7495f61a2a8a946648523c13 b211699d3fea5dcef032bdc14b24df9e181de7da dxyabab <177535022+dxyabab@users.noreply.github.com> 1789778785 +0000	commit: feat(2.10.3): 改造宿主 g56 而非自造 —— 修「chip 空壳」
+b211699d3fea5dcef032bdc14b24df9e181de7da cc380e4f585d09b81b8af43a7086511ff809acaf dxyabab <177535022+dxyabab@users.noreply.github.com> 1789779169 +0000	commit: fix(2.10.4): 修菜单点击链死代码 + 劫持 pd5.I 文案解析
+cc380e4f585d09b81b8af43a7086511ff809acaf 7fe0a6a6b025611b868130ed808010228b73539b dxyabab <177535022+dxyabab@users.noreply.github.com> 1789779430 +0000	commit: feat(2.10.5): 换赛道 —— 写宿主 prompt_feature 配置，而非注入 Compose 列表
+7fe0a6a6b025611b868130ed808010228b73539b 4f11adf40a246bce70a471d2efba0221cea93486 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789779698 +0000	commit: feat(2.10.6): 撤配置写入（避免与文件快捷选项抢键）+ 上常显闸门 + 补挂 pd5.H
+4f11adf40a246bce70a471d2efba0221cea93486 495957bb5cb5ddc6ef5a66b065735382a3750bae dxyabab <177535022+dxyabab@users.noreply.github.com> 1789779885 +0000	commit: fix(2.10.7): 修 12 处 dalvik 分支方向错误（真凶）—— 六版静默失效的根源
+495957bb5cb5ddc6ef5a66b065735382a3750bae a86dde27d560fe9c6cba8ca003d186d6054b2bce dxyabab <177535022+dxyabab@users.noreply.github.com> 1789780054 +0000	commit: fix(2.10.8): 修 GmPromptTextHook VerifyError（寄存器踩参数槽）
+a86dde27d560fe9c6cba8ca003d186d6054b2bce 0fc043658c5514bef2ca5298863e002c6ffa0089 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789780189 +0000	commit: fix(2.10.9): 停用常显闸门（真机实测会崩宿主）
+0fc043658c5514bef2ca5298863e002c6ffa0089 ec91b53ec308ebe38097aebd1789a45fb14387ac dxyabab <177535022+dxyabab@users.noreply.github.com> 1789780724 +0000	commit: feat(2.10.10): 方案③场景区分 + Context 第二来源 + 守卫指纹日志
+ec91b53ec308ebe38097aebd1789a45fb14387ac c2de15fa45d80e80d5d7996c930383b457849764 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789781122 +0000	commit: feat(2.10.11): 日志双写（GmDiag 镜像）+ 聊天区心跳（yp1.b）
+c2de15fa45d80e80d5d7996c930383b457849764 60896f9e02ead5ecccdca2d914bcb8d291bcc969 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789781423 +0000	commit: feat(2.10.12): 诊断印到界面上（设置页显示最近记录）
+60896f9e02ead5ecccdca2d914bcb8d291bcc969 d86f489b1edc7cdb136dd5887bc7517f82bacfd0 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789781550 +0000	commit: fix(2.10.13): 诊断刷屏修复（命中只记首次 + 去抖）
+d86f489b1edc7cdb136dd5887bc7517f82bacfd0 5e8556e3d28511119f48ea04e14c0233c5699372 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789781774 +0000	commit: fix(2.10.14): 补无声退出埋点 + 打印宿主列表实际大小
+5e8556e3d28511119f48ea04e14c0233c5699372 c9a49076eb82ad362020a918943e737c1b4a0172 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789782016 +0000	commit: feat(2.10.15): 诊断块加版本横幅（先排除「跑的是旧版」）
+c9a49076eb82ad362020a918943e737c1b4a0172 dadc006d8da6f2820a178ef12bc8c3969a5a97a4 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789782413 +0000	commit: fix(2.10.16): 修 if-gez ⇒ 文案接管从未执行（真凶）
+dadc006d8da6f2820a178ef12bc8c3969a5a97a4 6edc886a1d60208ce56f6bbe8caf9a63e3de6219 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789782863 +0000	commit: fix(2.10.17): 给 buildMut 套 try/catch + 入口 logOnce（定位用）
+6edc886a1d60208ce56f6bbe8caf9a63e3de6219 5c765169f07223101596c546f5d2d789c7fd71e5 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789783167 +0000	commit: fix(2.10.18): 诊断「最后事件」置顶（解决界面截断）
+5c765169f07223101596c546f5d2d789c7fd71e5 f6ede51fa1808ccf436ddd1b7600c628d2c1b25d dxyabab <177535022+dxyabab@users.noreply.github.com> 1789783310 +0000	commit: fix(2.10.19): 真凶 —— buildMut 第一行 if-nez p0,:ret 写反（从 2.10.1 起全程空转）
+f6ede51fa1808ccf436ddd1b7600c628d2c1b25d 6d015337ebf51ba5a7ca6fc9d2d2db2f2b121ace dxyabab <177535022+dxyabab@users.noreply.github.com> 1789783403 +0000	commit: fix(2.10.20): hasText() 改调 yp1.b() 方法（原按字段读，永远读到空）
+6d015337ebf51ba5a7ca6fc9d2d2db2f2b121ace da73307d4bc3de54dabfe4b2beb96c0137a20148 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789783504 +0000	commit: fix(2.10.21): 在 yp1.b() 钩子里存档输入内容，hasText 优先读存档
+da73307d4bc3de54dabfe4b2beb96c0137a20148 d5cad53ce319c87e395fcfc13ba0bf49e8f0d972 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789783604 +0000	commit: feat(2.10.22): 诊断加「最优：」行（区分 last 与 peak）
+d5cad53ce319c87e395fcfc13ba0bf49e8f0d972 fe3aa57803ddaa4938e4fc2b0e5fc8d249953824 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789783759 +0000	commit: feat(2.10.23): 宿主列表为空时自建我们的列表（启用 2.10.2 的 make/tryCtor）
+fe3aa57803ddaa4938e4fc2b0e5fc8d249953824 9332d074e5ea78daa8c89c7b789605e23019cc98 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789783914 +0000	commit: fix(2.10.24): 移除不存在的 make() 调用 + 放宽场景区分
+9332d074e5ea78daa8c89c7b789605e23019cc98 1a5dc8c36a16e2ba476c7e9eab82574ae2422624 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789784027 +0000	commit: fix(2.10.25): 空列表兜底改调 build()（先核对签名）
+1a5dc8c36a16e2ba476c7e9eab82574ae2422624 8b7098128f8c7d87a64fa51e587b768bc59d91fe dxyabab <177535022+dxyabab@users.noreply.github.com> 1789784129 +0000	commit: fix(2.10.26): tryCtor 按参数个数分流（适配真实 3 参构造器）
+8b7098128f8c7d87a64fa51e587b768bc59d91fe 07b88c8b66667ccb82ff97ecf358a00e25fbec58 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789784318 +0000	commit: fix(2.10.27): templates() 空判断反转 —— 模板池一直是 0 条
+07b88c8b66667ccb82ff97ecf358a00e25fbec58 772be43e2d1bab5cf944ac835005f7ae291cdb02 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789784429 +0000	commit: feat(2.10.28): 给 tryCtor 装口供（构造异常 / 字段比对失败各留一行日志）
+772be43e2d1bab5cf944ac835005f7ae291cdb02 5d75140793929c7e418f5dcbd53391f4852a51e3 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789784635 +0000	commit: fix(2.10.29): make() 放开 4 参限制 + tryCtor 造完强制写字段
+5d75140793929c7e418f5dcbd53391f4852a51e3 f421a80225d41075ababfccdfc788f05949196c1 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789784860 +0000	commit: feat(2.10.30): 按主人建议直连构造器且不吞异常（让堆栈进日志）
+f421a80225d41075ababfccdfc788f05949196c1 9cfb3a82129222ea26b340ad0df6bfbdce1e7294 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789784986 +0000	commit: feat(2.10.31): 必响探针 —— buildMut2 入口无条件直连构造一次（不吞异常）
+9cfb3a82129222ea26b340ad0df6bfbdce1e7294 fb1b11e4dc3005deef81f8f5fba34b8940f1e970 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789785176 +0000	commit: fix(2.10.32): 两个反判断 —— 宿主列表 4 条却走空分支 + 造出对象却跳失败
+fb1b11e4dc3005deef81f8f5fba34b8940f1e970 18c1aad7ad9b9aab6fb915b023b1cee7fe8eabb3 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789785320 +0000	commit: feat(2.10.33): 列表接管达成；改为造新对象（新身份）+ 复制场景字段 b
+18c1aad7ad9b9aab6fb915b023b1cee7fe8eabb3 ce1f4298455f16138a7452c22d29330984576189 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789785493 +0000	commit: feat(2.10.34): 加字段 dumper（dumpObj）定案「逻辑通但画面不动」
+ce1f4298455f16138a7452c22d29330984576189 d006345071ba969ff19d27edcecd06468802c385 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789785680 +0000	commit: fix(2.10.35): 给字段 dump 加前缀（上版裸输出，搜不到）
+d006345071ba969ff19d27edcecd06468802c385 7895e430feb0c3bcf599210f69cf6b26e3149b86 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789785997 +0000	commit: fix(2.10.36): 修 str() 反判断（字段值终于可读）；g56 字段类型确认
+7895e430feb0c3bcf599210f69cf6b26e3149b86 a64fed2be465540c887d72ef9ec3db009de6ba84 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789787460 +0000	commit: docs(2.10.37): 字段语义揭开 —— c=content 且宿主自己就有文案
+a64fed2be465540c887d72ef9ec3db009de6ba84 c09e0ac87ef19d30f40619641c58716abc1d5fa1 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789787561 +0000	commit: feat(2.10.37): 谜底 —— chip 文字走 contentRes（资源 id）而非 content
+c09e0ac87ef19d30f40619641c58716abc1d5fa1 700d6e2c87fab750c4b19df0a4d382eb451938e5 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789787676 +0000	commit: experiment(2.10.38): 对照实验 —— chip 标签读什么（三通道全排除）
+700d6e2c87fab750c4b19df0a4d382eb451938e5 b0e3aa6c248c1344206eecf95f4635cf30035b7d dxyabab <177535022+dxyabab@users.noreply.github.com> 1789787815 +0000	commit: diagnose(2.10.39): 主人观察摘清我们的锅；dump 自建对象
+b0e3aa6c248c1344206eecf95f4635cf30035b7d 198c7c9a539b5cf19857c4174b67792407d98b68 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789788508 +0000	commit: diag(NL 2.10.40): 重适配第一步 —— 列出宿主全部 kv_ 配置键；产物加 NL 前缀
+198c7c9a539b5cf19857c4174b67792407d98b68 4ccb3711328bd838432c7fd41c7c9e7f91b1b636 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789788994 +0000	commit: fix(NL 2.10.41): 补上 MMKV 读取接管注册 —— 找到旧版能显示的秘密
+4ccb3711328bd838432c7fd41c7c9e7f91b1b636 9dbe70bd3c9fddcfb532d1ce03ae49d24c8ab28a dxyabab <177535022+dxyabab@users.noreply.github.com> 1789789186 +0000	commit: fix(NL 2.10.42): 撤掉危险 MMKV 接管（恢复稳定）；配置通路方向已确认
+9dbe70bd3c9fddcfb532d1ce03ae49d24c8ab28a c2667187eed795f426057b85a96794e97f3315c7 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789789661 +0000	commit: fix(NL 2.10.46): 回到 39 稳定基线（撤 dumpAll + 撤 MMKV 接管），用于二分定位
+c2667187eed795f426057b85a96794e97f3315c7 ff19a26b1f1df0cc94f90aff0f65637a4a42b2de dxyabab <177535022+dxyabab@users.noreply.github.com> 1789789970 +0000	commit: docs: 写交接文档（上下文压缩后续接用）
+ff19a26b1f1df0cc94f90aff0f65637a4a42b2de 4fbaf884c9ab688c7f60efc357bcaefe07686886 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789790474 +0000	commit: feat(NL 2.10.47): 源头接管落地 —— MMKV 写(q)+读(k)双路安全接管；停掉末端列表接管(消除越界d)；修 scene 反了
+4fbaf884c9ab688c7f60efc357bcaefe07686886 11dbe9dee603704c92fce0c74f55e79ff4415633 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789790726 +0000	commit: fix(NL 2.10.48): 拆掉 forceVis(渲染热路径改宿主入参+状态) 与 isEmpty 谎报；新增崩溃捕手 GmCrashHook
+11dbe9dee603704c92fce0c74f55e79ff4415633 52cf80a15eacd5ce22573ec8d81eaed23d92b437 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789791033 +0000	commit: fix(NL 2.10.49): 修捕手反判断(if-eqz→if-nez)+双保险安装；加固 GmAvatarHook(getDrawable/Toast) 与 GmResTextHook
+52cf80a15eacd5ce22573ec8d81eaed23d92b437 e57a2eba7f78294c70dcea40269bdb8a2911d358 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789791315 +0000	commit: fix(NL 2.10.50): 崩因闭环 —— 停 GmSuggestHook2 的 buildMut + d 改 null + 修 idxOf 废码 + 死id保险丝
+e57a2eba7f78294c70dcea40269bdb8a2911d358 fb697aa5006ec2709625382e6849019750d66c2f dxyabab <177535022+dxyabab@users.noreply.github.com> 1789791895 +0000	commit: feat(NL 2.10.51): 恢复列表接管(d=null 安全版) + 条数=min(模板数,8) + idxOf 只认9~16
+fb697aa5006ec2709625382e6849019750d66c2f cf62a7e9c1b26c01288cf881480957f891783f94 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789792309 +0000	commit: fix(NL 2.10.52): 修好「文件快捷选项」读写(host/hostPut 走 native 本体绕开自身 hook) + 停掉占用那排的注入
+cf62a7e9c1b26c01288cf881480957f891783f94 23773a66acb899062df852d73a3078c96f21b789 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789792674 +0000	commit: fix(NL 2.10.53): 修「模型切换/灰度」被服务器下发顶掉
+23773a66acb899062df852d73a3078c96f21b789 74290afdf8ca66a69178fd46de7e8077f0ae2612 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789792913 +0000	commit: feat(NL 2.10.54): 调试基础设施 —— 日志落盘到宿主 data /DSMlogs
+74290afdf8ca66a69178fd46de7e8077f0ae2612 c1f9fb695b1d0d1652d61c204489ca4eb438e089 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789793095 +0000	commit: feat(NL 2.10.55): mmkv 决策链全打点 —— dump 样本 + 三条出口原因
+c1f9fb695b1d0d1652d61c204489ca4eb438e089 206d431de5356e88f77b5b0a04e309658d80e268 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789793263 +0000	commit: feat(NL 2.10.56): GmModel.reapply 四出口全打点 + 宿主侧确认 switchable 字段名
+206d431de5356e88f77b5b0a04e309658d80e268 3c5c05769192a0314a0e9c60593bf17b1a5964f2 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789793468 +0000	commit: fix(NL 2.10.57): 定位到匹配失败 —— reapply/setOn/handle 改正则宽松匹配 + dump 宿主样本
+3c5c05769192a0314a0e9c60593bf17b1a5964f2 24d536b2af06a4fd71cf9b3cd9fbd00311009fea dxyabab <177535022+dxyabab@users.noreply.github.com> 1789793572 +0000	commit: feat(NL 2.10.58): 无条件打宿主样本 + 认出上一轮日志是 56 版
+24d536b2af06a4fd71cf9b3cd9fbd00311009fea 57d5a43c88e6a9decc9d325435f1ac2bdc3c1dc3 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789793707 +0000	commit: fix(NL 2.10.59): 修 dump() 的 p1->p0（static 方法参数编号写错导致 VerifyError 整类被否）
+57d5a43c88e6a9decc9d325435f1ac2bdc3c1dc3 c44fc43c19b0724e8825e12223aa543d7664c7b3 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789793861 +0000	commit: feat(NL 2.10.60): 双保险 —— 正则不行就上 JSON 结构化改写(GmModel.fix)
+c44fc43c19b0724e8825e12223aa543d7664c7b3 a3f76891d3614936a743e9523a1622bcf5d3d796 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789794483 +0000	commit: feat(NL 2.10.61): 读写日志分标 + GmDsHook 补 after 下发后立即重应用
+a3f76891d3614936a743e9523a1622bcf5d3d796 3735a5d13828e8e9074d14572e7ad99917b7d1e1 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789794613 +0000	commit: feat(NL 2.10.62): 写入后立即回读，切开'没落盘(A)'与'被别的写覆盖(B)'
+3735a5d13828e8e9074d14572e7ad99917b7d1e1 d32ecd42276c60e1b4d23eeec6956dcc9fa0d111 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789794813 +0000	commit: diag(NL 2.10.63): 回读=true 证明落盘OK; 症结=宿主下发后不重读; 加下发Map探测
+d32ecd42276c60e1b4d23eeec6956dcc9fa0d111 ee048a67c4f3ea626dddc23d2f5c2685dcdd8922 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789794954 +0000	commit: feat(NL 2.10.64): 下发数据里 remove(model_configs) —— 断网验证成立后的对症修复
+ee048a67c4f3ea626dddc23d2f5c2685dcdd8922 80477daf848962c1db7508494911b0c99a6a440c dxyabab <177535022+dxyabab@users.noreply.github.com> 1789795189 +0000	commit: fix(NL 2.10.65): 修插桩寄存器 bug(v0 被覆盖成 String 导致静默失效) + GmSyncHook 新增 before
+80477daf848962c1db7508494911b0c99a6a440c e4e6f80aa3de0c38ff6a31d1df3ff336e92aab0a dxyabab <177535022+dxyabab@users.noreply.github.com> 1789795501 +0000	commit: fix(NL 2.10.66): 不可变 Map -> 复制可写副本并替换 args[0]
+e4e6f80aa3de0c38ff6a31d1df3ff336e92aab0a 81734a9d3ca33c0606b6206532a29fd08929a6a1 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789795737 +0000	commit: fix(NL 2.10.67): 同型副本 —— 用 orig.getClass() 构造 bx4 兼容实例
+81734a9d3ca33c0606b6206532a29fd08929a6a1 151dba501ac75eefd0b6a9a6db0db473558df26a dxyabab <177535022+dxyabab@users.noreply.github.com> 1789795860 +0000	commit: docs: 记录 2.10.52/2.10.67 对'文件快捷选项'的连带修复(prompt_feature 与 switchable 同处一份 JSON)
+151dba501ac75eefd0b6a9a6db0db473558df26a 44f2d7db4e353fd67daff8592995f82b8dec8331 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789795926 +0000	commit: fix(NL 2.10.68): GmPrompt.patch 改 JSON 结构化改写（修'保存不生效'）
+44f2d7db4e353fd67daff8592995f82b8dec8331 e4ee72fcdb37211f9b2871d0242aa50b4bce1637 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789796163 +0000	commit: fix(NL 2.10.69): GmPrompt.reapply 改直写宿主（补上'持续保住'这一环）
+e4ee72fcdb37211f9b2871d0242aa50b4bce1637 738c16685e404309db5d68b34314fcf369fab3e1 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789796314 +0000	commit: fix(NL 2.10.70): patch 改无条件写入（服务器下发的模型配置里没有 prompt_feature 字段）
+738c16685e404309db5d68b34314fcf369fab3e1 f34458dd8c909302380f22fc13fa2d07fc9b67c8 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789796448 +0000	commit: fix(NL 2.10.71): 恢复列表接管（走渲染参数注入，而非改 prompt_feature）
+f34458dd8c909302380f22fc13fa2d07fc9b67c8 b9941320146638b6a2437a5ee2fb80a7967b3484 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789796578 +0000	commit: fix(NL 2.10.72): 遍历 args 找 List 再替换（不写死 args[0]）
+b9941320146638b6a2437a5ee2fb80a7967b3484 08b6b05b981d0b90a8ebb9f98b5a891083cc6d31 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789796828 +0000	commit: feat(NL 2.10.73): 隐藏「美化→文件快捷选项」 + 「聊天」菜单新增「回复建议 ›」
+08b6b05b981d0b90a8ebb9f98b5a891083cc6d31 322992ef2ac9b4ebe5ca94ebeb8f5288dc7139ed dxyabab <177535022+dxyabab@users.noreply.github.com> 1789797056 +0000	commit: fix(NL 2.10.74): 隐藏一级菜单重复的回复建议项 + 修正聊天菜单项对齐
+322992ef2ac9b4ebe5ca94ebeb8f5288dc7139ed 5eba8e9b3af10d0ecbf93f2f5df13f064b023541 dxyabab <177535022+dxyabab@users.noreply.github.com> 1789797181 +0000	commit: docs(NL 2.10.74): 阶段性总结归档（参考/NL2.10.40-74-阶段性总结.md + 索引 + 交接文档头部）
+5eba8e9b3af10d0ecbf93f2f5df13f064b023541 5f1be930a7fdb5e957aed324f6b0b80bf91989b7 尼得亚伯 <nideyabo@dragon.local> 1790238695 +0000	commit: feat(NL 2.18.8): 方案A —— um1 后读一次宿主消息列表，把 AI 回复填进通话页 🤖 行
+5f1be930a7fdb5e957aed324f6b0b80bf91989b7 a5bbda7a00d7abfa49f0ff6643349a298c5fc781 尼得亚伯 <nideyabo@dragon.local> 1790238705 +0000	commit (amend): feat(NL 2.18.8): 方案A —— um1 后读一次宿主消息列表，把 AI 回复填进通话页 🤖 行
+a5bbda7a00d7abfa49f0ff6643349a298c5fc781 537a74371d89a4161abb9680938eeba2de352089 尼得亚伯 <nideyabo@dragon.local> 1790239013 +0000	commit: feat(NL 2.18.9): 抓取不再依赖 um1 —— 思考期低频只读轮询（方案 B）
+537a74371d89a4161abb9680938eeba2de352089 ef6bc4234b88edb21a69958ff7fb43f9f8a2596e 尼得亚伯 <nideyabo@dragon.local> 1790239354 +0000	commit: feat(NL 2.19.0): 换仓库读 wr.f（消息主存储）+ 每轮「探查」诊断 + 兜底 20s
+ef6bc4234b88edb21a69958ff7fb43f9f8a2596e 0407383f911230af1626a71a6f41e12081f366bf 尼得亚伯 <nideyabo@dragon.local> 1790239722 +0000	commit: feat(NL 2.19.1): 抓取改推送式 —— 挂 vq.S + wr.z，不再导航容器
+0407383f911230af1626a71a6f41e12081f366bf 1415d16d24cb9d922f6c8effc472097c634a9c62 尼得亚伯 <nideyabo@dragon.local> 1790239996 +0000	commit: feat(NL 2.19.2): 找到真·消息类 nx => 钩点换成 wr.a/u/v/z
+1415d16d24cb9d922f6c8effc472097c634a9c62 10457f71f21eeaa1a2ca8dc8e7a98b789cc35728 尼得亚伯 <nideyabo@dragon.local> 1790240344 +0000	commit: feat(NL 2.19.3): 钩子自检上浮到 1s 守护线程 + 捕获点加宽到 nx 构造器/s()
+10457f71f21eeaa1a2ca8dc8e7a98b789cc35728 e2640f4d1c4e54f63d65909afdfe7af1ebd7fed0 尼得亚伯 <nideyabo@dragon.local> 1790240566 +0000	commit: fix(NL 2.19.4): 真凶 = 新旧 dex 混用（没强停宿主）；让日志自证 dex
+e2640f4d1c4e54f63d65909afdfe7af1ebd7fed0 6011291cb1de47dff8559d2b107d58a9710dce89 尼得亚伯 <nideyabo@dragon.local> 1790240772 +0000	commit: feat(NL 2.20.0): 悬浮钮下线 + 音频通话转 wip + 摘除 6 条实验钩子
+6011291cb1de47dff8559d2b107d58a9710dce89 89822aa813b60e8b193841bae185b461a9520aaa 尼得亚伯 <nideyabo@local> 1790241035 +0000	commit: docs: 新增《宿主升级适配指南》+ 锚点总表-基线2.5.2.tsv
+89822aa813b60e8b193841bae185b461a9520aaa 04dcf1d0f11e6eb503717ea8f29a26cd33cd9eeb 尼得亚伯 <nideyabo@local> 1790241526 +0000	commit: docs: 宿主消息分片(fragments)体系静态分析建档 (2.5.2/vc273)
+04dcf1d0f11e6eb503717ea8f29a26cd33cd9eeb 08bcb0dc0cfc49b39362486526bf9f8becae6310 尼得亚伯 <nideyabo@local> 1790242046 +0000	commit: feat(NL 2.21.0): demo AI 助手气泡美化（深色底+紫青渐变）
+08bcb0dc0cfc49b39362486526bf9f8becae6310 724503ecafee05a330f1a1b952669eedefe72e41 尼得亚伯 <nideyabo@local> 1790242324 +0000	commit: feat(NL 2.21.1): 气泡美化改注入路线 + 诊断必现 + 美化菜单开关
+724503ecafee05a330f1a1b952669eedefe72e41 80bf6ef10ae98a8bd13497396a0afd8508ce9b7f 尼得亚伯 <nideyabo@local> 1790242509 +0000	commit: fix(NL 2.21.2): 修 GmBubble 类级 VerifyError（logOnce 少传一参）
+80bf6ef10ae98a8bd13497396a0afd8508ce9b7f 58fb80cbb72ae3b802a9247cf0ed7cbcac85f3f7 尼得亚伯 <nideyabo@local> 1790242671 +0000	commit: fix(NL 2.21.3): findClass 传裸 Java 名（Luia -> uia）
+58fb80cbb72ae3b802a9247cf0ed7cbcac85f3f7 e12118c38b020db09790cd692905dbaacd893955 尼得亚伯 <nideyabo@local> 1790242791 +0000	commit: feat(NL 2.21.4): 气泡形状令牌 kq.d(CircleShape) -> tt7.a(聊天消息区圆角)
+e12118c38b020db09790cd692905dbaacd893955 461a01a800da7cdeae030d4ea27725747f3cbc09 尼得亚伯 <nideyabo@local> 1790242938 +0000	commit: feat(NL 2.21.5): 真·圆角 - 反射调 tt7.b(px) 自家形状工厂
+461a01a800da7cdeae030d4ea27725747f3cbc09 08913d3ec3282a2080be945a7e07b922860f3853 尼得亚伯 <nideyabo@local> 1790243213 +0000	commit: feat(NL 2.21.7): 注入层级上移 pn9.c + 修注册表漏改 Luia->uia
+08913d3ec3282a2080be945a7e07b922860f3853 554658783d3f3fee7ceef3c493d19da14d24eb7b 尼得亚伯 <nideyabo@local> 1790243413 +0000	commit: feat(NL 2.21.8): 角色闸门 + 放开 sHit 上限（头像/标题也变色）
+554658783d3f3fee7ceef3c493d19da14d24eb7b c5fa9a146a1e054542c02ad8808d776162fe862d 尼得亚伯 <nideyabo@local> 1790243620 +0000	commit: fix(NL 2.21.9): 止血 - 停用坏掉的渐变 brush（Color 装箱体应为 q32）
+c5fa9a146a1e054542c02ad8808d776162fe862d 9b6eda81b62c9eb4faaf1cf70c1c7a73e6ebfd96 尼得亚伯 <nideyabo@local> 1790243790 +0000	commit: feat(NL 2.21.10): 项内背景透明化 - 让助手卡片成为一整面
+9b6eda81b62c9eb4faaf1cf70c1c7a73e6ebfd96 760863f3cee5bfc097b88e3c183026d195a8ef8a 尼得亚伯 <nideyabo@local> 1790243941 +0000	commit: fix(NL 2.21.11): 替换时跳过自身注入色（修卡片自刷透明）
+760863f3cee5bfc097b88e3c183026d195a8ef8a 7a8d32143554174d0664ce58777bdeeac652842f 尼得亚伯 <nideyabo@local> 1790244465 +0000	commit: feat(NL 2.22.0): 调色盘 + 圆角可调
+7a8d32143554174d0664ce58777bdeeac652842f db0d6f0a6e2f546b741706051c0bd93c0bdd8050 尼得亚伯 <nideyabo@local> 1790244639 +0000	commit: fix(NL 2.22.1): 圆角按钮 tag 改增量（修只有第一下有效）
+db0d6f0a6e2f546b741706051c0bd93c0bdd8050 552c8f945ac41dd05d4134ea120aa4b7a27edcff 尼得亚伯 <nideyabo@local> 1790244950 +0000	commit: feat(NL 2.22.2): 气泡背景支持图片（tn0 包装 BitmapShader）
+552c8f945ac41dd05d4134ea120aa4b7a27edcff ddbbc81be3ab2855e85b9203bfdcdcfa6e742ef0 尼得亚伯 <nideyabo@local> 1790245092 +0000	commit: fix(NL 2.22.3): 修 NPE - 回退路径用到被覆盖的 shape 寄存器
+ddbbc81be3ab2855e85b9203bfdcdcfa6e742ef0 0825785b6b585c9ad5b5b2184ab019369de3268e 尼得亚伯 <nideyabo@local> 1790245452 +0000	commit: diag(NL 2.22.4): 图片底 5 处静默失败点全部点亮（零逻辑变更）
+0825785b6b585c9ad5b5b2184ab019369de3268e 85c3858e888ea65496efeb2836f0132b00bda566 尼得亚伯 <nideyabo@local> 1790245719 +0000	commit: fix(NL 2.22.5): 选图结果被吃掉 - 吸干残留标志 + 失败重武装
+85c3858e888ea65496efeb2836f0132b00bda566 0f1cc127b339815cb7528d4cae995a1f6edc4c6d 尼得亚伯 <nideyabo@local> 1790245956 +0000	commit: fix(NL 2.22.6): 选图协议改先看数据再消费（isPicking）
+0f1cc127b339815cb7528d4cae995a1f6edc4c6d 681480be48b142f7bd21b36d682ab8f77b3feb52 尼得亚伯 <nideyabo@local> 1790246137 +0000	commit: fix(NL 2.22.7): 修选图没被拉起 - 双 Activity 兜底 + 静默路径全点亮
+681480be48b142f7bd21b36d682ab8f77b3feb52 7e06b720e1f1933dd6967f00f901c6457f703b12 尼得亚伯 <nideyabo@local> 1790246311 +0000	commit: fix(NL 2.22.8): 选图入口日志带[气泡]前缀 + 按请求码0x435b直判
+7e06b720e1f1933dd6967f00f901c6457f703b12 751ef68676247b4c0cc807fb48eaaec8cba589af 尼得亚伯 <nideyabo@local> 1790246467 +0000	commit: diag(NL 2.22.9): 图片底 文件不存在/为空/非图片 三分支点亮
+751ef68676247b4c0cc807fb48eaaec8cba589af 7402a2a7701ab50b3dce56bec4651d476f920741 尼得亚伯 <nideyabo@local> 1790246570 +0000	commit: fix(NL 2.22.10): imgBrush 宽常量踩掉 p0 - registers 6->8
+7402a2a7701ab50b3dce56bec4651d476f920741 339d2494a4e6914bb6b2ba9990f6e0023740e2bb 尼得亚伯 <nideyabo@local> 1790246735 +0000	commit: fix(NL 2.22.11): 图片底改解码验证+重编码PNG（照抄项目现成做法）
+339d2494a4e6914bb6b2ba9990f6e0023740e2bb e1c60dabf784b3aefff3c2ddc44fcab2fe2749cd 尼得亚伯 <nideyabo@local> 1790246861 +0000	commit: diag(NL 2.22.12): 图片底 打印选中 uri + intent type
+e1c60dabf784b3aefff3c2ddc44fcab2fe2749cd 8055d11c1ae1c1e6260c36c038d9b9d250172612 尼得亚伯 <nideyabo@local> 1790246966 +0000	commit: fix(NL 2.22.13): Photo Picker 的 picker_get_content 用 loadThumbnail 兜底
+8055d11c1ae1c1e6260c36c038d9b9d250172612 3febf0443e5899ef930ef0e125bcc229c0819266 尼得亚伯 <nideyabo@local> 1790247083 +0000	commit: fix(NL 2.22.14): 图片底加第三路 ImageDecoder 兜底
+3febf0443e5899ef930ef0e125bcc229c0819266 fe9360bce32a64d89ce431e0ac1f5cf0213fb5a3 尼得亚伯 <nideyabo@local> 1790247207 +0000	commit: fix(NL 2.22.15): 裸流包 BufferedInputStream + 落盘前删旧文件
+fe9360bce32a64d89ce431e0ac1f5cf0213fb5a3 70b3847c88b20eb78d26852a036cd821b847fb23 尼得亚伯 <nideyabo@local> 1790247280 +0000	commit: fix(NL 2.22.16): File.delete() 描述符 ()V -> ()Z
+70b3847c88b20eb78d26852a036cd821b847fb23 f022ed4de90330027f54af0c180a58c7f04c5f46 尼得亚伯 <nideyabo@local> 1790247384 +0000	commit: fix(NL 2.22.17): 绕开照片选择器, 改用 ACTION_OPEN_DOCUMENT
+f022ed4de90330027f54af0c180a58c7f04c5f46 74232f65ba3f6961f61bc2de678a361418389c57 尼得亚伯 <nideyabo@local> 1790247445 +0000	commit: fix(NL 2.22.18): 去掉 CATEGORY_OPENABLE - 与项目现成 Intent 逐字一致
+74232f65ba3f6961f61bc2de678a361418389c57 c3b09feb82783851611c9eb4c04911657160064b 尼得亚伯 <nideyabo@local> 1790247569 +0000	commit: fix(NL 2.22.19): 第四路 MediaStore 直读（从 picker URI 提 id）
+c3b09feb82783851611c9eb4c04911657160064b c38efcecd4ba36e9c651ecd59f6bf5f206320c38 尼得亚伯 <nideyabo@local> 1790247695 +0000	commit: fix(NL 2.22.20): 第4路改用 MediaStore loadThumbnail（格式不可解的真凶）
+c38efcecd4ba36e9c651ecd59f6bf5f206320c38 ec9d43d8f118b7d2f92743d4638fa05b120d4070 尼得亚伯 <nideyabo@local> 1790247813 +0000	commit: feat(NL 2.22.21): 图片底兜底改用 fuckds_bg.png + 点选图先开图片模式
+ec9d43d8f118b7d2f92743d4638fa05b120d4070 0bef2908448b4ad52e1e2ce5ceaee0dd9e48cddf 尼得亚伯 <nideyabo@local> 1790247922 +0000	commit: fix(NL 2.22.21): 选图改用 GmBgDialog.act() 发起（授权跟着发起 Activity）
+0bef2908448b4ad52e1e2ce5ceaee0dd9e48cddf 984f6276798d17447322ec16e3328b4c8567ec17 尼得亚伯 <nideyabo@local> 1790248085 +0000	commit: docs: 归档 AI 气泡背景可调阶段总结（2.22.0-2.22.21）
+984f6276798d17447322ec16e3328b4c8567ec17 57e8209ad13d5a1da1870228cb46d3252e5d9eb8 dxyabab <dxyabab@local> 1790248304 +0000	commit: fix(NL 2.22.22): 选图通道真凶 - 6 处分支极性写反 (saveImage x4 + imgBrush x2)
+57e8209ad13d5a1da1870228cb46d3252e5d9eb8 9d58931cd90d266a1f79ec90d4d080c05b3208f6 尼得亚伯 <nideyabo@local> 1790248424 +0000	commit: docs: 记录真根因（if-eqz 反了）+ 精准补丁，推翻此前误判
+9d58931cd90d266a1f79ec90d4d080c05b3208f6 56e80891a65cc85ebd3cc670d728c3bc05c6deb4 尼得亚伯 <nideyabo@local> 1790248431 +0000	commit: docs: 更正 - 6处极性补丁已由 57e8209(NL 2.22.22) 修复提交
+56e80891a65cc85ebd3cc670d728c3bc05c6deb4 4cb051b2f1a73bc1a595d070a43f004adc47c8a4 dxyabab <dxyabab@local> 1790249058 +0000	commit: feat(NL 2.22.23): 图片底按气泡尺寸铺满（挂宿主 tn0.b(J) createShader(size)）
+4cb051b2f1a73bc1a595d070a43f004adc47c8a4 f596e75473fa2b502c4c3a2625965f36dc50afc8 尼得亚伯 <nideyabo@local> 1790249758 +0000	commit: chore: 兜底打包脚本排除本地私有目录
+f596e75473fa2b502c4c3a2625965f36dc50afc8 2419e45af88b9f8f40bcc812283e9ee234282c3d nidyaber <dragon@nid.local> 1790255459 +0000	commit: feat(NL 2.22.24): 模块自绘弹窗统一套竖向 ScrollView（修「功能被压到下面点不到」）
+2419e45af88b9f8f40bcc812283e9ee234282c3d a19882af9b3da6ce86e17cdc77ef1d84aaf9512a dxyabab <177535022+dxyabab@users.noreply.github.com> 1790256995 +0000	commit: NL 2.22.25：日志地基 v1（三通道统一 + 崩溃落盘 + 轮转 + 可读时间戳）
+a19882af9b3da6ce86e17cdc77ef1d84aaf9512a 2bce8842f6c1f160d78db93e22062989177398d5 尼得亚伯 <noreply@example.com> 1790257359 +0000	commit: docs: 2026-09-24 归档（NL 2.22.25 基线）
+2bce8842f6c1f160d78db93e22062989177398d5 e6a6e5b7a07cdc8f7a45150bda8cb6ceca3362be 尼得亚伯 <noreply@example.com> 1790257370 +0000	commit (amend): docs: 2026-09-24 归档（NL 2.22.25 基线）
+e6a6e5b7a07cdc8f7a45150bda8cb6ceca3362be 4f4e8a01a731f9aa33f950c48842fa99eb828dc8 dxyabab <177535022+dxyabab@users.noreply.github.com> 1790257657 +0000	commit: NL 2.22.26：修 GmSuggestAi 整类 VerifyError（dbSid 未初始化+类型冲突，连坐 5 个 hook）+ tools/vercheck.pl
+4f4e8a01a731f9aa33f950c48842fa99eb828dc8 61860e8db2b14c3bfef0e47f97364de57756bc3c dxyabab <177535022+dxyabab@users.noreply.github.com> 1790258034 +0000	commit: NL 2.22.27：AI 气泡美化独立成二级菜单（新类 GmBubbleDialog + 美化页 8 处 + GmClick 2 id）
+61860e8db2b14c3bfef0e47f97364de57756bc3c 69266098f195578b2aeb85176a814d41903e01e3 dxyabab <177535022+dxyabab@users.noreply.github.com> 1790258176 +0000	commit: NL 2.22.28：修正美化页顺序（选择图片回到修改助手图片正下方）
+69266098f195578b2aeb85176a814d41903e01e3 9e66683177aee57999e6f4a1732c665d78ad750a 尼得亚伯 <nidyaber@local> 1790330180 +0000	commit: feat(mod-src): 模块真编译流水线首版 —— 入口类 GmEntry 真编译 + 自造 APK
+9e66683177aee57999e6f4a1732c665d78ad750a 0618e46e6f1fee23f187bfebb24c699983314bee 尼得亚伯 <nidyaber@local> 1790330186 +0000	commit (amend): feat(mod-src): 模块真编译流水线首版 —— 入口类 GmEntry 真编译 + 自造 APK
+0618e46e6f1fee23f187bfebb24c699983314bee 866da0ae92bcba25c812a336987521a0cb1223f6 尼得亚伯 <nidyaber@local> 1790330441 +0000	commit: feat(sign): 换用我们自己的签名私钥（4096-bit RSA / 30 年）+ 备份
+866da0ae92bcba25c812a336987521a0cb1223f6 d453873925ba44b58eddcfb7380c5a3ed18c8734 尼得亚伯 <nidyaber@local> 1790331053 +0000	commit: NL 2.22.111：真编译第一版出包（vc442）
+d453873925ba44b58eddcfb7380c5a3ed18c8734 2633c8f114e7e9395304c9b9dd9c6d51a2c69c15 尼得亚伯 <nidyaber@local> 1790331761 +0000	commit: UI 改版地基：GmUi 工具箱（真编译）+ UI 现状测绘
+2633c8f114e7e9395304c9b9dd9c6d51a2c69c15 b730faa19b913fcebfb7593d1c8c705ea89da8d1 尼得亚伯 <nidyaber@local> 1790331949 +0000	commit: NL 2.22.112：退掉模板包名（整个 gm 包搬家到 com.nidyaber.fuckdsmanger.gm）
+b730faa19b913fcebfb7593d1c8c705ea89da8d1 d0fb595cfcbd60c10f6ae50976db201059e25842 尼得亚伯 <nidyaber@local> 1790332034 +0000	commit: docs: 2.22.112 真机验证通过（hookM 38/38 · FAIL 0 · GmEnv 清白 · 宿主入口正常）
+d0fb595cfcbd60c10f6ae50976db201059e25842 a7f314e038da92c0d7a74fce942968f9906150d3 尼得亚伯 <nidyaber@local> 1790332917 +0000	commit: chore: m3e-canvas（web 项目）不入库
+a7f314e038da92c0d7a74fce942968f9906150d3 65de67bc2b84a1cba04b3202963fae16733ee89f 尼得亚伯 <nidyaber@local> 1790344297 +0000	commit: toolchain: arm64 原生 aapt2 到位（2.19）—— 解锁资源合并/矢量图/Compose 路线
+65de67bc2b84a1cba04b3202963fae16733ee89f e0e1cd2f0c9fce7b018c8baee4df827d1554276c 尼得亚伯 <nidyaber@local> 1790344978 +0000	commit: toolchain: Material Symbols 图标库入库（官方 TTF + 子集 + 7858 个 rounded SVG）
+e0e1cd2f0c9fce7b018c8baee4df827d1554276c 5df8ef4e65e3f56b8e5503fc8469fab237dd0016 尼得亚伯 <nidyaber@local> 1790344987 +0000	commit: docs(symbols): 实测连字字体无法按图标切子集（GSUB 闭包保住全部字形）⇒ 改走 SVG→矢量图
+5df8ef4e65e3f56b8e5503fc8469fab237dd0016 73701e11fef37b5c7bec646a0f325820973b4e2d 尼得亚伯 <nidyaber@local> 1790350766 +0000	commit: docs: 记录方案A最后一公里（poolingcontainer R$id 被 R8 吞掉 + D8 注入冲突）
+73701e11fef37b5c7bec646a0f325820973b4e2d a484635cf09cbb5d87cb1882f98582ad3b9bea73 尼得亚伯 <nidyaber@local> 1790354326 +0000	commit: 方案B 跑通：独立 Compose UI 可运行（FDM-UI-3.0）+ 总结文档 + 日记
+a484635cf09cbb5d87cb1882f98582ad3b9bea73 33c10e7ac94b23a4e8389628f634768487e4c2ab 尼得亚伯 <nidyaber@local> 1790425443 +0000	commit: feat(3.13.0): 「检查更新」换乘 —— View 弹窗 → Compose UI
+33c10e7ac94b23a4e8389628f634768487e4c2ab 678c402430d75e68342dca64d47d32f5f98bdd92 尼得亚伯 <nidyaber@local> 1790426056 +0000	commit: docs: 铁律 —— 模块功能不许依赖宿主包名（含 6 处违例清单 + 改法）
+678c402430d75e68342dca64d47d32f5f98bdd92 776c8ff9f36556cc3a7ef402de11a09b7cf56dfb 尼得亚伯 <nidyaber@local> 1790426540 +0000	commit: feat(3.14.0): 拔掉「依赖宿主包名」的六颗钉子 + 出包自检 ⑫
+776c8ff9f36556cc3a7ef402de11a09b7cf56dfb 2a72367168a2d9b819e19b07e1ced1f0d091e9b8 尼得亚伯 <nidyaber@local> 1790427893 +0000	commit: feat(C0): 宿主权威设置表 —— 从字节码抄出「键形 / 类型 / 默认值」
+2a72367168a2d9b819e19b07e1ced1f0d091e9b8 3d1e876c77de59d5c1f6c81eab87f9a6a983c458 尼得亚伯 <nidyaber@local> 1790428204 +0000	commit: feat(3.15.0): B1 读侧替换 —— 灰度值真的生效了（底座 2.22.122）
+3d1e876c77de59d5c1f6c81eab87f9a6a983c458 e9015ace458427d946d13ac42372225c4e5900e2 尼得亚伯 <nidyaber@local> 1790428590 +0000	commit: fix(3.16.0): B1' 修落点 —— 宿主读设置用的是 1 参 MMKV.j，我挂在了 2 参 k 上
+e9015ace458427d946d13ac42372225c4e5900e2 5284bbd0c2184b48e2a3586bdc166d398d6d519f 尼得亚伯 <nidyaber@local> 1790429054 +0000	commit: fix(3.17.0): pin 表灌不进去 —— MMKV 初始化比 Application.onCreate 晚
+5284bbd0c2184b48e2a3586bdc166d398d6d519f 53f79367ca7d19ef61590482c19d297024915807 尼得亚伯 <nidyaber@local> 1790439069 +0000	commit: toolchain: 出笼隧道 —— adb 无线调试打通全自动闭环
+53f79367ca7d19ef61590482c19d297024915807 1f7831d96ab431da72d474141067eb54255054ca 尼得亚伯 <nidyaber@local> 1790440786 +0000	commit: toolchain: 只读模式定稿 —— uid 0 + 仅 CAP_DAC_READ_SEARCH
+1f7831d96ab431da72d474141067eb54255054ca 2e77bbbd2a30676b4159271469724af99b92aefa 尼得亚伯 <nidyaber@local> 1790440911 +0000	commit: chore: 归档 3.16/3.17 源码与专题文档 + 隔离大件产物
+2e77bbbd2a30676b4159271469724af99b92aefa 287b2c0f8f893edd550733dbfc7db0c744579eb2 尼得亚伯 <nidyaber@local> 1790441504 +0000	commit: wip(bridge): pin 表读出链路 —— getAll() 修好，改为按签名捞被 R8 改名的 allKeys()
+287b2c0f8f893edd550733dbfc7db0c744579eb2 6970b81a213e2c3ec7b2587a1d9e90fc9785dd49 尼得亚伯 <nidyaber@local> 1790442077 +0000	commit: docs: 只读模式实测证据（含 /dev/null 对照组 —— 证明不是全盘禁写，而是纯按权限位）
+6970b81a213e2c3ec7b2587a1d9e90fc9785dd49 3451a96ee5850f655399a2932660c00ab52d139e 尼得亚伯 <nidyaber@local> 1790472369 +0000	commit: fix(bridge): pin 表读出链路打通 —— MMKV 的 allKeys 被 R8 压成 private native
+3451a96ee5850f655399a2932660c00ab52d139e 26aa8003ff9181b09e2299828dee3f88d33145f2 尼得亚伯 <nidyaber@local> 1790472732 +0000	commit: docs: pin 机制为什么没生效 —— 由「为什么旧 UI 能」逼出的完整链路
+26aa8003ff9181b09e2299828dee3f88d33145f2 46b1aa29dbd930ffdccf61e42661d6dbcc432e7f 尼得亚伯 <nidyaber@local> 1790474885 +0000	commit: fix: 覆盖层写入(3.24.0) + DS DATA 修复 + 日志页全文可选(3.25.0)
+46b1aa29dbd930ffdccf61e42661d6dbcc432e7f e19e5370e5ee0000b3f32e049a1dc5b1c7a240a6 尼得亚伯 <nidyaber@local> 1790474911 +0000	commit: fix(gitignore): fdm-app 的 UI 源码必须入库 —— 上午清理大件时误杀了整目录
+e19e5370e5ee0000b3f32e049a1dc5b1c7a240a6 75ad5583c99b1a7f2e75d798fe02694958afec1e 尼得亚伯 <nidyaber@local> 1790475202 +0000	commit: fix(bridge): 【致命】GmStore.write 参数顺序反了 —— 值全被写成 "s"
+75ad5583c99b1a7f2e75d798fe02694958afec1e 867d6cd81b711948c9c6d7b3f2b90316a9021194 尼得亚伯 <nidyaber@local> 1790475339 +0000	commit: docs: pin 机制勘误 + 3.26.0 版本文档
+867d6cd81b711948c9c6d7b3f2b90316a9021194 6c7a5b9bef9b86517e700962ad0ed966391d2181 尼得亚伯 <nidyaber@local> 1790764153 +0000	commit: fix(base 2.22.130): 角色分派 if-nez 写反(用户项走助手支线=大横条) + imgBrush 解码缓存(卡成PPT) · 3.28.0/vc538
+6c7a5b9bef9b86517e700962ad0ed966391d2181 8f7792a17391ff3d5f598268ab062ca886b33504 尼得亚伯 <nidyaber@local> 1790764612 +0000	commit: fix(3.28.1): 缓存建表 if-eqz 写反致 NPE(图片底变纯色) + 气泡选图改桥直拷(绕开 file:// 无 provider) · base 2.22.131
+8f7792a17391ff3d5f598268ab062ca886b33504 9a00a18212f3859da1ae937fc1086a92feb71f41 尼得亚伯 <nidyaber@local> 1790765309 +0000	commit: fix(3.28.2): 修改背景选图 kind 写成 avatar(覆盖助手图片+背景退回渐变) → bg + 桥直拷 bg 并自动开背景切图片档
+9a00a18212f3859da1ae937fc1086a92feb71f41 34fe92d015cf036275a789079a7b9f12811f7e08 尼得亚伯 <nidyaber@local> 1790766104 +0000	commit: fix(3.28.3): 坏图守门+头像直拷+PHook防崩 · 双档极性(colorLong/imgOn/radius) · xposedscope 双包名 · base 2.22.132
+34fe92d015cf036275a789079a7b9f12811f7e08 bc712ee0c289d94b721ac50fe13f0f8a425eac8d 尼得亚伯 <nidyaber@local> 1790767435 +0000	commit: fix(3.28.4): 文本项类型 i→s + 文本键走模块入口(招呼语/提示词/回复建议) + SettingText 空值不覆盖 + cfg_state 补三项可读
+bc712ee0c289d94b721ac50fe13f0f8a425eac8d f32cab1f55f338f349d469984eec11e89c0f5ec1 尼得亚伯 <nidyaber@local> 1790767907 +0000	commit: fix(3.28.5): 手写JSON解析不还原转义(模板池带\n) → 改 org.json + 桥侧换行归一化 · xposedscope 待办结案
+f32cab1f55f338f349d469984eec11e89c0f5ec1 70d3e85c3dbe8e951ddea19a5c8a8bbce1ea60fa 尼得亚伯 <nidyaber@local> 1790768440 +0000	commit: fix(3.28.6): 招呼语写入沿用原条目id(宿主按id分时段挑) + helloLines兜底读+出声 + 接上三个 *_reset 动作
+70d3e85c3dbe8e951ddea19a5c8a8bbce1ea60fa aaf32e200e86aac1b6c77570f740e8ec4c853c4a 尼得亚伯 <nidyaber@local> 1790768676 +0000	commit: docs: 2026-09-30 一日总复盘（3.28.0~3.28.6 七版一页看完）+ 日记 + 当前状态更新
+aaf32e200e86aac1b6c77570f740e8ec4c853c4a 4dada022818c4c74c5bd8aeb6910e9b1c0297711 尼得亚伯 <nidyaber@local> 1790912082 +0000	commit: fix(3.42.43): 两底串图结案 — FitHook 取图改「身份判据(两把钥匙)」+ 删掉误判的尺寸闸门 + 配对表限容
+4dada022818c4c74c5bd8aeb6910e9b1c0297711 8d2afb4d7937482bf47786e9bfdf07366831d17b 尼得亚伯 <nidyaber@local> 1790912969 +0000	commit: fix(3.42.44+3.42.45): 「永远铺满」两轮收敛 — 去掉封顶（min 才是盖不满的根源）+ 撤回 MIRROR
+8d2afb4d7937482bf47786e9bfdf07366831d17b e2f403ea1d879b61c181eabee16b381115323c62 尼得亚伯 <nidyaber@local> 1790914384 +0000	commit: docs(frida): 钉死启动方式 —— 是 /data/adb/frida/frida.sh（不是 tools/frida/frida.sh）
+e2f403ea1d879b61c181eabee16b381115323c62 9f82ca0ba257b26f7be77cae10e89734f0dcb15d 尼得亚伯 <nidyaber@local> 1790919284 +0000	commit: docs: 2026-10-02 一日总复盘 + 事故档（我把主人手机跑卡了）
+9f82ca0ba257b26f7be77cae10e89734f0dcb15d c61299aa5d8729b5b113a92a5baad557ca0c1ac3 尼得亚伯 <nidyaber@local> 1790921730 +0000	commit: docs+probe: AI气泡底第二坑 —— J=节点尺寸(定死) + AI的底挂在「消息项」不是「气泡」+ 调试通道(JDWP/选择调试应用)评估 + fit7探针(rect vs J, 带对照组)
+c61299aa5d8729b5b113a92a5baad557ca0c1ac3 f2fb841c0b8c80a2406e9f8ab9756ea5dc033b1d 尼得亚伯 <nidyaber@local> 1790924302 +0000	commit: probe+docs: 四枪 frida 全账(量具四次出错) + 静态定死真机制——ob7.i 分片绘制并 setLocalMatrix 抹掉我们的铺满矩阵; 修法候选(B: 合成矩阵)
+f2fb841c0b8c80a2406e9f8ab9756ea5dc033b1d 35d21ead2bd77dd4d6d4550a33e9bafb77f5a26d 尼得亚伯 <nidyaber@local> 1790924831 +0000	commit: 3.42.46(vc589): GmBmpShader override setLocalMatrix 合成 M0∘T(不再被宿主 ob7.i 抹掉铺满矩阵) + FitHook 改调 baseMatrix; 已出包签名装机
+35d21ead2bd77dd4d6d4550a33e9bafb77f5a26d 93fcb4dabb70e44967b30047b366d71c965e025d 尼得亚伯 <nidyaber@local> 1790925235 +0000	commit: 3.42.47(vc590): 铺满矩阵改贴到 RuntimeShader 的【输入 BitmapShader】(sInShaderMap + fitInput) —— 三版矩阵改动真机皆无区别⇒b(J)返回值不是渲染源; 已出包装机
+93fcb4dabb70e44967b30047b366d71c965e025d 80b8054ad1bff0f7d8462172ab8cbd0fc1ac77be 尼得亚伯 <nidyaber@local> 1790925908 +0000	commit: 3.42.48(vc591): 按主人选的C——按宽度铺(v10=W/bw 去掉max)+竖直贴顶(不居中), 上下由CLAMP边缘色延伸; 已出包装机(pid 5110)
+80b8054ad1bff0f7d8462172ab8cbd0fc1ac77be a112d5d045c238b07dbc9944ef689d8fb885e3cf 尼得亚伯 <nidyaber@local> 1790926091 +0000	commit: docs: AI气泡底第二坑结案(3.42.48 主人确认修好) —— 真身=RuntimeShader的输入BitmapShader; 教训376-380(改了没区别是线索/按像素读用户描述/量具优先); 遗留:删[FIT]日志·确认背景未被带歪
+a112d5d045c238b07dbc9944ef689d8fb885e3cf 1948ae170944b9355087c730ca3a5ef74ccfdb84 尼得亚伯 <nidyaber@local> 1790937379 +0000	commit: fix(3.42.50): 液态玻璃 2.6.1 重定位 —— 13 按钮锚点(xta/l10/v91/hs7/k53)+画底原语 qk7.D；出包前 4 道机械核验全过(13/13唯一候选·结构同构·新旧产物只差2文件·回读0残留)；玻璃源码/生成器/核验脚本补入库
+1948ae170944b9355087c730ca3a5ef74ccfdb84 53121b64134d6ee30b59274d4fd29b74d47b1df4 尼得亚伯 <nidyaber@local> 1790937392 +0000	commit: chore(sync): 2.6.1 适配期源码补档 —— bridge(FdmApp/FdmBridge/FdmEntry/FdmPush 更新 + GmRemap/GmCall/GmCallPin/GmProbe 新增) + stub 清理×4 + fdm-app UI(含 ColorPicker) + 做包.sh(调试总闸/2.6.1底座优先)
+53121b64134d6ee30b59274d4fd29b74d47b1df4 9340fe022fdf8f1c08c454839ba7d3e0a7cf0034 尼得亚伯 <nidyaber@local> 1790937406 +0000	commit: chore(sync): 文档/数据补档 —— 专题×21 / 版本×15 / 参考数据×6（2.6.1 适配 + frida 事故与复盘 + 液态玻璃线全账；含 3.42.49 台账）
+9340fe022fdf8f1c08c454839ba7d3e0a7cf0034 fa97d690133fd9b7916a1ae3f26db2820d263f13 尼得亚伯 <nidyaber@local> 1790937432 +0000	commit: chore(tools): 工具补档 —— frida 网关/探针(eval·js·速查) + fp 重定位×6 + 底座重建/安装脚本 + adb 工具包；.gitignore 排除 frida 二进制与 py16 虚拟环境(~190MB)
