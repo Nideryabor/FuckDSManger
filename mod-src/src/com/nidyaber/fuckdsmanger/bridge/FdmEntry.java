@@ -123,6 +123,45 @@ public final class FdmEntry implements IXposedHookLoadPackage {
             }
         }
 
+        // ⑤ 系统提示词注入（2026-10-03）：hook `ChatFullCompletionRequest` 的构造器，
+        //    把用户填的「系统提示词」用 Unicode Tag 隐形字符（U+E0000–E007F）塞进 prompt。
+        //    模型读得到、人眼看不见 —— 这是 DeepSeek 官方通道下唯一可行的形态
+        //    （协议层没有 system 位，已穷举证明，见 专题/系统提示词-不留痕投递.md）。
+        //    锚点找不到就自己 catch（宿主升级改名 ⇒ 等于没装，绝不连累宿主）。
+        if (isHost(lp.classLoader)) {
+            try {
+                GmSysPromptHook.install(lp.classLoader);
+                XposedBridge.log("[FDM] 系统提示词注入已安装");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] 系统提示词注入安装失败（不影响其它钩子）：" + t);
+            }
+        }
+
+        // ⑥ 文件卡片定位探针（2026-10-03）—— ★ **默认不注册**。
+        //    它当初是为「系统提示词当附件发」定位文件卡片用的；最终形态改用
+        //    「明文承载 + 渲染抹显示」（见 GmSysPromptHideHook），探针使命结束。
+        //    代码留着是因为**宿主升级后重新定位渲染点**时还能用上 —— 要用就把下面那段注释打开。
+        // if (isHost(lp.classLoader)) {
+        //     try {
+        //         GmFileCardProbe.install(lp.classLoader);
+        //     } catch (Throwable t) {
+        //         XposedBridge.log("[FDM] 文件卡片探针安装失败：" + t);
+        //     }
+        // }
+
+        // ⑦ 系统提示词 · 显示侧隐藏（2026-10-03）
+        //    明文承载的一半：prompt 里带着 ⟦FDM⟧提示词⟦/FDM⟧ 明文发出去（模型零风险），
+        //    但要在渲染前把这一段从气泡里**删掉** —— 用户看到的就只是他自己写的那句话。
+        //    做法是"宽容版"：不问它在哪个字段，渲染参数里只要出现过定界标记就地换掉。
+        if (isHost(lp.classLoader)) {
+            try {
+                GmSysPromptHideHook.install(lp.classLoader);
+                XposedBridge.log("[FDM] 提示词显示侧隐藏已安装");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] 提示词显示侧隐藏安装失败：" + t);
+            }
+        }
+
         // ④ 液态玻璃（2026-09-30）：给宿主所有按钮上玻璃。
         //    只在宿主进程装（isHost 判过）；里面全是 try/catch，坏也坏不到宿主身上。
         if (isHost(lp.classLoader)) {

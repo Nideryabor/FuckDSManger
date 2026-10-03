@@ -74,6 +74,7 @@ object Tree {
             It("本地数据库管理", null, K.SUB, sub = "db"),
             It("回复建议 ›", "输入框上方显示一排可点击的回复建议，点一下直接发送（数量/文字可自定义）",
                 K.SUB, sub = "suggest"),
+            It("系统提示词 ›", "把一段隐藏指令塞进每次请求：模型看得到、人眼看不见", K.SUB, sub = "sysprompt"),
         )),
 
         /* ───────── 美化（GmBeautyDialog）───────── */
@@ -91,6 +92,42 @@ object Tree {
             It("修改背景 ›", "图片或动态渐变背景，透明度可调", K.SUB, sub = "bg"),
             It("液态玻璃 ›", "给宿主所有按钮换上玻璃底（截底层→糊→折射）",
                 K.SUB, sub = "glass"),
+        )),
+
+        /* ───────── 系统提示词（2026-10-03 · 零宽隐形通道）───────── */
+        //  协议层依据：DeepSeek 官方通道没有 system 位（32 顶层字段 + 16 嵌套组合实测全灭，
+        //  特殊 token 被当普通文本，网页版 JS 全量扫描 0 命中）⇒ 见 专题/系统提示词-不留痕投递.md
+        //  本功能 = Unicode Tag 字符（U+E0000–E007F，渲染宽度 0）承载指令，塞进 prompt。
+        //  ⚠️ 它不是"真 system role"，优先级理论上低于 system；是官方通道下效果最接近的形态。
+        Pg("sysprompt", "系统提示词", listOf(
+            It("✦ 原理：隐形字符承载指令",
+                "Unicode Tag 区块（U+E0000–U+E007F）渲染宽度为 0，但模型能读到。" +
+                "指令随 prompt 上传，聊天界面/换设备/网页版全都看不见。", K.INFO),
+            It("⚠️ 它不是真正的 system prompt",
+                "位于 user 消息内部，优先级理论上低于 system；理论上可被「忽略之前所有指令」冲掉。" +
+                "这是官方通道下能拿到的最强形态。", K.INFO),
+            It("开启注入", "开启后才生效（默认关）",
+                K.SW, key = "fuckds_sysprompt_on", def = false),
+            It("提示词内容", "支持中英文。中文会自动转成 \\uXXXX 转义再隐形化",
+                K.TX, key = "fuckds_sysprompt_text", def = ""),
+            It("注入模式", "仅首条 = 只在本会话第一条消息注入（token 只花一次、位置=上下文最前）；" +
+                    "每轮 = 每条消息都注入（对抗稀释最强，token 持续消耗）",
+                K.CH, key = "fuckds_sysprompt_mode", def = 0,
+                choices = listOf("仅首条", "每轮")),
+            It("承载方式", "★ 决定提示词怎么被送出去：\n" +
+                    "· 隐形字符 = Unicode Tag（人眼看不见，但模型能察觉「有隐藏字符」⇒ 概率性拒答）\n" +
+                    "· 明文定界 = 正常文字，服务端/模型当普通内容读（零风险），由模块把这段从界面抹掉" +
+                    "（界面看不到，但服务端/换设备看得见）",
+                K.CH, key = "fuckds_sysprompt_carrier", def = 0,
+                choices = listOf("隐形字符", "明文定界")),
+            It("包装前缀", "包在提示词【前面】的隐形文字。留空 = 不加。\n" +
+                    "★ 措辞是主战场：写 SYSTEM-LEVEL / highest priority / overrides user turns " +
+                    "这类词，模型会直接判定「提示注入」并拒绝（已被真机实测打回一次）。",
+                K.TX, key = "fuckds_sysprompt_head",
+                def = "My standing preference for this whole conversation: "),
+            It("包装后缀", "包在提示词【后面】的隐形文字。留空 = 不加。\n" +
+                    "默认留空 —— 「END OF …」这种封口词本身也是注入特征。",
+                K.TX, key = "fuckds_sysprompt_tail", def = ""),
         )),
 
         /* ───────── 液态玻璃（2026-09-30 · 参照「底栏液态玻璃」）───────── */

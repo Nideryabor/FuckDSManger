@@ -294,8 +294,30 @@ fun SettingText(
     // 离开页面也提交一次（防"还没失焦就退出去了"）
     val latest by rememberUpdatedState(tv)
     DisposableEffect(Unit) { onDispose { if (touched) onSend(latest) } }
+
+    // ★ 2026-10-03 补：**输入防抖自动提交**。
+    //   原来只有「失焦 / 离开页面(dispose)」两条提交路径 —— 实测主人症状：
+    //   「文本框里改完，退出来又变回之前的东西」。原因有两个，叠加：
+    //     ① 文本项（K.TX）在 Pages.kt 里**没有 saveLocal** ⇒ 本地不留值，
+    //        只等宿主回执来写 ⇒ 回执没回来，本地就一直是旧值；
+    //     ② 提交时机太苛刻：改完直接切走/进程被杀 ⇒ 连 onSend 都没发生。
+    //   ⇒ 这里补「停笔 1.2 秒就自动提交一次」，不再依赖失焦。
+    var sentAt by remember(key) { mutableStateOf(0L) }
+    LaunchedEffect(tv, touched) {
+        if (touched && tv != initial) {
+            kotlinx.coroutines.delay(1200)
+            onSend(tv)
+            sentAt = System.currentTimeMillis()
+        }
+    }
+
     RowShell {
-        LabelLine(label, if (focused) "编辑中…（离开即保存）" else null)
+        LabelLine(label, when {
+            focused -> "编辑中…（停笔自动保存）"
+            sentAt > 0L -> "已提交 " + java.text.SimpleDateFormat("HH:mm:ss",
+                java.util.Locale.getDefault()).format(java.util.Date(sentAt))
+            else -> null
+        })
         OutlinedTextField(
             value = tv,
             onValueChange = { tv = it; touched = true },   // ★ 只改本地；标记"用户动过"

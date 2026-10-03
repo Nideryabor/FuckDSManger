@@ -77,7 +77,13 @@ private fun readValue(ctx: Context, row: It): Any {
     val key = row.key ?: return ""
     // ① 新格式：cfg.<key>（一律存成字符串，按行的类型转回来）
     val raw = ctxSp(ctx).getString("cfg.$key", null)
-    if (raw != null && raw.isNotEmpty()) {
+    // ★ 2026-10-03：**文本项允许"空"是一个有效值** ——
+    //   典型场景：包装前缀/后缀被主人**故意清空**（= 不加包装）。
+    //   原来一律要求 `raw.isNotEmpty()` ⇒ 清空后判为"没设置" ⇒ 又回落到默认值显示，
+    //   界面看到的是默认文案、实际注入的却是空 ⇒ 读写不一致，人会以为没清掉。
+    //   非文本类仍保持原样（它们的空值确实等于"没设置"）。
+    val hasLocal = ctxSp(ctx).contains("cfg.$key")
+    if (raw != null && (raw.isNotEmpty() || (hasLocal && row.k == K.TX))) {
         when (row.k) {
             K.SW -> return raw.equals("true", true) || raw == "1"
             K.SL, K.CH, K.CO -> raw.toIntOrNull()?.let { return it }
@@ -187,6 +193,11 @@ private fun ItemRow(
             poke(bump)
             // ★ 2026-09-30 修：文本项原来发的是 "i"（整数）⇒ 桥里 Integer.parseInt("你好") 直接抛
             //   ⇒ 招呼语/回复建议/提示词这些**一个字都写不进去**。文本必须发 "s"。
+            // ★ 2026-10-03 补：**本地也要存**！
+            //   开关/滑条/枚举/颜色四类都有 saveLocal，唯独文本项漏了 ⇒
+            //   本地 `cfg.<key>` 只能靠宿主回执来更新；回执没回来（宿主没跑 / 广播丢）
+            //   就永远是旧值 ⇒ 现象「改完退出，又变回之前的东西」。
+            saveLocal(ctx, it, v)
             FdmPush.sendCmd(ctx, "cfg_put", it.key!! + "\u001f" + "s" + "\u001f" + v); bump()
         }
         K.SUB -> SettingNav(it.label, it.hint) { onNav(it.sub!!) }
