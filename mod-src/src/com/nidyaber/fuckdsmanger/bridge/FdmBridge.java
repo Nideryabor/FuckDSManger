@@ -1761,6 +1761,18 @@ public final class FdmBridge {
             } else if ("suggest_reset".equals(cmd)) {
                 callGm(GM + "GmSuggest", "restore", new Class<?>[]{Context.class}, new Object[]{ctx});
                 back = "回复建议已恢复默认";
+            } else if ("rich_spec".equals(cmd)) {
+                // ★ AI 气泡富文本：把「格式约定」灌进系统提示词。
+                //   模型不会凭空知道我们自定义了一套标记 ⇒ 不告诉它，它永远只吐普通 markdown
+                //   ⇒ 功能看上去"没效果"。这一步就是把这个坑堵上（幂等，重复点不会叠加）。
+                back = com.nidyaber.fuckdsmanger.gm.GmRichText.mergeIntoSystemPrompt();
+            } else if ("rich_demo".equals(cmd)) {
+                // 一键灌开箱示例模板（主人改乱了想重来的时候用）
+                com.nidyaber.fuckdsmanger.gm.GmStore.write(ctx,
+                        com.nidyaber.fuckdsmanger.gm.GmRichText.K_TPLS,
+                        com.nidyaber.fuckdsmanger.gm.GmRichText.DEMO_TPLS, "s");
+                back = "已灌入开箱示例模板（"
+                        + com.nidyaber.fuckdsmanger.gm.GmRichText.names().size() + " 条）";
             } else if ("prompt_reset".equals(cmd)) {
                 callGm(GM + "GmPrompt", "restore", new Class<?>[]{Context.class}, new Object[]{ctx});
                 callGm(GM + "GmPrompt", "apply", new Class<?>[]{Context.class}, new Object[]{ctx});

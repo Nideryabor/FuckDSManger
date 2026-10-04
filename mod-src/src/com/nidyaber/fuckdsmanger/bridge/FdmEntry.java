@@ -162,6 +162,57 @@ public final class FdmEntry implements IXposedHookLoadPackage {
             }
         }
 
+        // ⑧ AI 气泡富文本（2026-10-03）
+        //    AI 回复里出现 ⟦FDM:模板名|参数⟧ 时，把**这一段**换成主人配好的富文本
+        //    （标记前后的普通文字照旧）。落点选 fz2.p —— 成品 AnnotatedString 的
+        //    唯一汇流点（thinking/引用预览/分享预览各走各的入口，最后都得从这儿过）。
+        //    做法是用**宿主自己的** AnnotatedString.Builder 重建：
+        //      原文段 → in.c(orig, start, end)   ← 样式自动跟着走，位置映射问题直接消失
+        //      标记段 → in.j(style) + in.e(text) + in.f()
+        //    锚点/自检任何一步不过 ⇒ 整条不启用，宿主毫发无损。
+        //    详见 专题/AI气泡富文本-锚点勘察.md。
+        if (isHost(lp.classLoader)) {
+            try {
+                GmRichTextHook.install(lp.classLoader);
+                XposedBridge.log("[FDM] AI气泡富文本：" + GmRichTextHook.status());
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] AI气泡富文本安装失败（不影响其它钩子）：" + t);
+            }
+        }
+
+        // ⑨' 建议点击 + 发送入口探针（2026-10-05）
+        //   两件事一起验：
+        //     ⓐ <Suggestion> 渲染成的链接，点击时我们的 listener 到底会不会被调到
+        //        （整条路唯一的未验证环节 —— pushLink 机制与宿主链接可点都已实证）
+        //     ⓑ 2.6.1 的"发送"入口在 gh2 的哪个方法上
+        //        （2.5.2 的 ao1.I / yp1 在 2.6.1 已失效，见 GmSendProbe 头注释）
+        //   本版**只打日志、不改行为** —— 主人点一次建议、点一次发送按钮，看日志即可。
+        if (isHost(lp.classLoader)) {
+            try {
+                GmSendProbe.install(lp.classLoader);
+                XposedBridge.log("[FDM] 发送探针：" + GmSendProbe.status());
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] 发送探针安装失败（不影响其它钩子）：" + t);
+            }
+        }
+
+        // ⑨ AI 气泡渲染任意 HTML（2026-10-03）
+        //    Compose 里"自己塞控件"对我们封死（AndroidView 是 @Composable，纯 javac 写不了），
+        //    所以**搭宿主自己的车**：宿主用 WebView 渲染 ```mermaid 代码块，我们
+        //      ① 让 ```html 也走那条语言闸门（v7a.M）
+        //      ② 在 MermaidViewerWebView 要把源码喂给 mermaid.js 的那一刻，
+        //         改成 loadDataWithBaseURL 装载 AI 的 HTML
+        //    ⇒ 位置/尺寸/回收/滚动全由宿主自己管。
+        //    ⚠️ 两个闸门必须一起成功才启用（只改一个会导致界面显示"渲染失败"）。
+        if (isHost(lp.classLoader)) {
+            try {
+                GmHtmlHook.install(lp.classLoader);
+                XposedBridge.log("[FDM] HTML 渲染：" + GmHtmlHook.status());
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] HTML 渲染安装失败（不影响其它钩子）：" + t);
+            }
+        }
+
         // ④ 液态玻璃（2026-09-30）：给宿主所有按钮上玻璃。
         //    只在宿主进程装（isHost 判过）；里面全是 try/catch，坏也坏不到宿主身上。
         if (isHost(lp.classLoader)) {

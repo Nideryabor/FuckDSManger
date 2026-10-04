@@ -75,6 +75,7 @@ object Tree {
             It("回复建议 ›", "输入框上方显示一排可点击的回复建议，点一下直接发送（数量/文字可自定义）",
                 K.SUB, sub = "suggest"),
             It("系统提示词 ›", "把一段隐藏指令塞进每次请求：模型看得到、人眼看不见", K.SUB, sub = "sysprompt"),
+            It("AI 气泡富文本 ›", "AI 回复里写 ⟦FDM:模板名|参数⟧ → 这一段变成你配好的富文本", K.SUB, sub = "richtext"),
         )),
 
         /* ───────── 美化（GmBeautyDialog）───────── */
@@ -128,6 +129,57 @@ object Tree {
             It("包装后缀", "包在提示词【后面】的隐形文字。留空 = 不加。\n" +
                     "默认留空 —— 「END OF …」这种封口词本身也是注入特征。",
                 K.TX, key = "fuckds_sysprompt_tail", def = ""),
+        )),
+
+        /* ───────── AI 气泡富文本（2026-10-03 · 标记 → 富文本）───────── */
+        //  落点 = 宿主 markdown 渲染的「成品 AnnotatedString」唯一汇流点（fz2.p）：
+        //    AI 文本 → svb.c（AssistantTextItem）→ eu6.c（Markdown）→ v91.m → fz2.p
+        //  做法：用**宿主自己的** AnnotatedString.Builder 重建 ——
+        //    原文段 append(orig, start, end)（样式自动跟着走）
+        //    标记段 pushStyle(样式) + append(文字) + pop()
+        //  锚点表、结构自检、风险清单见 专题/AI气泡富文本-锚点勘察.md。
+        Pg("richtext", "AI 气泡富文本", listOf(
+            It("✦ 用法：AI 回复里写 ⟦FDM:模板名|参数1|参数2⟧，这一段就变成你配好的富文本",
+                "标记前后的普通文字照旧；只有标记包着的那一段被替换。", K.INFO),
+            It("✦ 标签：<b>粗</b> <i>斜</i> <u>下划线</u> <s>删除线</s>　" +
+                    "<c1>色板色</c>　<c#FF0000>直给色</c>　<bg3>背景色</bg>　<br>换行",
+                "支持嵌套；不认识的标签会被整段丢掉，不会漏出尖括号。", K.INFO),
+            It("✦ 模板写法：一行一条「名字|富文本」，{1} {2} 会被标记里的参数替换",
+                "例：card|<b>{1}</b> {2}", K.INFO),
+            It("开启", "默认关。开了之后 AI 回复里的标记/标签才会被渲染",
+                K.SW, key = "fuckds_rich_on", def = false),
+            It("裸标签直接渲染（推荐开）",
+                "开了之后，AI 不用包任何标记，直接写 <b>粗</b> <c1>红</c1> <br> 就当场生效。\n" +
+                "关掉的话，它只认 ⟦FDM:模板名|参数⟧ 这一种写法 —— 而模型天生爱写 HTML，" +
+                "关掉就会看到满屏的尖括号露在界面上。\n" +
+                "安全靠白名单：只认 b/i/u/s/br/c1-9/bg1-9/c#RRGGBB/bg#RRGGBB，" +
+                "代码里的 <div>、数学里的 a < b 一律原样留着。",
+                K.SW, key = "fuckds_rich_bare", def = true),
+            It("模板池（每行一条：名字|富文本）",
+                "模板里不能带真换行 —— 换行请用 <br>；# 开头的行当注释。留空 = 用开箱示例模板",
+                K.TX, key = "fuckds_rich_tpls", def = ""),
+            It("① 把格式约定写进系统提示词",
+                "模型不会凭空知道这套标记 ⇒ 点一下把用法灌进「系统提示词」，它才会用（幂等，重复点不叠加）",
+                K.ACT, cmd = "rich_spec"),
+            It("② 灌入开箱示例模板", "改乱了想重来的时候用",
+                K.ACT, cmd = "rich_demo"),
+            It("★ 渲染任意 HTML（实验）",
+                "开了之后，AI 用 ```html 代码块写的内容会被真正当成网页渲染（表格、div、CSS 都能用）。\n" +
+                "原理：宿主本来就用 WebView 渲染 ```mermaid 代码块，我们让 ```html 也走那条路，" +
+                "再把内容换成你的 HTML。位置/尺寸/滚动全由宿主自己管。\n" +
+                "⚠️ 实验功能：若效果异常（比如高度不对、显示\"渲染失败\"），关掉即可完全恢复。",
+                K.SW, key = "fuckds_html_on", def = false),
+            It("HTML 页面用浅色", "默认跟随宿主的深色主题（浅字透明底）；宿主要是浅色主题就打开这个",
+                K.SW, key = "fuckds_html_light", def = false),
+            It("色板 1", "模板里用 <c1> 引用", K.CO, key = "fuckds_rich_c1", def = 0xFFFF5252.toInt()),
+            It("色板 2", null, K.CO, key = "fuckds_rich_c2", def = 0xFFFFB300.toInt()),
+            It("色板 3", null, K.CO, key = "fuckds_rich_c3", def = 0xFFFFD600.toInt()),
+            It("色板 4", null, K.CO, key = "fuckds_rich_c4", def = 0xFF4CAF50.toInt()),
+            It("色板 5", null, K.CO, key = "fuckds_rich_c5", def = 0xFF26A69A.toInt()),
+            It("色板 6", null, K.CO, key = "fuckds_rich_c6", def = 0xFF42A5F5.toInt()),
+            It("色板 7", null, K.CO, key = "fuckds_rich_c7", def = 0xFF7E57C2.toInt()),
+            It("色板 8", null, K.CO, key = "fuckds_rich_c8", def = 0xFFEC407A.toInt()),
+            It("色板 9", null, K.CO, key = "fuckds_rich_c9", def = 0xFF9E9E9E.toInt()),
         )),
 
         /* ───────── 液态玻璃（2026-09-30 · 参照「底栏液态玻璃」）───────── */
