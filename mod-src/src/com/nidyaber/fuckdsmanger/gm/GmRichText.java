@@ -743,18 +743,54 @@ public final class GmRichText {
      * （投递通道复用 3.45.0 那套，见 {@code 专题/系统提示词-不留痕投递.md}。）
      */
     public static String mergeIntoSystemPrompt() {
+        return mergeSpec(spec(), SPEC_TAG);
+    }
+
+    /**
+     * 「追问建议」约定的特征串 —— 用来判断"灌过没有"。
+     *
+     * <p>与 {@link #SPEC_TAG} 分开：两段约定是<b>独立</b>的，各灌各的、互不干扰
+     * （模型可能只要排版、也可能只要追问建议）。
+     */
+    public static final String SUG_SPEC_TAG = "【追问建议】";
+
+    /**
+     * 「追问建议」的格式约定 —— 灌给模型的文案。
+     *
+     * <p>为什么不告诉它就不行：模型不会凭空知道我们支持 {@code <Suggestion>} 这个标记，
+     * 不写进提示词，它就永远只吐普通 markdown ⇒ 功能看着"没效果"。
+     */
+    public static String suggestSpec() {
+        return "【追问建议】当你想让用户继续追问、或想引导对话方向时，"
+                + "在回复的最后另起一行输出：\n"
+                + "  <Suggestion>▸ 你的建议问题</Suggestion>\n"
+                + "可以写多行，每行一条建议，界面会渲染成可点击的按钮。\n"
+                + "★ 想「显示短一点、实际发的内容长一点」时，用竖线分开：\n"
+                + "  <Suggestion>▸ 说说看|请从原理上详细解释一下</Suggestion>\n"
+                + "★ 直接写就行，不要在代码块里写，也不要再用别的符号把它包起来。\n";
+    }
+
+    /** 把「追问建议」约定灌进系统提示词（幂等）。 */
+    public static String mergeSuggestIntoSystemPrompt() {
+        return mergeSpec(suggestSpec(), SUG_SPEC_TAG);
+    }
+
+    /**
+     * 通用的「把一段约定追加进系统提示词」—— <b>追加，绝不覆盖</b>。
+     *
+     * <p>幂等判据用<b>内容特征串</b>而不是定界符：定界符在旧版约定里也可能出现，
+     * 换了新版就点不动了（白折腾一轮）。
+     */
+    private static String mergeSpec(String add, String tag) {
         try {
             String cur = GmSysPrompt.text();
-            // ★ 幂等判据用**内容特征**而不是定界符 ——
-            //   定界符 `⟦FDM:` 在旧版约定里也有 ⇒ 换了新版约定就点不动了（会白折腾一轮）。
-            //   "【回答排版】" 只有新版 spec 才写。
-            if (cur != null && cur.indexOf(SPEC_TAG) >= 0) {
-                return "系统提示词里已经有新版格式约定了，没重复加";
+            if (cur != null && cur.indexOf(tag) >= 0) {
+                return "系统提示词里已经有这段约定了，没重复加";
             }
-            String add = spec();
             String nv = (cur == null || cur.isEmpty()) ? add : (cur + "\n\n" + add);
             GmSysPrompt.setText(nv);
-            return "已把格式约定写进系统提示词（+ " + add.length() + " 字）";
+            return "已写进系统提示词（原文 " + (cur == null ? 0 : cur.length())
+                    + " 字 → 现在 " + nv.length() + " 字，追加 " + add.length() + " 字）";
         } catch (Throwable t) {
             return "写提示词失败：" + t;
         }

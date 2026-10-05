@@ -62,7 +62,7 @@ public final class GmRemap {
         // ↓↓↓ 本轮未定位 —— 安全跳过（不改名、不注册）
         {"yp1", null},    // ASR/门控（满树未找到唯一候选）
         {"um1", null},    // 状态机信号
-        {"cn1", null},    // 打字发送命令（通话域 wip）
+        {"cn1", null},    // 打字发送命令（2.6.1 未定位；发送改走 gh2.h0 —— 见 bridge/GmSender）
         {"c73", null}, {"tt7", null}, {"pr8", null},
         {"g56", null}, {"c1", null},  {"i1", null},
     };

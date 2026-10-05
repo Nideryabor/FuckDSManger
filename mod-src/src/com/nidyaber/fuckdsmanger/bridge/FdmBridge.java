@@ -1764,8 +1764,14 @@ public final class FdmBridge {
             } else if ("rich_spec".equals(cmd)) {
                 // ★ AI 气泡富文本：把「格式约定」灌进系统提示词。
                 //   模型不会凭空知道我们自定义了一套标记 ⇒ 不告诉它，它永远只吐普通 markdown
-                //   ⇒ 功能看上去"没效果"。这一步就是把这个坑堵上（幂等，重复点不会叠加）。
+                //   ⇒ 功能看上去"没效果"。这一步就是把这个坑堵上。
+                //   ⚠️ **追加，不覆盖**（GmRichText.mergeSpec 里是 cur + "\n\n" + add），且幂等。
                 back = com.nidyaber.fuckdsmanger.gm.GmRichText.mergeIntoSystemPrompt();
+            } else if ("suggest_spec".equals(cmd)) {
+                // ★ 回复建议：把「追问建议（<Suggestion>）」约定灌进系统提示词。
+                //   同一个道理 —— 不告诉模型，它永远不会写这个标记。
+                //   与 rich_spec 各灌各的（两段约定互相独立），同样是**追加 + 幂等**。
+                back = com.nidyaber.fuckdsmanger.gm.GmRichText.mergeSuggestIntoSystemPrompt();
             } else if ("rich_demo".equals(cmd)) {
                 // 一键灌开箱示例模板（主人改乱了想重来的时候用）
                 com.nidyaber.fuckdsmanger.gm.GmStore.write(ctx,
