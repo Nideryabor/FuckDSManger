@@ -302,10 +302,19 @@ public final class GmSendProbe {
      */
     public static void onSuggestClick(String payload) {
         try {
-            GmUtil.log("[建议] \u2605\u2605 可点击验证成功！要回复的内容 = 「" + payload + "」");
-            GmUtil.log("[建议] 发送入口探针：" + status());
-        } catch (Throwable ignore) {
-            // 算了
+            GmUtil.log("[建议] \u2605\u2605 被点了！要回复的内容 = 「" + payload + "」");
+            boolean ok = GmSender.send(payload);
+            if (ok) {
+                GmUtil.log("[建议] \u2605 已替你发出去 ⇒ 等 AI 回答吧");
+            } else {
+                GmUtil.log("[建议] 发送没成功 —— " + GmSender.status());
+            }
+        } catch (Throwable t) {
+            try {
+                GmUtil.logFail("[建议] 点击处理异常", t);
+            } catch (Throwable ignore) {
+                // 算了
+            }
         }
     }
 }

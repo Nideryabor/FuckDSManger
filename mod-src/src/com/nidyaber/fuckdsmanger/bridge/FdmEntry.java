@@ -181,20 +181,16 @@ public final class FdmEntry implements IXposedHookLoadPackage {
         }
 
         // ⑨' 建议点击 + 发送入口探针（2026-10-05）
-        //   两件事一起验：
-        //     ⓐ <Suggestion> 渲染成的链接，点击时我们的 listener 到底会不会被调到
-        //        （整条路唯一的未验证环节 —— pushLink 机制与宿主链接可点都已实证）
-        //     ⓑ 2.6.1 的"发送"入口在 gh2 的哪个方法上
-        //        （2.5.2 的 ao1.I / yp1 在 2.6.1 已失效，见 GmSendProbe 头注释）
-        //   本版**只打日志、不改行为** —— 主人点一次建议、点一次发送按钮，看日志即可。
-        if (isHost(lp.classLoader)) {
-            try {
-                GmSendProbe.install(lp.classLoader);
-                XposedBridge.log("[FDM] 发送探针：" + GmSendProbe.status());
-            } catch (Throwable t) {
-                XposedBridge.log("[FDM] 发送探针安装失败（不影响其它钩子）：" + t);
-            }
-        }
+        //   ★ 探针使命已结束（发送链路已打通 → GmSender），正式版**不再注册**，
+        //     免得在触摸窗口里打无谓的日志。类保留，宿主改版后重新定位锚点时还能用。
+        // if (isHost(lp.classLoader)) {
+        //     try {
+        //         GmSendProbe.install(lp.classLoader);
+        //         XposedBridge.log("[FDM] 发送探针：" + GmSendProbe.status());
+        //     } catch (Throwable t) {
+        //         XposedBridge.log("[FDM] 发送探针安装失败（不影响其它钩子）：" + t);
+        //     }
+        // }
 
         // ⑨ AI 气泡渲染任意 HTML（2026-10-03）
         //    Compose 里"自己塞控件"对我们封死（AndroidView 是 @Composable，纯 javac 写不了），

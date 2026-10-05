@@ -118,7 +118,8 @@ public final class GmRichTextHook extends XC_MethodHook {
     public static String status() {
         return (sReady ? "已就绪" : "未就绪") + " · " + sWhy
                 + "（渲染 " + sRenders + " 次 / 替换 " + sHits + " 次）"
-                + " · 链接：" + GmRichLink.status();
+                + " · 链接：" + GmRichLink.status()
+                + " · 发送：" + GmSender.status();
     }
 
     // ═══════════════════════════ ① hook 主体 ═══════════════════════════
@@ -790,7 +791,13 @@ public final class GmRichTextHook extends XC_MethodHook {
                 sReady = true;
                 // ★ 顺带把"可点击"那套（<Suggestion> 要用）也自检了 —— 见 GmRichLink
                 GmRichLink.prepare(cl);
-                GmUtil.log("richText 自检 OK：" + sWhy + " · 链接：" + GmRichLink.status());
+                // ★★ 发送能力（<Suggestion> 点一下要能真发出去）—— 见 GmSender
+                if (GmSender.prepare(cl)) {
+                    GmSender.install(cl);
+                }
+                GmUtil.log("richText 自检 OK：" + sWhy
+                        + " · 链接：" + GmRichLink.status()
+                        + " · 发送：" + GmSender.status());
                 return true;
             } catch (Throwable t) {
                 sWhy = "自检抛异常：" + t;
