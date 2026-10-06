@@ -132,6 +132,12 @@ ANDROID_ATTR_ID = {
     "targetSdkVersion": 0x01010270, "allowBackup": 0x01010280, "supportsRtl": 0x010103AF,
     "extractNativeLibs": 0x010104EA, "compileSdkVersion": 0x01010572,
     "compileSdkVersionCodename": 0x01010573, "appComponentFactory": 0x0101057A,
+    # ★ 2026-10-06 尼尼加：前台服务类型（音乐播放要它，API 29+）——
+    #   值不是猜的，是 `javap -constants android/R$attr.class` 读出来的真值。
+    "foregroundServiceType": 0x01010599,
+    # ★ 2026-10-06 尼尼加：划掉任务卡时**不要**顺手停掉这个服务（音乐要能接着放）。
+    #   默认值本来就是 false，这里写明是为了表达意图 + 防手滑。
+    "stopWithTask": 0x010100EA,
 }
 
 

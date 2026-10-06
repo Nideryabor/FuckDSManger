@@ -1,0 +1,26 @@
+# .mailmap —— 把历史提交的多个身份归一到当前账号
+#
+# 为什么需要：
+#   早期有些提交用了占位邮箱 `noreply@example.com`。GitHub 的「贡献者」列表是
+#   **按作者邮箱匹配 GitHub 账号**的，那个通用地址恰好被一个不相干的账号
+#   （PyGuy2）占着 ⇒ 18 个提交被算到他头上。
+#   **那只是显示归类** —— 他对本仓库没有任何权限（非协作者、不能推、非 fork）。
+#
+#   同理，老账号 dxyabab（已被冻结）的提交也不再显示；本文件把它们一并归一。
+#
+# 格式： 规范名 <规范邮箱> 历史名 <历史邮箱>
+
+# —— 占位邮箱那批（就是被误归到 PyGuy2 的 18 个提交）——
+Nideryabor <338461957+Nideryabor@users.noreply.github.com> 尼得亚伯 <noreply@example.com>
+
+# —— 本地身份（未绑定邮箱，GitHub 本来匹配不到账号）——
+Nideryabor <338461957+Nideryabor@users.noreply.github.com> 尼得亚伯 <nideyabo@local>
+Nideryabor <338461957+Nideryabor@users.noreply.github.com> 尼得亚伯 <nideyabo@dragon.local>
+Nideryabor <338461957+Nideryabor@users.noreply.github.com> 尼得亚伯 <nidyaber@local>
+Nideryabor <338461957+Nideryabor@users.noreply.github.com> nidyaber <nidyaber@local>
+Nideryabor <338461957+Nideryabor@users.noreply.github.com> nidyaber <dragon@nid.local>
+
+# —— 老账号（已被冻结，不再显示）——
+Nideryabor <338461957+Nideryabor@users.noreply.github.com> dxyabab <dxyabab@local>
+Nideryabor <338461957+Nideryabor@users.noreply.github.com> dxyabab <dxyabab@users.noreply.github.com>
+Nideryabor <338461957+Nideryabor@users.noreply.github.com> dxyabab <177535022+dxyabab@users.noreply.github.com>

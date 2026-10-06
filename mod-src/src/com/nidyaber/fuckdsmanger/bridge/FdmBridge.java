@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger.bridge;
 
 import android.content.BroadcastReceiver;
@@ -66,6 +68,18 @@ public final class FdmBridge {
     private static volatile String sToken = null;
     private static BroadcastReceiver sRecv;
 
+    /**
+     * 桥的握手令牌（只读）。
+     *
+     * ★ 2026-10-06 给「迷你播放条」用：那个模块**在宿主进程**注册了一个导出的广播接收器
+     *   （跨进程广播必须导出），所以拿它当校验 —— 只有带对令牌的状态才认。
+     *   令牌是 UI 推配置时**顺手带过来**的（跟 provider 那条通道同一个），
+     *   所以不能假定它一定已经有了：拿不到时调用方自己决定宽松还是拒绝。
+     */
+    public static String token() {
+        return sToken;
+    }
+
     private FdmBridge() {
     }
 
@@ -73,6 +87,12 @@ public final class FdmBridge {
     public static void onHostReady(Context ctx) {
         if (sTried) return;
         sTried = true;
+        // ★ 2026-10-06：先把「音乐登录态」从文件读回来（重启宿主后照样是登录状态）
+        try {
+            com.nidyaber.fuckdsmanger.bridge.GmMusicLogin.apply(ctx);
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】读回音乐登录态失败（不影响其它）", t);
+        }
         try {
             probe(ctx);
         } catch (Throwable t) {
@@ -401,11 +421,27 @@ public final class FdmBridge {
         }
         sGotConfig = true;
 
+        // ★ 2026-10-06 · 悬浮便签：**这里故意什么都不做**。
+        //   3.51.0 的「便签内容」输入框已经按主人要求从设置页拿掉了。
+        //   而 UI 的 `FdmPush.push()` 是**全量**推的 —— 只要 SP 里还留着老的
+        //   `cfg.fuckds_note_text`（主人当时在那个框里打过字），它每次都会跟着推过来；
+        //   要是这里再 `setTextFromCfg`，就会**用一句老文字反复覆盖便签当前内容**。
+        //   ⇒ 便签文字从此只由便签自己（和 adb 的 cfg_put）改。
+
         // ★ 2026-09-30 · 液态玻璃：**整包推送**这条路也要刷新它。
         //   3.29.0 只挂了 cfg_put（单项改动）那条 ⇒ UI 走 CONFIG_PUSH 整体推时
         //   宿主侧的 GmGlassCfg 还是旧值（日志铁证：推送里 glass_on=true，宿主仍 on=false）。
         try {
             com.nidyaber.fuckdsmanger.glass.GmGlassInstall.refresh(ctx);
+        } catch (Throwable ignore) {
+        }
+
+        // ★ 2026-10-06 · 悬浮便签：外观（底色/透明度/字号）是**裸写**进配置的
+        //   ⇒ 让已经挂上的那张重读重绘。
+        //   注意：这里**不会**把 `✕` 关掉的重新拉出来（refresh 只刷已挂的，不 attach）——
+        //   那正是主人 2026-10-06 定的语义。
+        try {
+            GmNote.refresh();
         } catch (Throwable ignore) {
         }
 
@@ -1187,6 +1223,16 @@ public final class FdmBridge {
                 GmUtil.log("【FdmBridge】" + key + "=" + v + " → GmDevice.setOn");
                 return true;
             }
+            // ★ 2026-10-06 · 悬浮便签：走**自己的入口**（拨开关当场长出来/收掉，不用等下次 onResume）
+            if (GmNote.K_ON.equals(key)) {
+                GmNote.setOn(ctx, v);
+                return true;
+            }
+            // ★ 2026-10-06 · 迷你播放条：同上（拨开关当场显示/收起）
+            if (GmMiniBar.K_ON.equals(key)) {
+                GmMiniBar.setOn(ctx, v);
+                return true;
+            }
         } catch (Throwable t) {
             GmUtil.log("【FdmBridge】" + key + " 专用入口失败（退回裸写）：" + t);
         }
@@ -1337,6 +1383,13 @@ public final class FdmBridge {
                         new Object[]{ctx, json});
                 callGm(GM + "GmPrompt", "apply", new Class<?>[]{Context.class}, new Object[]{ctx});
                 GmUtil.log("【FdmBridge】提示词内容 → build+put+apply（" + rows.size() + " 条）");
+                return true;
+            }
+            // ★ 2026-10-06 · 悬浮便签：**只走 adb**（`cfg_put … note_text`）。
+            //   设置页的「便签内容」输入框已经拿掉了（主人要求），所以界面不会走这条路；
+            //   留在这里是给我调试便签文字用的（`adb shell am broadcast …`）。
+            if (GmNote.K_TEXT.equals(key)) {
+                GmNote.setTextFromCfg(ctx, val);
                 return true;
             }
         } catch (Throwable t) {
@@ -1714,6 +1767,68 @@ public final class FdmBridge {
                     now = v == null ? "" : String.valueOf(v);
                 }
                 lastData = "{\"key\":\"" + key + "\",\"ok\":true,\"value\":\"" + now + "\"}";
+            } else if (cmd != null && cmd.startsWith("music_")) {
+                // ★ 2026-10-06 · 音乐控制（播放器在宿主进程，见 GmMusicPlayer）
+                //   模块 UI 的按钮走这儿；迷你卡自己就在宿主里，直接调，不走这里。
+                GmMusicPlayer mp = GmMusicPlayer.get();
+                if (mp == null) {
+                    GmMusicPlayer.install(ctx);
+                    mp = GmMusicPlayer.get();
+                }
+                String what = cmd.substring(6);
+                // ── 登录态：模块 UI 登录成功后把凭证送过来（**只有宿主能写自己的私有目录**）──
+                if ("login_save".equals(what)) {
+                    // arg = "musicU\u001fuid\u001fnick"
+                    try {
+                        String raw = arg == null ? "" : String.valueOf(arg);
+                        String[] seg = raw.split("\u001f", -1);
+                        GmUtil.log("【FdmBridge】收到登录凭证：长度=" + seg[0].length()
+                                + " 分段数=" + seg.length);
+                        boolean ok = GmMusicLogin.save(ctx, seg[0],
+                                seg.length > 1 ? seg[1] : "",
+                                seg.length > 2 ? seg[2] : "");
+                        back = ok ? "已保存登录态" : ("保存失败：" + GmMusicLogin.lastOp());
+                    } catch (Throwable t) {
+                        GmUtil.logFail("【FdmBridge】保存登录态失败", t);
+                        back = "保存登录态失败：" + t;
+                    }
+                } else if ("login_clear".equals(what)) {
+                    GmMusicLogin.clear(ctx);
+                    back = "已退出登录";
+                } else if ("os_mode".equals(what)) {
+                    // ★ 伪装成哪种客户端（pc / android / iPhone）—— 存配置 + 立刻生效
+                    try {
+                        int m = Integer.parseInt(String.valueOf(arg));
+                        GmStore.write(ctx, "fuckds_music_os", String.valueOf(m), "i");
+                        com.nidyaber.fuckdsmanger.music.GmMusicApi.setOsMode(m);
+                        GmUtil.log("【FdmBridge】客户端伪装 → " + m
+                                + "（pc=0 / android=1 / iphone=2），已存配置");
+                        back = "已切换客户端伪装 → " + m;
+                    } catch (Throwable t) {
+                        back = "切换失败";
+                    }
+                } else if (mp != null) {
+                    if ("toggle".equals(what)) {
+                        mp.toggle();
+                    } else if ("next".equals(what)) {
+                        mp.next();
+                    } else if ("prev".equals(what)) {
+                        mp.prev();
+                    } else if ("stop".equals(what)) {
+                        mp.stop();
+                    } else if ("clear".equals(what)) {
+                        mp.clearQueue();
+                    } else if ("loop".equals(what)) {
+                        mp.setLoop(mp.state().loop + 1);
+                    } else if ("seek".equals(what)) {
+                        try {
+                            mp.seekTo(Integer.parseInt(String.valueOf(arg)));
+                        } catch (Throwable ignore) {
+                        }
+                    }
+                }
+                GmUtil.log("【FdmBridge】音乐指令 " + what + "（播放器=" + (mp != null) + "）");
+                back = "音乐：" + what;
             } else if ("cfg_state".equals(cmd)) {
                 // ★ 状态通道：把**模块自己 getter 的当前值**回传（界面照着显示，而不是读我编的键）
                 JSONObject o = new JSONObject();
@@ -1723,6 +1838,29 @@ public final class FdmBridge {
                 try { o.put("db_count", GmDb.count(ctx)); } catch (Throwable ignore) { }
                 try { o.put("device_on", GmDevice.isOn()); } catch (Throwable ignore) { }
                 try { o.put("probe_on", GmProbe.shown()); } catch (Throwable ignore) { }
+                try { o.put("note_on", GmNote.isOn(ctx)); } catch (Throwable ignore) { }
+                try { o.put("bar_on", GmMiniBar.isOn(ctx)); } catch (Throwable ignore) { }
+                // ★ 2026-10-06 · 音乐：**播放器在宿主进程** ⇒ 状态从这里回传给模块 UI。
+                //   （模块 UI 那个音乐页只当"开关/入口"，显示的就是这几个字段）
+                try {
+                    GmMusicPlayer mp = GmMusicPlayer.get();
+                    GmMusicPlayer.State ms = mp == null ? null : mp.state();
+                    o.put("music_playing", ms != null && ms.playing);
+                    o.put("music_name", ms == null || ms.track == null ? "" : ms.track.name);
+                    o.put("music_artist", ms == null || ms.track == null ? "" : ms.track.artist);
+                    o.put("music_pos", ms == null ? 0 : ms.pos);
+                    o.put("music_dur", ms == null ? 0 : ms.dur);
+                    o.put("music_queue", ms == null ? 0 : ms.queueSize);
+                    o.put("music_loop", ms == null ? 0 : ms.loop);
+                } catch (Throwable ignore) { }
+                // ★ 2026-10-06 · 登录态（界面拿它显示"已登录/未登录"）
+                try {
+                    o.put("music_logged", GmMusicLogin.loggedIn());
+                    o.put("music_user", GmMusicLogin.summary(ctx));
+                    // 诊断：让界面能看清"到底存在哪一步"（真机排查用）
+                    o.put("music_login_diag", GmMusicLogin.diag(ctx));
+                    o.put("music_os_mode", com.nidyaber.fuckdsmanger.music.GmMusicApi.osMode());
+                } catch (Throwable ignore) { }
                 try { o.put("bubble_on", callGm("com.nidyaber.fuckdsmanger.gm.GmBubble", "on",
                         new Class<?>[]{}, new Object[]{})); } catch (Throwable ignore) { }
                 try { o.put("ububble_on", callGm("com.nidyaber.fuckdsmanger.gm.GmBubble", "uOn",

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
 /**
@@ -112,8 +114,34 @@ object Conf {
         Key("fuckds_model_switch", "模型切换", KType.B, false, hint = "改完要重启宿主才看得见（它会改写宿主的模型配置）"),
     )
 
+    // ───────── 悬浮便签（5 键 · 2026-10-06）─────────
+    //  宿主侧读法见 mod-src/.../bridge/GmNote.java —— 两边默认值必须一致
+    //  ⚠️ fuckds_note_data（便签全部内容的 JSON 存档）由宿主自己维护，界面不直接碰
+    val note = listOf(
+        Key("fuckds_note_on", "显示便签", KType.B, false, hint = "挂在宿主窗口上的浮层（零权限）"),
+        Key("fuckds_note_bg", "便签底色", KType.C, 0xFFFFF3B0.toInt()),
+        Key("fuckds_note_alpha", "不透明度", KType.I, 230, 0, 255),
+        Key("fuckds_note_size", "字号", KType.I, 14, 10, 28, hint = "单位 sp"),
+        // ⚠️ `fuckds_note_text` 不在界面上了（2026-10-06 主人：「把那个输入框去了」）——
+        //    它是**宿主自己维护**的键，界面不再读写。
+        //    （宿主侧仍留了一条 adb 通道：`cfg_put … note_text`，那是我调试便签文字用的。）
+    )
+
+    // ───────── 悬浮迷你条（1 键 · 2026-10-06）─────────
+    //  播放器在模块自己进程（MusicService），迷你条挂在宿主进程 ⇒ 两边靠广播。
+    //  这里只有「显示开关」；位置（fuckds_bar_y）由迷你条自己维护。
+    val bar = listOf(
+        Key("fuckds_bar_on", "显示迷你条", KType.B, false, hint = "常驻卡片，放歌时才显示"),
+        Key("fuckds_bar_w", "卡片宽度", KType.I, 320, 190, 600, hint = "单位 dp（拖角也行）"),
+        Key("fuckds_bar_h", "卡片高度", KType.I, 200, 120, 640, hint = "单位 dp（拖角也行）"),
+        // ★ 2026-10-06 · 音源伪装：换一种"客户端身份"去请求（pc / android / iPhone）
+        //   ⚠️ 实测：对 VIP 曲（fee=1）**没差别**，三档都只给试听片段 ——
+        //      那要登录+会员才行。保留它是因为"os 与 UA 一致"本身是必要的修正。
+        Key("fuckds_music_os", "音源伪装", KType.E, 2, choices = listOf("PC", "Android", "iPhone")),
+    )
+
     /** 调试页用：全部键（含只读的） */
-    val all: List<Key> = bg + bubble + suggest + glass + texts + pass
+    val all: List<Key> = bg + bubble + suggest + glass + texts + pass + note + bar
 
     fun find(key: String): Key? = all.firstOrNull { it.key == key }
 

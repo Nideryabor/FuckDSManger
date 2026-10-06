@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 """
 build_single.py —— 单包组装（方案 C）🐲
 
@@ -46,6 +48,11 @@ ICON_SETTINGS = 0x7F040001   # drawable/ic_admin_panel_settings
 SETTINGS_AFFINITY = PKG + ".bridge"   # 设置页自己一个任务，不跟 UI 抢
 PROVIDER = "com.nidyaber.fuckdsmanger.bridge.ConfigProvider"
 PROVIDER_AUTH = PKG + ".config"
+
+# ★ 2026-10-06 · 音乐：前台播放服务（跑在**我们自己的进程**里 ⇒ 宿主被杀也在放）
+MUSIC_SVC = "com.nidyaber.fuckdsmanger.MusicService"
+# FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK = 2（与 ServiceInfo 常量一致）
+FGS_MEDIA_PLAYBACK = 0x2
 
 
 # ------------------------------------------------------------------ 清单打补丁
@@ -119,6 +126,12 @@ def patch_manifest(src, version_code, version_name, app_class=None):
             out.append(("start", e[1], e[2], e[3], attrs))
 
         elif e[0] == "start" and e[3] == "application":
+            # ★ 2026-10-06 · 音乐：**权限必须写在 <application> 之前** ⇒ 趁这个位置补上
+            for perm in ("android.permission.INTERNET",
+                         "android.permission.WAKE_LOCK",
+                         "android.permission.FOREGROUND_SERVICE",
+                         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"):
+                out += new_elem("uses-permission", [s_attr("name", perm)])
             attrs = list(e[4])
             if app_class:
                 attrs.append(s_attr("name", app_class))
@@ -136,6 +149,11 @@ def patch_manifest(src, version_code, version_name, app_class=None):
                 (A, "exported", None, axml.TYPE_INT_BOOLEAN, 0xFFFFFFFF),
                 (A, "grantUriPermissions", None, axml.TYPE_INT_BOOLEAN, 0),
             ])
+
+            # ★ 2026-10-06 · 音乐：**播放器已搬进宿主进程**（bridge/GmMusicPlayer.java）⇒
+            #   本模块的清单里**不再需要 Service 声明**。
+            #   之前那个前台 MusicService 已删除（主人拍板：播放交给宿主，可接受没有通知栏）。
+            #   权限仍保留 INTERNET —— 模块 UI 那边也要联网（备用/调试）。
 
             # 桥设置页：纯框架控件（Switch），**不需要 Compose / 不需要任何资源**
             # 给它自己的 LAUNCHER 图标 ⇒ 桌面多一个「FDM 桥设置」，点开就能拨开关

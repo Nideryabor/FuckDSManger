@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 """FDM 方案A 全流程：POM 解析闭包 → 资源合并(0x7e) → R类 → Compose编译 → R8 → 组包 → 签名 → 备份"""
 import os, re, sys, zipfile, subprocess, urllib.request, shutil
 FD="/workspace/fdm-app"; AAPT="/workspace/tools/aapt2/aapt2_64"

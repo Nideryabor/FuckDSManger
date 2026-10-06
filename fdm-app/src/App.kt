@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
 import androidx.activity.compose.BackHandler
@@ -42,10 +44,20 @@ private val spatial = spring<IntOffset>(dampingRatio = Spring.DampingRatioNoBoun
 private val effects = spring<Float>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)
 
 @Composable
-fun FdmApp() {
+fun FdmApp(initialPage: String? = null) {
     var page by remember { mutableStateOf(HOME) }
     var tr by remember { mutableStateOf(Tr.FADE) }
     var stack by remember { mutableStateOf(listOf<String>()) }
+
+    // ★ 2026-10-06：从宿主迷你卡点 ♪ 进来时，直接落到指定页（默认音乐）
+    LaunchedEffect(initialPage) {
+        val t = initialPage
+        if (!t.isNullOrEmpty() && t != HOME && t != ABOUT) {
+            tr = Tr.FADE
+            stack = listOf(HOME)
+            page = t
+        }
+    }
 
     fun go(target: String, t: Tr, push: Boolean = false) {
         if (target == page) return          // 同页不重复入栈（防"返回两次"）

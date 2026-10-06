@@ -21,6 +21,7 @@ HERE=$(dirname "$0")
 CACHE="$HERE/.adbport"
 SCAN="$HERE/扫adb端口.py"
 KNOWN="34597"
+PORT=""
 
 adb start-server >/dev/null 2>&1
 
@@ -49,4 +50,16 @@ if ! alive; then
   done
 fi
 
+# ★ 取到端口后必须带 -s：容器里可能同时挂着多个设备
+#   （无线调试端口 + 局域网 IP + 幽灵 emulator-5554）
+#   不带 -s 就会报 "more than one device/emulator"
+if alive; then
+  P=$(adb devices 2>/dev/null \
+      | awk '/^127\.0\.0\.1:[0-9]+[[:space:]]+device/{sub(/^127\.0\.0\.1:/,"",$1); print $1; exit}')
+  [ -n "$P" ] && PORT="$P"
+fi
+
+if [ -n "$PORT" ]; then
+  exec adb -s "127.0.0.1:$PORT" "$@"
+fi
 exec adb "$@"

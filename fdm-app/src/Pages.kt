@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
 import android.content.ClipData
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.rounded.AdminPanelSettings
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.Mood
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Sms
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -215,7 +218,7 @@ private fun ItemRow(
             Log.e(TAG, "已复制 " + t.length + " 字")
             bump()
         }
-        K.INFO -> SettingInfo(it.label, "")
+        K.INFO -> SettingInfo(it.label, it.hint ?: "")
     }
 }
 
@@ -253,6 +256,14 @@ private suspend fun pokeDelayed(bump: () -> Unit) {
 fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
     if (id == "gray") {                       // 「灰度选项管理」= 宿主开关编辑器
         GrayPage(onBack)
+        return
+    }
+    if (id == "music") {                      // 「音乐」= 独立播放器页（2026-10-06）
+        MusicPage(onNav, onBack)
+        return
+    }
+    if (id == "musiclogin") {                 // 「网易云登录」（2026-10-06）
+        MusicLoginPage(onBack)
         return
     }
     val ctx = LocalContext.current
@@ -581,12 +592,13 @@ fun TreeHome(onNav: (String) -> Unit, onAbout: () -> Unit) {
             SectionLabel("附加の功能")
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 val extra = listOf(
+                    Triple("音乐", Icons.Rounded.MusicNote, "搜歌 / 播放 / 歌词 —— 免登录 320k"),
                     Triple("过检", Icons.Rounded.AdminPanelSettings, "如果ds压力root设备/发现lsp，点我"),
                     Triple("调试", Icons.Rounded.Build, "如果没bug，里面的东西别乱动"),
                     Triple("聊天", Icons.Rounded.Sms, null as String?),
                     Triple("美化", Icons.Rounded.Mood, null as String?),
                 )
-                val ids = listOf("env", "debug", "chat", "beauty")
+                val ids = listOf("music", "env", "debug", "chat", "beauty")
                 extra.forEachIndexed { i, item ->
                     FdmListItem(
                         title = item.first,

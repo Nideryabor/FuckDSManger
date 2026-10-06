@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger.bridge;
 
 import android.os.Bundle;
@@ -217,6 +219,33 @@ public final class FdmEntry implements IXposedHookLoadPackage {
                 XposedBridge.log("[FDM] 液态玻璃已安装");
             } catch (Throwable t) {
                 XposedBridge.log("[FDM] 液态玻璃安装失败（不影响其它钩子）：" + t);
+            }
+        }
+
+        // ⑩ 悬浮便签（2026-10-06）：往宿主窗口的 decorView 里塞一张便签浮层。
+        //    · 零权限（不用「显示在其他应用上层」）—— 宿主本来就有窗口，我们只是加个子 View
+        //    · 钩 `android.app.Activity`（框架类，名字永远不变）的 onResume/onPause
+        //    · 开关默认关（fuckds_note_on = false），主人自己拨
+        //    锚点/窗口拿不到 ⇒ 等于没装，绝不连累宿主。
+        if (isHost(lp.classLoader)) {
+            try {
+                GmNote.install(lp.classLoader);
+                XposedBridge.log("[FDM] 悬浮便签已安装");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] 悬浮便签安装失败（不影响其它钩子）：" + t);
+            }
+        }
+
+        // ⑪ 迷你播放条（2026-10-06）：宿主底部一条窄条，显示「正在放什么」+ 三个按钮。
+        //    · 它只是个**显示端**：播放器在模块自己的进程里（MusicService），两边靠广播说话
+        //    · 跟便签同一套路数（挂 decorView、零权限、全程 try/catch）
+        //    · 开关默认关（fuckds_bar_on = false），在「美化 › 悬浮全家桶」里拨
+        if (isHost(lp.classLoader)) {
+            try {
+                GmMiniBar.install(lp.classLoader);
+                XposedBridge.log("[FDM] 迷你播放条已安装");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] 迷你播放条安装失败（不影响其它钩子）：" + t);
             }
         }
     }
