@@ -23,7 +23,13 @@ say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 die() { printf '\033[31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 
 say "0. 自检"
-[ -f .git/config ] || die "这里不是 git 仓库"
+# ★★ 2026-10-06 修：先在「没有 git 的 shell」里会**假装成功**往下走
+#    （`$(git ...)` 失败不触发 set -e）⇒ 打出一堆 "0 个改动 / 提交数 0" 的假象。
+#    这里先把它挡住，报清楚的错。
+command -v git >/dev/null 2>&1 || die "这个 shell 里没有 git。
+  · 在【小窝/沙箱】里跑（那边有 git），或
+  · 在手机上跑就装一个有 git 的终端"
+[ -f .git/config ] || die "这里不是 git 仓库（当前目录：$(pwd)）"
 BAD=$(git status --porcelain | grep -v '^??' | wc -l)
 [ "$BAD" = "0" ] || die "还有 $BAD 个未提交改动，先 commit"
 BIG=$(git ls-files -z | while IFS= read -r -d '' f; do [ -f "$f" ] && stat -c '%s %n' "$f"; done | awk '$1>52428800' | head -3)
