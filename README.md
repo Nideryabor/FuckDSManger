@@ -26,7 +26,8 @@
 | 代码形态 | **Java / Kotlin 真编译**（`mod-src/` + `fdm-app/`）＋ 自造 APK 打包器 |
 | 构建方式 | `mod-src/build.sh` → `pipeline/build_ui.py` → `pipeline/build_single.py`（三条脚本一条龙） |
 | 模板来源 | `Disable-FLAG_SECURE_2.0.0.apk`（标准 Xposed 模板，早期） |
-| 签名 | 自备私钥（jks/pk8/pem）。**私钥不入库**（已从公开仓撤出） |
+| 签名 | 自备私钥（jks/pk8/pem）。**私钥不入库** |
+| 授权 | **PolyForm Noncommercial 1.0.0**（学习自由 · **禁止商用** · 无担保） |
 
 **当前状态**：最新 **3.50.4 / vc652**，V1+V2+V3 签名，已装机。
 近期主线：**建议按钮全链路闭环**（点一下 ⇒ 自动回话）· **AI 气泡富文本 + 任意 HTML**（含 `<Suggestion>` 可点击）· **系统提示词不留痕投递**。
@@ -38,6 +39,9 @@
 ```
 /
 ├── README.md                ← 本文件
+├── LICENSE                  ← PolyForm Noncommercial 1.0.0
+├── THIRD-PARTY-NOTICES.md   ← ★ 第三方资源的授权与归属（字体/模板/宿主数据）
+├── .mailmap                 ← 把历史提交的多个身份归一到当前账号
 ├── 大纲.md                   ← ★ 总入口：现状 / 功能结构 / 铁律 / 待办
 ├── 交接文档.md                ← ★ 最新状态置顶（每条含真因 + 教训编号）
 │
@@ -90,6 +94,7 @@
 | 提示词怎么不被看见 | `专题/系统提示词-不留痕投递.md` |
 | 怎么让模块自己发消息 | `专题/发送链路-gh2.S-2026-10-05.md` |
 | 怎么构建 | `pipeline/README-构建.md` + `mod-src/README.md` |
+| **能不能商用 / 第三方资源归属** | `LICENSE` + `THIRD-PARTY-NOTICES.md` |
 | 还没做完的事 | `专题/待办与遗留.md` · `大纲.md` |
 
 ---
@@ -198,6 +203,7 @@
 - `版本存档/` 特意入库：它是**手写 smali 时代的源码本体**（dex 每个仅 ~200KB），是唯一能防「误删=灭顶」的东西。
 - `*.apk` 仍然 **`.gitignore`**（8GB 归档不入库，只挑里程碑发 Release）。
 - `tmp/` 整体不入库（十几 GB 的反编译 dump）。
+- 源码文件头统一带 **SPDX** 标识（`SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0`）。
 
 ---
 
@@ -205,7 +211,7 @@
 
 **[PolyForm Noncommercial License 1.0.0](LICENSE)** · [polyformproject.org](https://polyformproject.org/licenses/noncommercial/1.0.0)
 
-> **不想要一段"法律黑话"，就直接看这三句：**
+> **不想看"法律黑话"的直接看这三句：**
 >
 > 1. ✅ **个人学习、研究、试验、业余爱好、自己改着玩 —— 随便用，不用问我**
 > 2. ❌ **不许商业使用**（别打包去卖、别塞进商业产品、别拿它做生意）
