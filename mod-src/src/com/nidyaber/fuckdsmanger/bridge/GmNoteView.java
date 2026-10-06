@@ -108,7 +108,7 @@ final class GmNoteView extends FrameLayout {
         }), lp(GmNote.dp(c, 26), GmNote.dp(c, 26)));
 
         bar.addView(mkBtn("‹", new Runnable() {
-            @Override public void run() { GmNote.setIdx(GmNote.curIdx() - 1); refreshAll(); }
+            @Override public void run() { commitEdit(); GmNote.setIdx(GmNote.curIdx() - 1); refreshAll(); }
         }), lp(GmNote.dp(c, 22), GmNote.dp(c, 26)));
 
         counter = mkBtn("1/1", null);
@@ -117,7 +117,7 @@ final class GmNoteView extends FrameLayout {
         bar.addView(counter, lp(GmNote.dp(c, 34), GmNote.dp(c, 26)));
 
         bar.addView(mkBtn("›", new Runnable() {
-            @Override public void run() { GmNote.setIdx(GmNote.curIdx() + 1); refreshAll(); }
+            @Override public void run() { commitEdit(); GmNote.setIdx(GmNote.curIdx() + 1); refreshAll(); }
         }), lp(GmNote.dp(c, 22), GmNote.dp(c, 26)));
 
         bar.addView(mkBtn("－", new Runnable() {
@@ -252,7 +252,14 @@ final class GmNoteView extends FrameLayout {
 
             JSONObject it = GmNote.curItem();
             String t = it.optString("t", "");
-            if (!editing && !t.equals(edit.getText().toString())) {
+            // ★ 2026-10-06 修：以前是 `!editing && …` —— 编辑中就不刷新。
+            //   现在配合「切页前先 commitEdit()」：走到这儿 editing 一定是 false，
+            //   所以**每次刷新都把 edit 同步成当前页的内容**，不会再串页。
+            if (editing) {
+                // 理论上不会进（切页前已落盘）；真进了说明有人漏了 commitEdit，
+                // 这里**只记日志不动内容**（别把用户正在敲的字冲掉）
+                GmUtil.log("【GmNote】⚠️ 刷新时仍在编辑中（有调用点漏了 commitEdit）");
+            } else if (!t.equals(edit.getText().toString())) {
                 edit.setText(t);
             }
 
@@ -295,6 +302,37 @@ final class GmNoteView extends FrameLayout {
 
     // ══════════════════════════════ 就地编辑 ══════════════════════════════
 
+    /**
+     * 把当前编辑中的内容**落盘**（无论是否还在编辑）。
+     *
+     * <p>★ 2026-10-06 真机 bug 修：主人报
+     * <pre>
+     *   ① 「第一页的文字会覆盖后面页面的文字」
+     *   ② 「保存必须使输入框失去焦点（点对话框）才能保存」
+     * </pre>
+     * 两个是**同一个根因**：切页/增删时走的是 {@link #refreshAll()}，
+     * 而 `refreshAll` 只在 `!editing` 时才把 `edit` 换成新页内容 ——
+     * 于是**没落盘的字**留在 `edit` 里，切到下一页再一敲，就落到新页上了。
+     *
+     * <p>正确姿势：**动当前页之前，先把当前页存了**。
+     */
+    private void commitEdit() {
+        try {
+            if (!editing) return;                 // 没在编辑 = 没有未落盘的东西
+            editing = false;
+            try {
+                edit.setFocusable(false);
+                edit.setFocusableInTouchMode(false);
+                edit.setCursorVisible(false);
+            } catch (Throwable ignore) {
+            }
+            GmNote.setText(edit.getText().toString());   // ★ 关键：先存
+            GmUtil.log("【GmNote】落盘当前页（切页/增删前）");
+        } catch (Throwable t) {
+            GmUtil.logFail("【GmNote】落盘失败", t);
+        }
+    }
+
     private void beginEdit() {
         try {
             editing = true;
@@ -313,24 +351,32 @@ final class GmNoteView extends FrameLayout {
     }
 
     private void endEdit() {
+        // 收到焦点就去（和 commitEdit 的区别只在这里：它会收键盘）
         if (!editing) return;
-        editing = false;
+        commitEdit();
         try {
-            edit.setFocusable(false);
-            edit.setFocusableInTouchMode(false);
-            edit.setCursorVisible(false);
             InputMethodManager imm = (InputMethodManager)
                     getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null) imm.hideSoftInputFromWindow(edit.getWindowToken(), 0);
         } catch (Throwable ignore) {
         }
-        GmNote.setText(edit.getText().toString());
     }
 
-    /** 摘掉之前把没落盘的编辑存了（不然切页面/切 Activity 会丢字）。 */
+    /**
+     * 摘掉之前把没落盘的编辑存了（不然切页面/切 Activity 会丢字）。
+     *
+     * <p>★ 顺手改成走 {@link #commitEdit()} —— 它会**收键盘**（原来只存不收，
+     * 摘掉视图后输入法可能还挂在窗口上）。
+     */
     void saveNow() {
         try {
-            if (editing) endEdit();
+            commitEdit();
+            try {
+                InputMethodManager imm = (InputMethodManager)
+                        getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) imm.hideSoftInputFromWindow(edit.getWindowToken(), 0);
+            } catch (Throwable ignore) {
+            }
         } catch (Throwable ignore) {
         }
     }
@@ -338,6 +384,7 @@ final class GmNoteView extends FrameLayout {
     // ══════════════════════════════ 按钮动作 ══════════════════════════════
 
     private void doAdd() {
+        commitEdit();                 // ★ 先存当前页，再新建
         GmNote.addItem();
         refreshAll();
         post(new Runnable() {
@@ -346,11 +393,13 @@ final class GmNoteView extends FrameLayout {
     }
 
     private void doDel() {
+        commitEdit();                 // ★ 先存当前页，再删
         GmNote.delItem();
         refreshAll();
     }
 
     private void doMin() {
+        commitEdit();                 // ★ 先存（最小化也算"离开当前页"）
         GmNote.setMin(!GmNote.state().optBoolean("min", false));
         refreshAll();
     }
@@ -407,6 +456,7 @@ final class GmNoteView extends FrameLayout {
                         GmNote.setPos(GmNote.px2dp(getContext(), getX()),
                                 GmNote.px2dp(getContext(), getY()));
                         if (kind == BALL_IS_BALL && !moved) {
+                            commitEdit();                    // ★ 还原前先存
                             GmNote.setMin(false);            // 点圆球 = 还原
                             refreshAll();
                         }
