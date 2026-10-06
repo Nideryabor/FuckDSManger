@@ -1,0 +1,60 @@
+uniform shader content;
+uniform float2 sampleSize;
+uniform float2 materialOrigin;
+uniform float2 materialSize;
+uniform float4 cornerRadii;
+uniform float refractionHeight;
+uniform float refractionAmount;
+uniform float depthEffect;
+uniform float dispersion;
+uniform float4 tintColor;
+float radiusAt(float2 coord, float4 radii) {
+    if (coord.x >= 0.0) {
+        if (coord.y <= 0.0) return radii.y; else return radii.z;
+    } else {
+        if (coord.y <= 0.0) return radii.x; else return radii.w;
+    }
+}
+float sdRoundedRect(float2 coord, float2 halfSize, float radius) {
+    float2 cornerCoord = abs(coord) - (halfSize - float2(radius));
+    float outside = length(max(cornerCoord, 0.0)) - radius;
+    float inside = min(max(cornerCoord.x, cornerCoord.y), 0.0);
+    return outside + inside;
+}
+float2 gradSdRoundedRect(float2 coord, float2 halfSize, float radius) {
+    float2 cornerCoord = abs(coord) - (halfSize - float2(radius));
+    if (cornerCoord.x >= 0.0 || cornerCoord.y >= 0.0) {
+        return sign(coord) * normalize(max(cornerCoord, 0.0) + float2(0.0001));
+    } else {
+        float gradX = step(cornerCoord.y, cornerCoord.x);
+        return sign(coord) * float2(gradX, 1.0 - gradX);
+    }
+}
+float circleMap(float x) { return 1.0 - sqrt(max(1.0 - x * x, 0.0)); }
+float2 clampSample(float2 c) {
+    return clamp(c, float2(0.5), sampleSize - float2(0.5));
+}
+half4 main(float2 coord) {
+    float2 matCoord = coord - materialOrigin;
+    float2 halfSize = materialSize * 0.5;
+    float2 centeredCoord = matCoord - halfSize;
+    float radius = radiusAt(matCoord, cornerRadii);
+    float sd = sdRoundedRect(centeredCoord, halfSize, radius);
+    float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));
+    float2 grad = normalize(
+            gradSdRoundedRect(centeredCoord, halfSize, gradRadius)
+            + depthEffect * normalize(centeredCoord + float2(0.0001)));
+    float d = 0.0;
+    if (sd < 0.0) {
+        float t = clamp(1.0 + sd / max(refractionHeight, 0.001), 0.0, 1.0);
+        d = circleMap(t) * refractionAmount;
+    }
+    float2 base = coord + d * grad;
+    half4 cr = content.eval(clampSample(base + dispersion * grad));
+    half4 cg = content.eval(clampSample(base));
+    half4 cb = content.eval(clampSample(base - dispersion * grad));
+    float3 rgb = float3(float(cr.r), float(cg.g), float(cb.b));
+    float aEff = tintColor.a * fdmFadeFac(sd);
+    float3 outRgb = tintColor.rgb * aEff + rgb * (1.0 - aEff);
+    return half4(half(outRgb.r), half(outRgb.g), half(outRgb.b), half(1.0));
+}

@@ -1772,6 +1772,10 @@ public final class FdmBridge {
                 //   同一个道理 —— 不告诉模型，它永远不会写这个标记。
                 //   与 rich_spec 各灌各的（两段约定互相独立），同样是**追加 + 幂等**。
                 back = com.nidyaber.fuckdsmanger.gm.GmRichText.mergeSuggestIntoSystemPrompt();
+            } else if ("specs_clear".equals(cmd)) {
+                // ★ 清空灌入的约定（回答排版 + 追问建议两段一起摘）。
+                //   按段落摘 —— 你自己写的提示词一个字都不动。
+                back = com.nidyaber.fuckdsmanger.gm.GmRichText.removeSpecs();
             } else if ("rich_demo".equals(cmd)) {
                 // 一键灌开箱示例模板（主人改乱了想重来的时候用）
                 com.nidyaber.fuckdsmanger.gm.GmStore.write(ctx,

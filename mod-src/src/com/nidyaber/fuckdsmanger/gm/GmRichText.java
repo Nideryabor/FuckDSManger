@@ -776,6 +776,60 @@ public final class GmRichText {
     }
 
     /**
+     * 把我们灌进去的约定段落**摘掉**（用户自己写的原样保留）—— 给"清空灌入"用。
+     *
+     * <p>做法是**按段落摘**而不是按文本匹配：{@code spec()} 的内容会随模板池变，
+     * 直接 replace 会匹配不上。所以从特征串定位，向前往回找到段落头（{@code \n\n} 之后），
+     * 向后找到段落尾（下一个 {@code \n\n} 之前），整段剪掉。
+     */
+    public static String removeSpecs() {
+        try {
+            String cur = GmSysPrompt.text();
+            if (cur == null || cur.isEmpty()) return "系统提示词本来就是空的，没什么可清";
+
+            int before = cur.length();
+            String out = cutParagraph(cur, SPEC_TAG);
+            out = cutParagraph(out, SUG_SPEC_TAG);
+            out = tidy(out);
+
+            if (out.length() == before) {
+                return "没找到我们灌进去的约定（可能本来就没灌，或被手动删过）";
+            }
+            GmSysPrompt.setText(out);
+            return "已清空灌入的约定（" + before + " 字 → " + out.length() + " 字）"
+                    + "；你自己写的内容原样保留";
+        } catch (Throwable t) {
+            return "清空失败：" + t;
+        }
+    }
+
+    /** 从 {@code tag} 所在段落整段剪掉（段落 = 前后各一个 {@code \n\n} 的区间）。 */
+    private static String cutParagraph(String s, String tag) {
+        if (s == null) return "";
+        int i = s.indexOf(tag);
+        if (i < 0) return s;
+
+        int start = 0;
+        int p = s.lastIndexOf("\n\n", i);
+        if (p >= 0) start = p + 2;
+
+        int q = s.indexOf("\n\n", i);
+        int end = (q < 0) ? s.length() : q;
+
+        return s.substring(0, start) + s.substring(end);
+    }
+
+    /** 收拾一下：去掉首尾空白 + 连续三个以上换行压成两个。 */
+    private static String tidy(String s) {
+        if (s == null) return "";
+        String out = s.trim();
+        while (out.contains("\n\n\n")) {
+            out = out.replace("\n\n\n", "\n\n");
+        }
+        return out;
+    }
+
+    /**
      * 通用的「把一段约定追加进系统提示词」—— <b>追加，绝不覆盖</b>。
      *
      * <p>幂等判据用<b>内容特征串</b>而不是定界符：定界符在旧版约定里也可能出现，

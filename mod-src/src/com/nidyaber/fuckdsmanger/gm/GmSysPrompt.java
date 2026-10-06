@@ -445,14 +445,26 @@ public final class GmSysPrompt {
     public static String wrap(String sp) {
         if (sp == null || sp.isEmpty()) return "";
 
-        // ★ 明文承载：原样包一对定界符就发出去（不隐形化）——
-        //   模型把它当普通用户文本读（零风险），界面由 hook 抹掉这段。
-        if (carrier() == CARRIER_PLAIN) {
-            return PLAIN_OPEN + sp + PLAIN_CLOSE;
-        }
-
         String h = head();
         String t = tail();
+
+        // ★ 明文承载：原样包一对定界符就发出去（不隐形化）——
+        //   模型把它当普通用户文本读（零风险），界面由 hook 抹掉这段。
+        //   ★★ 2026-10-05 修：**head/tail 在这里也要包进去**。
+        //      以前这两个在明文模式下被静默忽略 —— 界面照常显示"包装前缀/后缀"，
+        //      用户填了却没用 ⇒ 典型的"标识不清"。现在两种模式语义一致：
+        //        ⟦FDM⟧前缀 + 正文 + 后缀⟦/FDM⟧
+        if (carrier() == CARRIER_PLAIN) {
+            StringBuilder pb = new StringBuilder();
+            pb.append(PLAIN_OPEN);
+            if (h != null && !h.isEmpty()) pb.append(h);
+            pb.append(sp);
+            if (t != null && !t.isEmpty()) pb.append(t);
+            pb.append(PLAIN_CLOSE);
+            return pb.toString();
+        }
+
+        // 隐形承载：head/text/tail 全部转成 Unicode Tag 再拼接
         StringBuilder sb = new StringBuilder();
         if (h != null && !h.isEmpty()) sb.append(toTag(h));
         sb.append(toTag(sp));

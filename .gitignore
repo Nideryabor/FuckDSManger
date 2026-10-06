@@ -102,3 +102,28 @@ tools/出笼隧道/.adbport
 *token*.txt
 *_token*
 *tokendump*
+
+# 版本存档：dex 与 smali 是"手写 smali 时代的源码"，必须入库
+!版本存档/**
+
+# ============================================================
+#  2026-10-06 追加：误删事故复盘后的"防爆"规则
+#  教训：/sdcard 被清空；而工作区里 8GB 的 APK 归档 + 十几 GB 的
+#        tmp 反编译 dump 一直只活在设备上（.gitignore 有 *.apk）。
+#  ⇒ 把「大件」彻底挡在门外，把「源码级小件」（dex/smali）放进来。
+# ============================================================
+
+# 整个 tmp 都不进库（已跟踪的 48 个历史文件不受影响）
+/tmp/
+
+# 本次新建的 Layout Inspect MCP 工程：只留源码，不留产物与钥匙
+layoutinspect-mcp/out/
+layoutinspect-mcp/keys/
+layoutinspect-mcp/backup/
+
+# 版本存档：dex/smali 要入库，其余不管（dex 也已被 *.apk 之外放行）
+!版本存档/**
+版本存档/**/*.apk
+
+# 坏软链（2026-10-06：指向读不到的目标，git 无法 stat）
+/抓日志.sh

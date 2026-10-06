@@ -1,0 +1,4 @@
+# 我健忘，所以留了这个，你用不了
+su
+cd /data/adb/frida/
+sh frida.sh

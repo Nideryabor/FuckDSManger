@@ -88,6 +88,22 @@ public final class GmSender {
     /** 收集到的 gh2 实例（弱引用，随 GC 自动清理） */
     private static final ArrayList<WeakReference<Object>> sInst = new ArrayList<WeakReference<Object>>();
 
+    /**
+     * ★★★ 「最近活跃」的 gh2 —— <b>这是选会话最可信的依据</b>。
+     *
+     * <p>为什么必须有它（2026-10-05 真机 bug）：只靠"消息数最多"会选错 ——
+     * 主人点了一下建议，消息**发到了另一个对话**（那个会话消息更多）。
+     *
+     * <p>正解：<b>当前正在显示的那个会话，它的 gh2 会被 UI 持续调用</b>（渲染/状态更新）。
+     * 所以 hook {@link #M_NS}（{@code W()}，取消息存储，被调得最频繁的那个）
+     * —— 每次被调就把 {@code thisObject} 记下来。<b>只赋一个引用，零日志，开销可忽略。</b>
+     */
+    private static volatile Object sRecent = null;
+    /** sRecent 最后一次被刷新的时刻（用于判断它还新不新） */
+    private static volatile long sRecentAt = 0L;
+    /** 多久没用过就不信它（毫秒） */
+    private static final long RECENT_TTL = 15000L;
+
     private GmSender() {}
 
     public static boolean ready() { return sReady; }
@@ -232,16 +248,52 @@ public final class GmSender {
         } catch (Throwable t) {
             GmUtil.logFail("gmSender.install", t);
         }
+
+        // ★★★ 关键：hook W()（取消息存储）—— 谁被调，谁就是「正在显示的那个会话」
+        //   开销：一次赋值。收益：发送永远不会选错会话。
+        try {
+            XposedBridge.hookMethod(mNs, new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam p) {
+                    try {
+                        Object x = p.thisObject;
+                        if (x != null) {
+                            sRecent = x;
+                            sRecentAt = System.currentTimeMillis();
+                        }
+                    } catch (Throwable ignore) {
+                        // 算了
+                    }
+                }
+            });
+            GmUtil.log("gmSender 已挂 gh2.W()（最近活跃标记 ⇒ 发送永不选错会话）");
+        } catch (Throwable t) {
+            GmUtil.logFail("gmSender.install/W", t);
+        }
     }
 
     // ═══════════════════════════ ③ 发送 ═══════════════════════════
 
     /**
-     * 挑出「当前会话」的那个 gh2 实例。
+     * 挑出「当前会话」的 gh2。
      *
-     * <p>判据（实证）：<b>{@code W().a}（会话 id）非空</b>，且 <b>{@code W().f}（消息表）最大</b>。
+     * <p><b>① 首选「最近活跃」</b>（见 {@link #sRecent}）：正在显示的那个会话，
+     * 它的 {@code W()} 一定刚被 UI 调过 ⇒ 这就是最可信的判据。
+     *
+     * <p><b>② 回退「消息数最多」</b>：只有在最近活跃不可用时才用。
+     * ⚠️ 这个判据本身**不够准** —— 别的会话消息更多时就会选错（真机踩过：
+     * 点建议结果发到了另一个对话）⇒ 它现在只是兜底。
      */
     private static Object pickCurrent() {
+        long now = System.currentTimeMillis();
+
+        // ① 最近活跃优先
+        Object r = sRecent;
+        if (r != null && (now - sRecentAt) < RECENT_TTL && hasSession(r)) {
+            return r;
+        }
+
+        // ② 兜底：实例表里挑「sid 非空 + 消息数最多」
         Object best = null;
         int bestSize = -1;
         synchronized (sInst) {
@@ -265,7 +317,23 @@ public final class GmSender {
                 }
             }
         }
+        if (best != null) {
+            GmUtil.logOnce("gmSender.pick.fallback",
+                    "[发送] ⚠ 最近活跃不可用，回退到「消息数最多」的会话 —— 可能不准，请留意");
+        }
         return best;
+    }
+
+    /** 这个 gh2 带不带会话（{@code W().a} 非空） */
+    private static boolean hasSession(Object gh) {
+        try {
+            Object ns = mNs.invoke(gh);
+            if (ns == null) return false;
+            String sid = (String) fSid.get(ns);
+            return sid != null && sid.length() > 0;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     /**

@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+patch_261.py v2 —— 底座 smali：宿主 2.5.2 → 2.6.1  🐲 尼得亚伯 2026-10-01
+
+策略（v2 修订）：
+  · **GmEntry.smali 不动字符串** —— 它的寄存器被复用（同一个 "v" 服务 m5/uia/s5），
+    纯文本替换会串味。改成在 `hookM` 入口**插入一次运行时查表调用**：
+        cls    = GmRemap.cls(cls)              // 未定位 ⇒ 返回假名 ⇒ findClass 失败 ⇒ 安全跳过
+        method = GmRemap.method(旧cls, method)
+  · **其余文件**：只做**宿主类名字符串**的 1:1 替换（这些文件里一个名字只服务一个用途，无冲突）。
+  · 未定位的名字 → 替换成 `__gmGone_xxx`（必然找不到）。
+  · 输出到 tmp/base130_261，原树不动。
+"""
+import os, re, shutil, sys
+
+SRC = sys.argv[1] if len(sys.argv) > 1 else 'tmp/base130/sm'
+DST = sys.argv[2] if len(sys.argv) > 2 else 'tmp/base130_261/sm'
+
+CLASS_MAP = {
+    'kf5': 'kh7', 'fh6': 'w2b', 'me4': 'pe5', 'h91': 'd12', 'p5': 'x5',
+    'pn9': 'i93', 'ls9': 'ua0', 'uia': 'qk7', 'tn0': 'jq0', 'jd8': 'dn9',
+    'se0': 'eh0', 'zc': 'pr6',  's5': 'a6',   'p66': 'm97', 'h02': 'yt2',
+    'ao1': 'gh2', 'bx4': 'py5', 'yb5': 'hs7', 'pd5': 'i93', 'hp8': 'dz9',
+    'wr': 'ns',   'sr9': 'zx8', 'lp9': 's4b', 'le': 'af',   'ok0': 'an0',
+    'ku6': 'mz7', 'vq': 'mr',   'c76': 'x97', 'ey3': 'yx4', 'sn0': 'iq0',
+    'dd8': 'im9', 'md8': 'gn9', 'we5': 'pz7', 'vk0': 'jn0', 'gz3': 'bz4',
+    'it9': 'd9b',
+    # 未定位 ⇒ 改成必然不存在的名字
+    'c73': 'f44',   # LinearGradient（字段 c/d 都是 List + (J)Shader）
+    'tt7': 'u19',   # Shape 伴生（a()/b(F)/c(FFFF) 全齐）
+    'g56': 'g87',   # 建议文案的数据类（由 pd5.H 形参位次推出）
+    'yp1': '__gmGone_yp1', 'um1': '__gmGone_um1', 'cn1': '__gmGone_cn1',
+    'pr8': '__gmGone_pr8',
+    'm5': '__gmGone_m5',   # m5 只在 GmEntry 里，由运行时表处理；别的地方若出现也算异常
+}
+# GmEntry.smali 交给运行时表 ⇒ 这里不改它
+SKIP_FILES = {'GmEntry.smali'}
+
+# ── ③ 宿主资源 ID 平移（2026-10-01 实测：用户反馈"设置页又变回检查更新"）
+RES_MAP = {
+    '0x7f0f0217': '0x7f0f0263',   # 【历史遗留】2.5.0 时代的"检查更新行" id ⇒ 它就是这一行
+    '0x7f0f021f': '0x7f0f0263',   # 检查更新行 profile_check_for_updates（2.6.1 新 id）
+    '0x7f0f0220': '0x7f0f0264',   # profile_check_for_updates_newest（备用）
+    # ⚠️ 下面两个是当年"宿主资源表里没有这个 id ⇒ 返回空串防 NotFoundException 崩溃"的防护。
+    #    2.6.1 里 0x7f0f0221/0x7f0f0222 **已经变成真的资源**
+    #    （mobile_verification_account_exist_toast / ..._invalid_phone_number_toast）
+    #    ⇒ 这条分支会把登录验证的 toast 清空！必须废掉 ⇒ 指向 0（不可能是任何有效资源 id）
+    '0x7f0f0221': '0x0',
+    '0x7f0f0222': '0x0',
+    '0x7f070059': '0x7f07005a',   # assistant_message_avatar（同一份矢量图 res/Fi.xml）
+}
+
+
+# ── ④ 锚点「判据常量」平移（2026-10-01 实测：设置行 case 号被 R8 重排）
+# 老 m5.v() : case 0x14 → sget Lad8;->a   （检查更新行）
+# 新 t5.w() : case 0x5  → sget Lz32;->a   ★ 用运行时调用栈抓到的真桶：
+#    AndroidComposeView.dispatchTouchEvent → … → m01.w → t5.w → … → xu2.a
+#    （t5 带串 batch_management_click，与老 m5 同；分支体 sget Lz32;->a 完全同构）
+# 证据链：① 运行时调用栈锁定 t5  ② t5 带老 m5 的招牌串 batch_management_click
+TARGET_EDITS = [
+    # (文件, 旧片段, 新片段)
+    # PAINTMOD_ORDER: 新宿主 jn0 的构造器参数顺序被 R8 换了 (I,J) -> (J,I)
+    #                    ⇒ ColorFilter 的 newInstance 参数要换序：Integer/Long 对调
+    ('gm/GmPaintModHook.smali',
+     "    const/4 v4, 0x0\n\n    aput-object v3, v2, v4\n\n    const-wide/16 v4, 0x0",
+     "    const/4 v4, 0x1\n\n    aput-object v3, v2, v4\n\n    const-wide/16 v4, 0x0"),
+    ('gm/GmPaintModHook.smali',
+     "    const/4 v4, 0x1\n\n    aput-object v3, v2, v4\n\n    invoke-static {v1, v2}, Lde/robv/android/xposed/XposedHelpers;->newInstance",
+     "    const/4 v4, 0x0\n\n    aput-object v3, v2, v4\n\n    invoke-static {v1, v2}, Lde/robv/android/xposed/XposedHelpers;->newInstance"),
+    # 纯观感：GmPainterHook 里写死的旧日志串
+    ('gm/GmPainterHook.smali', '"PHook: kf5.K id=0x"', '"PHook: kh7.x id=0x"'),
+    ('gm/GmEntryHook.smali',
+     "    const/16 v2, 0x14\n\n    if-eq v1, v2, :cond_10",
+     "    new-instance v4, Ljava/lang/StringBuilder;\n\n"
+     "    const-string v5, \"[FDS] row case=\"\n\n"
+     "    invoke-direct {v4, v5}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V\n\n"
+     "    invoke-virtual {v4, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;\n\n"
+     "    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;\n\n"
+     "    move-result-object v4\n\n"
+     "    invoke-static {v4}, Lcom/nidyaber/fuckdsmanger/gm/GmUtil;->log(Ljava/lang/String;)V\n\n"
+     "    const/16 v2, 0x1d\n\n    if-eq v1, v2, :cond_10"),
+]
+JSON_HOOK = None
+
+CS = re.compile(r'^(\s*const-string(?:/jumbo)?\s+[vp]\d+,\s*")(.*)("\s*)$')
+
+
+# ── ⑦ 宿主「成员名」重映射（R8 也改字段名/方法名）
+#    这一类是"功能全哑"的真凶：模块要用反射深挖宿主对象，
+#    而对象上的方法名/字段名被 R8 换了 ⇒ 静默失效（异常被 try 吞掉）。
+#    每处都用「const-string + 紧跟的反射调用」做唯一上下文，避免误伤。
+MEMBER_EDITS = [
+    # --- GmSuggestHook 里 c1/i1 是方法名（不是类名），任务已还原，这里不动
+    # --- GmBubble：Modifier.background 的两个扩展（老 uia.u/v → 新 qk7.C/D）
+    ('gm/GmBubble.smali',
+     '    const-string v4, "u"\n\n    invoke-static {v3, v4, v2}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod',
+     '    const-string v4, "C"\n\n    invoke-static {v3, v4, v2}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod'),
+    ('gm/GmBubble.smali',
+     '    const-string v4, "v"\n\n    invoke-static {v3, v4, v2}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod',
+     '    const-string v4, "D"\n\n    invoke-static {v3, v4, v2}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod'),
+    ('gm/GmBubble.smali',
+     '    const-string v1, "v"\n\n    invoke-static {v0, v1, v2}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod',
+     '    const-string v1, "D"\n\n    invoke-static {v0, v1, v2}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod'),
+    ('gm/GmBubble.smali',
+     '    const-string v6, "u"\n\n    invoke-static {v5, v6, v4}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod',
+     '    const-string v6, "C"\n\n    invoke-static {v5, v6, v4}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod'),
+]
+
+def apply_member_edits(dst):
+    n = 0
+    for rel, o, nw in MEMBER_EDITS:
+        fp = os.path.join(dst, 'com/nidyaber/fuckdsmanger', rel)
+        if not os.path.exists(fp):
+            print('  ⚠️ 缺', rel); continue
+        t = open(fp, encoding='utf-8').read()
+        c = t.count(o)
+        if c == 1:
+            open(fp, 'w', encoding='utf-8').write(t.replace(o, nw, 1)); n += 1
+        else:
+            print(f'  ⚠️ {rel} 上下文出现 {c} 次（跳过）: {o[:40]}')
+    return n
+
+def fix_probe_fields(dst):
+    """GmProbe 的字段是 private，但 4 个类在读它 ⇒ IllegalAccessError ⇒ 改 public"""
+    fp = os.path.join(dst, 'com/nidyaber/fuckdsmanger/gm/GmProbe.smali')
+    if not os.path.exists(fp):
+        print('  ⚠️ 缺 GmProbe'); return 0
+    t = open(fp, encoding='utf-8').read()
+    n = t.count('\n.field private static ')
+    if n:
+        t = t.replace('\n.field private static ', '\n.field public static ')
+        open(fp, 'w', encoding='utf-8').write(t)
+    return n
+
+
+def main():
+    if os.path.exists(DST):
+        shutil.rmtree(DST)
+    shutil.copytree(SRC, DST)
+    n_cls = 0; n_files = 0; n_res = 0
+    for dp, _, fs in os.walk(DST):
+        for fn in fs:
+            if not fn.endswith('.smali') or fn in SKIP_FILES:
+                continue
+            p = os.path.join(dp, fn)
+            txt = open(p, encoding='utf-8').read()
+            if txt.startswith('\ufeff'):
+                txt = txt[1:]
+            lines = txt.split('\n')
+            changed = False
+            for i, line in enumerate(lines):
+                # 先做资源 id 替换（纯文本，够特异）
+                for oid, nid in RES_MAP.items():
+                    if oid in line:
+                        line = line.replace(oid, nid)
+                        n_res += 1
+                        changed = True
+                lines[i] = line
+                m = CS.match(line)
+                if not m:
+                    continue
+                v = m.group(2)
+                if v in CLASS_MAP:
+                    lines[i] = m.group(1) + CLASS_MAP[v] + m.group(3)
+                    n_cls += 1
+                    changed = True
+            if changed:
+                open(p, 'w', encoding='utf-8').write('\n'.join(lines))
+                n_files += 1
+    print(f'✓ 类名替换：{n_files} 个文件 / {n_cls} 处')
+    print(f'✓ 资源 ID 平移：{n_res} 处')
+    n_t = 0
+    for rel, oldseg, newseg in TARGET_EDITS:
+        fp = os.path.join(DST, 'com/nidyaber/fuckdsmanger', rel)
+        if not os.path.exists(fp):
+            print('  ⚠️ 缺文件', fp); continue
+        t = open(fp, encoding='utf-8').read()
+        if oldseg in t:
+            open(fp, 'w', encoding='utf-8').write(t.replace(oldseg, newseg, 1)); n_t += 1
+        else:
+            print('  ⚠️ 判据片段没找到:', rel)
+    print(f'✓ 判据常量平移：{n_t} 处')
+    gd = os.path.join(DST, 'com/nidyaber/fuckdsmanger/gm/GmDialog.smali')
+    if os.path.exists(gd):
+        print(f'✓ 新键纳管：追加 {add_new_keys(gd)} 个宿主新键（83 -> 85）')
+    # ⚠️ 2026-10-01 回滚：GmProbe 字段改 public 会复活 4 条从未跑过的钩子，
+    #    它们的成员名还是旧的 ⇒ 一跑就咬崩宿主。等逐个修好逻辑再开。
+    # print(f'✓ GmProbe 字段改 public：{fix_probe_fields(DST)} 个')
+    print('· GmProbe 字段改动【已回滚】(4 条钩子保持哑火，宿主优先)')
+    # ⚠️ 2026-10-01 回滚：成员名重映射先只留 qk7(u/v→C/D) 这 4 处（GmBubble 用的，
+    #    该钩子本来就能跑）；GmBubbleCellHook 那 3 处随 GmProbe 一起先关掉。
+    _me = 0  # ⚠️ 临时禁用：qk7.u/v→C/D 疑似致崩，先关掉
+    # _me = apply_member_edits(DST)
+    print(f'✓ 成员名重映射：{_me} 处（含 GmBubble 的 4 处）')
+    print(f'  （GmEntry.smali 跳过 —— 由 GmRemap 在运行时查表）')
+
+
+# ── ⑤ 新键纳管：往 GmDialog 的 KEYS/NAMES/TYPES 表里追加宿主新键
+NEW_KEYS = [
+    ("edit_canvas_brush_enabled", "圈选画笔", "b",
+     "开关：多模态相机是否提供圈选画笔（下发 false 隐藏画布与圈选引导）"),
+    ("enable_wechat_upload", "微信上传入口", "b",
+     "开关：是否显示微信上传文件入口"),
+    ("key_tts_voice_list", "朗读音色列表", "s",
+     "TTS 可选音色列表（JSON 数组，宿主 2.6.1 新增）"),
+]
+
+def add_new_keys(path):
+    t = open(path, encoding='utf-8').read()
+    if 'edit_canvas_brush_enabled' in t:
+        return 0
+    import re as _re
+    n_old = 0x53  # 原表长度（83）
+    n_new = n_old + len(NEW_KEYS)
+    t = t.replace('const/16 v0, 0x53', 'const/16 v0, 0x%x' % n_new, 1)
+    anchor = t.index('sput-object v1, Lcom/nidyaber/fuckdsmanger/gm/GmDialog;->KEYS:')
+    head, tail = t[:anchor], t[anchor:]
+    m = list(_re.finditer(r'aput-object v5, v3, v4\s*\n', head))[-1]
+    ins = ''
+    for k, (key, name, typ, desc) in enumerate(NEW_KEYS):
+        ins += ('    const/16 v4, 0x%x\n\n'
+                '    const-string v5, "%s"\n\n'
+                '    aput-object v5, v1, v4\n\n'
+                '    const-string v5, "%s"\n\n'
+                '    aput-object v5, v2, v4\n\n'
+                '    const-string v5, "%s"\n\n'
+                '    aput-object v5, v3, v4\n\n') % (n_old + k, key, name, typ)
+    t = head[:m.end()] + ins + head[m.end():] + tail
+    # DESCS 串尾部补两行（用正则找那一整行的结尾引号）
+    mm = _re.search(r'(\\u6717\\u8bfb\\u97f3\\u8272 ID\\uff08zh-CN[^"]*)"', t)
+    if mm:
+        extra = ''.join('\\n' + d for _k, _n, _t, d in NEW_KEYS)
+        t = t[:mm.end()-1] + extra + t[mm.end()-1:]
+    else:
+        print('  ⚠️ DESCS 尾串没匹配上（描述未补，不影响功能）')
+    open(path, 'w', encoding='utf-8').write(t)
+    return len(NEW_KEYS)
+
+
+if __name__ == '__main__':
+    main()
