@@ -84,6 +84,20 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
     }
     var tick by remember { mutableIntStateOf(0) }
 
+    // ★ 3.57.1 · 提示词音乐变量的两个开关（读法同 barOn：新格式 `cfg.<key>` 优先）
+    var pvarOn by remember {
+        mutableStateOf(
+            (sp.getString("cfg.fuckds_pvar_on", null)
+                ?: sp.getString("fuckds_pvar_on", "false")) == "true"
+        )
+    }
+    var lyricOn by remember {
+        mutableStateOf(
+            (sp.getString("cfg.fuckds_pvar_lyric", null)
+                ?: sp.getString("fuckds_pvar_lyric", "false")) == "true"
+        )
+    }
+
     // 定时问宿主要状态（宿主回 cmd.cfg_state）
     LaunchedEffect(tick) {
         FdmPush.sendCmd(ctx, "cfg_state", null)
@@ -220,6 +234,109 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                 Spacer(Modifier.height(6.dp))
                 Text(
                     "换完要**重新点一下那首歌**才会用新身份去取地址（正在放的不会自动切）。",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            // ───────── 提示词音乐变量（2026-10-07 · 3.57.0；3.57.1 从「系统提示词」页搬过来）─────────
+            //
+            //  ★ 主人 2026-10-07：「音乐相关的不用管在系统提示词，应该在音乐板块」
+            //    它是音乐功能 —— 主人找它的时候，脑子在「音乐」，手不该去「系统提示词」。
+            //
+            //  ★★ 同一版还修了一个**真漏洞**（主人指出）：
+            //    「系统提示词里面写没有播放就是没在放歌，但是如果我放歌把总开关关掉了呢」
+            //    ⇒ 「变量为空」至少有三种原因（开关关着 / 真没在放歌 / 歌词开关关着），
+            //      而模型看到的只是"空"。第一版示例还写了「没在放歌时两行整体消失」
+            //      ＝ 我们替模型做了一个可能不准的断言。修法见下（不写断言 + {music_or_none}）。
+            SectionLabel("提示词音乐变量")
+            CardBox {
+                Text(
+                    "让 AI 知道你在听什么。提示词里写这些占位符，会在**发消息那一刻**" +
+                    "替换成真值（所以歌词行、进度天然是实时的）：\n" +
+                    "· {music}           《歌名》 - 歌手 (1:23/3:42)\n" +
+                    "· {music_or_none}  ★ 同上，但**没在听**时明确写「没有在听歌」\n" +
+                    "· {song}  {artist}  {album}\n" +
+                    "· {music_pos}  {music_dur}  {music_left}   已听 / 总长 / 剩余\n" +
+                    "· {music_state}   playing / paused\n" +
+                    "· {lyric}  {lyric_prev}  {lyric_next}   当前这一句 / 上一句 / 下一句",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "⚠️ 「空」不等於「没在放歌」——空有三种原因：\n" +
+                    "① 总开关关着　② 真没在放歌　③ 歌词开关关着 / 歌词还没缓存到。\n" +
+                    "所以本页**不替你做任何「空 = 没在听」的断言**，两种需求各给一个工具：\n" +
+                    "· 想「没在听就整句别出现」⇒ 用 [[ ]] 把整行包起来：\n" +
+                    "    [[正在听：{music}]]   ← 变量全空时整行（连 [[ ]]）一起删掉\n" +
+                    "· 想「让模型知道我没在听」⇒ 用 {music_or_none}：\n" +
+                    "    它只在【开关开着但真没在听】时写「没有在听歌」；开关关着时它也是空。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "音乐变量",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            "总开关。关着时所有变量都替换成**空串** —— 绝不会把裸 {music} 发给模型。" +
+                            "开着之后，只要提示词里有音乐变量，注入就强制「每轮」（忽略系统提示词页的注入模式）。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = pvarOn,
+                        onCheckedChange = { v ->
+                            pvarOn = v
+                            FdmPush.sendCmd(ctx, "cfg_put", "fuckds_pvar_on\u001fb\u001f$v")
+                            FdmPush.sp(ctx).edit().putString("cfg.fuckds_pvar_on", v.toString()).apply()
+                            tick++
+                        },
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "允许歌词变量（⚠️ 版权）",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            "默认关。开启后 {lyric} 系列才生效。\n" +
+                            "⚠️ 歌名/歌手/专辑是事实性信息；歌词是作品。项目对歌词的铁律是「只放内存」，" +
+                            "但那是**显示给自己看** —— 开启本项意味着歌词行会**随提示词上传给服务器、" +
+                            "并留在对话历史里**，性质完全不同。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = lyricOn,
+                        onCheckedChange = { v ->
+                            lyricOn = v
+                            FdmPush.sendCmd(ctx, "cfg_put", "fuckds_pvar_lyric\u001fb\u001f$v")
+                            FdmPush.sp(ctx).edit().putString("cfg.fuckds_pvar_lyric", v.toString()).apply()
+                            tick++
+                        },
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = { FdmPush.sendCmd(ctx, "pvar_spec", null) }) {
+                    Text("① 把示例写进系统提示词")
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "▲ 点它会把上面那两行 [[ … ]] 示例写进「系统提示词」（在「聊天 › 系统提示词」里能看到）。\n" +
+                    "★ 它是**更新语义**：重复点不会叠加，而且会把旧版本的示例**换成新版**" +
+                    "（你自己写的内容一个字都不动）。\n" +
+                    "⚠️ 灌完记得把上面的「音乐变量」开关打开，否则变量一律变成空串。",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
