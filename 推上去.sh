@@ -10,6 +10,15 @@
 #   · **不把 token 写进 .git/config** —— 用一次性 URL 推送
 #   · 只做「推送」类操作，绝不删任何东西
 #   · 推之前先跑自检（大文件 / 密钥 / 体积），不过就拒绝推
+#
+#  ⚠️⚠️ 2026-10-07 · 网络排障（**先看这行，能省半小时**）：
+#     报错「Failed to connect to github.com port 443 … Couldn't connect」（超时 35s）
+#     而 `curl https://api.github.com` 却 200 ⇒ **不是没网，是 github.com 那个 IP 被挡**。
+#     而 /etc/hosts 里**钉死了** github.com ⇒ 钉的那个 IP 一被封，git 就永远连不上。
+#     实测（2026-10-07）：140.82.121.3 ✗ · 140.82.112.3 ✗ · 140.82.116.3 ✗
+#                        20.205.243.166 ✗ · **140.82.113.3 ✓ · 140.82.114.3 ✓**
+#     修法：sed -i 's/^140\.82\.121\.3 github\.com$/140.82.114.3 github.com/' /etc/hosts
+#     顺带记一条好用的：`ssh.github.com:443` 通（22 不通）⇒ 将来可以走 SSH over 443。
 # =====================================================================
 set -e
 cd "$(dirname "$0")"
@@ -40,10 +49,28 @@ echo "· 体积: $(git count-objects -vH | grep size-pack | cut -d' ' -f2-)"
 
 say "1. 推送 main（token 只出现在这条命令里，不落盘）"
 URL="https://x-access-token:${TOKEN}@github.com/${OWNER}/${REPO}.git"
-git push "$URL" "$BRANCH:$BRANCH" 2>&1 | sed "s/${TOKEN}/***/g" | tail -20
+# ★★ 2026-10-07 修（第二次栽在同一个地方，见 7a31904）：
+#   `git push … | sed … | tail` 的**退出码是 tail 的**，永远是 0 ⇒
+#   推送失败（TLS 断 / 被墙 / 认证失败）脚本照样往下打出「✓ 完成」，**假装成功**。
+#   实测踩到：`GnuTLS recv error (-110)` + 「✓ 完成」。
+#   ⇒ 先落盘再检查退出码，失败就 die（把 git 的原话带出来）。
+PLOG=/tmp/fdm_push_main.log
+if git push "$URL" "$BRANCH:$BRANCH" >"$PLOG" 2>&1; then
+  sed "s/${TOKEN}/***/g" "$PLOG" | tail -20
+else
+  printf '\033[31m── git 的原话 ──\033[0m\n'
+  sed "s/${TOKEN}/***/g" "$PLOG" | tail -30
+  die "推送 $BRANCH 失败（**这次是真失败**，别再往下走）"
+fi
 
 say "2. 推 tags"
-git push "$URL" --tags 2>&1 | sed "s/${TOKEN}/***/g" | tail -10 || echo "（没有 tag 或 tag 已存在，跳过）"
+TLOG=/tmp/fdm_push_tags.log
+if git push "$URL" --tags >"$TLOG" 2>&1; then
+  sed "s/${TOKEN}/***/g" "$TLOG" | tail -10
+else
+  sed "s/${TOKEN}/***/g" "$TLOG" | tail -10
+  echo "（没有 tag / 或 tag 已存在 —— 不致命，继续）"
+fi
 
 say "3. 设一个新 remote 方便以后用（不带 token）"
 git remote remove neworigin 2>/dev/null || true
