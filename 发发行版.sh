@@ -49,7 +49,7 @@ body += "\n\n---\n\n## 📦 附件\n\n"
 body += "| 文件 | 说明 |\n|---|---|\n"
 body += "| `%s` | **单包**：模块 + UI + 桥，装这一个就够 |\n" % os.path.basename(apk)
 body += "\n```\nsha256  %s\n```\n" % sha
-body += "\n> 宿主：DeepSeek 客户端 2.5.2 / 2.6.1\n"
+body += "\n> 宿主：DeepSeek 客户端 2.6.1（宿主版本以实测为准，升级后需重新适配）\n"
 print(json.dumps({"tag_name": None, "body": body}, ensure_ascii=False))
 PY
 BODY=$(python3 -c 'import json,sys; print(json.load(open("/tmp/relbody.json"))["body"])' 2>/dev/null || true)

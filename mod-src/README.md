@@ -101,7 +101,7 @@ invoke-virtual {v0, v1}, StringBuilder->append(String)
 | SHA-1 | `32:C8:B0:57:9D:BE:41:E7:65:FB:25:F5:63:5B:73:3D:B9:FD:24:25` |
 | SHA-256 | `9C:2D:D7:4D:F0:09:FA:57:43:D1:16:F3:A4:7F:EE:CE:29:30:F5:31:C3:09:2A:B5:91:09:16:14:5C:A3:78:05` |
 
-- 正本：`pack/keys/fuckdsmanger.{jks,p12,pk8,x509.pem}`（密码 `***REMOVED***`，别名 `fuckdsmanger`）
+- 正本：`pack/keys/fuckdsmanger.{jks,p12,pk8,x509.pem}`（**口令与别名不写在这里** —— 见本地钥匙备份 `巢穴/宝物库/签名钥匙备份-2026-09-25/`，本文件已入库 ⇒ 明文口令绝不入库）
 - 给主人带走的副本：`/workspace/签名钥匙备份-2026-09-25/`（含 zip，已 gitignore）
 - **丢了就再也签不出能覆盖安装的包** ⇒ 至少存两处
 
