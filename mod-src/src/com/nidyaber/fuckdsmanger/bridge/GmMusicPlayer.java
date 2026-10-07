@@ -677,6 +677,56 @@ public final class GmMusicPlayer {
         });
     }
 
+    // ══════════════ ★ 给「提示词变量」用的同步查询（3.57.0）══════════════
+    //
+    //  为什么单独开一节：下面两个方法是给 GmSysPrompt.inject 用的 —— 那条路是**发消息的热路径**，
+    //  纪律比界面严得多：
+    //    · **必须同步返回**（不能等网络、不能等回调）
+    //    · **绝不联网**：只读 sLyricCache（内存），没命中就交给 GmPromptVars 异步预热
+    //    · **绝不落盘**：歌词是版权内容，出这个进程就只能进提示词（且由独立开关把关）
+    //
+    //  ⚠️ 与 GmMiniBarView.highlight() 用的是**同一套判定**（最后一个 ms[i] <= pos 的行）——
+    //     两处若不一致，会出现「卡片高亮这句、提示词说那句」的鬼故事。
+
+    /** 同步取**已经缓存**的歌词（绝不联网、绝不落盘）。null = 还没缓存。 */
+    public String cachedLyric(long id) {
+        try {
+            return sLyricCache.get(Long.valueOf(id));
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * 此刻唱到哪一句 —— 返回 {@code {当前, 上一句, 下一句}}，取不到返回 null。
+     *
+     * <p>前奏（还没唱第一句）时：当前 = 空串，下一句 = 第一句 —— 如实反映「还没开口」，
+     * 而不是硬指一句。空串会被 {@code GmPromptVars} 的空值语义处理掉。
+     */
+    public String[] lyricAround(long id, int pos) {
+        String lrc = cachedLyric(id);
+        if (lrc == null || lrc.length() == 0) return null;
+        Object[] p = parseLrc(lrc);
+        if (p == null || p.length < 2) return null;
+        long[] ms = (long[]) p[0];
+        String[] tx = (String[]) p[1];
+        if (ms == null || tx == null || ms.length == 0) return null;
+
+        int idx = -1;
+        for (int i = 0; i < ms.length; i++) {
+            if (ms[i] <= pos) idx = i;
+            else break;
+        }
+        String cur = idx >= 0 && idx < tx.length ? str(tx[idx]) : "";
+        String prev = idx > 0 && idx - 1 < tx.length ? str(tx[idx - 1]) : "";
+        String next = idx + 1 < tx.length ? str(tx[idx + 1]) : "";
+        if (idx < 0) {                       // 前奏
+            prev = "";
+            next = tx.length > 0 ? str(tx[0]) : "";
+        }
+        return new String[]{cur, prev, next};
+    }
+
     // ══════════════════════════════ 小工具 ══════════════════════════════
 
     private static String str(Object o) {

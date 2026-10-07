@@ -1910,6 +1910,12 @@ public final class FdmBridge {
                 //   同一个道理 —— 不告诉模型，它永远不会写这个标记。
                 //   与 rich_spec 各灌各的（两段约定互相独立），同样是**追加 + 幂等**。
                 back = com.nidyaber.fuckdsmanger.gm.GmRichText.mergeSuggestIntoSystemPrompt();
+            } else if ("pvar_spec".equals(cmd)) {
+                // ★ 2026-10-07 · 音乐变量（3.57.0）：把「占位符怎么用」的示例灌进系统提示词。
+                //   同一个套路（追加 + 按特征串幂等，见 GmPromptVars.mergeIntoSystemPrompt）——
+                //   模型不会凭空知道 {music}/{lyric} 是什么，不写进提示词它只会当普通花括号看。
+                //   ⚠️ 灌完还得把上面的「音乐变量」开关打开，否则变量一律替换成空串。
+                back = com.nidyaber.fuckdsmanger.gm.GmPromptVars.mergeIntoSystemPrompt();
             } else if ("specs_clear".equals(cmd)) {
                 // ★ 清空灌入的约定（回答排版 + 追问建议两段一起摘）。
                 //   按段落摘 —— 你自己写的提示词一个字都不动。

@@ -130,9 +130,13 @@ public final class GmSysPrompt {
     /**
      * 宽容读 boolean —— 先按宿主真实类型读，读不到再兼容"历史上被写成字符串"的脏值。
      *
+     * <p>★ 2026-10-07：由 {@code private} 改为**包内可见**，给 {@code GmPromptVars} 复用
+     * —— 这套「宿主真实类型 → 字符串脏值 → int」的兜底读法踩过坑（见上方长注释），
+     * 复制一份就等于埋一颗同款地雷，不如共用一处。
+     *
      * <p>键存在 + 类型对 ⇒ "true"/"false"；任何异常 ⇒ ""（已由 read2 兜住）。
      */
-    private static boolean boolOf(Context ctx, String key, boolean def) {
+    static boolean boolOf(Context ctx, String key, boolean def) {
         String s = GmStore.read2(ctx, key, "b");           // 宿主真实类型（UI 走 cfg_put type="b"）
         if ("true".equals(s) || "1".equals(s)) return true;
         if ("false".equals(s) || "0".equals(s)) return false;
@@ -490,13 +494,25 @@ public final class GmSysPrompt {
             if (hasTag(prompt)) return prompt;              // 幂等：已含 Tag 就不重复注入
 
             int m = mode();
-            if (m == MODE_FIRST && !first) return prompt;
 
-            String head = wrap(sp);
+            // ★ 2026-10-07（3.57.0）· 音乐变量：**时变**内容必须每轮注入。
+            //   主人原话：「音乐提示词忽略这个设置」。
+            //   道理：提示词正文里一旦出现 {music}/{lyric} 这类变量，它就是**随时间变的** ——
+            //   若按「仅首条」冻在会话第一条，模型会永远以为你在听开场那首歌
+            //   （实测场景：会话开了两小时，歌换了三十首，模型还在聊第一首）。
+            //   ⇒ 有变量 ⇒ 无视「注入模式」，强制每轮。UI 上有对应警告。
+            boolean hasVar = GmPromptVars.hasAny(sp);
+            if (m == MODE_FIRST && !first && !hasVar) return prompt;
+
+            String body = GmPromptVars.resolve(sp);         // ★ 发消息这一刻替换成真值
+            if (body.isEmpty()) return prompt;
+
+            String head = wrap(body);
             if (head.isEmpty()) return prompt;
 
             GmUtil.logOnce("sysprompt.inject",
-                    "sp=" + sp.length() + " first=" + first + " mode=" + m);
+                    "sp=" + sp.length() + " body=" + body.length()
+                    + " first=" + first + " mode=" + m + " pvar=" + hasVar);
             return head + prompt;
         } catch (Throwable t) {
             GmUtil.logFail("sysprompt.inject", t);
