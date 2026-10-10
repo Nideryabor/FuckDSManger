@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -38,6 +39,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -46,6 +50,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -165,15 +170,35 @@ private class Saved(
      */
     fun normalized(): Saved {
         val cards2 = LinkedHashMap<String, CCard>()
+        /**
+         * ★ 2026-10-10（3.62.2）修 ——「**三个内置卡片被当夜宵吃了**」。
+         *
+         * <p>老存档（3.60 / 3.61 那套格式）里**只有 id 列表、没有 `cards` 表**；
+         * 而这里原来要求"卡片表里得有这一张"才认 ⇒ 三张内置卡被当成脏数据**整批丢掉**，
+         * 丢掉之后**又被写回存档** ⇒ **永久丢失**（主人视角：抽屉里那三张凭空消失）。
+         *
+         * <p>修法两条：
+         * ① 内置三张 + 源卡片的**键就是它自己的类型名** ⇒ 卡片表里没有也能**现造**；
+         * ② 「两边都没有」的它们**补回抽屉** —— 它们本来就**删不掉**（没有删除按钮），
+         *    所以"失踪"只可能是存档坏了（或这次的 bug），补回来是安全的。
+         */
         fun keep(k: String) {
-            val c = cards[k]
-            if (c != null && (c.isBuiltin || c.isText)) cards2[k] = c
+            val ex = cards[k]
+            val c: CCard? = when (k) {
+                T_SUGGEST -> CCard(k, T_SUGGEST, typeTitle(T_SUGGEST), ex?.text ?: "")
+                T_MUSIC -> CCard(k, T_MUSIC, typeTitle(T_MUSIC), ex?.text ?: "")
+                T_RICHTEXT -> CCard(k, T_RICHTEXT, typeTitle(T_RICHTEXT), ex?.text ?: "")
+                K_SRC -> CCard(k, T_TEXTSRC, typeTitle(T_TEXTSRC), ex?.text ?: "")
+                else -> if (ex != null && ex.isText) ex else null
+            }
+            if (c != null) cards2[k] = c
         }
         drawer.forEach { keep(it) }
         box.forEach { keep(it) }
-        cards2[K_SRC] = cards2[K_SRC]   // 源卡片永远留着：它是"复制"的来源，删了就再也拖不出来了
-            ?: CCard(K_SRC, T_TEXTSRC, typeTitle(T_TEXTSRC), cards[K_SRC]?.text ?: "")
-        val drawer2 = (drawer.filter { cards2.containsKey(it) } + listOf(K_SRC)).distinct()
+        // 内置三张 + 源卡片：哪边都没有 ⇒ 补回抽屉
+        val missing = listOf(T_SUGGEST, T_MUSIC, T_RICHTEXT, K_SRC).filter { !cards2.containsKey(it) }
+        missing.forEach { keep(it) }
+        val drawer2 = (drawer.filter { cards2.containsKey(it) } + missing + listOf(K_SRC)).distinct()
         val box2 = box.filter { cards2.containsKey(it) && it != K_SRC }
         return Saved(drawer2, box2, expanded.filter { cards2.containsKey(it) }.toSet(), cards2, nextId.coerceAtLeast(1))
     }
@@ -496,8 +521,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                             expanded = if (id in expanded) expanded - id else expanded + id
                                         },
                                         onNav = { onNav(typeNavTarget(c.type)) },
-                                        onTitleClick = { beginEdit(id, true) },
-                                        onBodyFocus = { beginEdit(id, false) },
+                                        onEditStart = { title -> beginEdit(id, title) },
                                         onBufChange = { editBuf = it },
                                         onCommitEdit = { flushEdit() },
                                         onWithTitle = { v ->
@@ -603,8 +627,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                         expanded = if (id in expanded) expanded - id else expanded + id
                                     },
                                     onNav = { onNav(typeNavTarget(c.type)) },
-                                    onTitleClick = { beginEdit(id, true) },
-                                    onBodyFocus = { beginEdit(id, false) },
+                                    onEditStart = { title -> beginEdit(id, title) },
                                     onBufChange = { editBuf = it },
                                     onCommitEdit = { flushEdit() },
                                     onWithTitle = { v ->
@@ -702,8 +725,8 @@ private fun PromptCard(
     showDelete: Boolean,
     onToggle: () -> Unit,
     onNav: () -> Unit,
-    onTitleClick: () -> Unit,
-    onBodyFocus: () -> Unit,
+    /** 开始编辑：true = 标题，false = 正文（由 ✏ 按钮或输入框拿到焦点时调）。 */
+    onEditStart: (Boolean) -> Unit,
     onBufChange: (String) -> Unit,
     onCommitEdit: () -> Unit,
     onWithTitle: (Boolean) -> Unit,
@@ -749,7 +772,7 @@ private fun PromptCard(
         ) {
             // ★ 标题左边的「编辑标题」铅笔（只有自定义文本卡需要 —— 内置三张的标题是固定的）
             if (card.isText) {
-                IconButton(onClick = onTitleClick, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = { onEditStart(true) }, modifier = Modifier.size(36.dp)) {
                     Icon(
                         Icons.Rounded.Edit, "编辑标题",
                         modifier = Modifier.size(18.dp),
@@ -759,13 +782,35 @@ private fun PromptCard(
             }
             Column(Modifier.weight(1f).padding(start = if (card.isText) 0.dp else 8.dp)) {
                 if (editing && editingTitle) {
+                    // ★ 2026-10-10（3.62.2）修：标题原来"没处可退"（只能靠收起卡片/点别处）——
+                    //   现在 **回车（Done）= 保存并退出** · **失焦 = 保存并退出**，并且进来就自动拿焦点。
+                    //   `hadFocus` 这道闸是必须的：输入框刚出现在组合里时会先报一次"未聚焦"，
+                    //   不加闸就会被当成"失焦"⇒ 一个字都没敲就退出了。
+                    val fr = remember(card.key) { FocusRequester() }
+                    var hadFocus by remember(card.key) { mutableStateOf(false) }
+                    LaunchedEffect(card.key) {
+                        try { fr.requestFocus() } catch (t: Throwable) { }
+                    }
                     OutlinedTextField(
                         value = editBuf,
                         onValueChange = onBufChange,
                         singleLine = true,
                         label = { Text("标题") },
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                        keyboardOptions = KeyboardOptions.Default,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp)
+                            .focusRequester(fr)
+                            .onFocusChanged { st ->
+                                if (st.isFocused) {
+                                    hadFocus = true
+                                    onEditStart(true)
+                                } else if (hadFocus) {
+                                    hadFocus = false
+                                    onCommitEdit()
+                                }
+                            },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { onCommitEdit() }),
                     )
                 } else {
                     Text(
@@ -805,19 +850,22 @@ private fun PromptCard(
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             ) {
                 if (card.isText) {
+                    // ★ 2026-10-10（3.62.2）：正文同样用**焦点**驱动（拿到焦点=开始编辑，失焦=保存），
+                    //   比原来那坨"监听 pointerInput 里有没有按下"干净得多（那版还会漏事件）。
+                    var bHadFocus by remember(card.key) { mutableStateOf(false) }
                     OutlinedTextField(
                         value = if (editing && !editingTitle) editBuf else card.text,
                         onValueChange = { onBufChange(it) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 72.dp, max = 200.dp)
-                            .pointerInput(card.key) {
-                                // ★ 拿焦点（点了就开始编辑；失焦提交）
-                                awaitPointerEventScope {
-                                    while (true) {
-                                        val e = awaitPointerEvent()
-                                        if (e.changes.any { it.pressed }) onBodyFocus()
-                                    }
+                            .onFocusChanged { st ->
+                                if (st.isFocused) {
+                                    bHadFocus = true
+                                    onEditStart(false)
+                                } else if (bHadFocus) {
+                                    bHadFocus = false
+                                    onCommitEdit()
                                 }
                             },
                         placeholder = { Text(card.text.ifEmpty { DEF_TEXT }) },
