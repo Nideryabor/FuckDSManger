@@ -359,6 +359,29 @@ public final class GmPromptVars {
         }
     }
 
+    /**
+     * 只把【音乐变量】那一段摘掉 🐲 —— 新版界面：「音乐」卡片被拖回抽屉 ⇒ 清空。
+     *
+     * <p>与 {@link #mergeIntoSystemPrompt()} 对称：同样按特征串 {@link #SPEC_TAG} 定位段落、
+     * 整段剪掉，<b>主人自己写的正文一个字不动。</b>
+     * （{@code GmRichText.removeSpecs()} 摘的是富文本那两段，跟这一段是两回事。）
+     */
+    public static String removeSpec() {
+        try {
+            String cur = GmSysPrompt.text();
+            if (cur == null || cur.isEmpty()) return "系统提示词本来是空的，没什么可清";
+            if (cur.indexOf(SPEC_TAG) < 0) return "系统提示词里没有【音乐变量】这一段（可能本来就没灌）";
+
+            int before = cur.length();
+            String out = tidy(cutParagraph(cur, SPEC_TAG));
+            GmSysPrompt.setText(out);
+            return "已清空音乐变量示例（" + before + " 字 → " + out.length() + " 字）"
+                    + "；你自己写的内容原样保留";
+        } catch (Throwable t) {
+            return "清空失败：" + t;
+        }
+    }
+
     /** 从 {@code tag} 所在段落整段剪掉（段落 = 前后各一个 {@code \n\n} 的区间）。 */
     private static String cutParagraph(String s, String tag) {
         if (s == null) return "";

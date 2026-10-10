@@ -805,6 +805,31 @@ public final class GmRichText {
         }
     }
 
+    /**
+     * 只摘**一段**（{@code "rich"} = 回答排版 / {@code "suggest"} = 追问建议）🐲
+     *
+     * <p>给新版界面的「把卡片拖回抽屉 = 清空这一张卡灌进去的东西」用。
+     * 与 {@link #removeSpecs()} 的区别就在这儿：那个是**两段一起摘**（旧按钮的语义），
+     * 这个是**按卡片各摘各的**。同一个 {@link #cutParagraph}，
+     * <b>主人自己写的正文一个字都不动。</b>
+     */
+    public static String removeSpec(String which) {
+        try {
+            String tag = "suggest".equals(which) ? SUG_SPEC_TAG : SPEC_TAG;
+            String cur = GmSysPrompt.text();
+            if (cur == null || cur.isEmpty()) return "系统提示词本来是空的，没什么可清";
+            if (cur.indexOf(tag) < 0) return "系统提示词里没有 " + tag + " 这一段（可能本来就没灌）";
+
+            int before = cur.length();
+            String out = tidy(cutParagraph(cur, tag));
+            GmSysPrompt.setText(out);
+            return "已清空 " + tag + "（" + before + " 字 → " + out.length() + " 字）"
+                    + "；你自己写的内容原样保留";
+        } catch (Throwable t) {
+            return "清空失败：" + t;
+        }
+    }
+
     /** 从 {@code tag} 所在段落整段剪掉（段落 = 前后各一个 {@code \n\n} 的区间）。 */
     private static String cutParagraph(String s, String tag) {
         if (s == null) return "";

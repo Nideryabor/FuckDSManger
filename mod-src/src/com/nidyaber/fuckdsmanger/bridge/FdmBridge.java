@@ -1920,6 +1920,15 @@ public final class FdmBridge {
                 // ★ 清空灌入的约定（回答排版 + 追问建议两段一起摘）。
                 //   按段落摘 —— 你自己写的提示词一个字都不动。
                 back = com.nidyaber.fuckdsmanger.gm.GmRichText.removeSpecs();
+            } else if ("spec_remove".equals(cmd)) {
+                // ★ 2026-10-10（3.61.0）：新版界面「把卡片拖回抽屉 = 清空这一张卡灌进去的东西」。
+                //   arg 决定摘哪一段：rich =【回答排版】· suggest =【追问建议】· music =【音乐变量】。
+                //   与 specs_clear（富文本那两段一起摘）的区别就在这里：**按卡片各摘各的**。
+                String which = arg == null ? "" : String.valueOf(arg);
+                back = "music".equals(which)
+                        ? com.nidyaber.fuckdsmanger.gm.GmPromptVars.removeSpec()
+                        : com.nidyaber.fuckdsmanger.gm.GmRichText.removeSpec(which);
+                GmUtil.log("【FdmBridge】spec_remove(" + which + ") → " + back);
             } else if ("rich_demo".equals(cmd)) {
                 // 一键灌开箱示例模板（主人改乱了想重来的时候用）
                 com.nidyaber.fuckdsmanger.gm.GmStore.write(ctx,

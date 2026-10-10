@@ -325,24 +325,7 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
             pg.items.forEachIndexed { i, it ->
                 if (i > 0) Spacer(Modifier.height(8.dp))
                 // ★ 在这里读值 —— 这里观察了 `t`，`tick` 变了才会带着新值调用 ItemRow ⇒ 它会重组
-                val hv = it.key?.let { k ->
-                    ctxSp(ctx).getString("host.kv_remote_settings_" + k, null)
-                        ?: ctxSp(ctx).getString("host.kv_settings_" + k, null)
-                        ?: ctxSp(ctx).getString(FdmPush.HOST_PREFIX + k, null)
-                }
-                // 模块真值（cfg_state 回传）：有 sk 的项用它显示 —— 不再读我编的键
-                val stJson = ctxSp(ctx).getString("cmd.cfg_state", "{}") ?: "{}"
-                val st = jsonToMap(stJson)
-                val value: Any = it.sk?.let { sk ->
-                    st[sk]?.let { v ->
-                        when (it.k) {
-                            K.SW -> v.equals("true", true) || v == "1"
-                            K.SL, K.CH, K.CO -> v.toIntOrNull() ?: readValue(ctx, it)
-                            else -> v
-                        }
-                    }
-                } ?: readValue(ctx, it)
-                ItemRow(it, value, hv, onNav) { tick++ }
+                ItemRow(it, itemValue(ctx, it, stateMap(ctx)), itemHostText(ctx, it), onNav) { tick++ }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -365,6 +348,66 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
             SettingAction("问一下宿主最新状态", "让宿主跑一遍 status 动作并把结果回传") {
                 FdmPush.sendCmd(ctx, "avatar_status", null); tick++
             }
+        }
+    }
+}
+
+/**
+ * 一批条目现场值的来源：**宿主回执**（`cmd.cfg_state`，模块自己 getter 的真值）。
+ *
+ * <p>把它和 [itemValue] / [itemHostText] 抽出来，是为了让**「更多」弹窗**里的控件
+ * （见 `SysPromptV2.kt`）跟普通页走**完全同一套取数规矩** —— 不然同一个开关两处显示两个值，
+ * 比显示错更难看。
+ */
+private fun stateMap(ctx: Context): Map<String, String> =
+    jsonToMap(ctxSp(ctx).getString("cmd.cfg_state", "{}") ?: "{}")
+
+/** 一项的「宿主侧原话」（老格式的三处兜底读取，给控件显示用）。 */
+private fun itemHostText(ctx: Context, it: It): String? = it.key?.let { k ->
+    ctxSp(ctx).getString("host.kv_remote_settings_" + k, null)
+        ?: ctxSp(ctx).getString("host.kv_settings_" + k, null)
+        ?: ctxSp(ctx).getString(FdmPush.HOST_PREFIX + k, null)
+}
+
+/** 一项的「现场值」：**模块真值优先**（有 `sk` 就用它）→ 本地兜底 [readValue]。 */
+private fun itemValue(ctx: Context, it: It, st: Map<String, String>): Any =
+    it.sk?.let { sk ->
+        st[sk]?.let { v ->
+            when (it.k) {
+                K.SW -> v.equals("true", true) || v == "1"
+                K.SL, K.CH, K.CO -> v.toIntOrNull() ?: readValue(ctx, it)
+                else -> v
+            }
+        }
+    } ?: readValue(ctx, it)
+
+/**
+ * 把一批条目渲染出来（给**弹窗**用的那一版）🐲
+ *
+ * <p>为什么要有它：「更多」弹窗里要放**旧「系统提示词」页那 6 项**（开关/内容/模式/承载/前缀/后缀），
+ * 而那 6 项的真值、推送、回显逻辑全在 `ItemRow` 里 —— 与其抄一遍，不如把 `ItemRow`
+ * 连同这一小圈"取数 + 定时问宿主"一起复用。
+ *
+ * <p>取数规矩与普通页**逐字一致**（`stateMap` / `itemHostText` / `itemValue` 同一套函数）⇒
+ * 同一个开关在弹窗里和在页面上，显示的永远是同一个值。
+ */
+@Composable
+fun ItemsBlock(items: List<It>, onNav: (String) -> Unit) {
+    val ctx = LocalContext.current
+    var tick by remember { mutableIntStateOf(0) }
+    val t = tick
+    // 弹窗一开就问一次宿主真值，随后短轮询几拍（回执是**异步**的，不刷就看不见）
+    LaunchedEffect(items) {
+        FdmPush.sendCmd(ctx, "cfg_state", null)
+        repeat(6) {
+            kotlinx.coroutines.delay(1200)
+            tick++
+        }
+    }
+    Column(Modifier.fillMaxWidth()) {
+        items.forEachIndexed { i, it ->
+            if (i > 0) Spacer(Modifier.height(8.dp))
+            ItemRow(it, itemValue(ctx, it, stateMap(ctx)), itemHostText(ctx, it), onNav) { tick++ }
         }
     }
 }

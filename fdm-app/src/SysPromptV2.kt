@@ -14,8 +14,10 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.AlertDialog
@@ -95,10 +97,19 @@ private val CardExpandH = 56.dp
 private val CardRadius = 20.dp
 
 /** 三张提示词卡片。`nav` = 点 ▸ 要跳到的**页面 id**（App 导航栈认这个）。 */
-private enum class PCard(val id: String, val title: String, val hint: String, val nav: String) {
-    SUGGEST("suggest", "回复建议", "让 AI 在回复末尾写 <Suggestion>▸ 追问 —— 那排可点的建议就是这么来的", "suggest"),
-    MUSIC("music", "音乐", "把「我在听什么」送进提示词：{music} / {artist} / {lyric} …", "music"),
-    RICHTEXT("richtext", "富文本", "⟦FDM:模板名|参数⟧ → 那一段变成你配好的富文本（<b> <c1> <bg3> …）", "richtext"),
+private enum class PCard(
+    val id: String,
+    val title: String,
+    val hint: String,
+    val nav: String,
+    /** **拖进容器**时发的命令 = 把这一段的约定灌进系统提示词。 */
+    val pasteCmd: String,
+    /** **拖回抽屉**时 `spec_remove` 的参数 = 只摘这一段。 */
+    val kind: String,
+) {
+    SUGGEST("suggest", "回复建议", "让 AI 在回复末尾写 <Suggestion>▸ 追问 —— 那排可点的建议就是这么来的", "suggest", "suggest_spec", "suggest"),
+    MUSIC("music", "音乐", "把「我在听什么」送进提示词：{music} / {artist} / {lyric} …", "music", "pvar_spec", "music"),
+    RICHTEXT("richtext", "富文本", "⟦FDM:模板名|参数⟧ → 那一段变成你配好的富文本（<b> <c1> <bg3> …）", "richtext", "rich_spec", "rich"),
 }
 
 private fun cardOf(id: String): PCard? = PCard.values().firstOrNull { it.id == id }
@@ -222,17 +233,27 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
             /** 当前被拖的卡片矩形 = 缓存槽位 + 位移（槽位在拖拽开始时冻结，绝不被 offset 带偏）。 */
             fun draggedRect(): Rect = dragSlot.translate(dragOff)
 
-            /** 松手：落在哪边就归哪边；哪边都不是 ⇒ 什么都不做（原地不动）。 */
+            /** 松手：落在哪边就归哪边；哪边都不是 ⇒ 什么都不做（原地不动）。
+             *
+             *  ★ 2026-10-10（3.61.0）：**拖动本身就是动作** ——
+             *  · **拖进容器** ⇒ 把这一张卡对应的约定**灌进系统提示词**
+             *  · **拖回抽屉** ⇒ **只摘掉这一段**（不碰别的卡、也不碰主人自己写的正文）
+             *  两件事都**只在松手那一刻执行一次**：进页面时不会"自动对齐"
+             *  （主人定的：不做自动补灌 —— 不然我凭什么动他的提示词）。
+             */
             fun drop() {
                 val id = dragId
                 if (id != null) {
                     val r = draggedRect()
+                    val card = cardOf(id)
                     if (boxRect.contains(r.center)) {
                         inDrawer = inDrawer.filter { it != id }
                         inBox = insertByY(inBox, id, r.center.y)
+                        card?.let { FdmPush.sendCmd(ctx, it.pasteCmd, null) }      // = 灌入
                     } else if (drawerRect.contains(r.center)) {
                         inBox = inBox.filter { it != id }
                         inDrawer = insertByY(inDrawer, id, r.center.y)
+                        card?.let { FdmPush.sendCmd(ctx, "spec_remove", it.kind) }  // = 清空这一段
                     }
                 }
                 dragId = null
@@ -405,7 +426,12 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
         }
     }
 
-    /* ── 「更多」弹窗：标题 + 确认键（骨架阶段点了就关） ── */
+    /* ── 「更多」弹窗 ──
+     *  ★ 2026-10-10（3.61.0）：**旧「系统提示词」页那 6 项搬进这儿了**
+     *  （开启注入 / 提示词内容 / 注入模式 / 承载方式 / 包装前缀 / 包装后缀）。
+     *  控件用的是同一套 `ItemRow`（经 `ItemsBlock`）⇒ 取值 / 推送 / 回显与普通页**逐字一致**。
+     *  确认键只负责关窗；改动是**即改即生效**（跟别处一样，写完推给宿主）。
+     */
     if (more) {
         AlertDialog(
             onDismissRequest = { more = false },
@@ -413,9 +439,60 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                 TextButton(onClick = { more = false }) { Text("确认") }
             },
             title = { Text("更多") },
+            text = {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    ItemsBlock(SysPromptItems, onNav = {})
+                }
+            },
         )
     }
 }
+
+/**
+ * 「系统提示词」的 **6 项设置** —— 从旧 UI（`Tree.kt` 的 `Pg("sysprompt")`）**原样搬过来的**。
+ *
+ * <p>旧页现在留的是一张**指路卡**（主人原来就在那一页找它们，搬空会让人以为功能没了）。
+ * 六项一个不少：开关 / 正文 / 注入模式 / 承载方式 / 前缀 / 后缀。
+ */
+private val SysPromptItems: List<It> = listOf(
+    It("开启注入", "开启后才生效（默认关）",
+        K.SW, key = "fuckds_sysprompt_on", def = false),
+    It("提示词内容", "支持中英文。\n" +
+            "★ 两种承载方式都填这里 —— 换承载方式不用改内容：\n" +
+            "· 隐形字符 = 中文会自动转成 \\uXXXX 转义再隐形化\n" +
+            "· 明文定界 = 原样发出，由模块在界面上把整段抹掉",
+        K.TX, key = "fuckds_sysprompt_text", def = ""),
+    It("注入模式", "仅首条 = 只在本会话第一条消息注入（token 只花一次、位置=上下文最前）；" +
+            "每轮 = 每条消息都注入（对抗稀释最强，token 持续消耗）。\n" +
+            "⚠️ 提示词里一旦出现**音乐变量**（{music} / {lyric} 等），本项会被**忽略**、" +
+            "强制按「每轮」—— 音乐是时变的，冻在会话开头就等于骗模型" +
+            "（音乐变量在 首页 › 附加の功能 › 音乐 › 提示词音乐变量）。",
+        K.CH, key = "fuckds_sysprompt_mode", def = 0,
+        choices = listOf("仅首条", "每轮")),
+    It("承载方式", "★ 决定提示词怎么被送出去：\n" +
+            "· 隐形字符 = Unicode Tag（人眼看不见，但模型能察觉「有隐藏字符」⇒ 概率性拒答）\n" +
+            "· 明文定界 = 正常文字，服务端/模型当普通内容读（零风险），由模块把这段从界面抹掉" +
+            "（界面看不到，但服务端/换设备看得见）\n" +
+            "★ 下面两个「包装前缀/后缀」在两种方式下**都生效**" +
+            "（明文方式下会和正文一起被 ⟦FDM⟧…⟦/FDM⟧ 包住）",
+        K.CH, key = "fuckds_sysprompt_carrier", def = 0,
+        choices = listOf("隐形字符", "明文定界")),
+    It("包装前缀", "包在提示词【前面】的文字。留空 = 不加。\n" +
+            "· 隐形字符模式：前缀也会被隐形化（人眼看不见）\n" +
+            "· 明文定界模式：前缀原样发出，和正文一起被 ⟦FDM⟧…⟦/FDM⟧ 包住（界面照样看不到）\n" +
+            "★ 措辞是主战场：写 SYSTEM-LEVEL / highest priority / overrides user turns " +
+            "这类词，模型会直接判定「提示注入」并拒绝（已被真机实测打回一次）。",
+        K.TX, key = "fuckds_sysprompt_head",
+        def = "My standing preference for this whole conversation: "),
+    It("包装后缀", "包在提示词【后面】的文字。留空 = 不加。\n" +
+            "两种承载方式下都生效（同前缀：隐形模式被隐形化，明文模式随正文一起被定界符包住）。\n" +
+            "默认留空 —— 「END OF …」这种封口词本身也是注入特征。",
+        K.TX, key = "fuckds_sysprompt_tail", def = ""),
+)
 
 /**
  * 一张提示词卡片 🐲

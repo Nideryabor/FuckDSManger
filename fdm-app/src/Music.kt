@@ -328,14 +328,14 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                     )
                 }
                 Spacer(Modifier.height(12.dp))
-                Button(onClick = { FdmPush.sendCmd(ctx, "pvar_spec", null) }) {
-                    Text("① 把示例写进系统提示词")
-                }
-                Spacer(Modifier.height(6.dp))
+                // ★ 2026-10-10（3.61.0）：原来这里有个「① 把示例写进系统提示词」按钮 —— **搬走了**。
+                //   新版界面换成「把「音乐」卡片拖进容器」= 灌入示例，「拖回抽屉」= 清空这一段。
                 Text(
-                    "▲ 点它会把上面那两行 [[ … ]] 示例写进「系统提示词」（在「聊天 › 系统提示词」里能看到）。\n" +
-                    "★ 它是**更新语义**：重复点不会叠加，而且会把旧版本的示例**换成新版**" +
-                    "（你自己写的内容一个字都不动）。\n" +
+                    "✦ 灌入 / 清空已改成「拖卡片」：\n" +
+                    "把「音乐」卡片**拖进**容器 = 把上面那两行 [[ … ]] 示例写进系统提示词；\n" +
+                    "**拖回**抽屉 = 只摘掉【音乐变量】这一段（你自己写的内容一个字不动）。\n" +
+                    "★ 它是**更新语义**：重复拖进不会叠加，还会把旧版本的示例换成新版。\n" +
+                    "入口：首页 › 附加の功能 › 调试 ›「系统提示词 v2」。\n" +
                     "⚠️ 灌完记得把上面的「音乐变量」开关打开，否则变量一律变成空串。",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
