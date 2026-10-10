@@ -1840,6 +1840,11 @@ public final class FdmBridge {
                 try { o.put("probe_on", GmProbe.shown()); } catch (Throwable ignore) { }
                 try { o.put("note_on", GmNote.isOn(ctx)); } catch (Throwable ignore) { }
                 try { o.put("bar_on", GmMiniBar.isOn(ctx)); } catch (Throwable ignore) { }
+                // ★ 2026-10-10（3.62.0）：把「系统提示词内容」也回传 ——
+                //   新版界面用它给「系统提示词内容」那张源卡片**播种**（第一次读一次，
+                //   免得主人原来写的字在模型换成卡片之后没地方找）。
+                try { o.put("sysprompt_text", com.nidyaber.fuckdsmanger.gm.GmSysPrompt.text()); }
+                catch (Throwable ignore) { }
                 // ★ 2026-10-06 · 音乐：**播放器在宿主进程** ⇒ 状态从这里回传给模块 UI。
                 //   （模块 UI 那个音乐页只当"开关/入口"，显示的就是这几个字段）
                 try {
@@ -1929,6 +1934,58 @@ public final class FdmBridge {
                         ? com.nidyaber.fuckdsmanger.gm.GmPromptVars.removeSpec()
                         : com.nidyaber.fuckdsmanger.gm.GmRichText.removeSpec(which);
                 GmUtil.log("【FdmBridge】spec_remove(" + which + ") → " + back);
+            } else if ("prompt_compose".equals(cmd)) {
+                // ★ 2026-10-10（3.62.0）：**系统提示词内容 = 容器里卡片们的内容按顺序拼起来**。
+                //   主人：「有"回复建议 音乐 我的自定义文本"，那提示词就是"回复建议自带的提示词/内容
+                //           + 音乐自带的 + 我的自定义文本"」。⇒ 卡片本身就是提示词的来源，
+                //   那个文本字段从此是**派生值**（由这里重建），不再手敲。
+                //
+                //   arg = {"items":[{"t":"suggest"},{"t":"text","title":"…","text":"…","withTitle":true}]}
+                //   · 三张内置卡的自带内容由**宿主自己**取（GmRichText.suggestSpec / GmPromptVars.spec /
+                //     GmRichText.spec）—— 不把那些文案抄一份到界面里，免得两边各说一套。
+                //   · 卡片之间空一行（\n\n）：各成一段，模型好读。
+                //   ⚠️ 容器空 ⇒ 拼出来是空 ⇒ **文本字段被清空**（主人确认过这个语义）。
+                try {
+                    org.json.JSONObject req = new org.json.JSONObject(String.valueOf(arg));
+                    org.json.JSONArray items = req.optJSONArray("items");
+                    StringBuilder sb = new StringBuilder();
+                    int segs = 0;
+                    if (items != null) {
+                        for (int i = 0; i < items.length(); i++) {
+                            org.json.JSONObject it0 = items.optJSONObject(i);
+                            if (it0 == null) continue;
+                            String t = it0.optString("t", "");
+                            String seg = null;
+                            if ("suggest".equals(t)) {
+                                seg = com.nidyaber.fuckdsmanger.gm.GmRichText.suggestSpec();
+                            } else if ("music".equals(t)) {
+                                seg = com.nidyaber.fuckdsmanger.gm.GmPromptVars.spec();
+                            } else if ("richtext".equals(t)) {
+                                seg = com.nidyaber.fuckdsmanger.gm.GmRichText.spec();
+                            } else if ("text".equals(t)) {
+                                String title = it0.optString("title", "");
+                                String body = it0.optString("text", "");
+                                boolean wt = it0.optBoolean("withTitle", false);
+                                seg = (wt && title.trim().length() > 0)
+                                        ? (title.trim() + "\n" + body)
+                                        : body;
+                            }
+                            if (seg == null || seg.trim().length() == 0) continue;
+                            if (sb.length() > 0) sb.append("\n\n");
+                            sb.append(seg.trim());
+                            segs++;
+                        }
+                    }
+                    String out = sb.toString();
+                    String before = com.nidyaber.fuckdsmanger.gm.GmSysPrompt.text();
+                    com.nidyaber.fuckdsmanger.gm.GmSysPrompt.setText(out);
+                    back = "系统提示词已按卡片重建：" + segs + " 段 / " + out.length() + " 字"
+                            + "（原 " + (before == null ? 0 : before.length()) + " 字）";
+                    GmUtil.log("【FdmBridge】prompt_compose → " + back);
+                } catch (Throwable t) {
+                    GmUtil.logFail("【FdmBridge】prompt_compose 失败", t);
+                    back = "按卡片重建提示词失败：" + t;
+                }
             } else if ("rich_demo".equals(cmd)) {
                 // 一键灌开箱示例模板（主人改乱了想重来的时候用）
                 com.nidyaber.fuckdsmanger.gm.GmStore.write(ctx,

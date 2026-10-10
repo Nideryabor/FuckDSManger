@@ -585,7 +585,7 @@ private fun GrayRow(g: Gray, hostValIn: String?, bump: () -> Unit) {
 }
 
 /** 极简 JSON 解析（value 都是字符串） */
-private fun jsonToMap(s: String): Map<String, String> {
+fun jsonToMap(s: String): Map<String, String> {
     val m = mutableMapOf<String, String>()
     // ★ 2026-09-30 修：原来用手写正则，只"匹配"转义但不"还原" ⇒ 带换行的值（模板池/招呼语）
     //   回读出来是字面 `\n` 的一坨，用户一保存还把转义版写回存储 ✗。
