@@ -14,6 +14,7 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Save
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -58,7 +59,9 @@ fun FdmTopBar(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     onBack: (() -> Unit)? = null,
-    /** 传非空 ⇒ 右上角出现一个「更多」图标钮（右对齐，48dp）。不传就还是原来那副样子。 */
+    /** 传非空 ⇒ 右上角出现一个「保存」图标钮（**排在「更多」左边**，48dp）。 */
+    onSave: (() -> Unit)? = null,
+    /** 传非空 ⇒ 右上角出现一个「更多」图标钮（最右一个，48dp）。不传就还是原来那副样子。 */
     onMore: (() -> Unit)? = null,
 ) {
     TopAppBar(
@@ -71,6 +74,12 @@ fun FdmTopBar(
             }
         },
         actions = {
+            // ★ 顺序即位置：先「保存」后「更多」⇒ 保存落在更多左边
+            if (onSave != null) {
+                IconButton(onClick = onSave, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Rounded.Save, "保存")
+                }
+            }
             if (onMore != null) {
                 IconButton(onClick = onMore, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.Rounded.MoreVert, "更多")

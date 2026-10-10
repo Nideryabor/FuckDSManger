@@ -266,8 +266,8 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
         MusicLoginPage(onBack)
         return
     }
-    if (id == "sysprompt_v2") {               // 「系统提示词 v2」= 重构骨架页（2026-10-07）
-        SysPromptV2Page(onBack)
+    if (id == "sysprompt_v2") {               // 「系统提示词 v2」= 重构页（2026-10-10）
+        SysPromptV2Page(onBack, onNav)
         return
     }
     val ctx = LocalContext.current
