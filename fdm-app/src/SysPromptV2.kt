@@ -51,7 +51,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
@@ -186,7 +186,11 @@ private class Saved(
          * ② 「两边都没有」的它们**补回抽屉** —— 它们本来就**删不掉**（没有删除按钮），
          *    所以"失踪"只可能是存档坏了（或这次的 bug），补回来是安全的。
          */
-        fun keep(k: String) {
+        // ★★ 2026-10-10（3.63.1）：「卡片被当夜宵吃了」的**根治** ——
+        //  卡片表是**唯一真相**：表里有的卡片，这里**一张都不许丢**；
+        //  谁都不在列表里（孤儿）就**补回抽屉**；要删只有一条路 —— 主人点那张红删除。
+        //  （老写法只认"列表里提到的"，表里没条目的（老存档）或列表漏掉的就当脏数据清掉 ⇒ 会真丢东西。）
+        fun coerce(k: String) {
             val ex = cards[k]
             val c: CCard? = when (k) {
                 T_SUGGEST -> CCard(k, T_SUGGEST, typeTitle(T_SUGGEST), ex?.text ?: "")
@@ -195,16 +199,26 @@ private class Saved(
                 K_SRC -> CCard(k, T_TEXTSRC, typeTitle(T_TEXTSRC), ex?.text ?: "")
                 else -> if (ex != null && ex.isText) ex else null
             }
-            if (c != null) cards2[k] = c
+            if (c != null && !cards2.containsKey(k)) cards2[k] = c
         }
-        drawer.forEach { keep(it) }
-        box.forEach { keep(it) }
-        // 内置三张 + 源卡片：哪边都没有 ⇒ 补回抽屉
+        // ① 先把**卡片表里的全部**收下（只丢"类型不认识"的）
+        cards.forEach { (k, c) -> if (c.isBuiltin || c.isText) cards2[k] = c }
+        // ② 老存档（只有 id 列表、没有卡片表）：内置三张 + 源卡片的键就是类型名 ⇒ 现造
+        drawer.forEach { coerce(it) }
+        box.forEach { coerce(it) }
         val missing = listOf(T_SUGGEST, T_MUSIC, T_RICHTEXT, K_SRC).filter { !cards2.containsKey(it) }
-        missing.forEach { keep(it) }
-        val drawer2 = (drawer.filter { cards2.containsKey(it) } + missing + listOf(K_SRC)).distinct()
-        val box2 = box.filter { cards2.containsKey(it) && it != K_SRC }
-        return Saved(drawer2, box2, expanded.filter { cards2.containsKey(it) }.toSet(), cards2, nextId.coerceAtLeast(1))
+        missing.forEach { coerce(it) }
+        // ③ 两边都没提到的（孤儿）⇒ 补回抽屉，**绝不静默丢掉**
+        val orphans = cards2.keys.filter { it !in drawer && it !in box }
+        val drawer2 = (drawer.filter { cards2.containsKey(it) } + missing + orphans + listOf(K_SRC)).distinct()
+        val box2 = box.filter { cards2.containsKey(it) && it != K_SRC }.distinct()
+        // ④ nextId 保险：绝不允许跟已有的键撞车（撞了就"复制"成覆盖别人的内容）
+        var nx = nextId
+        cards2.keys.forEach { k ->
+            val m = Regex("^text#(\\d+)$").find(k)
+            if (m != null) nx = maxOf(nx, m.groupValues[1].toInt() + 1)
+        }
+        return Saved(drawer2, box2, expanded.filter { cards2.containsKey(it) }.toSet(), cards2, nx.coerceAtLeast(1))
     }
 }
 
@@ -343,8 +357,14 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
         if (seeded) writeLayout(ctx, inDrawer, inBox, expanded, cards, nextId)
     }
 
-    /** 一次「提交」= 落盘 + 重建提示词（摆放/删除/文本失焦都走它）。 */
+    /**
+     * 一次「提交」= 落盘 + 重建提示词（摆放 / 删除 / 文本失焦 / 切开关都走它）。
+     *
+     * <p>★ 2026-10-10（3.63.1）：**没读回存档之前直接返回** ——
+     * 否则会把"半加载"的状态（卡片表还是空的）写回存档，一次就把卡片吃光。
+     */
     fun commit() {
+        if (!seeded) return
         writeLayout(ctx, inDrawer, inBox, expanded, cards, nextId)
         compose(ctx, inBox, cards)
     }
@@ -356,6 +376,10 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
     val bounds = remember { mutableStateMapOf<String, Rect>() }
     var boxRect by remember { mutableStateOf(Rect.Zero) }
     var drawerRect by remember { mutableStateOf(Rect.Zero) }
+    // ★ 2026-10-10（3.63.1）：判定用**根坐标**，但画线要用**页面内坐标** ——
+    //   页面 Box 的原点已被 Scaffold 的 padding（顶栏 + 状态栏）推下去，
+    //   直接拿根坐标当 offset ⇒ 线整体偏一个顶栏的高度（主人报的"严重偏移"）。
+    var pagePos by remember { mutableStateOf(Offset.Zero) }
 
     /* ── 抽屉里左右两列（内置 / 自定义）：各占一屏，横滑切换 ── */
     //  ★ 主人 2026-10-10：「我还是决定左右列 …… 左边是内置功能提示词，右边是专门放用户自定义提示词的，
@@ -363,7 +387,10 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
     var colIdx by remember { mutableIntStateOf(0) }       // 目标列（0 内置 / 1 自定义）
     var colFPos by remember { mutableFloatStateOf(0f) }   // 当前列（浮点，拖动中连续）
     var colSettle by remember { mutableStateOf(false) }   // 正在用手拖（这时别用动画抢）
-    var colPageW by remember { mutableFloatStateOf(1f) }
+    // ★ 2026-10-10（3.63.1）：列宽**不再"先测量再回填"** —— 那套首帧拿到的是 0（我写成 1f），
+    //   而 `onSizeChanged` 的回填一旦没跟上，两列就只有 1px 宽 ⇒ **卡片全部隐形**
+    //   （主人报的"UI 里没有可以拖的卡片了（包括内置的）"就是这个）。
+    //   改用 `BoxWithConstraints` 的 `maxWidth`：**组合期就已知**，首帧就是对的。
 
     LaunchedEffect(colIdx, colSettle) {
         if (!colSettle) {
@@ -453,9 +480,19 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                 }
             }
 
-            fun insertByY(list: List<String>, key: String, y: Float): List<String> {
+            /**
+             * 按 y 插到合适下标（就近插入）。
+             *
+             * <p>★ 抽屉里**只跟同一列的卡片比** —— 左右两列是两个独立列表，
+             * 拿另一列的卡片算序号会把位置算歪（它们只是"屏幕外"、不是"在那条线上"）。
+             */
+            fun insertByY(list: List<String>, key: String, y: Float, sameColumnOnly: Boolean = false): List<String> {
                 val others = list.filter { it != key }
-                val idx = others.count { (bounds[it]?.center?.y ?: 0f) < y }
+                val isB = cards[key]?.isBuiltin == true
+                val idx = others.count { k ->
+                    (!sameColumnOnly || (cards[k]?.isBuiltin == true) == isB) &&
+                            (bounds[k]?.center?.y ?: 0f) < y
+                }
                 return others.take(idx) + key + others.drop(idx)
             }
 
@@ -482,7 +519,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     } else if (drawerRect.contains(r.center)) {
                         if (id != K_SRC) {                       // 源卡片本来就常驻抽屉，拖回是空操作
                             inBox = inBox.filter { it != id }
-                            inDrawer = insertByY(inDrawer, id, r.center.y)
+                            inDrawer = insertByY(inDrawer, id, r.center.y, sameColumnOnly = true)
                             commit()
                         }
                     }                                              // 落空 ⇒ 什么都不做
@@ -509,8 +546,13 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     drawerRect.contains(center) -> inDrawer
                     else -> return null
                 }
+                val sameColOnly = list === inDrawer
+                val isB = cards[id]?.isBuiltin == true
                 val others = list.filter { it != id }
-                val idx = others.count { (bounds[it]?.center?.y ?: 0f) < center.y }
+                val idx = others.count { k ->
+                    (!sameColOnly || (cards[k]?.isBuiltin == true) == isB) &&
+                            (bounds[k]?.center?.y ?: 0f) < center.y
+                }
                 val y = when {
                     others.isEmpty() -> center.y
                     idx == 0 -> (bounds[others[0]]?.top ?: r.top) - 4f
@@ -547,8 +589,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     onCommitEdit = { flushEdit() },
                     onWithTitle = { v ->
                         c.withTitle = v
-                        writeLayout(ctx, inDrawer, inBox, expanded, cards, nextId)
-                        compose(ctx, inBox, cards)
+                        commit()
                     },
                     onDelete = { pendingDelete = id },
                     onDragStart = {
@@ -565,19 +606,28 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                 )
             }
 
-            val lifting = dragId != null && dragId in inBox
+            // ★ 2026-10-10（3.63.1）采纳主人建议：「把卡片设置成最高层级，可以解决一些穿模 bug」。
+            //   做法 = **"被拖的那张卡所在的层"整层提到最上**（卡片自己的 zIndex 只管层内），
+            //   这样它跨容器/抽屉时永远不会被另一半吃掉或裁掉。
+            //   z 值一览（都写在注释里，免得下次又算错）：
+            //     内容层 2f（拖动中它在容器里 ⇒ 4f） · 抽屉层 2.5f（拖动中它在抽屉里 ⇒ 4f）
+            //     归档图标 200f（页面级，恒在最上，但它落在容器与抽屉之间的空档里，不压卡片）
+            //     落点线   210f（页面级，就该盖在卡片上） · 拖动中的卡片 100f（层内）
+            val dragInBox = dragId != null && dragId in inBox
+            val dragInDrawer = dragId != null && dragId in inDrawer
 
-            Box(Modifier.fillMaxSize()) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .onGloballyPositioned { pagePos = it.positionInRoot() },
+            ) {
 
                 /* ── ① 内容区：容器（抽屉拉开时跟着变矮） ── */
                 Column(
                     Modifier
                         .fillMaxSize()
                         .padding(bottom = with(density) { (handlePx + live).toDp() })
-                        // ★ 图层序：内容 0.5 < 蓝罩 0.9 < 图标 1.5 < 抽屉 1 …… 等等，抽屉是 1
-                        //   ⇒ 蓝罩(0.9) 在内容(0.5)之上、抽屉(1)之下；拖动中的卡片所在的内容层提到 2f
-                        //     ⇒ 比抽屉还高（从容器往外拖时不会被抽屉吃掉）。
-                        .zIndex(if (lifting) 2f else 0.5f),
+                        .zIndex(if (dragInBox) 4f else 2f),
                 ) {
                     Box(
                         Modifier
@@ -590,6 +640,14 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                 RoundedCornerShape(28.dp),
                             ),
                     ) {
+                        // 拖动中：容器自己亮一层淡蓝（在卡片**下面**，所以不挡卡片）
+                        if (dragId != null) {
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0x262196F3)),
+                            )
+                        }
                         if (inBox.isEmpty()) {
                             Text(
                                 "（空白容器 · 把抽屉里的卡片拖上来）",
@@ -618,7 +676,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .height(sheetDp)
-                        .zIndex(1f)
+                        .zIndex(if (dragInDrawer) 4f else 2.5f)
                         .offset {
                             IntOffset(0, (travel - live.coerceIn(0f, travel)).roundToInt())
                         }
@@ -679,11 +737,10 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                 Spacer(Modifier.width(4.dp))
                                 DrawerTab("自定义", colFPos > 0.5f) { colIdx = 1 }
                             }
-                            Box(
+                            BoxWithConstraints(
                                 Modifier
                                     .fillMaxWidth()
                                     .weight(1f)
-                                    .onSizeChanged { colPageW = it.width.toFloat().coerceAtLeast(1f) }
                                     .pointerInput(Unit) {
                                         // 抽屉里的**横滑**：切左右两列（竖滑仍然归抽屉自己，靠内层优先）
                                         detectHorizontalDragGestures(
@@ -697,11 +754,16 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                             },
                                         ) { change, delta ->
                                             colSettle = true
-                                            colFPos = (colFPos - delta / colPageW).coerceIn(0f, 1f)
+                                            // pointerInput 的 lambda 在外层作用域 ⇒ 看不到 pagePx，用它自己的 size
+                                            val w = size.width.toFloat().coerceAtLeast(1f)
+                                            colFPos = (colFPos - delta / w).coerceIn(0f, 1f)
                                             change.consume()
                                         }
                                     },
                             ) {
+                                // 列宽 = 可用宽度（组合期就知道，不用等测量）
+                                val pageDp = if (maxWidth.value.isFinite() && maxWidth.value > 1f) maxWidth else 320.dp
+                                val pagePx = with(density) { pageDp.toPx() }
                                 // ★ 拖动中 & 这张卡不在抽屉里 ⇒ 整片高亮：松手 = 归档回抽屉
                                 if (dragId != null && dragId !in inDrawer) {
                                     Box(
@@ -721,13 +783,13 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                 }
                                 Row(
                                     Modifier.offset {
-                                        IntOffset((-colFPos * colPageW).roundToInt(), 0)
+                                        IntOffset((-colFPos * pagePx).roundToInt(), 0)
                                     },
                                 ) {
                                     /* ── 左列：内置功能提示词 ── */
                                     Column(
                                         Modifier
-                                            .width(with(density) { colPageW.toDp() })
+                                            .width(pageDp)
                                             .fillMaxHeight()
                                             .verticalScroll(rememberScrollState()),
                                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -750,7 +812,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                     /* ── 右列：用户自定义提示词 ── */
                                     Column(
                                         Modifier
-                                            .width(with(density) { colPageW.toDp() })
+                                            .width(pageDp)
                                             .fillMaxHeight()
                                             .verticalScroll(rememberScrollState()),
                                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -779,32 +841,24 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     }
                 }
 
-                /* ── ②.5 抽屉收回时的「归档」提示：蓝色半透明遮罩 + 下载图标 ──
-                 *  主人：「抽屉收回可以加一个蓝色半透明遮罩和一个下载图标表示可以归档」。
-                 *  · 遮罩：铺满内容区（抽屉一动它就淡出），表示"这上面是可以放东西的地方"；
-                 *  · 图标：就在收起后的抽屉把手正上方，随抽屉开合上下浮动。
+                /* ── ②.5 「归档」提示：蓝色 + 下载图标 ──
+                 *  ★ 2026-10-10（3.63.1）改：**只在"拉住卡片拖"的时候出现**（主人定的）——
+                 *    以前是"抽屉收着就一直挂着"，等于屏幕上永远有个淡蓝滤镜，很吵。
+                 *  · 蓝底：铺在**容器内部**（卡片在它上面 ⇒ 不压卡片、不穿模），拖动时才亮；
+                 *  · 图标：落在**容器与抽屉之间的那条空档**里 ⇒ 既看得见，又不压任何卡片。
                  */
-                val collapse = (1f - (live / travel)).coerceIn(0f, 1f)
-                val scrimA = if (dragId != null) 1f else collapse
-                if (scrimA > 0.01f) {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .zIndex(0.9f)
-                            .graphicsLayer { alpha = scrimA }
-                            .background(Color(0x262196F3)),
-                    )
+                if (dragId != null) {
                     Icon(
                         Icons.Rounded.Archive, "归档",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            // ★ offset 是"向下为正" ⇒ 想让它浮在把手**上面**必须给负值；
-                            //   再把 zIndex 提到抽屉之上，免得动画途中被抽屉盖住。
-                            .offset { IntOffset(0, -(handlePx + live + 14f).roundToInt()) }
-                            .size(26.dp)
-                            .zIndex(1.5f)
-                            .graphicsLayer { alpha = scrimA },
+                            // ★ offset 向下为正 ⇒ 往上浮要给负值；这里刚好落在"容器底 ~ 抽屉顶"的空档
+                            .offset {
+                                IntOffset(0, -(live + with(density) { 10.dp.toPx() }).roundToInt())
+                            }
+                            .size(28.dp)
+                            .zIndex(200f),
                     )
                 }
 
@@ -814,10 +868,15 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     val rect = if (hint.first === inBox) boxRect else drawerRect
                     Box(
                         Modifier
-                            .offset { IntOffset(rect.left.roundToInt(), (hint.third - 1.5f).roundToInt()) }
+                            .offset {
+                                IntOffset(
+                                    (rect.left - pagePos.x).roundToInt(),
+                                    (hint.third - pagePos.y - 1.5f).roundToInt(),
+                                )
+                            }
                             .width(with(density) { rect.width.toDp() })
                             .height(3.dp)
-                            .zIndex(3f)
+                            .zIndex(210f)
                             .clip(RoundedCornerShape(2.dp))
                             .background(MaterialTheme.colorScheme.primary),
                     )
@@ -941,7 +1000,7 @@ private fun PromptCard(
     Column(
         Modifier
             .fillMaxWidth()
-            .zIndex(if (dragging) 10f else 0f)
+            .zIndex(if (dragging) 100f else 0f)
             .onGloballyPositioned { bounds[card.key] = it.boundsInRoot() }   // 槽位（在 offset 之前）
             .offset { IntOffset(dragOff.x.roundToInt(), dragOff.y.roundToInt()) }
             .graphicsLayer {
