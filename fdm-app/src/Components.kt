@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -59,7 +60,7 @@ fun groupedShape(index: Int, count: Int): Shape {
 private val BlueLink = Color(0xFF1E88E5)
 
 @Composable
-fun JumpHintCard(onOpen: () -> Unit, text: String = "去「系统提示词」看看 ›") {
+fun JumpHintCard(onOpen: () -> Unit, text: String = stringResource(R.string.c_jump_go)) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -68,7 +69,7 @@ fun JumpHintCard(onOpen: () -> Unit, text: String = "去「系统提示词」看
             .padding(horizontal = Edge, vertical = 12.dp),
     ) {
         Text(
-            "猜你想跳转",
+            stringResource(R.string.c_jump_hint),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -102,7 +103,7 @@ fun FdmTopBar(
         navigationIcon = {
             if (onBack != null) {
                 IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "返回")
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.c_back))
                 }
             }
         },
@@ -110,12 +111,12 @@ fun FdmTopBar(
             // ★ 顺序即位置：先「保存」后「更多」⇒ 保存落在更多左边
             if (onSave != null) {
                 IconButton(onClick = onSave, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Rounded.Save, "保存")
+                    Icon(Icons.Rounded.Save, stringResource(R.string.c_save))
                 }
             }
             if (onMore != null) {
                 IconButton(onClick = onMore, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Rounded.MoreVert, "更多")
+                    Icon(Icons.Rounded.MoreVert, stringResource(R.string.c_more))
                 }
             }
         },
@@ -266,8 +267,8 @@ fun FdmNavBar(selected: Int, onSelect: (Int) -> Unit) {
         NavigationBarItem(
             selected = selected == 0,
             onClick = { onSelect(0) },
-            icon = { Icon(Icons.Rounded.Home, "首页") },
-            label = { Text("首页", style = MaterialTheme.typography.labelMedium) },
+            icon = { Icon(Icons.Rounded.Home, stringResource(R.string.c_nav_home)) },
+            label = { Text(stringResource(R.string.c_nav_home), style = MaterialTheme.typography.labelMedium) },
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
                 selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -279,8 +280,8 @@ fun FdmNavBar(selected: Int, onSelect: (Int) -> Unit) {
         NavigationBarItem(
             selected = selected == 1,
             onClick = { onSelect(1) },
-            icon = { Icon(Icons.Rounded.Info, "关于") },
-            label = { Text("关于", style = MaterialTheme.typography.labelMedium) },
+            icon = { Icon(Icons.Rounded.Info, stringResource(R.string.c_nav_about)) },
+            label = { Text(stringResource(R.string.c_nav_about), style = MaterialTheme.typography.labelMedium) },
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
                 selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,

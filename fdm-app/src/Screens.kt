@@ -134,8 +134,9 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                     )
                 }
                 Text(
-                    // ★ 3.68.0：显式依赖 lang ⇒ 换完说话方式这一行立刻跟着变（不再看心情重组）
-                    remember(lang) { Lang.S.tagline(ctx) },
+                    // ★ 3.68.0：直接调 —— `ctx` 本身会随说话方式换成 values-zz 那套，
+                    //   （原来那层 `remember(lang)` 会把新 ctx 挡住，反而变不回来 ✗）
+                    Lang.S.tagline(ctx),
                     fontSize = 22.sp,
                     lineHeight = 30.sp,
                     fontWeight = FontWeight.Bold,

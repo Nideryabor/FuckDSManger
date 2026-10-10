@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ══════════════════════════════════════════════════════════════════════════
+   🐲 龙龙语（"说话方式" = 龙龙语 时用的那一套）
+
+   ★ 这里**不用写满** —— 没写的 key 自动回落到 `res/values/strings.xml` 的人话版。
+     所以可以一句一句慢慢加，界面永远处于"能用的中间状态"。
+
+   ★ 加一句 = 两个目录里**同一个 name** 各写一条。
+     改文案 = 改这里（或者拿 MT 直接改包里的 resources.arsc 那份 zz 变体）。
+
+   ★ `zz` 是 BCP47 保留码（真机不会被设成它）—— 见 `Lang.DRAGON_LOCALE`。
+   ══════════════════════════════════════════════════════════════════════════
+-->
+<resources>
+
+    <!-- ══════ 彩蛋弹窗本体（在龙龙语下也变龙，但"人话/龙龙语"两个选项名故意不翻） ══════ -->
+    <string name="fdm_lang_title">嗷呜·说话方式</string>
+    <string name="fdm_lang_desc">这张图点七下才蹦出来的小彩蛋 —— 挑一种叫法嗷：</string>
+    <string name="fdm_lang_note">挑完马上就变啦：窝里那些跟着变的句子立刻换说法咕。</string>
+    <string name="fdm_lang_confirm">好嗷</string>
+    <string name="fdm_lang_cancel">算了</string>
+
+    <!-- ══════ 界面文案 ══════ -->
+
+    <!-- 关于页标语 -->
+    <string name="fdm_lang_tagline" formatted="false">FDM-100%由龙龙脑瓜发动の神秘模块，嗷呜！</string>
+
+    <!-- 系统提示词页的空容器提示 -->
+    <string name="fdm_lang_emptybox">（空空的窝 · 把卡片叼上来嗷）</string>
+
+    <!-- 「功能原理 &amp; 帮助」入口 -->
+    <string name="fdm_lang_help">嗷呜·原理与帮助</string>
+
+    <!-- ══════ 通用组件（Components.kt） ══════ -->
+    <string name="c_back">回窝</string>
+    <string name="c_save">存好</string>
+    <string name="c_more">还有啥</string>
+    <string name="c_nav_home">窝</string>
+    <string name="c_nav_about">关于尼尼</string>
+    <string name="c_jump_hint">猜你想蹦去哪</string>
+    <string name="c_jump_go">去「系统提示词」瞅瞅嗷 ›</string>
+
+</resources>

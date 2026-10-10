@@ -5,43 +5,64 @@
     <!-- ════════════════════════════════════════════════════════════════════
          「说话方式」🐲 —— 关于页连点七下的小彩蛋（3.67.0 起）
 
-         ★ 3.68.0：这一整块**全部搬进 resources.arsc**。Kotlin 里只留资源 id
-           （`R.string.fdm_lang_*`），一行文案都不硬编码 ⇒ 想改一句话，
-           改这里重编，或者直接拿 MT 管理器改包里的 resources.arsc 都行。
+         ★ 3.68.0：文案全部搬进 resources.arsc，而且**一个 key 只写一遍**。
+           龙龙语版住在 `res/values-zz/strings.xml`，运行时由 `Lang.wrap(ctx, DRAGON)`
+           换一个带 zz locale 的 Configuration ⇒ 系统自己挑那一份。
+           没在 values-zz 里写的 key **自动回落到这里的人话版** ⇒ 龙龙语可以慢慢加。
 
-         命名约定：
-           fdm_lang_xxx_human   = 人话版
-           fdm_lang_xxx_dragon  = 龙龙语版
-           加一句新话 = 这里加一对 + `Lang.S` 里加一行。
+         ★ 命名约定：
+              fdm_lang_xxx        —— 界面文案（会跟着说话方式变）★ 主用
+              fdm_lang_xxx_human  \
+              fdm_lang_xxx_dragon /  —— 弹窗内部那几个"必须有明确两种写法"的
+                                       （选项名 / 小字 / 回执），**不进 values-zz**
 
-         ⚠️ 含「%」的字符串必须带 formatted="false"，否则 aapt2 会把它当格式串
-            （「100%由…」这种会被误判成占位符）。
+         ⚠️ 含「%」的字符串必须带 formatted="false"，否则 aapt2 把它当格式串。
+         ⚠️ 带参数的句子用 %1$s 这种**位置化**写法（aapt2 不认裸 %s 混中文）。
          ════════════════════════════════════════════════════════════════════ -->
 
-    <!-- ── 弹窗本身 ── -->
+    <!-- ══════ 彩蛋弹窗本体 ══════ -->
     <string name="fdm_lang_title">说话方式</string>
     <string name="fdm_lang_desc">点这张图七下才出来的小彩蛋 —— 选一种说话方式：</string>
+    <string name="fdm_lang_note">换完立刻生效：页面上那些跟着变的句子马上就是新的说法。</string>
+    <string name="fdm_lang_confirm">确认</string>
+    <string name="fdm_lang_cancel">取消</string>
+
+    <!-- 两个选项名：**任何说话方式下都显示中文**（不然主人自己都认不出在选什么） -->
     <string name="fdm_lang_human">人话</string>
     <string name="fdm_lang_human_sub">正经说话（默认）</string>
     <string name="fdm_lang_dragon">龙龙语</string>
     <string name="fdm_lang_dragon_sub">尼尼的母语（嗷呜咕噜）</string>
-    <string name="fdm_lang_note">换完立刻生效：页面上那些跟着变的句子马上就是新的说法。</string>
-    <string name="fdm_lang_confirm">确认</string>
-    <string name="fdm_lang_cancel">取消</string>
+
+    <!-- 回执：用**刚选的那种话**说 -->
     <string name="fdm_lang_toast_human">好，正经说话。</string>
     <string name="fdm_lang_toast_dragon">嗷呜～以后就这么说话咕</string>
 
-    <!-- ── 已经接进去的句子（一对一条） ── -->
+    <!-- ══════ 界面文案（单 key；龙龙语版在 values-zz/） ══════ -->
 
-    <!-- 关于页标语 -->
-    <string name="fdm_lang_tagline_human" formatted="false">FDM-100%由DS鬼脑发动的神秘模块</string>
-    <string name="fdm_lang_tagline_dragon" formatted="false">FDM-100%由龙龙脑瓜发动の神秘模块，嗷呜！</string>
+    <!-- ── 关于页标语 ── -->
+    <string name="fdm_lang_tagline" formatted="false">FDM-100%由DS鬼脑发动的神秘模块</string>
 
-    <!-- 系统提示词页的空容器提示 -->
-    <string name="fdm_lang_emptybox_human">（空白容器 · 把抽屉里的卡片拖上来）</string>
-    <string name="fdm_lang_emptybox_dragon">（空空的窝 · 把卡片叼上来嗷）</string>
+    <!-- ── 系统提示词页的空容器提示 ── -->
+    <string name="fdm_lang_emptybox">（空白容器 · 把抽屉里的卡片拖上来）</string>
 
-    <!-- 「功能原理 &amp; 帮助」入口 -->
-    <string name="fdm_lang_help_human">功能原理 &amp; 帮助</string>
-    <string name="fdm_lang_help_dragon">嗷呜·原理与帮助</string>
+    <!-- ── 「功能原理 &amp; 帮助」入口 ── -->
+    <string name="fdm_lang_help">功能原理 &amp; 帮助</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         通用组件（Components.kt）
+         键名前缀 `c_` = components
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <!-- 顶部栏图标（contentDescription） -->
+    <string name="c_back">返回</string>
+    <string name="c_save">保存</string>
+    <string name="c_more">更多</string>
+
+    <!-- 底部导航栏 -->
+    <string name="c_nav_home">首页</string>
+    <string name="c_nav_about">关于</string>
+
+    <!-- 「猜你想跳转」小卡 -->
+    <string name="c_jump_hint">猜你想跳转</string>
+    <string name="c_jump_go">去「系统提示词」看看 ›</string>
 </resources>
