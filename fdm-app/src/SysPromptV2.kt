@@ -586,7 +586,14 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     showDelete = fromDrawer && c.type == T_TEXT,
                     onToggle = {
                         flushEdit()          // 先把别的卡的编辑收干净
-                        expanded = if (id in expanded) expanded - id else expanded + id
+                        val wasOpen = id in expanded
+                        expanded = if (wasOpen) expanded - id else expanded + id
+                        // ★ 2026-10-10（3.63.7）修：「必须聚焦一下输入框，按钮才刷新状态」——
+                        //   提交按钮依赖 `editKey`，而 `editKey` 原来**只在输入框拿到焦点时**才设置
+                        //   ⇒ 展开卡片后直接点「提交」= 什么都没发生（看着就是按钮坏了）。
+                        //   ⇒ 现在**展开文本卡就自动进入编辑态**（缓冲立刻等于当前文本），
+                        //     不必先点一下输入框。内置三张没有正文，不参与。
+                        if (!wasOpen && c.isText) beginEdit(id, false)
                     },
                     onNav = { onNav(typeNavTarget(c.type)) },
                     onEditStart = { title -> beginEdit(id, title) },
@@ -1165,10 +1172,16 @@ private fun PromptCard(
                     //   现在点了会明确回一句：提交成功 / 本次没有改动。
                     val ctx2 = LocalContext.current
                     TextButton(onClick = {
+                        // ★ 3.63.7：即使"没在编辑"也要给回执 —— 否则主人只会看到"点了没反应"
+                        val editingNow = editing
                         val changed = onCommitEditChanged()
                         Toast.makeText(
                             ctx2,
-                            if (changed) "已提交到系统提示词 ✓" else "没有改动（内容与已保存的一致）",
+                            when {
+                                changed -> "已提交到系统提示词 ✓"
+                                editingNow -> "没有改动（内容与已保存的一致）"
+                                else -> "没有任何改动需要提交"
+                            },
                             Toast.LENGTH_SHORT,
                         ).show()
                     }) { Text("提交到提示词") }
