@@ -1,2 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><string name="app_name">FuckDSManger</string></resources>
+<resources>
+    <string name="app_name">FuckDSManger</string>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         「说话方式」🐲 —— 关于页连点七下的小彩蛋（3.67.0 起）
+
+         ★ 3.68.0：这一整块**全部搬进 resources.arsc**。Kotlin 里只留资源 id
+           （`R.string.fdm_lang_*`），一行文案都不硬编码 ⇒ 想改一句话，
+           改这里重编，或者直接拿 MT 管理器改包里的 resources.arsc 都行。
+
+         命名约定：
+           fdm_lang_xxx_human   = 人话版
+           fdm_lang_xxx_dragon  = 龙龙语版
+           加一句新话 = 这里加一对 + `Lang.S` 里加一行。
+
+         ⚠️ 含「%」的字符串必须带 formatted="false"，否则 aapt2 会把它当格式串
+            （「100%由…」这种会被误判成占位符）。
+         ════════════════════════════════════════════════════════════════════ -->
+
+    <!-- ── 弹窗本身 ── -->
+    <string name="fdm_lang_title">说话方式</string>
+    <string name="fdm_lang_desc">点这张图七下才出来的小彩蛋 —— 选一种说话方式：</string>
+    <string name="fdm_lang_human">人话</string>
+    <string name="fdm_lang_human_sub">正经说话（默认）</string>
+    <string name="fdm_lang_dragon">龙龙语</string>
+    <string name="fdm_lang_dragon_sub">尼尼的母语（嗷呜咕噜）</string>
+    <string name="fdm_lang_note">换完立刻生效：页面上那些跟着变的句子马上就是新的说法。</string>
+    <string name="fdm_lang_confirm">确认</string>
+    <string name="fdm_lang_cancel">取消</string>
+    <string name="fdm_lang_toast_human">好，正经说话。</string>
+    <string name="fdm_lang_toast_dragon">嗷呜～以后就这么说话咕</string>
+
+    <!-- ── 已经接进去的句子（一对一条） ── -->
+
+    <!-- 关于页标语 -->
+    <string name="fdm_lang_tagline_human" formatted="false">FDM-100%由DS鬼脑发动的神秘模块</string>
+    <string name="fdm_lang_tagline_dragon" formatted="false">FDM-100%由龙龙脑瓜发动の神秘模块，嗷呜！</string>
+
+    <!-- 系统提示词页的空容器提示 -->
+    <string name="fdm_lang_emptybox_human">（空白容器 · 把抽屉里的卡片拖上来）</string>
+    <string name="fdm_lang_emptybox_dragon">（空空的窝 · 把卡片叼上来嗷）</string>
+
+    <!-- 「功能原理 &amp; 帮助」入口 -->
+    <string name="fdm_lang_help_human">功能原理 &amp; 帮助</string>
+    <string name="fdm_lang_help_dragon">嗷呜·原理与帮助</string>
+</resources>

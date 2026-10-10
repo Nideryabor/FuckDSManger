@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.res.painterResource
+import android.os.SystemClock
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.AlertDialog
@@ -29,6 +30,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+/**
+ * 彩蛋「连点七下」的时间窗（3.68.0）。
+ *
+ * 两次点击的间隔超过它就**重新数** —— 否则"早上点三下、下午点四下"也会把弹窗叫出来，
+ * 那就不是"连点"了。
+ */
+private const val TAP_WINDOW_MS = 1500L
 
 /* ═════════════════════════ 主页 ═════════════════════════ */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,6 +96,7 @@ fun AboutScreen(onNav: (Int) -> Unit) {
     val ctx = LocalContext.current
     // ★ 3.67.0 彩蛋状态：连点计数 + 语言弹窗 + 当前说话方式（用 state 是为了让标语当场跟着变）
     var taps by remember { mutableIntStateOf(0) }
+    var lastTapMs by remember { mutableLongStateOf(0L) }   // ★ 3.68.0：连点的时间窗
     var showLangPick by remember { mutableStateOf(false) }
     var lang by remember { mutableIntStateOf(Lang.current(ctx)) }
     Scaffold(
@@ -106,8 +116,11 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                         .align(Alignment.Center)
                         .clip(RoundedCornerShape(24.dp))
                         .clickable {
-                            taps += 1
-                            if (taps >= 7) {          // 连点七下（点了别处会由下面那句 Toast 之外的重置兜住）
+                            // ★ 3.68.0：连点要有时间窗 —— 间隔超过 TAP_WINDOW_MS 就重新数
+                            val now = SystemClock.uptimeMillis()
+                            taps = if (now - lastTapMs > TAP_WINDOW_MS) 1 else taps + 1
+                            lastTapMs = now
+                            if (taps >= 7) {          // 连点七下 ⇒ 叫出彩蛋
                                 taps = 0
                                 showLangPick = true
                             }
@@ -121,7 +134,8 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                     )
                 }
                 Text(
-                    Lang.S.tagline(ctx),
+                    // ★ 3.68.0：显式依赖 lang ⇒ 换完说话方式这一行立刻跟着变（不再看心情重组）
+                    remember(lang) { Lang.S.tagline(ctx) },
                     fontSize = 22.sp,
                     lineHeight = 30.sp,
                     fontWeight = FontWeight.Bold,
@@ -182,16 +196,16 @@ fun AboutScreen(onNav: (Int) -> Unit) {
     if (showLangPick) {
         AlertDialog(
             onDismissRequest = { showLangPick = false },
-            title = { Text("说话方式") },
+            title = { Text(ctx.getString(R.string.fdm_lang_title)) },
             text = {
                 Column {
                     Text(
-                        "点这张图七下才出来的小彩蛋 —— 选一种说话方式：",
+                        ctx.getString(R.string.fdm_lang_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(8.dp))
-                    listOf(Lang.HUMAN to "人话", Lang.DRAGON to "龙龙语").forEach { (v, name) ->
+                    listOf(Lang.HUMAN, Lang.DRAGON).forEach { v ->
                         Row(
                             Modifier
                                 .fillMaxWidth()
@@ -204,12 +218,12 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                             Spacer(Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    name,
+                                    ctx.getString(Lang.nameRes(v)),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 Text(
-                                    if (v == Lang.DRAGON) "尼尼的母语（嗷呜咕噜）" else "正经说话（默认）",
+                                    ctx.getString(Lang.subRes(v)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -218,7 +232,7 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                     }
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "现在接进去的地方还不多（关于页标语 / 系统提示词页的空容器 / 帮助入口）—— 要加哪一句跟我说。",
+                        ctx.getString(R.string.fdm_lang_note),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -230,13 +244,15 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                     showLangPick = false
                     Toast.makeText(
                         ctx,
-                        if (lang == Lang.DRAGON) "嗷呜～以后就这么说话咕" else "好，正经说话。",
+                        ctx.getString(Lang.toastRes(lang)),
                         Toast.LENGTH_SHORT,
                     ).show()
-                }) { Text("确认") }
+                }) { Text(ctx.getString(R.string.fdm_lang_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showLangPick = false }) { Text("取消") }
+                TextButton(onClick = { showLangPick = false }) {
+                    Text(ctx.getString(R.string.fdm_lang_cancel))
+                }
             },
         )
     }

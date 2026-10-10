@@ -89,13 +89,15 @@ fun FdmApp(initialPage: String? = null) {
         label = "page",
     ) { p ->
         when (p) {
-            HOME -> SwipeRightToGo(onGo = { go(ABOUT, Tr.IN_LEFT) }) {
+            // ★ 3.68.0：首页**左滑**进关于 —— 内容跟手往左，关于页从右边滑进来（Tr.IN_RIGHT）
+            HOME -> SwipeToGo(dir = -1, onGo = { go(ABOUT, Tr.IN_RIGHT) }) {
                 TreeHome(
                     onNav = { id -> go(id, Tr.IN_RIGHT, push = true) },
                     onAbout = { go(ABOUT, Tr.IN_RIGHT) },
                 )
             }
-            ABOUT -> SwipeRightToGo(onGo = { go(HOME, Tr.IN_LEFT) }) {
+            // 关于页：**右滑**回首页（主人：「关于页没问题」⇒ 一个字不动）
+            ABOUT -> SwipeToGo(dir = +1, onGo = { go(HOME, Tr.IN_LEFT) }) {
                 AboutScreen(onNav = { i -> if (i == 0) go(HOME, Tr.IN_RIGHT) })
             }
             else -> TreePage(
@@ -107,23 +109,40 @@ fun FdmApp(initialPage: String? = null) {
     }
 }
 
-/** 向右滑动：跟随手指移动；超过阈值就跳转，否则弹回 */
+/**
+ * 跟手横滑：内容**跟着手指**走；松手过阈值就跳转，否则弹回原位。
+ *
+ * @param dir 允许的滑动方向 —— `+1` = 向右滑，`-1` = 向左滑。
+ *
+ * ★ 3.68.0（主人 2026-10-10：「首页应该是左滑到关于，关于页没问题」）：
+ *   原来只有一个 `SwipeRightToGo`（只认右滑），首页被挂成了「**右**滑→关于」⇒ 方向反了。
+ *   ⇒ 加一个 `dir` 参数：首页传 `-1`（左滑进关于），关于页保持 `+1`（右滑回首页）。
+ *
+ * 再记一笔：这里 `pointerInput` 的 key 里不放 lambda（`onGo`）——
+ * 每次重组 lambda 都是新实例，放进 key 会让 pointerInput **在拖动中途重启**（拖一半就断）。
+ * 它闭包里读的 `page` / `stack` / `tr` 都是 state，所以读到的一定是新值 ✓。
+ */
 @Composable
-private fun SwipeRightToGo(onGo: () -> Unit, content: @Composable () -> Unit) {
+private fun SwipeToGo(dir: Int, onGo: () -> Unit, content: @Composable () -> Unit) {
     var dx by remember { mutableFloatStateOf(0f) }
     val threshold = with(LocalDensity.current) { 88.dp.toPx() }
     Box(
         Modifier
             .fillMaxSize()
             .offset { IntOffset(dx.roundToInt(), 0) }
-            .pointerInput(Unit) {
+            .pointerInput(dir) {
                 detectHorizontalDragGestures(
                     onDragEnd = {
-                        if (dx > threshold) onGo()
+                        val passed = if (dir > 0) dx > threshold else dx < -threshold
+                        if (passed) onGo()
                         dx = 0f
                     },
                     onHorizontalDrag = { _, delta ->
-                        dx = (dx + delta).coerceIn(0f, size.width.toFloat())
+                        dx = if (dir > 0) {
+                            (dx + delta).coerceIn(0f, size.width.toFloat())          // 只能往右
+                        } else {
+                            (dx + delta).coerceIn(-size.width.toFloat(), 0f)         // 只能往左
+                        }
                     },
                 )
             },
