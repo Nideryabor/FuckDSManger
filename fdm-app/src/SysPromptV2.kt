@@ -333,16 +333,33 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
     var editTitle by remember { mutableStateOf(false) }
     var editBuf by remember { mutableStateOf("") }
 
-    /** 把正在编辑的那张卡"落盘"（改内存 → 提交 → 重建提示词）。 */
+    /**
+     * 把正在编辑的那张卡"提交"（改内存 → 落盘 → 重建提示词）。
+     *
+     * <p>★ 这里**必须区分**"正在编辑标题"还是"正在编辑正文" ——
+     * 两者共用同一个输入缓冲 `editBuf`，不小心就会把标题写进正文里（3.62.0 的真实 bug）。
+     */
     fun flushEdit() {
         val k = editKey ?: return
         val c = cards[k]
-        if (c != null && editBuf != c.text) {
-            c.text = editBuf
-            commit()
+        if (c != null) {
+            if (editTitle) {
+                if (editBuf != c.title) { c.title = editBuf; commit() }
+            } else {
+                if (editBuf != c.text) { c.text = editBuf; commit() }
+            }
         }
         editKey = null
         editTitle = false
+    }
+
+    /** 切到别的输入目标之前，先把上一次的编辑**收干净**（否则那一笔就丢了）。 */
+    fun beginEdit(key: String, title: Boolean) {
+        if (editKey != null && editKey != key) flushEdit()
+        else if (editKey == key && editTitle != title) flushEdit()
+        editKey = key
+        editTitle = title
+        editBuf = if (title) cards[key]?.title ?: "" else cards[key]?.text ?: ""
     }
 
     // 二次确认（红删除）
@@ -475,20 +492,12 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                         bounds = bounds,
                                         showDelete = false,     // ★ 容器里**不**给删除（要删先拖回抽屉）
                                         onToggle = {
-                                            if (id in expanded) {
-                                                flushEdit()
-                                                expanded = expanded - id
-                                            } else {
-                                                expanded = expanded + id
-                                            }
+                                            flushEdit()          // 先把别的卡的编辑收干净
+                                            expanded = if (id in expanded) expanded - id else expanded + id
                                         },
                                         onNav = { onNav(typeNavTarget(c.type)) },
-                                        onTitleClick = {
-                                            editKey = id; editTitle = true; editBuf = c.title
-                                        },
-                                        onBodyFocus = {
-                                            editKey = id; editTitle = false; editBuf = c.text
-                                        },
+                                        onTitleClick = { beginEdit(id, true) },
+                                        onBodyFocus = { beginEdit(id, false) },
                                         onBufChange = { editBuf = it },
                                         onCommitEdit = { flushEdit() },
                                         onWithTitle = { v ->
@@ -590,20 +599,12 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                     // ★ 红删除：**只有暂存在抽屉里的自定义文本副本**才有
                                     showDelete = c.type == T_TEXT,
                                     onToggle = {
-                                        if (id in expanded) {
-                                            flushEdit()
-                                            expanded = expanded - id
-                                        } else {
-                                            expanded = expanded + id
-                                        }
+                                        flushEdit()          // 先把别的卡的编辑收干净
+                                        expanded = if (id in expanded) expanded - id else expanded + id
                                     },
                                     onNav = { onNav(typeNavTarget(c.type)) },
-                                    onTitleClick = {
-                                        editKey = id; editTitle = true; editBuf = c.title
-                                    },
-                                    onBodyFocus = {
-                                        editKey = id; editTitle = false; editBuf = c.text
-                                    },
+                                    onTitleClick = { beginEdit(id, true) },
+                                    onBodyFocus = { beginEdit(id, false) },
                                     onBufChange = { editBuf = it },
                                     onCommitEdit = { flushEdit() },
                                     onWithTitle = { v ->
