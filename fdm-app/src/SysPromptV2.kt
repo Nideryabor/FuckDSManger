@@ -32,10 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -56,10 +56,10 @@ import kotlin.math.roundToInt
  * 1. **页面内的空白容器**（内容区）—— 卡片可以从抽屉**拖进来**、在里面**拖拽排序**。
  * 2. **底部抽屉** —— 可向上拉，最高到**页面 1/2**；初始收在底部、只露一条把手。
  *    抽屉里放三张**提示词卡片**：回复建议 / 音乐 / 富文本。
- * 3. **卡片两件事分得很开**（主人特意定的）：
- *    · **点卡片本体** ⇒ **展开 / 收起**（展开内容**暂时空白**，先占位）
- *    · **点右边那个 ▸ 图标钮** ⇒ **跳到对应页面**（返回回到本页，走 App 的导航栈）
- * 4. **顶部工具栏**：`[保存] [更多]` —— **保存是手动的**，点了才写 JSON；平时不自动落盘。
+ * 3. **卡片两件事分得很开**：**点本体 ⇒ 展开**（展开块暂空）· **点右边 ▸ ⇒ 跳对应页面** ·
+ *    **按住拖 ⇒ 搬运**（抽屉 ⇄ 容器，同容器内还能排序）。
+ * 4. **顶部工具栏**：`[💾] [⋮]` —— 改动**实时落盘**（切摆/展开都立刻写），
+ *    那个 💾 是**保险**（手动再写一次 + 给个回执），不是唯一的保存路径。
  *
  * <p>为什么抽屉不用 `ModalBottomSheet`：它没法「收在底部只露一条把手」——
  * 一打开就至少是半个屏，而且背后会压一层 scrim。这里要的是**常驻在页面里的抽屉**，
@@ -68,10 +68,17 @@ import kotlin.math.roundToInt
  * <p>★ 手势方向：Compose 的 drag delta 沿轴正向为正（竖向 = 往下为正），
  * 所以「往上拉」是负 delta ⇒ `live = live - delta`。
  *
- * <p>★ 卡片拖拽用的是「**全局幽灵层**」：拖的时候在页面根节点上画一张跟着手指的幽灵卡，
- * 松手时拿**手指在根坐标系里的位置**去撞两个投放区（容器 / 抽屉）的矩形 ——
- * 这样跨容器（抽屉 ⇄ 容器）的搬运不用做任何坐标换算的脏活。
- * 顺序 = 松手时数一数「有几个同列表卡片的中心在我上面」⇒ 得到插入下标（拖拽排序顺手就有了）。
+ * <p>★★ **拖的是真卡片本体**（不是另画一张幽灵）：
+ * 卡片留在自己的槽位里，只叠一个 `offset`（位移 = 拖拽增量的累加）⇒ 手指上就是这张真卡。
+ * 由此带来三个必须做对的地方：
+ * • **位移必须用 delta 累加**（`dragAmount`），**不能用** `change.position` ——
+ *   后者是「相对卡片自己」的坐标，而卡片自己正在动 ⇒ 会自己追自己。
+ * • **槽位矩形要在拖拽开始时缓存**（`dragSlot`），不能拖到一半再读 —— 那时的坐标已经被 offset 带偏。
+ * • **拖出去要能看见**：容器/抽屉原来都有 `clip(...)` 会把出界的卡片**裁掉**
+ *   ⇒ 改成「**圆角底只当背景画**」（`background(color, shape)`）+ 不裁切子节点
+ *   （容器的 8dp 内边距 + 卡片 20dp 圆角，刚好和 28dp 的外圆角同心 ⇒ 平时看不出来）。
+ *   ＋ 从**容器**往外拖时把内容层 `zIndex` 提到抽屉之上（否则卡片会钻到抽屉底下消失）；
+ *   容器因为给抽屉让了位，永不与抽屉重叠 ⇒ 提层不会有任何视觉副作用。
  */
 
 /** 把手条的高度（收起时露出来的就是它）。 */
@@ -80,13 +87,12 @@ private val DrawerHandleH = 28.dp
 /** 抽屉最大高度 = 屏幕的一半（含把手）。 */
 private const val DrawerMaxRatio = 0.5f
 
-/** 幽灵卡的尺寸（跟手指的那张）。 */
-private val GhostW = 220.dp
-private val GhostH = 56.dp
-
 /** 卡片标题行 / 展开块的高度。 */
 private val CardRowH = 64.dp
 private val CardExpandH = 56.dp
+
+/** 卡片圆角（拖拽时的影子也照这个形状）。 */
+private val CardRadius = 20.dp
 
 /** 三张提示词卡片。`nav` = 点 ▸ 要跳到的**页面 id**（App 导航栈认这个）。 */
 private enum class PCard(val id: String, val title: String, val hint: String, val nav: String) {
@@ -100,7 +106,7 @@ private fun cardOf(id: String): PCard? = PCard.values().firstOrNull { it.id == i
 /** 三张卡片的 id（默认全在抽屉里）。 */
 private fun allCardIds(): List<String> = PCard.values().map { it.id }
 
-/* ═════════════════════ 落盘（手动保存才写） ═════════════════════ */
+/* ═════════════════════ 落盘（实时 + 手动保险） ═════════════════════ */
 
 /** 摆放的 JSON 键（存在**我们自己的** SharedPreferences 里，不推给宿主）。 */
 private const val LAYOUT_KEY = "cfg.sysprompt_v2_layout"
@@ -142,34 +148,39 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
     val ctx = LocalContext.current
     var more by remember { mutableStateOf(false) }
 
-    /* ── 摆放状态 ── */
-    var inDrawer by remember { mutableStateOf(allCardIds()) }
-    var inBox by remember { mutableStateOf(emptyList<String>()) }
-    var expanded by remember { mutableStateOf(emptySet<String>()) }
+    /* ── 摆放状态（初值从盘上同步读一次 —— 免得首帧拿默认值把存档冲掉） ── */
+    val initial = remember { readLayout(ctx) }
+    var inDrawer by remember { mutableStateOf(initial?.first ?: allCardIds()) }
+    var inBox by remember { mutableStateOf(initial?.second ?: emptyList()) }
+    var expanded by remember { mutableStateOf(initial?.third ?: emptySet()) }
 
-    // 进来读一次（**只读不写** —— 写盘只在主人点「保存」时发生）
-    LaunchedEffect(Unit) {
-        readLayout(ctx)?.let { (d, b, e) ->
-            inDrawer = d; inBox = b; expanded = e
-        }
+    // ★ 实时保存：改动一提交就写盘。`watch` 挡住首帧（首帧要先把盘上的值读回来，不能反过来冲掉）
+    var watch by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { watch = true }
+    LaunchedEffect(inDrawer, inBox, expanded, watch) {
+        if (watch) writeLayout(ctx, inDrawer, inBox, expanded)
     }
 
-    /* ── 拖拽状态（全局幽灵层） ── */
+    /* ── 拖拽状态（真卡片本体跟手） ── */
     var dragId by remember { mutableStateOf<String?>(null) }
-    var ghost by remember { mutableStateOf(Offset.Zero) }              // 手指位置（根坐标 px）
-    val origins = remember { mutableStateMapOf<String, Offset>() }     // 卡片左上角（根坐标）
-    val bounds = remember { mutableStateMapOf<String, Rect>() }        // 卡片矩形（根坐标）
-    var boxRect by remember { mutableStateOf(Rect.Zero) }              // 投放区：容器
-    var drawerRect by remember { mutableStateOf(Rect.Zero) }           // 投放区：抽屉内容
+    var dragOff by remember { mutableStateOf(Offset.Zero) }      // 位移（累加增量）
+    var dragSlot by remember { mutableStateOf(Rect.Zero) }       // 拖拽开始时的**槽位**矩形（根坐标）
+    val bounds = remember { mutableStateMapOf<String, Rect>() }  // 各卡片的槽位矩形（根坐标）
+    var boxRect by remember { mutableStateOf(Rect.Zero) }        // 投放区：容器（根坐标）
+    var drawerRect by remember { mutableStateOf(Rect.Zero) }     // 投放区：抽屉内容（根坐标）
 
     Scaffold(
         topBar = {
             FdmTopBar(
                 title = "系统提示词 v2",
                 onBack = onBack,
-                onSave = {                       // ★ 手动保存（不点就不写盘）
+                onSave = {                       // ★ 保险按钮（改动本来就实时存了）
                     writeLayout(ctx, inDrawer, inBox, expanded)
-                    Toast.makeText(ctx, "已保存摆放（抽屉 ${inDrawer.size} 张 / 容器 ${inBox.size} 张）", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        ctx,
+                        "已保存摆放（抽屉 ${inDrawer.size} 张 / 容器 ${inBox.size} 张）",
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 },
                 onMore = { more = true },
             )
@@ -182,16 +193,14 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
             val sheetPx = with(density) { maxHeight.toPx() } * DrawerMaxRatio
             val travel = (sheetPx - handlePx).coerceAtLeast(1f)
             val sheetDp = with(density) { sheetPx.toDp() }
-            val ghostW = with(density) { GhostW.toPx() }
-            val ghostH = with(density) { GhostH.toPx() }
 
             // live = 已经拉起来多少（0 = 收在底部；travel = 拉满）
             var live by remember { mutableFloatStateOf(0f) }
-            var dragging by remember { mutableStateOf(false) }
+            var draggingSheet by remember { mutableStateOf(false) }
             var target by remember { mutableFloatStateOf(0f) }
 
-            LaunchedEffect(target, dragging) {
-                if (!dragging) {
+            LaunchedEffect(target, draggingSheet) {
+                if (!draggingSheet) {
                     animate(
                         initialValue = live,
                         targetValue = target,
@@ -210,13 +219,48 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                 return others.take(idx) + id + others.drop(idx)
             }
 
+            /** 当前被拖的卡片矩形 = 缓存槽位 + 位移（槽位在拖拽开始时冻结，绝不被 offset 带偏）。 */
+            fun draggedRect(): Rect = dragSlot.translate(dragOff)
+
+            /** 松手：落在哪边就归哪边；哪边都不是 ⇒ 什么都不做（原地不动）。 */
+            fun drop() {
+                val id = dragId
+                if (id != null) {
+                    val r = draggedRect()
+                    if (boxRect.contains(r.center)) {
+                        inDrawer = inDrawer.filter { it != id }
+                        inBox = insertByY(inBox, id, r.center.y)
+                    } else if (drawerRect.contains(r.center)) {
+                        inBox = inBox.filter { it != id }
+                        inDrawer = insertByY(inDrawer, id, r.center.y)
+                    }
+                }
+                dragId = null
+                dragOff = Offset.Zero
+            }
+
+            fun startDrag(id: String) {
+                dragId = id
+                dragOff = Offset.Zero
+                dragSlot = bounds[id] ?: Rect.Zero
+            }
+
+            fun moveDrag(delta: Offset) {
+                dragOff += delta
+            }
+
+            // 从**容器**里往外拖时，把内容层提到抽屉之上（否则卡片会钻到抽屉底下看不见）。
+            // 容器给抽屉让了位、永不重叠 ⇒ 提层没有任何视觉副作用。
+            val lifting = dragId != null && dragId in inBox
+
             Box(Modifier.fillMaxSize()) {
 
                 /* ── ① 内容区：容器（抽屉拉开时跟着变矮，别被盖住） ── */
                 Column(
                     Modifier
                         .fillMaxSize()
-                        .padding(bottom = with(density) { (handlePx + live).toDp() }),
+                        .padding(bottom = with(density) { (handlePx + live).toDp() })
+                        .zIndex(if (lifting) 2f else 1f),
                 ) {
                     Box(
                         Modifier
@@ -224,8 +268,11 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                             .weight(1f)
                             .padding(horizontal = Edge)
                             .onGloballyPositioned { boxRect = it.boundsInRoot() }
-                            .clip(RoundedCornerShape(28.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                            // ★ 只当背景画、**不裁子节点** —— 卡片要能拖出去还看得见
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainerHigh,
+                                RoundedCornerShape(28.dp),
+                            ),
                     ) {
                         if (inBox.isEmpty()) {
                             Text(
@@ -243,29 +290,20 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 inBox.forEach { id ->
-                                    CardView(
+                                    PromptCard(
                                         id = id,
                                         expanded = id in expanded,
+                                        dragging = id == dragId,
+                                        dragOff = if (id == dragId) dragOff else Offset.Zero,
                                         onToggle = {
                                             expanded = if (id in expanded) expanded - id else expanded + id
                                         },
                                         onNav = { cardOf(id)?.nav?.let(onNav) },
-                                        origins = origins,
                                         bounds = bounds,
-                                        onDragStart = { p -> dragId = id; ghost = p },
-                                        onDragMove = { p -> ghost = p },
-                                        onDragEnd = {
-                                            // 落在容器里 ⇒ 留在容器（含排序）；落在抽屉里 ⇒ 搬回去；落别处 ⇒ 原地不动
-                                            if (boxRect.contains(ghost)) {
-                                                inDrawer = inDrawer.filter { it != id }
-                                                inBox = insertByY(inBox, id, ghost.y)
-                                            } else if (drawerRect.contains(ghost)) {
-                                                inBox = inBox.filter { it != id }
-                                                inDrawer = insertByY(inDrawer, id, ghost.y)
-                                            }
-                                            dragId = null
-                                        },
-                                        onDragCancel = { dragId = null },
+                                        onDragStart = { startDrag(id) },
+                                        onDragMove = { moveDrag(it) },
+                                        onDragEnd = { drop() },
+                                        onDragCancel = { dragId = null; dragOff = Offset.Zero },
                                     )
                                 }
                             }
@@ -279,24 +317,28 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .height(sheetDp)
+                        .zIndex(1f)
                         .offset {
                             IntOffset(0, (travel - live.coerceIn(0f, travel)).roundToInt())
                         }
-                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        // ★ 同样：圆角只当背景，不裁子节点（卡片要能拖出去）
+                        .background(
+                            MaterialTheme.colorScheme.surfaceContainerHigh,
+                            RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                        )
                         .draggable(
                             orientation = Orientation.Vertical,
                             state = rememberDraggableState { delta ->
                                 live = (live - delta).coerceIn(0f, travel)
                             },
-                            onDragStarted = { dragging = true },
+                            onDragStarted = { draggingSheet = true },
                             onDragStopped = { v ->
                                 val open = when {
                                     v < -600f -> true      // 往上甩 ⇒ 开
                                     v > 600f -> false      // 往下甩 ⇒ 收
                                     else -> live > travel / 2f   // 慢慢拖 ⇒ 过半算数
                                 }
-                                dragging = false
+                                draggingSheet = false
                                 target = if (open) travel else 0f
                             },
                         ),
@@ -340,62 +382,30 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                 )
                             }
                             inDrawer.forEach { id ->
-                                CardView(
+                                PromptCard(
                                     id = id,
                                     expanded = id in expanded,
+                                    dragging = id == dragId,
+                                    dragOff = if (id == dragId) dragOff else Offset.Zero,
                                     onToggle = {
                                         expanded = if (id in expanded) expanded - id else expanded + id
                                     },
                                     onNav = { cardOf(id)?.nav?.let(onNav) },
-                                    origins = origins,
                                     bounds = bounds,
-                                    onDragStart = { p -> dragId = id; ghost = p },
-                                    onDragMove = { p -> ghost = p },
-                                    onDragEnd = {
-                                        if (boxRect.contains(ghost)) {
-                                            inDrawer = inDrawer.filter { it != id }
-                                            inBox = insertByY(inBox, id, ghost.y)
-                                        } else if (drawerRect.contains(ghost)) {
-                                            inBox = inBox.filter { it != id }
-                                            inDrawer = insertByY(inDrawer, id, ghost.y)
-                                        }
-                                        dragId = null
-                                    },
-                                    onDragCancel = { dragId = null },
+                                    onDragStart = { startDrag(id) },
+                                    onDragMove = { moveDrag(it) },
+                                    onDragEnd = { drop() },
+                                    onDragCancel = { dragId = null; dragOff = Offset.Zero },
                                 )
                             }
                         }
-                    }
-                }
-
-                /* ── ③ 幽灵卡（跟手指那一片） ── */
-                dragId?.let { id ->
-                    Box(
-                        Modifier
-                            .offset {
-                                IntOffset(
-                                    (ghost.x - ghostW / 2f).roundToInt(),
-                                    (ghost.y - ghostH / 2f).roundToInt(),
-                                )
-                            }
-                            .size(GhostW, GhostH)
-                            .zIndex(10f)
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            cardOf(id)?.title ?: id,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        )
                     }
                 }
             }
         }
     }
 
-    /* ── ④ 「更多」弹窗：标题 + 确认键（骨架阶段点了就关） ── */
+    /* ── 「更多」弹窗：标题 + 确认键（骨架阶段点了就关） ── */
     if (more) {
         AlertDialog(
             onDismissRequest = { more = false },
@@ -412,41 +422,55 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
  *
  * · **点本体** ⇒ 展开 / 收起（展开块**暂时空白**）
  * · **点右边 ▸** ⇒ `onNav()`（图标钮是子节点，自己吃掉点击 ⇒ 不会连带展开）
- * · **按住拖** ⇒ 交给页面级的幽灵层
+ * · **按住拖** ⇒ 整张卡片本体跟着手指走（叠 `offset`，不另画幽灵）
  *
  * <p>★ 顺序讲究：`clickable` 在前、`pointerInput` 在后 ⇒ 拖拽检测在**内层**、
  * 先拿到事件（超过 touch slop 就 consume）⇒ 拖动时点击自动作废；
- * 轻点不动则拖拽不 consume ⇒ 点击照常生效。两个手势不打架。
+ * 轻点不动则拖拽不 consume ⇒ 点击照常生效。两个手势不打架，**不用做拖动把手**。
+ *
+ * <p>★ 位移只认 `dragAmount`（**增量**）。**不能用 `change.position`** ——
+ * 那是「相对卡片自己」的坐标，而卡片自己正在被 offset 挪走 ⇒ 会变成自己追自己。
  */
 @Composable
-private fun CardView(
+private fun PromptCard(
     id: String,
     expanded: Boolean,
+    dragging: Boolean,
+    dragOff: Offset,
     onToggle: () -> Unit,
     onNav: () -> Unit,
-    origins: MutableMap<String, Offset>,
     bounds: MutableMap<String, Rect>,
-    onDragStart: (Offset) -> Unit,
+    onDragStart: () -> Unit,
     onDragMove: (Offset) -> Unit,
     onDragEnd: () -> Unit,
     onDragCancel: () -> Unit,
 ) {
     val card = cardOf(id) ?: return
+    val scale = if (dragging) 1.03f else 1f
     Column(
         Modifier
             .fillMaxWidth()
-            .onGloballyPositioned {
-                origins[id] = it.positionInRoot()
-                bounds[id] = it.boundsInRoot()
+            .zIndex(if (dragging) 10f else 0f)
+            // ① 槽位矩形（**在 offset 之前**记 ⇒ 永远是"槽位"，不会被位移带偏）
+            .onGloballyPositioned { bounds[id] = it.boundsInRoot() }
+            // ② 位移：整张卡片本体跟手
+            .offset { IntOffset(dragOff.x.roundToInt(), dragOff.y.roundToInt()) }
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                if (dragging) {
+                    shadowElevation = 12.dp.toPx()
+                    shape = RoundedCornerShape(CardRadius)
+                }
             }
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(CardRadius))
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable { onToggle() }
             .pointerInput(id) {
                 detectDragGestures(
-                    onDragStart = { local -> onDragStart((origins[id] ?: Offset.Zero) + local) },
-                    onDrag = { change, _ ->
-                        onDragMove((origins[id] ?: Offset.Zero) + change.position)
+                    onDragStart = { onDragStart() },
+                    onDrag = { change, amount ->
+                        onDragMove(amount)
                         change.consume()
                     },
                     onDragEnd = { onDragEnd() },
