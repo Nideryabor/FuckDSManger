@@ -16,6 +16,23 @@ import com.nidyaber.fuckdsmanger.bridge.FdmPush
  *   · 界面显示的应该是**宿主真值**（拿不到时才退回我们的值并标注）
  */
 object Bridge {
+    /**
+     * **健壮布尔解析** 🐲（2026-10-10 · 3.64.5）
+     *
+     * 库里同一个开关可能是两种写法：`"1"/"0"`（宿主 `"b"` 类型的惯用值）或
+     * `"true"/"false"`（早期界面写的）—— 而各处**只认其中一种**时就会出现
+     * 「界面显示关、宿主里却是开」（主人报的"迷你条明明关了还挂着"就是这个）。
+     * ⇒ 读的时候统一走这里，两种都认。
+     */
+    fun boolOf(s: String?): Boolean {
+        if (s == null) return false
+        val t = s.trim().lowercase()
+        return t == "1" || t == "true" || t == "yes" || t == "on"
+    }
+
+    /** 写回库里的**统一格式**（跟宿主 `"b"` 类型的惯用值一致）。 */
+    fun boolStr(v: Boolean): String = if (v) "1" else "0"
+
     /** 把当前配置推给宿主（宿主会走功能自己的入口写入）。 */
     fun push(ctx: Context): Int = FdmPush.push(ctx)
 

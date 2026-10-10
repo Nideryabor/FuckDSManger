@@ -27,6 +27,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -78,23 +81,31 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
     //   两边不一致 ⇒ 重启 UI 后开关显示会和实际不符。
     var barOn by remember {
         mutableStateOf(
-            (sp.getString("cfg.fuckds_bar_on", null)
-                ?: sp.getString("fuckds_bar_on", "false")) == "true"
+            Bridge.boolOf(
+                sp.getString("cfg.fuckds_bar_on", null)
+                    ?: sp.getString("fuckds_bar_on", null)
+            )
         )
     }
     var tick by remember { mutableIntStateOf(0) }
+    // ★ 2026-10-10（3.66.0）：「功能原理 & 帮助」子框的状态
+    var helpTopic by remember { mutableStateOf<String?>(null) }
 
     // ★ 3.57.1 · 提示词音乐变量的两个开关（读法同 barOn：新格式 `cfg.<key>` 优先）
     var pvarOn by remember {
         mutableStateOf(
-            (sp.getString("cfg.fuckds_pvar_on", null)
-                ?: sp.getString("fuckds_pvar_on", "false")) == "true"
+            Bridge.boolOf(
+                sp.getString("cfg.fuckds_pvar_on", null)
+                    ?: sp.getString("fuckds_pvar_on", null)
+            )
         )
     }
     var lyricOn by remember {
         mutableStateOf(
-            (sp.getString("cfg.fuckds_pvar_lyric", null)
-                ?: sp.getString("fuckds_pvar_lyric", "false")) == "true"
+            Bridge.boolOf(
+                sp.getString("cfg.fuckds_pvar_lyric", null)
+                    ?: sp.getString("fuckds_pvar_lyric", null)
+            )
         )
     }
 
@@ -129,13 +140,17 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 24.dp),
         ) {
+            // ★ 2026-10-10（3.65.0）：「猜你想跳转」—— 音乐页顶上给一条去系统提示词的路
+            JumpHintCard(onOpen = { onNav("sysprompt_v2") }, text = "去「系统提示词」调音乐变量 ›")
+            Spacer(Modifier.height(10.dp))
+
             // ───────── 迷你卡开关 ─────────
-            SectionLabel("悬浮迷你卡")
+            SectionLabel("悬浮迷你条")
             CardBox {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            "在宿主上常驻一张播放卡",
+                            "显示迷你条",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
@@ -153,9 +168,38 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                             // ★ 走宿主自己的入口（拨一下当场显示/收起）
                             FdmPush.sendCmd(ctx, "cfg_put", "fuckds_bar_on\u001fb\u001f$v")
                             // ★ 本地也存**新格式**（跟界面读法一致；旧格式顶层键交给桥的自愈去清）
-                            FdmPush.sp(ctx).edit().putString("cfg.fuckds_bar_on", v.toString()).apply()
+                            FdmPush.sp(ctx).edit().putString("cfg.fuckds_bar_on", Bridge.boolStr(v)).apply()
                             tick++
                         },
+                    )
+                }
+                // ★ 2026-10-10（3.64.0）：迷你条的**详细设置**收到这儿来
+                //   （原来挂在「美化 › 悬浮全家桶」里 —— 两处都能开它，冲突；
+                //    现在它是音乐功能的亲儿子，设置也就近放）
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onNav("bar") }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "悬浮条设置 ›",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            "卡片尺寸（也能拖四个角）· 「≡」拖动把手 · 它到底长什么样",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(
+                        Icons.Rounded.ChevronRight, "去设置",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -295,7 +339,7 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                         onCheckedChange = { v ->
                             pvarOn = v
                             FdmPush.sendCmd(ctx, "cfg_put", "fuckds_pvar_on\u001fb\u001f$v")
-                            FdmPush.sp(ctx).edit().putString("cfg.fuckds_pvar_on", v.toString()).apply()
+                            FdmPush.sp(ctx).edit().putString("cfg.fuckds_pvar_on", Bridge.boolStr(v)).apply()
                             tick++
                         },
                     )
@@ -322,21 +366,16 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                         onCheckedChange = { v ->
                             lyricOn = v
                             FdmPush.sendCmd(ctx, "cfg_put", "fuckds_pvar_lyric\u001fb\u001f$v")
-                            FdmPush.sp(ctx).edit().putString("cfg.fuckds_pvar_lyric", v.toString()).apply()
+                            FdmPush.sp(ctx).edit().putString("cfg.fuckds_pvar_lyric", Bridge.boolStr(v)).apply()
                             tick++
                         },
                     )
                 }
                 Spacer(Modifier.height(12.dp))
-                // ★ 2026-10-10（3.61.0）：原来这里有个「① 把示例写进系统提示词」按钮 —— **搬走了**。
-                //   新版界面换成「把「音乐」卡片拖进容器」= 灌入示例，「拖回抽屉」= 清空这一段。
+                // ★ 2026-10-10（3.66.0）：这段说明**过时了**（还写着"调试 › 系统提示词 v2"）
+                //   ⇒ 整段搬进页面末尾的「功能原理 & 帮助」，这里只留一行指路。
                 Text(
-                    "✦ 灌入 / 清空已改成「拖卡片」：\n" +
-                    "把「音乐」卡片**拖进**容器 = 把上面那两行 [[ … ]] 示例写进系统提示词；\n" +
-                    "**拖回**抽屉 = 只摘掉【音乐变量】这一段（你自己写的内容一个字不动）。\n" +
-                    "★ 它是**更新语义**：重复拖进不会叠加，还会把旧版本的示例换成新版。\n" +
-                    "入口：首页 › 附加の功能 › 调试 ›「系统提示词 v2」。\n" +
-                    "⚠️ 灌完记得把上面的「音乐变量」开关打开，否则变量一律变成空串。",
+                    "✦ 功能原理 / 怎么让它生效 / 不生效怎么查 —— 见页面末尾的「功能原理 & 帮助」。",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -369,20 +408,22 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
             }
 
             // ───────── 致谢 ─────────
-            SectionLabel("致谢")
-            CardBox {
-                Text(
-                    "接口与加密算法来自 NeteaseCloudMusicApi" +
-                    "（作者 Binaryify，MIT 许可）。\n" +
-                    "本模块只用它的算法与接口约定，把加密层用 Java 重新实现了一遍 —— " +
-                    "原项目是 Node.js 服务，塞不进 Xposed 模块。\n" +
-                    "感谢原作者与所有贡献者 🐲",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            //  ★ 2026-10-10（3.67.0）：主人「音乐菜单不是有个致谢吗，搬到关于页面里面」
+            //    ⇒ 内容搬到「关于 › 致谢」，这里留一行指路。
+            Text(
+                "（致谢已搬到「关于」页面）",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            // ★ 2026-10-10（3.66.0）：页面**末尾**的「功能原理 & 帮助」入口
+            Spacer(Modifier.height(16.dp))
+            HelpEntry(label = Lang.S.helpEntry(ctx)) { helpTopic = "music" }
         }
     }
+
+    // 帮助子框（Compose 弹窗）
+    helpTopic?.let { tp -> HelpDialog(tp) { helpTopic = null } }
 }
 
 @Composable

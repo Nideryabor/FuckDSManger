@@ -96,7 +96,7 @@ fun SettingSwitch(
     var checked by remember(key) { mutableStateOf(initial) }
     // ★ 宿主回执到了 ⇒ 采纳它（这就是"只重绘这一个按钮"）
     LaunchedEffect(key, confirmed) {
-        if (confirmed != null) checked = confirmed.equals("true", true) || confirmed == "1"
+        if (confirmed != null) checked = Bridge.boolOf(confirmed)
     }
     RowShell {
         Row(verticalAlignment = Alignment.CenterVertically) {

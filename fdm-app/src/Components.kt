@@ -52,6 +52,39 @@ fun groupedShape(index: Int, count: Int): Shape {
     return RoundedCornerShape(topStart = tl, topEnd = tr, bottomEnd = br, bottomStart = bl)
 }
 
+/* ───────────────────────── 「猜你想跳转」小卡 ─────────────────────────
+ *  ★ 2026-10-10（3.65.0）主人：「分别在音乐、回复建议、富文本顶上加一个容器，
+ *    标题是"猜你想跳转"，里面一行可点击的蓝色文字指向系统提示词的界面」
+ */
+private val BlueLink = Color(0xFF1E88E5)
+
+@Composable
+fun JumpHintCard(onOpen: () -> Unit, text: String = "去「系统提示词」看看 ›") {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .padding(horizontal = Edge, vertical = 12.dp),
+    ) {
+        Text(
+            "猜你想跳转",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = BlueLink,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { onOpen() }
+                .padding(vertical = 6.dp),
+        )
+    }
+}
+
 /* ───────────────────────── 顶部应用栏：64dp / surface / titleLarge / 左右 48dp 图标钮 ───────────────────────── */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

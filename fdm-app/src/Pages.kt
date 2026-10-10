@@ -236,7 +236,10 @@ private fun ItemRow(
  */
 private fun saveLocal(ctx: Context, row: It, v: Any) {
     val k = row.key ?: return
-    ctxSp(ctx).edit().putString("cfg.$k", v.toString()).apply()
+    // ★ 2026-10-10（3.64.5）：布尔统一写成 "1"/"0"
+    //   （原来写 "true"/"false"，而库里另一半地方是 "1"/"0" ⇒ 只认一种的读法就会显示错）
+    val txt = if (v is Boolean) Bridge.boolStr(v) else v.toString()
+    ctxSp(ctx).edit().putString("cfg.$k", txt).apply()
 }
 
 /* ─────────────── 页面 ─────────────── */
@@ -274,6 +277,8 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
     var tick by remember { mutableIntStateOf(0) }
     val t = tick
     val pg = Tree.page(id)
+    // ★ 2026-10-10（3.66.0）：「功能原理 & 帮助」子框（页面末尾那个入口打开它）
+    var helpTopic by remember { mutableStateOf<String?>(null) }
     // 进页面索要"模块接口项"的真值（助手图片/账号名/防撤回/环境…），并等宿主回话后重画
     LaunchedEffect(id) {
         FdmPush.sendCmd(ctx, "state_all", null)
@@ -322,6 +327,11 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
                 SettingInfo("找不到这一页", id)
                 return@Column
             }
+            // ★ 2026-10-10（3.65.0）：「猜你想跳转」—— 回复建议 / 富文本顶上给一条去系统提示词的路
+            if (id == "suggest" || id == "richtext") {
+                JumpHintCard(onOpen = { onNav("sysprompt_v2") })
+                Spacer(Modifier.height(10.dp))
+            }
             pg.items.forEachIndexed { i, it ->
                 if (i > 0) Spacer(Modifier.height(8.dp))
                 // ★ 在这里读值 —— 这里观察了 `t`，`tick` 变了才会带着新值调用 ItemRow ⇒ 它会重组
@@ -348,8 +358,17 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
             SettingAction("问一下宿主最新状态", "让宿主跑一遍 status 动作并把结果回传") {
                 FdmPush.sendCmd(ctx, "avatar_status", null); tick++
             }
+
+            // ★ 2026-10-10（3.66.0）：页面**末尾**的「功能原理 & 帮助」入口
+            if (id == "suggest" || id == "richtext") {
+                Spacer(Modifier.height(16.dp))
+                HelpEntry(label = Lang.S.helpEntry(ctx)) { helpTopic = id }
+            }
         }
     }
+
+    // 帮助子框（Compose 弹窗，内容可滚动）
+    helpTopic?.let { tp -> HelpDialog(tp) { helpTopic = null } }
 }
 
 /**

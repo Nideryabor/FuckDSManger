@@ -44,6 +44,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -133,10 +134,24 @@ private const val DEF_TEXT = "这是尼尼的卡片"
 private class CCard(
     val key: String,
     val type: String,
-    var title: String,
-    var text: String,
-    var withTitle: Boolean = false,
+    title: String,
+    text: String,
+    withTitle: Boolean = false,
 ) {
+    /**
+     * ★★ 2026-10-10（3.63.10）**必须用 Compose 状态**（原来是普通 `var`）——
+     * 主人报的「按钮/开关必须重新打开选项卡、或聚焦一下输入框才刷新」就是这个：
+     * 拨开关时 `withTitle` 改了、配置也写进宿主了，**但 Compose 观察不到这个普通 `var`**
+     * ⇒ 界面不重画 ⇒ 看着就是「点了没反应」；等你**切个选项卡 / 点一下输入框**
+     * （别的重组被触发）它才"突然"刷成新样子。
+     *
+     * <p>同一个坑还影响**标题文字**（编辑完标题，卡片抬头不变）与**正文回显**。
+     * ⇒ 一并改成 `mutableStateOf`：**读它们的 Compose 会自动订阅**。
+     */
+    var title by mutableStateOf(title)
+    var text by mutableStateOf(text)
+    var withTitle by mutableStateOf(withTitle)
+
     val isBuiltin get() = type == T_SUGGEST || type == T_MUSIC || type == T_RICHTEXT
     val isText get() = type == T_TEXT || type == T_TEXTSRC
 }
@@ -202,7 +217,8 @@ private class Saved(
                 T_SUGGEST -> CCard(k, T_SUGGEST, typeTitle(T_SUGGEST), ex?.text ?: "")
                 T_MUSIC -> CCard(k, T_MUSIC, typeTitle(T_MUSIC), ex?.text ?: "")
                 T_RICHTEXT -> CCard(k, T_RICHTEXT, typeTitle(T_RICHTEXT), ex?.text ?: "")
-                K_SRC -> CCard(k, T_TEXTSRC, typeTitle(T_TEXTSRC), ex?.text ?: "")
+                // ★ 3.64.3：它是**默认模板** ⇒ 内容固定为默认值（不再沿用旧的/播种来的文本）
+                K_SRC -> CCard(k, T_TEXTSRC, typeTitle(T_TEXTSRC), DEF_TEXT)
                 else -> if (ex != null && ex.isText) ex else null
             }
             if (c != null && !cards2.containsKey(k)) cards2[k] = c
@@ -309,7 +325,13 @@ private fun compose(ctx: Context, box: List<String>, cards: Map<String, CCard>) 
             )
         }
         val req = JSONObject().apply { put("items", arr) }
-        FdmPush.sendCmd(ctx, "prompt_compose", req.toString())
+        val payload = req.toString()
+        FdmPush.sp(ctx).edit()
+            .putLong("dbg.compose_at", System.currentTimeMillis())
+            .putString("dbg.compose_arg", payload)
+            .apply()
+        FdmPush.sendCmd(ctx, "prompt_compose", payload)
+        FdmPush.sp(ctx).edit().putLong("dbg.compose_sent_at", System.currentTimeMillis()).apply()
     } catch (t: Throwable) {
         Toast.makeText(ctx, "重建提示词失败：" + t, Toast.LENGTH_SHORT).show()
     }
@@ -336,31 +358,15 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
         val s = initial
         if (s != null) {
             cards.clear(); s.cards.forEach { (k, c) -> cards[k] = c }
-            inDrawer = s.drawer; inBox = s.box; expanded = s.expanded; nextId = s.nextId
+            inDrawer = s.drawer; inBox = s.box; nextId = s.nextId
+            // ★ 2026-10-10（3.64.4）主人：「如果原先这些提示词是展开的现在被锁了还是展开的，
+            //   所以我建议你进入页面时默认把所有卡片全部折叠」⇒ **进页面一律折叠**
+            //   （存档里那个 expanded 不再恢复；下次提交会把空的写回去）
+            expanded = emptySet()
         } else {
             defaultCards().forEach { (k, c) -> cards[k] = c }
         }
         seeded = true
-        // 源卡片还是空的（第一次种）⇒ 向宿主问一次"系统提示词内容"，把原值收进来
-        if ((cards[K_SRC]?.text ?: "").isEmpty()) {
-            FdmPush.sendCmd(ctx, "cfg_state", null)
-            repeat(6) {
-                kotlinx.coroutines.delay(1000)
-                val host = FdmPush.sp(ctx).getString("cmd.cfg_state", null)
-                if (host != null) {
-                    val t = jsonToMap(host)["sysprompt_text"] ?: ""
-                    if (t.isNotEmpty()) {
-                        cards[K_SRC] = CCard(K_SRC, T_TEXTSRC, typeTitle(T_TEXTSRC), t)
-                        return@repeat
-                    }
-                }
-            }
-        }
-    }
-
-    // ★ 源卡片内容一到位就落盘一次（否则下次进来又得重新播种）
-    LaunchedEffect(seeded, cards[K_SRC]?.text) {
-        if (seeded) writeLayout(ctx, inDrawer, inBox, expanded, cards, nextId)
     }
 
     /**
@@ -372,6 +378,12 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
     fun commit() {
         if (!seeded) return
         writeLayout(ctx, inDrawer, inBox, expanded, cards, nextId)
+        // ★ 2026-10-10（3.63.8）诊断：把「提交了什么」记进我们自己的 SP
+        //   （宿主侧日志被 ColorOS 吞了，只能从这头取证：UI 到底发没发、发了什么）
+        FdmPush.sp(ctx).edit()
+            .putLong("dbg.commit_at", System.currentTimeMillis())
+            .putString("dbg.commit_box", inBox.joinToString("|"))
+            .apply()
         compose(ctx, inBox, cards)
     }
 
@@ -397,49 +409,86 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
     //     "两列同屏"在结构上就不可能发生。横滑只用来**换列**（不跟随、不做连续位移），
     //     换列时用 `AnimatedContent` 播一个离散的滑入滑出（位置永远只有 0/1 两个状态）。
 
-    /* ── 文本编辑状态（**失焦 / 收起卡片时提交**） ── */
-    var editKey by remember { mutableStateOf<String?>(null) }
-    var editTitle by remember { mutableStateOf(false) }
-    var editBuf by remember { mutableStateOf("") }
+    /* ── 文本编辑：**缓冲按卡片存**，不再有"当前在编辑哪张"这种状态 ──
+     *  ★ 2026-10-10（3.63.9）真因：之前"正在编辑哪张卡"（editKey）只在**点开卡片那一刻**设置，
+     *    而 `expanded` 是从存档恢复的 ⇒ **一进页面卡片本来就是展开的** ⇒ editKey 从没被设过
+     *    ⇒ 「提交」按钮找不到要提交的东西，必须"重新打开卡片/聚焦输入框"才醒。
+     *  ⇒ 现在：谁的内容变了就记在 **`bufs[卡片键]`**（标题用 `卡片键|title`）里，
+     *    按钮/失焦/收起/离开页面时把缓冲写回卡片并提交 ⇒ **按钮随时可用**。
+     */
+    val bufs = remember { mutableStateMapOf<String, String>() }
+    var titleEditing by remember { mutableStateOf<String?>(null) }   // 哪张卡的"标题输入框"开着（纯 UI 模式）
+
+    fun titleKey(k: String) = k + "|title"
+
+    /** 把某张卡的缓冲写回并提交；**返回这次有没有改动**。 */
+    fun commitCard(key: String): Boolean {
+        val c = cards[key] ?: return false
+        var changed = false
+        bufs[key]?.let { if (it != c.text) { c.text = it; changed = true } }
+        bufs[titleKey(key)]?.let { if (it != c.title) { c.title = it; changed = true } }
+        bufs.remove(key)
+        bufs.remove(titleKey(key))
+        if (changed) commit()
+        return changed
+    }
+
+    /** 把所有缓冲都写回去（收起卡片 / 拖放 / 离开页面时用）。 */
+    fun commitAllBuffers(): Boolean {
+        var changed = false
+        bufs.keys.toList().forEach { k ->
+            val key = if (k.endsWith("|title")) k.removeSuffix("|title") else k
+            if (commitCard(key)) changed = true
+        }
+        return changed
+    }
 
     /**
      * 把正在编辑的那张卡"提交"（改内存 → 落盘 → 重建提示词）。
      *
      * <p>★ 这里**必须区分**"正在编辑标题"还是"正在编辑正文" ——
-     * 两者共用同一个输入缓冲 `editBuf`，不小心就会把标题写进正文里（3.62.0 的真实 bug）。
+     * （历史：3.62.0 时标题与正文**共用同一个输入缓冲** `editBuf` ⇒ 改标题会被当成正文写进去；
+     *   3.63.9 起缓冲**按卡片 + 按用途分开**（`bufs[key]` / `bufs[key|title]`），这条坑已经不存在了。）
      */
-    /** 提交正在编辑的文本；**返回这次有没有真的改动**（按钮反馈要用）。 */
-    fun flushEditChanged(): Boolean {
-        val k = editKey
-        var changed = false
-        if (k != null) {
-            val c = cards[k]
-            if (c != null) {
-                if (editTitle) {
-                    if (editBuf != c.title) { c.title = editBuf; changed = true }
-                } else {
-                    if (editBuf != c.text) { c.text = editBuf; changed = true }
+    /* ── 拼合结果预览（★ 3.64.3：主人要的"点击保存以后弹出拼合后的系统提示词"）──
+     *  实现：保存/提交时**让宿主重建**，然后轮询把 `sysprompt_text` 读回来显示
+     *  （内置三张卡"自带的约定"文案在宿主那边，界面自己拼不出来 ⇒ 只能读回真值）。
+     */
+    val scope = rememberCoroutineScope()
+    var promptPreview by remember { mutableStateOf<String?>(null) }
+
+    fun showComposed() {
+        scope.launch {
+            // ★★ 2026-10-10（3.64.4）**只认"新回话"**：
+            //   上一版这里直接读缓存的 `cmd.cfg_state` ⇒ 宿主没在跑时读到的是**旧快照**，
+            //   于是"拼合结果"显示成上一次的内容（主人看到的"拼合的还是旧的"就是这个）。
+            //   判据：宿主每次回话都会刷新 `host.at`（UI 侧收到广播时写的）⇒ 用它比大小。
+            val before = FdmPush.sp(ctx).getLong("host.at", 0L)
+            repeat(12) {
+                kotlinx.coroutines.delay(300)
+                FdmPush.sendCmd(ctx, "cfg_state", null)
+                kotlinx.coroutines.delay(300)
+                val at = FdmPush.sp(ctx).getLong("host.at", 0L)
+                if (at > before) {                       // 收到**新**回话
+                    val raw = FdmPush.sp(ctx).getString("cmd.cfg_state", null)
+                    val t = raw?.let { jsonToMap(it)["sysprompt_text"] }
+                    if (t != null) {
+                        promptPreview = t
+                        return@launch
+                    }
                 }
-                if (changed) commit()
             }
+            promptPreview =
+                "（宿主没回话）\n\n" +
+                "提示词是**由宿主（DeepSeek）里的模块**负责写进去的 ——\n" +
+                "所以必须**先打开 DeepSeek**，再来点保存/提交。\n\n" +
+                "（现在这个界面照旧能编辑、能排版；只是「写进去」这一步要宿主在场。）"
         }
-        editKey = null
-        editTitle = false
-        return changed
     }
 
-    /** 只当"提交一下"用的薄封装（收起卡片 / 切目标时调）。 */
-    fun flushEdit() {
-        flushEditChanged()
-    }
-
-    /** 切到别的输入目标之前，先把上一次的编辑**收干净**（否则那一笔就丢了）。 */
-    fun beginEdit(key: String, title: Boolean) {
-        if (editKey != null && editKey != key) flushEdit()
-        else if (editKey == key && editTitle != title) flushEdit()
-        editKey = key
-        editTitle = title
-        editBuf = if (title) cards[key]?.title ?: "" else cards[key]?.text ?: ""
+    // 离开页面时把没提交的字交上去（免得"打了字、没点提交、走了"就丢了）
+    DisposableEffect(Unit) {
+        onDispose { commitAllBuffers() }
     }
 
     // 二次确认（红删除）
@@ -448,11 +497,12 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
     Scaffold(
         topBar = {
             FdmTopBar(
-                title = "系统提示词 v2",
+                title = "系统提示词",
                 onBack = onBack,
-                onSave = {                       // ★ 保险：重存一次 + 重建一次（改动本来就实时）
+                onSave = {                       // ★ 保存：先交出缓冲 → 重存 → 重建 → **弹出拼合结果**
+                    commitAllBuffers()
                     commit()
-                    Toast.makeText(ctx, "已保存（容器 ${inBox.size} 张卡）", Toast.LENGTH_SHORT).show()
+                    showComposed()
                 },
                 onMore = { more = true },
             )
@@ -503,6 +553,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
 
             /** 松手：落哪边归哪边；**源卡片是"复制"**（源留着，容器里长出一张新副本）。 */
             fun drop() {
+                commitAllBuffers()   // 拖之前先把没提交的字交上去（免得搬运把字丢了）
                 val id = dragId
                 if (id != null) {
                     val r = draggedRect()
@@ -575,30 +626,37 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     expanded = id in expanded,
                     dragging = id == dragId,
                     dragOff = if (id == dragId) dragOff else Offset.Zero,
-                    editing = editKey == id,
-                    editingTitle = editKey == id && editTitle,
-                    editBuf = if (editKey == id) editBuf else "",
+                    bodyBuf = bufs[id],
+                    titleBuf = bufs[titleKey(id)],
+                    titleEditing = titleEditing == id,
                     bounds = bounds,
-                    // ★ 主人：「抽屉里的卡片改成不能展开，不然会出显示bug」⇒ 抽屉里只当"卡片条"，
-                    //   展开（编辑内容）在容器里做 —— 那儿空间够，也不会把抽屉挤爆。
-                    noExpand = fromDrawer,
+                    // ★ 2026-10-10（3.64.3）主人澄清：
+                    //   · **自定义文本"副本"** ⇒ 抽屉里也能展开编辑（3.64.2 解禁的就是它们）
+                    //   · **「系统提示词内容」= 默认模板** ⇒ **锁死**：不能展开、不能编辑
+                    //     （它只负责"拖出来复制一份"，本身不该被改）
+                    //   · **内置三张** ⇒ 抽屉里也不展开（展开只有一句占位，没东西可编）
+                    noExpand = c.isBuiltin || c.type == T_TEXTSRC,
                     // ★ 红删除：**只有暂存在抽屉里的自定义文本副本**才有
                     showDelete = fromDrawer && c.type == T_TEXT,
                     onToggle = {
-                        flushEdit()          // 先把别的卡的编辑收干净
-                        val wasOpen = id in expanded
-                        expanded = if (wasOpen) expanded - id else expanded + id
-                        // ★ 2026-10-10（3.63.7）修：「必须聚焦一下输入框，按钮才刷新状态」——
-                        //   提交按钮依赖 `editKey`，而 `editKey` 原来**只在输入框拿到焦点时**才设置
-                        //   ⇒ 展开卡片后直接点「提交」= 什么都没发生（看着就是按钮坏了）。
-                        //   ⇒ 现在**展开文本卡就自动进入编辑态**（缓冲立刻等于当前文本），
-                        //     不必先点一下输入框。内置三张没有正文，不参与。
-                        if (!wasOpen && c.isText) beginEdit(id, false)
+                        commitAllBuffers()   // 收起/展开前先把别的卡的字交上去
+                        if (id in expanded) {
+                            titleEditing = null
+                            expanded = expanded - id
+                        } else {
+                            expanded = expanded + id
+                        }
                     },
                     onNav = { onNav(typeNavTarget(c.type)) },
-                    onEditStart = { title -> beginEdit(id, title) },
-                    onBufChange = { editBuf = it },
-                    onCommitEditChanged = { flushEditChanged() },
+                    onTitleEditStart = { titleEditing = id },
+                    onBodyChange = { bufs[id] = it },
+                    onTitleChange = { bufs[titleKey(id)] = it },
+                    onCommit = {
+                        val ch = commitCard(id)
+                        titleEditing = null
+                        showComposed()      // ★ 提交后同样把"拼合结果"给主人看一眼
+                        ch
+                    },
                     onWithTitle = { v ->
                         c.withTitle = v
                         commit()
@@ -647,10 +705,8 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                             .weight(1f)
                             .padding(horizontal = Edge)
                             .onGloballyPositioned { boxRect = it.boundsInRoot() }
-                            .background(
-                                MaterialTheme.colorScheme.surfaceContainerHigh,
-                                RoundedCornerShape(28.dp),
-                            ),
+                            // ★ 2026-10-10（3.64.2）：主人「把空白容器那个填充色改成透明」
+                            .background(Color.Transparent, RoundedCornerShape(28.dp)),
                     ) {
                         // 拖动中：容器自己亮一层淡蓝（在卡片**下面**，所以不挡卡片）
                         if (dragId != null) {
@@ -662,7 +718,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                         }
                         if (inBox.isEmpty()) {
                             Text(
-                                "（空白容器 · 把抽屉里的卡片拖上来）",
+                                Lang.S.emptyBox(ctx),   // ★ 3.67.0：跟着「说话方式」变
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
@@ -921,6 +977,31 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
         )
     }
 
+    /* ── 拼合后的系统提示词（保存/提交后弹出来） ── */
+    promptPreview?.let { txt ->
+        AlertDialog(
+            onDismissRequest = { promptPreview = null },
+            confirmButton = {
+                TextButton(onClick = { promptPreview = null }) { Text("好") }
+            },
+            title = { Text("拼合后的系统提示词（" + txt.length + " 字）") },
+            text = {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 360.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Text(
+                        if (txt.isEmpty()) "（空的 —— 容器里没有卡片，所以提示词是空的）" else txt,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            },
+        )
+    }
+
     /* ── 红色删除的二次确认 ── */
     val delKey = pendingDelete
     if (delKey != null) {
@@ -935,7 +1016,10 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     inDrawer = inDrawer.filter { it != delKey }
                     inBox = inBox.filter { it != delKey }
                     expanded = expanded - delKey
-                    if (editKey == delKey) { editKey = null; editTitle = false }
+                    // ★ 3.63.9：删卡片时把它的缓冲一起清掉（不再有 editKey 那套状态）
+                    bufs.remove(delKey)
+                    bufs.remove(titleKey(delKey))
+                    if (titleEditing == delKey) titleEditing = null
                     pendingDelete = null
                     commit()
                 }) { Text("删除", color = MaterialTheme.colorScheme.error) }
@@ -974,7 +1058,7 @@ private fun typeNavTarget(type: String): String = when (type) {
     T_SUGGEST -> "suggest"
     T_MUSIC -> "music"
     T_RICHTEXT -> "richtext"
-    else -> "sysprompt"
+    else -> "sysprompt_v2"
 }
 
 /**
@@ -992,20 +1076,23 @@ private fun PromptCard(
     expanded: Boolean,
     dragging: Boolean,
     dragOff: Offset,
-    editing: Boolean,
-    editingTitle: Boolean,
-    editBuf: String,
+    /** 正文缓冲（null = 没有未提交的改动，直接显示卡片里的文本）。 */
+    bodyBuf: String?,
+    /** 标题缓冲（同上）。 */
+    titleBuf: String?,
+    titleEditing: Boolean,
     bounds: MutableMap<String, Rect>,
     /** true = 这张卡**不能展开**（抽屉里用：展开会把抽屉挤爆、还会出显示 bug）。 */
     noExpand: Boolean,
     showDelete: Boolean,
     onToggle: () -> Unit,
     onNav: () -> Unit,
-    /** 开始编辑：true = 标题，false = 正文（由 ✏ 按钮或输入框拿到焦点时调）。 */
-    onEditStart: (Boolean) -> Unit,
-    onBufChange: (String) -> Unit,
-    /** 提交正在编辑的文本；**返回值 = 这次有没有真的改动**（给按钮做反馈用）。 */
-    onCommitEditChanged: () -> Boolean,
+    /** 点 ✏ ⇒ 打开标题输入框（纯 UI 模式）。 */
+    onTitleEditStart: () -> Unit,
+    onBodyChange: (String) -> Unit,
+    onTitleChange: (String) -> Unit,
+    /** 提交这张卡（正文+标题缓冲写回 + 重建提示词）；返回有没有改动。 */
+    onCommit: () -> Boolean,
     onWithTitle: (Boolean) -> Unit,
     onDelete: () -> Unit,
     onDragStart: () -> Unit,
@@ -1057,7 +1144,7 @@ private fun PromptCard(
         ) {
             // ★ 标题左边的「编辑标题」铅笔（只有自定义文本卡需要 —— 内置三张的标题是固定的）
             if (card.isText) {
-                IconButton(onClick = { onEditStart(true) }, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onTitleEditStart, modifier = Modifier.size(36.dp)) {
                     Icon(
                         Icons.Rounded.Edit, "编辑标题",
                         modifier = Modifier.size(18.dp),
@@ -1066,7 +1153,7 @@ private fun PromptCard(
                 }
             }
             Column(Modifier.weight(1f).padding(start = if (card.isText) 0.dp else 8.dp)) {
-                if (editing && editingTitle) {
+                if (titleEditing) {
                     // ★ 2026-10-10（3.62.2）修：标题原来"没处可退"（只能靠收起卡片/点别处）——
                     //   现在 **回车（Done）= 保存并退出** · **失焦 = 保存并退出**，并且进来就自动拿焦点。
                     //   `hadFocus` 这道闸是必须的：输入框刚出现在组合里时会先报一次"未聚焦"，
@@ -1077,8 +1164,8 @@ private fun PromptCard(
                         try { fr.requestFocus() } catch (t: Throwable) { }
                     }
                     OutlinedTextField(
-                        value = editBuf,
-                        onValueChange = onBufChange,
+                        value = titleBuf ?: card.title,
+                        onValueChange = onTitleChange,
                         singleLine = true,
                         label = { Text("标题") },
                         modifier = Modifier
@@ -1086,16 +1173,11 @@ private fun PromptCard(
                             .padding(vertical = 2.dp)
                             .focusRequester(fr)
                             .onFocusChanged { st ->
-                                if (st.isFocused) {
-                                    hadFocus = true
-                                    onEditStart(true)
-                                } else if (hadFocus) {
-                                    hadFocus = false
-                                    onCommitEditChanged()
-                                }
+                                if (st.isFocused) hadFocus = true
+                                else if (hadFocus) { hadFocus = false; onCommit() }
                             },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { onCommitEditChanged() }),
+                        keyboardActions = KeyboardActions(onDone = { onCommit() }),
                     )
                 } else {
                     Text(
@@ -1139,19 +1221,14 @@ private fun PromptCard(
                     //   比原来那坨"监听 pointerInput 里有没有按下"干净得多（那版还会漏事件）。
                     var bHadFocus by remember(card.key) { mutableStateOf(false) }
                     OutlinedTextField(
-                        value = if (editing && !editingTitle) editBuf else card.text,
-                        onValueChange = { onBufChange(it) },
+                        value = bodyBuf ?: card.text,
+                        onValueChange = onBodyChange,
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 72.dp, max = 200.dp)
                             .onFocusChanged { st ->
-                                if (st.isFocused) {
-                                    bHadFocus = true
-                                    onEditStart(false)
-                                } else if (bHadFocus) {
-                                    bHadFocus = false
-                                    onCommitEditChanged()
-                                }
+                                if (st.isFocused) bHadFocus = true
+                                else if (bHadFocus) { bHadFocus = false; onCommit() }
                             },
                         placeholder = { Text(card.text.ifEmpty { DEF_TEXT }) },
                         label = { Text("这一段的提示词内容") },
@@ -1172,16 +1249,11 @@ private fun PromptCard(
                     //   现在点了会明确回一句：提交成功 / 本次没有改动。
                     val ctx2 = LocalContext.current
                     TextButton(onClick = {
-                        // ★ 3.63.7：即使"没在编辑"也要给回执 —— 否则主人只会看到"点了没反应"
-                        val editingNow = editing
-                        val changed = onCommitEditChanged()
+                        // ★ 3.63.9：**随时可点** —— 缓冲按卡片存，不再依赖焦点/是否"正在编辑"
+                        val changed = onCommit()
                         Toast.makeText(
                             ctx2,
-                            when {
-                                changed -> "已提交到系统提示词 ✓"
-                                editingNow -> "没有改动（内容与已保存的一致）"
-                                else -> "没有任何改动需要提交"
-                            },
+                            if (changed) "已提交到系统提示词 ✓" else "没有改动（内容与已保存的一致）",
                             Toast.LENGTH_SHORT,
                         ).show()
                     }) { Text("提交到提示词") }
@@ -1211,7 +1283,7 @@ private fun cardHint(c: CCard): String = when (c.type) {
     T_SUGGEST -> "自带的【追问建议】约定 · 拖回抽屉 = 这一段不进提示词"
     T_MUSIC -> "自带的【音乐变量】示例 · 拖回抽屉 = 这一段不进提示词"
     T_RICHTEXT -> "自带的【回答排版】约定 · 拖回抽屉 = 这一段不进提示词"
-    T_TEXTSRC -> "拖到容器里 = 复制一张新的（能无限拖）"
+    T_TEXTSRC -> "默认模板（锁着，不能改）· 拖到容器里 = 复制一张新的（能无限拖）"
     else -> if (c.text.isEmpty()) "（还没写内容 · 点开卡片编辑）" else c.text.take(60)
 }
 

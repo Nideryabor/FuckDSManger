@@ -4,6 +4,13 @@ package com.nidyaber.fuckdsmanger
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.res.painterResource
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.Image
+import android.widget.Toast
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -77,6 +84,11 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(onNav: (Int) -> Unit) {
+    val ctx = LocalContext.current
+    // ★ 3.67.0 彩蛋状态：连点计数 + 语言弹窗 + 当前说话方式（用 state 是为了让标语当场跟着变）
+    var taps by remember { mutableIntStateOf(0) }
+    var showLangPick by remember { mutableStateOf(false) }
+    var lang by remember { mutableIntStateOf(Lang.current(ctx)) }
     Scaffold(
         bottomBar = { FdmNavBar(selected = 1, onSelect = onNav) },
         containerColor = MaterialTheme.colorScheme.surface,
@@ -87,15 +99,29 @@ fun AboutScreen(onNav: (Int) -> Unit) {
         ) {
             /* ── 412×368 容器：图片居中 + 下部粗体标题（组件叠在容器之上） ── */
             ContainerBox(368.dp, MaterialTheme.colorScheme.primaryContainer) {
-                ImagePlaceholder(200.dp, Modifier.align(Alignment.Center)) {
-                    Icon(
-                        Icons.Rounded.EditNote, null,
-                        modifier = Modifier.size(72.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                // ★ 2026-10-10（3.67.0）彩蛋：这个方块换成尼尼的图，**连点 7 下**弹「说话方式」弹窗
+                Box(
+                    Modifier
+                        .size(200.dp)
+                        .align(Alignment.Center)
+                        .clip(RoundedCornerShape(24.dp))
+                        .clickable {
+                            taps += 1
+                            if (taps >= 7) {          // 连点七下（点了别处会由下面那句 Toast 之外的重置兜住）
+                                taps = 0
+                                showLangPick = true
+                            }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.fdm_mascot),
+                        contentDescription = "FDM",
+                        modifier = Modifier.size(200.dp),
                     )
                 }
                 Text(
-                    "FDM-100%由DS鬼脑发动的神秘模块",
+                    Lang.S.tagline(ctx),
                     fontSize = 22.sp,
                     lineHeight = 30.sp,
                     fontWeight = FontWeight.Bold,
@@ -136,6 +162,9 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                         "m3e-canvas（本项目的 UI 设计/实现参考）",
                         "项目地址：https://github.com/lnkiai/m3e-canvas",
                         "■神：我也不知道怎么会有这个。",
+                        // ★ 3.67.0：从「音乐」页搬过来的那条
+                        "NeteaseCloudMusicApi（Binaryify，MIT）：音乐功能的接口与加密算法参考"
+                                + "（本模块只用它的算法与接口约定，加密层用 Java 重写了一遍）",
                     ).forEach {
                         Text(
                             it,
@@ -147,6 +176,69 @@ fun AboutScreen(onNav: (Int) -> Unit) {
             }
             Spacer(Modifier.height(16.dp))
         }
+    }
+
+    /* ★ 3.67.0 彩蛋：说话方式（人话 / 龙龙语） */
+    if (showLangPick) {
+        AlertDialog(
+            onDismissRequest = { showLangPick = false },
+            title = { Text("说话方式") },
+            text = {
+                Column {
+                    Text(
+                        "点这张图七下才出来的小彩蛋 —— 选一种说话方式：",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    listOf(Lang.HUMAN to "人话", Lang.DRAGON to "龙龙语").forEach { (v, name) ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { lang = v }
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = lang == v, onClick = { lang = v })
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    if (v == Lang.DRAGON) "尼尼的母语（嗷呜咕噜）" else "正经说话（默认）",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "现在接进去的地方还不多（关于页标语 / 系统提示词页的空容器 / 帮助入口）—— 要加哪一句跟我说。",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    Lang.set(ctx, lang)
+                    showLangPick = false
+                    Toast.makeText(
+                        ctx,
+                        if (lang == Lang.DRAGON) "嗷呜～以后就这么说话咕" else "好，正经说话。",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }) { Text("确认") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLangPick = false }) { Text("取消") }
+            },
+        )
     }
 }
 
