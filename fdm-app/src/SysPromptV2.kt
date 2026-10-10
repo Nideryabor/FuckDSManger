@@ -5,6 +5,12 @@ package com.nidyaber.fuckdsmanger
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -384,26 +390,12 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
     /* ── 抽屉里左右两列（内置 / 自定义）：各占一屏，横滑切换 ── */
     //  ★ 主人 2026-10-10：「我还是决定左右列 …… 左边是内置功能提示词，右边是专门放用户自定义提示词的，
     //    这样不会混在一起」。左边 = 三张内置卡；右边 = 源卡片 + 所有自定义副本。
-    var colIdx by remember { mutableIntStateOf(0) }       // 目标列（0 内置 / 1 自定义）
-    var colFPos by remember { mutableFloatStateOf(0f) }   // 当前列（浮点，拖动中连续）
-    var colSettle by remember { mutableStateOf(false) }   // 正在用手拖（这时别用动画抢）
-    // ★ 2026-10-10（3.63.1）：列宽**不再"先测量再回填"** —— 那套首帧拿到的是 0（我写成 1f），
-    //   而 `onSizeChanged` 的回填一旦没跟上，两列就只有 1px 宽 ⇒ **卡片全部隐形**
-    //   （主人报的"UI 里没有可以拖的卡片了（包括内置的）"就是这个）。
-    //   改用 `BoxWithConstraints` 的 `maxWidth`：**组合期就已知**，首帧就是对的。
-
-    LaunchedEffect(colIdx, colSettle) {
-        if (!colSettle) {
-            animate(
-                initialValue = colFPos,
-                targetValue = colIdx.toFloat(),
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                ),
-            ) { v, _ -> colFPos = v }
-        }
-    }
+    var colIdx by remember { mutableIntStateOf(0) }        // 0 = 内置列 / 1 = 自定义列
+    // ★★ 2026-10-10（3.63.5）：**不再做"左右分页位移"那套**。
+    //   前两版想"横滑跟手 + 吸附到整列"，结果反复出现"两列同屏 / 卡在中间"（主人截图为证）。
+    //   ⇒ 换成最笨也最稳的：**只渲染当前那一列**，另一列**根本不进组合** ——
+    //     "两列同屏"在结构上就不可能发生。横滑只用来**换列**（不跟随、不做连续位移），
+    //     换列时用 `AnimatedContent` 播一个离散的滑入滑出（位置永远只有 0/1 两个状态）。
 
     /* ── 文本编辑状态（**失焦 / 收起卡片时提交**） ── */
     var editKey by remember { mutableStateOf<String?>(null) }
@@ -416,18 +408,29 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
      * <p>★ 这里**必须区分**"正在编辑标题"还是"正在编辑正文" ——
      * 两者共用同一个输入缓冲 `editBuf`，不小心就会把标题写进正文里（3.62.0 的真实 bug）。
      */
-    fun flushEdit() {
-        val k = editKey ?: return
-        val c = cards[k]
-        if (c != null) {
-            if (editTitle) {
-                if (editBuf != c.title) { c.title = editBuf; commit() }
-            } else {
-                if (editBuf != c.text) { c.text = editBuf; commit() }
+    /** 提交正在编辑的文本；**返回这次有没有真的改动**（按钮反馈要用）。 */
+    fun flushEditChanged(): Boolean {
+        val k = editKey
+        var changed = false
+        if (k != null) {
+            val c = cards[k]
+            if (c != null) {
+                if (editTitle) {
+                    if (editBuf != c.title) { c.title = editBuf; changed = true }
+                } else {
+                    if (editBuf != c.text) { c.text = editBuf; changed = true }
+                }
+                if (changed) commit()
             }
         }
         editKey = null
         editTitle = false
+        return changed
+    }
+
+    /** 只当"提交一下"用的薄封装（收起卡片 / 切目标时调）。 */
+    fun flushEdit() {
+        flushEditChanged()
     }
 
     /** 切到别的输入目标之前，先把上一次的编辑**收干净**（否则那一笔就丢了）。 */
@@ -520,6 +523,8 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                         if (id != K_SRC) {                       // 源卡片本来就常驻抽屉，拖回是空操作
                             inBox = inBox.filter { it != id }
                             inDrawer = insertByY(inDrawer, id, r.center.y, sameColumnOnly = true)
+                            // ★ 归档回去之后，自动切到它该在的那一列（不然主人还得自己找）
+                            colIdx = if (c?.isBuiltin == true) 0 else 1
                             commit()
                         }
                     }                                              // 落空 ⇒ 什么都不做
@@ -586,7 +591,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     onNav = { onNav(typeNavTarget(c.type)) },
                     onEditStart = { title -> beginEdit(id, title) },
                     onBufChange = { editBuf = it },
-                    onCommitEdit = { flushEdit() },
+                    onCommitEditChanged = { flushEditChanged() },
                     onWithTitle = { v ->
                         c.withTitle = v
                         commit()
@@ -733,38 +738,32 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f),
                                 )
-                                DrawerTab("内置", colFPos < 0.5f) { colIdx = 0 }
+                                DrawerTab("内置", colIdx == 0) { colIdx = 0 }
                                 Spacer(Modifier.width(4.dp))
-                                DrawerTab("自定义", colFPos > 0.5f) { colIdx = 1 }
+                                DrawerTab("自定义", colIdx == 1) { colIdx = 1 }
                             }
-                            BoxWithConstraints(
+                            Box(
                                 Modifier
                                     .fillMaxWidth()
                                     .weight(1f)
-                                    .pointerInput(Unit) {
-                                        // 抽屉里的**横滑**：切左右两列（竖滑仍然归抽屉自己，靠内层优先）
+                                    .pointerInput(colIdx) {
+                                        // 横滑**只用来换列**：不跟手、不做连续位移 ⇒ 不可能停在中间
+                                        var acc = 0f
                                         detectHorizontalDragGestures(
+                                            onDragStart = { acc = 0f },
                                             onDragEnd = {
-                                                colSettle = false
-                                                colIdx = if (colFPos > 0.5f) 1 else 0
+                                                if (acc < -60f) colIdx = 1
+                                                else if (acc > 60f) colIdx = 0
+                                                acc = 0f
                                             },
-                                            onDragCancel = {
-                                                colSettle = false
-                                                colIdx = if (colFPos > 0.5f) 1 else 0
-                                            },
+                                            onDragCancel = { acc = 0f },
                                         ) { change, delta ->
-                                            colSettle = true
-                                            // pointerInput 的 lambda 在外层作用域 ⇒ 看不到 pagePx，用它自己的 size
-                                            val w = size.width.toFloat().coerceAtLeast(1f)
-                                            colFPos = (colFPos - delta / w).coerceIn(0f, 1f)
+                                            acc += delta
                                             change.consume()
                                         }
                                     },
                             ) {
-                                // 列宽 = 可用宽度（组合期就知道，不用等测量）
-                                val pageDp = if (maxWidth.value.isFinite() && maxWidth.value > 1f) maxWidth else 320.dp
-                                val pagePx = with(density) { pageDp.toPx() }
-                                // ★ 拖动中 & 这张卡不在抽屉里 ⇒ 整片高亮：松手 = 归档回抽屉
+                                // 拖动中 & 这张卡不在抽屉里 ⇒ 整片高亮：松手 = 归档回抽屉
                                 if (dragId != null && dragId !in inDrawer) {
                                     Box(
                                         Modifier
@@ -781,59 +780,69 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                         )
                                     }
                                 }
-                                Row(
-                                    Modifier.offset {
-                                        IntOffset((-colFPos * pagePx).roundToInt(), 0)
+                                AnimatedContent(
+                                    targetState = colIdx,
+                                    transitionSpec = {
+                                        if (targetState > initialState) {
+                                            (slideInHorizontally { it } + fadeIn()) togetherWith
+                                                    (slideOutHorizontally { -it } + fadeOut())
+                                        } else {
+                                            (slideInHorizontally { -it } + fadeIn()) togetherWith
+                                                    (slideOutHorizontally { it } + fadeOut())
+                                        }
                                     },
-                                ) {
-                                    /* ── 左列：内置功能提示词 ── */
-                                    Column(
-                                        Modifier
-                                            .width(pageDp)
-                                            .fillMaxHeight()
-                                            .verticalScroll(rememberScrollState()),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        Text(
-                                            "内置功能提示词",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        val bi = inDrawer.filter { cards[it]?.isBuiltin == true }
-                                        if (bi.isEmpty()) {
+                                    label = "drawerCol",
+                                ) { ci ->
+                                    if (ci == 0) {
+                                        /* ── 左列：内置功能提示词 ── */
+                                        Column(
+                                            Modifier
+                                                .fillMaxSize()
+                                                .verticalScroll(rememberScrollState()),
+                                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
                                             Text(
-                                                "（都搬到上面了）",
-                                                style = MaterialTheme.typography.bodySmall,
+                                                "内置功能提示词",
+                                                style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
+                                            val bi = inDrawer.filter { cards[it]?.isBuiltin == true }
+                                            if (bi.isEmpty()) {
+                                                Text(
+                                                    "（都搬到上面了）",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                            }
+                                            bi.forEach { id -> CardSlot(id, fromDrawer = true) }
                                         }
-                                        bi.forEach { id -> CardSlot(id, fromDrawer = true) }
-                                    }
-                                    /* ── 右列：用户自定义提示词 ── */
-                                    Column(
-                                        Modifier
-                                            .width(pageDp)
-                                            .fillMaxHeight()
-                                            .verticalScroll(rememberScrollState()),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        Text(
-                                            "自定义提示词（暂存在这儿 · 也能归档回来）",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        val cu = inDrawer.filter {
-                                            val t = cards[it]?.type
-                                            t == T_TEXT || t == T_TEXTSRC
-                                        }
-                                        if (cu.isEmpty()) {
+                                    } else {
+                                        /* ── 右列：用户自定义提示词 ── */
+                                        Column(
+                                            Modifier
+                                                .fillMaxSize()
+                                                .verticalScroll(rememberScrollState()),
+                                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
                                             Text(
-                                                "（这儿是空的）",
-                                                style = MaterialTheme.typography.bodySmall,
+                                                "自定义提示词（暂存在这儿 · 也能归档回来）",
+                                                style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1, overflow = TextOverflow.Ellipsis,
                                             )
+                                            val cu = inDrawer.filter {
+                                                val t = cards[it]?.type
+                                                t == T_TEXT || t == T_TEXTSRC
+                                            }
+                                            if (cu.isEmpty()) {
+                                                Text(
+                                                    "（这儿是空的）",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                            }
+                                            cu.forEach { id -> CardSlot(id, fromDrawer = true) }
                                         }
-                                        cu.forEach { id -> CardSlot(id, fromDrawer = true) }
                                     }
                                 }
                             }
@@ -988,7 +997,8 @@ private fun PromptCard(
     /** 开始编辑：true = 标题，false = 正文（由 ✏ 按钮或输入框拿到焦点时调）。 */
     onEditStart: (Boolean) -> Unit,
     onBufChange: (String) -> Unit,
-    onCommitEdit: () -> Unit,
+    /** 提交正在编辑的文本；**返回值 = 这次有没有真的改动**（给按钮做反馈用）。 */
+    onCommitEditChanged: () -> Boolean,
     onWithTitle: (Boolean) -> Unit,
     onDelete: () -> Unit,
     onDragStart: () -> Unit,
@@ -1012,18 +1022,11 @@ private fun PromptCard(
                 }
             }
             .clip(RoundedCornerShape(CardRadius))
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .pointerInput(card.key) {
-                // ★ 2026-10-10（3.63.0）：**长按才拖动**（主人：「把拖动改成长按触发，这样滑动就可以滑动列表了」）
-                //   —— 轻扫/竖滑不再被"拖卡片"抢走，列表能正常滚；
-                //   长按（约 500ms）之后卡片才跟手。
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { onDragStart() },
-                    onDrag = { change, amount -> onDragMove(amount); change.consume() },
-                    onDragEnd = { onDragEnd() },
-                    onDragCancel = { onDragCancel() },
-                )
-            },
+            .background(MaterialTheme.colorScheme.surfaceContainerLow),
+        // ★★ 2026-10-10（3.63.6）修：「卡片下面那个按钮死活点不动」——
+        //   长按拖动原来挂在**整张卡**上（连展开区一起罩住）：输入框、开关、提交按钮全在它的手势范围里。
+        //   现在把它收窄到**标题行** ⇒ 展开区**没有任何拖动手势**，点哪儿都算数。
+        //   （老账 3.51.0：「可拖区域和可点区域别重叠」—— 这次是第二次栽在同一个地方。）
     ) {
         Row(
             Modifier
@@ -1032,6 +1035,16 @@ private fun PromptCard(
                 // ★ 点击展开**只在这一行**（展开区里的按钮/输入框不受影响）；
                 //   整张卡的点击拿掉了 —— 否则在展开区里点一下就把卡片收起来，很烦。
                 .clickable(enabled = !noExpand) { onToggle() }
+                // 长按 = 拖这张卡（放在 clickable 之后 ⇒ 拖拽检测在内层、先拿事件；
+                // 超过 touch slop 就 consume、点击自动作废；轻点则拖动不 consume、点击照常）
+                .pointerInput(card.key) {
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = { onDragStart() },
+                        onDrag = { change, amount -> onDragMove(amount); change.consume() },
+                        onDragEnd = { onDragEnd() },
+                        onDragCancel = { onDragCancel() },
+                    )
+                }
                 .padding(start = 8.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -1071,11 +1084,11 @@ private fun PromptCard(
                                     onEditStart(true)
                                 } else if (hadFocus) {
                                     hadFocus = false
-                                    onCommitEdit()
+                                    onCommitEditChanged()
                                 }
                             },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { onCommitEdit() }),
+                        keyboardActions = KeyboardActions(onDone = { onCommitEditChanged() }),
                     )
                 } else {
                     Text(
@@ -1130,7 +1143,7 @@ private fun PromptCard(
                                     onEditStart(false)
                                 } else if (bHadFocus) {
                                     bHadFocus = false
-                                    onCommitEdit()
+                                    onCommitEditChanged()
                                 }
                             },
                         placeholder = { Text(card.text.ifEmpty { DEF_TEXT }) },
@@ -1147,7 +1160,18 @@ private fun PromptCard(
                         Switch(checked = card.withTitle, onCheckedChange = onWithTitle)
                     }
                     Spacer(Modifier.height(6.dp))
-                    TextButton(onClick = onCommitEdit) { Text("提交（也会在收起卡片时自动提交）") }
+                    // ★ 2026-10-10（3.63.6）：原来点了**屏幕上什么都不会变**
+                    //   （正文照样在框里、卡片照样开着）⇒ 看起来就是"点不动"。
+                    //   现在点了会明确回一句：提交成功 / 本次没有改动。
+                    val ctx2 = LocalContext.current
+                    TextButton(onClick = {
+                        val changed = onCommitEditChanged()
+                        Toast.makeText(
+                            ctx2,
+                            if (changed) "已提交到系统提示词 ✓" else "没有改动（内容与已保存的一致）",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }) { Text("提交到提示词") }
                 } else {
                     Box(
                         Modifier
