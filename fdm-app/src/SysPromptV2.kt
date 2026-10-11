@@ -465,10 +465,15 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
             //   于是"拼合结果"显示成上一次的内容（主人看到的"拼合的还是旧的"就是这个）。
             //   判据：宿主每次回话都会刷新 `host.at`（UI 侧收到广播时写的）⇒ 用它比大小。
             val before = FdmPush.sp(ctx).getLong("host.at", 0L)
-            repeat(12) {
-                kotlinx.coroutines.delay(300)
-                FdmPush.sendCmd(ctx, "cfg_state", null)
-                kotlinx.coroutines.delay(300)
+            // ★★ 3.69.4 修「大窝没应声」（主人 2026-10-11 实测：宿主明明在跑、却弹这句）
+            //   两个毛病：
+            //     ① **窗口太短**：12 轮 × 600ms = 7.2 秒。宿主正在跑对话/思考时，
+            //        一条回执晚到几秒就判"没应声" ⇒ 现在 24 轮 × 600ms ≈ 14 秒。
+            //     ② **先等再发**：原来先 delay 300 再发命令，白白浪费半秒起手；
+            //        改成**先把命令发出去**，再等回执（第一次往返更早开始）。
+            repeat(24) {
+                FdmPush.sendCmd(ctx, "cfg_state", null)   // 先问
+                kotlinx.coroutines.delay(600)             // 再等
                 val at = FdmPush.sp(ctx).getLong("host.at", 0L)
                 if (at > before) {                       // 收到**新**回话
                     val raw = FdmPush.sp(ctx).getString("cmd.cfg_state", null)

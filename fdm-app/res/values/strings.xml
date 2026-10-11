@@ -475,7 +475,7 @@
     <string name="spv_006">自定义文本</string>
     <string name="spv_007">存摆放失败：</string>
     <string name="spv_008">重建提示词失败：</string>
-    <string name="spv_009">"（宿主没回话）
+    <string name="spv_009">"（大窝还没回话 —— 它可能正忙。先去宿主里发条消息，再回来点一次「存好/提交」试试）
 
 "</string>
     <string name="spv_010">"提示词是**由宿主（DeepSeek）里的模块**负责写进去的 ——

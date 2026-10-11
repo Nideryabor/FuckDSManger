@@ -158,6 +158,23 @@ public final class GmRichText {
     public static final String[] DJ_OPENS = {
             "\u27E6DJ:", "[DJ:", "\uFF3BDJ:", "\u3010DJ:"
     };
+    /**
+     * ★★ 3.69.4：有没有点歌标记（**四种括号形态都算**）。
+     *
+     * <p>这是给 {@code GmRichTextHook.mayRender()} 那道**快速闸**用的。
+     * 漏了它 ⇒ 只写点歌标记的回复会被闸直接拦掉、{@code scan()} 根本不跑
+     * ⇒ 标记原样漏在气泡里（真机实测，见 {@code 版本/3.69.4.md}）。
+     *
+     * <p>★ 教训：**加一族标记 = 三处一起改**（本类常量 + {@code scan()} + 那道快速闸）。
+     */
+    public static boolean hasDj(String s) {
+        if (s == null) return false;
+        for (String op : DJ_OPENS) {
+            if (s.indexOf(op) >= 0) return true;
+        }
+        return false;
+    }
+
     /** 与 {@link #DJ_OPENS} 一一对应的闭括号 */
     public static final String[] DJ_CLOSES = {
             "\u27E7", "]", "\uFF3D", "\u3011"

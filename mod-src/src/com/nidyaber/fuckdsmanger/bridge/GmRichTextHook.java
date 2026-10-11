@@ -139,7 +139,17 @@ public final class GmRichTextHook extends XC_MethodHook {
             if (text == null || text.isEmpty()) return;
 
             // ★ 第一道闸：绝大多数调用（以及同一帧的反复重入）在这一行就结束
-            if (!mayRender(text)) return;
+            if (!mayRender(text)) {
+                // ★ 3.69.4 诊断：闸没放行、但文本里像有 DJ ⇒ 记一次（这次就是它拦掉的）
+                if (text.indexOf("DJ") >= 0) {
+                    int k = text.indexOf("DJ");
+                    GmUtil.logOnce("richHook.djgate",
+                            "快速闸拦下了含 DJ 的文本（hasDj 没覆盖这种形态？）："
+                                    + text.substring(Math.max(0, k - 10),
+                                    Math.min(text.length(), k + 40)).replace("\n", "\\n"));
+                }
+                return;
+            }
             sRenders++;
 
             Object nb = rebuild(orig, text);
@@ -176,6 +186,10 @@ public final class GmRichTextHook extends XC_MethodHook {
         if (s.indexOf(GmRichText.OPEN) >= 0) return true;        // ⟦FDM:name|args⟧
         if (s.indexOf(GmRichText.ANON_OPEN) >= 0) return true;   // ⟦FDM⟧…⟦/FDM⟧
         if (GmRichText.hasSuggest(s)) return true;               // ★ <Suggestion>…</Suggestion>
+        // ★★ 3.69.4 补：点歌 ⟦DJ:…⟧（四种括号形态）。
+        //   原来漏了这一族 ⇒ 只写点歌标记的回复在这道闸就被拦掉、scan() 根本不跑 ✗
+        //   ★ 加一族标记必须同时改三处：GmRichText 的常量 / scan() / **这里**。
+        if (GmRichText.hasDj(s)) return true;
         return bareCached() && GmRichText.hasBareTag(s);
     }
 

@@ -251,7 +251,9 @@
     <string name="spv_006">自己写的话</string>
     <string name="spv_007">存摆放没成：</string>
     <string name="spv_008">重建提示词没成：</string>
-    <string name="spv_009">（大窝没应声嗷）</string>
+    <string name="spv_009">"（大窝还没应声 —— 它可能正忙着嗷。先去大窝里说句话，再回来点一次「存好/提交」）
+
+"</string>
     <string name="spv_010">"提示词是**由大窝（DeepSeek）里的小挂**负责写进去的 ——
 "</string>
     <string name="spv_011">"所以必须**先打开 DeepSeek**，再来点存好/提交。
