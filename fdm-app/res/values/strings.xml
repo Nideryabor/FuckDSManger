@@ -561,6 +561,8 @@
     <string name="spv_075">"· 「系统提示词内容」那张能**无限复制**出自定义文本卡，卡里写什么就是什么
 "</string>
     <string name="spv_076">⇒ 这个框里只剩「怎么送出去」的设置（开启/模式/承载/包装）。</string>
+    <string name="spv_dj">让模型点歌</string>
+    <string name="spv_dj_hint">模型回复里写 ⟦DJ:歌名-歌手⟧ 就能放歌；搜不到就放搜索结果第一条。⚠️ 宿主没在跑时拨不动（先开宿主）</string>
     <string name="tree_001">DeepSeek 灰度开关工具箱</string>
     <string name="tree_002">宿主下发配置的开关编辑器（改完保存，自动备份原值）</string>
     <string name="tree_003">AI 最新回复下方加一排追问按钮，点一下即发送</string>

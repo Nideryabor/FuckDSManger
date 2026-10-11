@@ -285,6 +285,8 @@
 "</string>
     <string name="spv_075">"· 「系统提示词内容」那张能**无限再叼一份**出自定义文本卡，卡里写什么就是什么
 "</string>
+    <string name="spv_dj">让模型给你点歌嗷</string>
+    <string name="spv_dj_hint">模型在回复里写 ⟦DJ:歌名-歌手⟧ 就能给你放歌嗷；搜不到就放第一条。⚠️ 大窝没在跑时拨不动（先开大窝）</string>
     <string name="tree_002">大窝下发配置的开关编辑器（改完存好，自动备份原值）</string>
     <string name="tree_004">装个环境</string>
     <string name="tree_005">隐藏 root / 小挂痕迹，绕过风控环境检测</string>

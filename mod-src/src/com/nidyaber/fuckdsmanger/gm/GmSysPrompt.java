@@ -506,6 +506,7 @@ public final class GmSysPrompt {
 
             String body = GmPromptVars.resolve(sp);         // ★ 发消息这一刻替换成真值
             if (body.isEmpty()) return prompt;
+            body = djSection(body);                         // ★ 3.69.0 点歌约定（开关开才补）
 
             String head = wrap(body);
             if (head.isEmpty()) return prompt;
@@ -517,6 +518,32 @@ public final class GmSysPrompt {
         } catch (Throwable t) {
             GmUtil.logFail("sysprompt.inject", t);
             return prompt;                                   // 任何异常都原样放行
+        }
+    }
+
+    /**
+     * 点歌约定 🐲 2026-10-11 · 3.69.0
+     *
+     * <p>主人：「在系统提示词的音乐里面加个开关，让模型能给用户点歌」。
+     * 真身逻辑在 {@code GmMusicDj}（那里要用 GmMusicPlayer ⇒ 在 bridge 包），
+     * 这里只负责**按照开关决定补不补那一段**。
+     *
+     * <p>⚠️ 为什么用「关掉才补」的键（{@code fuckds_dj_off}）而不是「开着才补」：
+     * {@code GmStore} 的原生 {@code read2(...,"b")} 在**没收到用户输入**时
+     * 对「压根没写过的键」要拿契约值，而契约值是**兜底 false** ——
+     * 于是"没写过"会被读成「关」（与用户选择矛盾，是这套存储里踩过的经典坑，
+     * 见 {@link com.nidyaber.fuckdsmanger.gm.GmRichText#boolOf} 里那条注释）。
+     * 用「关掉才补」后：没写过 ⇒ 兜底 false ⇒ 不冲突 ⇒ 默认**补**（就是用户要的默认开）。
+     */
+    private static String djSection(String body) {
+        try {
+            Context ctx = GmUtil.app();
+            if (ctx == null) return body;
+            boolean off = GmRichText.boolOf(ctx, "fuckds_dj_off", true);
+            if (off) return body;
+            return body + com.nidyaber.fuckdsmanger.bridge.GmMusicDj.promptSection();
+        } catch (Throwable t) {
+            return body;                        // 任何异常都不影响主流程
         }
     }
 

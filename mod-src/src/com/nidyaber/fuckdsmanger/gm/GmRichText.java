@@ -123,6 +123,24 @@ public final class GmRichText {
     public static final String ANON_CLOSE = "\u27E6/FDM\u27E7";
 
     /**
+     * 点歌标记开：{@code ⟦DJ:}（2026-10-11 · 3.69.0）🐲
+     *
+     * <p>主人：「在系统提示词的音乐里面加个开关，让模型能给用户点歌（以**歌曲-歌手**的模式，
+     * 搜不到歌曲默认结果第一个）」。
+     *
+     * <p>形态：{@code ⟦DJ:歌名-歌手⟧}，可选旗标 {@code ⟦DJ:歌名-歌手|hidden⟧}
+     * （hidden = 连「♪ 正在给你放…」那一行都不显示）。
+     *
+     * <p>为什么单开一族而不用 {@code ⟦FDM:模板⟧}：模板名是**用户可自定义**的
+     * （{@code fuckds_rich_tpls}）⇒ 叫 "dj" 的模板会和点歌撞车。
+     * 而 {@code ⟦DJ:} 里不含 {@code ⟦FDM:} / {@code ⟦FDM⟧} / {@code ⟦SUG⟧} 的子串
+     * ⇒ 几族判定互不干扰（跟当初给 {@code ⟦SUG⟧} 分族的理由一样）。
+     */
+    public static final String DJ_OPEN = "\u27E6DJ:";
+    /** 点歌标记闭：{@code ⟧}（与其它族共用同一个闭括号） */
+    public static final String DJ_CLOSE = "\u27E7";
+
+    /**
      * 建议按钮开：{@code <Suggestion>} —— ★ 2026-10-05 加。
      *
      * <p>用途：AI 在回复末尾写一行 {@code <Suggestion>▸ 帮我再展开讲讲</Suggestion>}，
@@ -376,6 +394,11 @@ public final class GmRichText {
         /** 点击后要"回复"给 AI 的文字（缺省 = 显示文字） */
         public String sugPayload;
 
+        /** ★ 点歌段 {@code ⟦DJ:歌名-歌手⟧}（2026-10-11 · 3.69.0 加） */
+        public boolean dj;
+        /** 点歌段里的原文（{@code 歌名-歌手} 或 {@code 歌名-歌手|hidden}） */
+        public String djBody;
+
         public String raw(String text) {
             return text.substring(start, end);
         }
@@ -401,15 +424,34 @@ public final class GmRichText {
             int a2 = s.indexOf(ANON_OPEN, from);      // ⟦FDM⟧
             int a3 = s.indexOf(SUG_OPEN, from);       // <Suggestion>
             int a4 = s.indexOf(SUG2_OPEN, from);      // ⟦SUG⟧（保险写法）
-            if (a1 < 0 && a2 < 0 && a3 < 0 && a4 < 0) break;
+            int a5 = s.indexOf(DJ_OPEN, from);        // ⟦DJ:（点歌）
+            if (a1 < 0 && a2 < 0 && a3 < 0 && a4 < 0 && a5 < 0) break;
 
-            // ★ 四选一：谁最靠前就先处理谁（2026-10-05 加 <Suggestion> 与 ⟦SUG⟧）
+            // ★ 五选一：谁最靠前就先处理谁（2026-10-11 加 ⟦DJ: 点歌）
             int a = -1;
-            int kind = 0;                             // 0=模板 1=匿名 2=建议 3=建议(⟦SUG⟧)
+            int kind = 0;                             // 0=模板 1=匿名 2=建议 3=建议(⟦SUG⟧) 4=点歌
             if (a1 >= 0) { a = a1; kind = 0; }
             if (a2 >= 0 && (a < 0 || a2 < a)) { a = a2; kind = 1; }
             if (a3 >= 0 && (a < 0 || a3 < a)) { a = a3; kind = 2; }
             if (a4 >= 0 && (a < 0 || a4 < a)) { a = a4; kind = 3; }
+            if (a5 >= 0 && (a < 0 || a5 < a)) { a = a5; kind = 4; }
+
+            if (kind == 4) {
+                // ★ 点歌：不闭合（流式中途被截断）就原地不动 —— 宁可这一帧不渲染，
+                //   也不要让"⟦DJ:晴天-周杰"这种半截标记漏到界面上
+                int b = s.indexOf(DJ_CLOSE, a + DJ_OPEN.length());
+                if (b < 0) break;
+                Seg seg = new Seg();
+                seg.start = a;
+                seg.end = b + DJ_CLOSE.length();
+                seg.dj = true;
+                seg.djBody = s.substring(a + DJ_OPEN.length(), b).trim();
+                seg.name = "";
+                seg.args = EMPTY_ARGS;
+                out.add(seg);
+                from = seg.end;
+                continue;
+            }
 
             if (kind == 2 || kind == 3) {
                 // ★ 建议按钮：不闭合（流式中途被截断）就原地不动，宁可这一帧不渲染

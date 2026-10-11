@@ -218,7 +218,17 @@ public final class GmRichTextHook extends XC_MethodHook {
             if (s.start > cur) {
                 if (emitPlain(nb, orig, text, cur, s.start, bare)) changed = true;
             }
-            if (s.suggest) {
+            if (s.dj) {
+                // ★ 3.69.0 点歌：把标记**吃掉**；必要时（没写 |hidden）补一行「♪ 正在给你放：…」
+                //   真正的搜索/起播在 GmMusicDj 里异步做 —— 这里只负责"这一帧显示什么"
+                try {
+                    String show = GmMusicDj.handle(s.djBody);
+                    if (show != null) mAppendStr.invoke(nb, show);
+                } catch (Throwable t) {
+                    GmUtil.logFail("richHook.dj", t);
+                }
+                changed = true;
+            } else if (s.suggest) {
                 // ★ 建议按钮：渲染成"可点击"，点一下 = 把 payload 当消息回复给 AI
                 emitSuggest(nb, s);
                 changed = true;
