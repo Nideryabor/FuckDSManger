@@ -3,6 +3,7 @@
 package com.nidyaber.fuckdsmanger.bridge;
 
 import android.content.Context;
+import android.os.SystemClock;
 
 import com.nidyaber.fuckdsmanger.gm.GmRichText;
 import com.nidyaber.fuckdsmanger.gm.GmStore;
@@ -52,6 +53,39 @@ public final class GmMusicDj {
 
     /** 旗标：{@code |hidden} ⇒ 连「♪ 正在给你放…」都不显示（悄悄放）。 */
     private static final String FLAG_HIDDEN = "hidden";
+
+    /**
+     * ★★★ 3.69.5 去重（主人实测：「多次搜索，然后播放器多次播放，吐司一大堆」）。
+     *
+     * <p><b>为什么会被重复调用</b>：{@code handle()} 挂在 {@code GmRichTextHook.rebuild()} 里 ——
+     * 而**每次重绘都会 rebuild**：流式输出（一段一段长）、滚动、重组……
+     * 真机日志里同一条 {@code ⟦DJ:红色高跟鞋-蔡健雅⟧} 被处理了 **18 次**
+     * ⇒ 搜 18 次、播 18 次（每次 {@code play()} 都 {@code startCurrent()} ⇒ 歌一直从头重开）、
+     * 吐司弹 18 次。
+     *
+     * <p>⇒ 按「歌名|歌手|hidden」记一个时间窗：窗内同一条**只处理一次**。
+     * 之所以带时间窗而不是永久去重：用户过一会儿**再点同一首**是合理需求，得放行。
+     *
+     * <p>窗口取 15 秒 —— 够覆盖一条消息的整个流式渲染过程，又不至于拦掉"再点一次"。
+     */
+    private static final long DEDUP_MS = 15000L;
+    private static final Object DEDUP_LOCK = new Object();
+    private static final java.util.HashMap<String, Long> DEDUP = new java.util.HashMap<String, Long>();
+
+    /** true = 这条点歌最近刚处理过（跳过：不搜、不播、不吐司）。 */
+    private static boolean recentlyHandled(String key) {
+        long now = SystemClock.uptimeMillis();
+        synchronized (DEDUP_LOCK) {
+            java.util.Iterator<java.util.Map.Entry<String, Long>> it = DEDUP.entrySet().iterator();
+            while (it.hasNext()) {                       // 顺手清过期项
+                if (now - it.next().getValue() > DEDUP_MS) it.remove();
+            }
+            Long t = DEDUP.get(key);
+            if (t != null && now - t < DEDUP_MS) return true;
+            DEDUP.put(key, now);
+            return false;
+        }
+    }
 
     private GmMusicDj() {}
 
@@ -143,55 +177,91 @@ public final class GmMusicDj {
             String show = hidden ? null
                     : ("♪ 正在给你放：" + (artist.isEmpty() ? song : song + " - " + artist));
 
+            // ── ③.5 ★ 去重：同一条点歌在"一次渲染过程"里只处理一次 ──
+            //   （流式/滚动会让同一条消息 rebuild 很多次，见 DEDUP_MS 的说明）
+            final String dedupKey = (hidden ? "H|" : "") + song + "|" + artist;
+            if (recentlyHandled(dedupKey)) {
+                GmUtil.logOnce("dj.dup." + Math.abs(dedupKey.hashCode()),
+                        "同一条点歌被重复渲染 ⇒ 跳过（不重复搜/放/吐司）：" + dedupKey);
+                return show;
+            }
+
             // ── ④ 搜 → 选 → 放（回调在主线程）──
             GmMusicPlayer pl = GmMusicPlayer.get();
             if (pl == null) return show;
+            // ★ 3.69.5：组合关键词（"歌名 歌手"）零结果时，**退回纯歌名**再搜一次。
+            //   真机实测：`迷宫 王若琳` 有时搜不到，而纯歌名能搜到 ⇒ 多一次机会。
             pl.search(kw, 20, new GmMusicPlayer.Cb<List<GmMusicPlayer.Track>>() {
                 @Override
                 public void on(List<GmMusicPlayer.Track> list) {
-                    try {
-                        GmMusicPlayer p = GmMusicPlayer.get();
-                        if (p == null) return;
-                        GmMusicPlayer.Track pick = null;
-                        boolean exact = false;
-                        if (list != null) {
-                            for (GmMusicPlayer.Track t : list) {
-                                if (t == null) continue;
-                                boolean nameOk = t.name != null && t.name.contains(fSong);
-                                boolean artOk = fArtist.isEmpty()
-                                        || (t.artist != null && t.artist.contains(fArtist));
-                                if (nameOk && artOk) {
-                                    pick = t;
-                                    exact = true;
-                                    break;
+                    if ((list == null || list.isEmpty()) && !fArtist.isEmpty()) {
+                        GmMusicPlayer p2 = GmMusicPlayer.get();
+                        if (p2 != null) {
+                            GmUtil.log("【DJ】组合词没结果，退回纯歌名再搜：" + fSong);
+                            p2.search(fSong, 20, new GmMusicPlayer.Cb<List<GmMusicPlayer.Track>>() {
+                                @Override
+                                public void on(List<GmMusicPlayer.Track> l2) {
+                                    doPick(l2, fSong, fArtist);
                                 }
-                            }
-                            // ★ 主人：「搜不到歌曲默认结果第一个」
-                            if (pick == null && !list.isEmpty()) pick = list.get(0);
-                        }
-                        if (pick == null) {
-                            GmUtil.toast(GmUtil.app(), "♪ 没搜到「" + fSong + "」");
-                            GmUtil.log("【DJ】点歌失败（零结果）：" + fSong + " - " + fArtist);
+                            });
                             return;
                         }
-                        p.play(pick);
-                        GmUtil.log("【DJ】点歌 " + fSong + " - " + fArtist
-                                + " ⇒ 放了 " + pick.name + " - " + pick.artist
-                                + (exact ? "（精确命中）" : "（兜底第一条）"));
-                        if (!exact) {
-                            // 兜底/替换要**说出来** —— 否则用户以为放错了、或以为歌名匹配上了
-                            GmUtil.toast(GmUtil.app(), "♪ 没找到「" + fSong
-                                    + "」，给你放了：" + pick.name + " - " + pick.artist);
-                        }
-                    } catch (Throwable t) {
-                        GmUtil.logFail("dj.play", t);
                     }
+                    doPick(list, fSong, fArtist);
                 }
             });
             return show;
         } catch (Throwable t) {
             GmUtil.logFail("dj.handle", t);
             return null;                       // 出岔子也别把标记漏到界面上
+        }
+    }
+
+    /**
+     * 从搜索结果里挑一首并起播（★ 3.69.5 从 handle 里抽出来，好给"纯歌名兜底搜索"复用）。
+     *
+     * @param list   搜索结果（可能为 null / 空）
+     * @param fSong  歌名
+     * @param fArtist 歌手（可能为空）
+     */
+    private static void doPick(List<GmMusicPlayer.Track> list, String fSong, String fArtist) {
+        try {
+            GmMusicPlayer p = GmMusicPlayer.get();
+            if (p == null) return;
+
+            GmMusicPlayer.Track pick = null;
+            boolean exact = false;
+            if (list != null) {
+                for (GmMusicPlayer.Track t : list) {
+                    if (t == null) continue;
+                    boolean nameOk = t.name != null && t.name.contains(fSong);
+                    boolean artOk = fArtist.isEmpty()
+                            || (t.artist != null && t.artist.contains(fArtist));
+                    if (nameOk && artOk) {
+                        pick = t;
+                        exact = true;
+                        break;
+                    }
+                }
+                // ★ 主人：「搜不到歌曲默认结果第一个」
+                if (pick == null && !list.isEmpty()) pick = list.get(0);
+            }
+            if (pick == null) {
+                GmUtil.toast(GmUtil.app(), "♪ 没搜到「" + fSong + "」");
+                GmUtil.log("【DJ】点歌失败（零结果）：" + fSong + " - " + fArtist);
+                return;
+            }
+            p.play(pick);
+            GmUtil.log("【DJ】点歌 " + fSong + " - " + fArtist
+                    + " ⇒ 放了 " + pick.name + " - " + pick.artist
+                    + (exact ? "（精确命中）" : "（兜底第一条）"));
+            if (!exact) {
+                // 兜底/替换要**说出来** —— 否则用户以为放错了、或以为歌名匹配上了
+                GmUtil.toast(GmUtil.app(), "♪ 没找到「" + fSong
+                        + "」，给你放了：" + pick.name + " - " + pick.artist);
+            }
+        } catch (Throwable t) {
+            GmUtil.logFail("dj.play", t);
         }
     }
 
