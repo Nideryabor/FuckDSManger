@@ -464,24 +464,35 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
             //   上一版这里直接读缓存的 `cmd.cfg_state` ⇒ 宿主没在跑时读到的是**旧快照**，
             //   于是"拼合结果"显示成上一次的内容（主人看到的"拼合的还是旧的"就是这个）。
             //   判据：宿主每次回话都会刷新 `host.at`（UI 侧收到广播时写的）⇒ 用它比大小。
-            val before = FdmPush.sp(ctx).getLong("host.at", 0L)
-            // ★★ 3.69.4 修「大窝没应声」（主人 2026-10-11 实测：宿主明明在跑、却弹这句）
-            //   两个毛病：
-            //     ① **窗口太短**：12 轮 × 600ms = 7.2 秒。宿主正在跑对话/思考时，
-            //        一条回执晚到几秒就判"没应声" ⇒ 现在 24 轮 × 600ms ≈ 14 秒。
-            //     ② **先等再发**：原来先 delay 300 再发命令，白白浪费半秒起手；
-            //        改成**先把命令发出去**，再等回执（第一次往返更早开始）。
+            // ★★★ 3.69.7 修「大窝没应声」的**真正原因**（这次是抓了证据才动手的）
+            //
+            //  原判据是「host.at 变新 = 宿主回话了」。但真机日志（13:22:41~13:22:49）显示：
+            //    · UI 发出的 13 次 cfg_state —— **全部到达宿主**（时间戳一一对应）
+            //    · 宿主**每次都回答了**（回执写进 `cmd.cfg_state`）
+            //    · 而 `host.at` 一动不动 ✗
+            //  原因：`host.at` 是 **ACTION_STATE** 广播写的，而宿主只在"**自己定期回读配置**"
+            //  时才发那条广播；**回答 cfg_state 走的是另一条路（ACTION_RESULT → cmd.cfg_state）**。
+            //  ⇒ 等 host.at 等于等一个**跟本次对话无关**的信号 ⇒ 绝大部分时候必然超时 ✗
+            //
+            //  正解：**等 UI 真正要读的那样东西**（`cmd.cfg_state`）到货。
+            //  做法：先把它清空当"信箱"，然后只要它变非空 ⇒ 就是**新回执** ✓
+            //  （这也能顺带防住 3.64.4 那个"拼合结果是旧的" —— 旧值被清掉了，读到的一定是新的）
+            val sp = FdmPush.sp(ctx)
+            sp.edit().putString("cmd.cfg_state", "").apply()
             repeat(24) {
-                FdmPush.sendCmd(ctx, "cfg_state", null)   // 先问
-                kotlinx.coroutines.delay(600)             // 再等
-                val at = FdmPush.sp(ctx).getLong("host.at", 0L)
-                if (at > before) {                       // 收到**新**回话
-                    val raw = FdmPush.sp(ctx).getString("cmd.cfg_state", null)
-                    val t = raw?.let { jsonToMap(it)["sysprompt_text"] }
-                    if (t != null) {
-                        promptPreview = t
-                        return@launch
-                    }
+                FdmPush.sendCmd(ctx, "cfg_state", null)   // 先问（第一时间把请求发出去）
+                kotlinx.coroutines.delay(600)             // 再等 600ms
+                val raw = sp.getString("cmd.cfg_state", null)
+                if (!raw.isNullOrEmpty()) {               // ★ 回执到货（非空 = 新回执）
+                    val t = jsonToMap(raw)["sysprompt_text"]
+                    // 宿主回了、但没带提示词正文 ⇒ 别说"没应声"（那是两回事）
+                    promptPreview = t ?: (
+                            ctx.getString(R.string.spv_009) +
+                                    ctx.getString(R.string.spv_010) +
+                                    ctx.getString(R.string.spv_011) +
+                                    ctx.getString(R.string.spv_012)
+                            )
+                    return@launch
                 }
             }
             promptPreview =
