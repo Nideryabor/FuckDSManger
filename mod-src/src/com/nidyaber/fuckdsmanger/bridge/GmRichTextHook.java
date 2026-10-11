@@ -208,6 +208,27 @@ public final class GmRichTextHook extends XC_MethodHook {
             return null;
         }
 
+        // ★★ 3.69.3 远程诊断：模型写了 DJ 但**一种括号都没匹配上**时留一条痕迹。
+        //    这次就是靠主人抄提示词才定位到"括号形态不同"，下次直接看日志就行。
+        if (text.indexOf("DJ:") >= 0) {
+            boolean gotDj = false;
+            for (GmRichText.Seg sg : segs) {
+                if (sg.dj) {
+                    gotDj = true;
+                    break;
+                }
+            }
+            if (!gotDj) {
+                int k = text.indexOf("DJ:");
+                GmUtil.logOnce("richHook.djmiss",
+                        "看到 DJ: 但没匹配上（括号形态？）附近："
+                                + text.substring(Math.max(0, k - 8),
+                                Math.min(text.length(), k + 40)).replace("\n", "\\n"));
+            } else {
+                GmUtil.logOnce("richHook.djhit", "点歌标记已认出 ✓");
+            }
+        }
+
         // 一次解析模板池（同一条消息里可能有多个标记，别每个都去读一次存储）
         java.util.LinkedHashMap<String, String> pool = GmRichText.tplMap();
 

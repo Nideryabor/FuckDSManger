@@ -141,6 +141,29 @@ public final class GmRichText {
     public static final String DJ_CLOSE = "\u27E7";
 
     /**
+     * ★★ 3.69.3：DJ 族的**括号要宽容**（实测教训）。
+     *
+     * <p>真机证据（主人 2026-10-11 的聊天截图）：约定里明明白白写着 `\u27E6DJ:…\u27E7`，
+     * 而模型敲出来的是 {@code [DJ:红色高跟鞋-蔡健雅]} —— **ASCII 方括号**。
+     * 结果：scan 没匹配上 ⇒ 标记**原样漏在气泡里**、
+     * 既没换成「♪ 正在给你放…」也没搜歌（迷你条一直"未在播放"）。
+     *
+     * <p>⇒ 与其在提示词里求模型"写对字符"，不如**接住它会写的那几种**：
+     * 数学白方括号（我们约定的）· ASCII {@code []} · 全角 {@code ［］} · 中文 {@code 【】}。
+     *
+     * <p>数组下标一一对应：{@code OPENS[i]} 配 {@code CLOSES[i]}。
+     * 只对 DJ 族放宽 —— 其它族（FDM/SUG）跑了很久没出过这问题，
+     * 放宽反而可能把普通正文里的 {@code [注释]} 误吃掉。
+     */
+    public static final String[] DJ_OPENS = {
+            "\u27E6DJ:", "[DJ:", "\uFF3BDJ:", "\u3010DJ:"
+    };
+    /** 与 {@link #DJ_OPENS} 一一对应的闭括号 */
+    public static final String[] DJ_CLOSES = {
+            "\u27E7", "]", "\uFF3D", "\u3011"
+    };
+
+    /**
      * 建议按钮开：{@code <Suggestion>} —— ★ 2026-10-05 加。
      *
      * <p>用途：AI 在回复末尾写一行 {@code <Suggestion>▸ 帮我再展开讲讲</Suggestion>}，
@@ -424,7 +447,16 @@ public final class GmRichText {
             int a2 = s.indexOf(ANON_OPEN, from);      // ⟦FDM⟧
             int a3 = s.indexOf(SUG_OPEN, from);       // <Suggestion>
             int a4 = s.indexOf(SUG2_OPEN, from);      // ⟦SUG⟧（保险写法）
-            int a5 = s.indexOf(DJ_OPEN, from);        // ⟦DJ:（点歌）
+            // ★ 点歌：多种括号形态里取**最靠左**的那个（见 DJ_OPENS 的说明）
+            int a5 = -1;
+            int a5k = -1;
+            for (int i = 0; i < DJ_OPENS.length; i++) {
+                int q = s.indexOf(DJ_OPENS[i], from);
+                if (q >= 0 && (a5 < 0 || q < a5)) {
+                    a5 = q;
+                    a5k = i;
+                }
+            }
             if (a1 < 0 && a2 < 0 && a3 < 0 && a4 < 0 && a5 < 0) break;
 
             // ★ 五选一：谁最靠前就先处理谁（2026-10-11 加 ⟦DJ: 点歌）
@@ -439,13 +471,15 @@ public final class GmRichText {
             if (kind == 4) {
                 // ★ 点歌：不闭合（流式中途被截断）就原地不动 —— 宁可这一帧不渲染，
                 //   也不要让"⟦DJ:晴天-周杰"这种半截标记漏到界面上
-                int b = s.indexOf(DJ_CLOSE, a + DJ_OPEN.length());
+                String dop = DJ_OPENS[a5k];               // 它是哪一种括号
+                String dcl = DJ_CLOSES[a5k];
+                int b = s.indexOf(dcl, a + dop.length());
                 if (b < 0) break;
                 Seg seg = new Seg();
                 seg.start = a;
-                seg.end = b + DJ_CLOSE.length();
+                seg.end = b + dcl.length();
                 seg.dj = true;
-                seg.djBody = s.substring(a + DJ_OPEN.length(), b).trim();
+                seg.djBody = s.substring(a + dop.length(), b).trim();
                 seg.name = "";
                 seg.args = EMPTY_ARGS;
                 out.add(seg);
