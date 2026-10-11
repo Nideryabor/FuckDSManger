@@ -29,6 +29,9 @@ I18N = os.path.join(ROOT, "fdm-app", "i18n")
 KEYS = os.path.join(I18N, "keys.json")
 ZZ = os.path.join(I18N, "zz.json")
 
+# ★ 手写表（键 = 人话原文，值 = 龙龙语）—— 主人也能直接改这个文件
+HAND_FILE = os.path.join(I18N, "dragon_hand.json")
+
 MAX_TAIL_LEN = 26          # 超过这么长的句子：只在"命中词库"时改，否则保持人话
 
 # ── 词库：长词写前面（按长度降序排过） ─────────────────────────────
@@ -77,48 +80,93 @@ def _pick(key, arr):
     return arr[h % len(arr)]
 
 
+def tailable(t):
+    """配不配加尾巴？🐲
+
+    主人 2026-10-11：「很多地方只是加了嗷和咕」—— 所以这里故意定得很严：
+      · 长说明（>14 字）不加 —— 加在技术说明尾巴上只会显得吵
+      · 开头/结尾是标点的一律不加 —— 那些是**被拼进句子的片段**
+        （如 `字节）`、`内容（`、`（无）`、` 字）`），加尾巴会插到句子中间 ✗
+      · 带括号的不加 —— 多是说明/单位/英文注
+      · 必须**本来就是一句话**（里面有逗号/顿号/分号这种句子结构）才加
+    其余一律保持人话（靠资源 fallback），等手写表来收。
+    """
+    if "\n" in t or len(t) > 14:
+        return False
+    if re.match(r"^[\s（()【】「」·—\-…、，,。：:；;]", t):
+        return False
+    if re.search(r"[（()【】「」：:，,、；;—…]$", t):
+        return False
+    if re.search(r"[（()【】「」]", t):
+        return False
+    return bool(re.search(r"[。！？，、；]", t))
+
+
 def dragon(key, human):
+    """返回龙龙语；返回 None = **保持人话**（不写进 zz.json，靠资源 fallback）。"""
     text = human
-    # ① 词库（长词优先）
+
+    # ① 手写表最优先（精确匹配整句）
+    if text in HAND:
+        return HAND[text]
+
+    # ② 词库（长词优先，只收"换完还是同义词"的）
     hits = 0
     for w in sorted(LEX, key=len, reverse=True):
         if w in text:
-            # 「关于」在「关于尼尼」里别二次替换
             text = re.sub(re.escape(w), LEX[w], text)
             hits += 1
-    # ② 全是英文/符号/URL 的，原样
     if not re.search(r"[\u4e00-\u9fff]", text):
-        return text
+        return text                                  # 纯英文/符号：原样
     if hits:
-        # 命中了词库 ⇒ 已经够龙了，短句再加个尾
-        if len(text) <= 8 and "\n" not in text and not re.search(r"[。！？!?：:，,、—…\.]$", text):
-            return text + _pick(key, TAIL_LABEL)
+        # 命中词库 ⇒ 已经"龙"过了；只有整句才再加尾
+        if tailable(human) and not re.search(r"[。！？：:—…、,\.]$", text):
+            return text + _pick(key, TAIL_SENT)
         return text
-    # ③ 没命中：短句加尾巴，长段/多行/不明结尾的保持人话
-    if len(human) > MAX_TAIL_LEN:
-        return None                      # None = 不写进 zz.json ⇒ 自动回落人话
-    if "\n" in text:
-        return None                      # ★ 多行串别加尾（尾巴会飘到下一行去）
-    if re.search(r"[。！？!?]$", text):
-        return text[:-1] + _pick(key, TAIL_SENT) + text[-1]
-    if re.search(r"[：:—－～~、,，…\.]$", text):
-        return None                      # ★ 以标点/破折号收尾的，加尾反而怪
-    if len(text) <= 6:
-        return text + _pick(key, TAIL_LABEL)
-    return text + _pick(key, TAIL_SENT)
+
+    # ③ 没命中：短句/短标签加尾巴；**光秃秃的长标签宁可保持人话**
+    if len(human) > MAX_TAIL_LEN or "\n" in human:
+        return None
+    if re.search(r"[。！？]$", human):
+        return human[:-1] + _pick(key, TAIL_SENT) + human[-1]
+    if re.search(r"[：:—－～~、,，…\.]$", human):
+        return None
+    if tailable(human):
+        return human + _pick(key, TAIL_SENT)
+    # ↓★ 关键改动：**光秃秃的标签一律不加尾巴**。
+    #   主人 2026-10-11：「很多地方只是加了嗷和咕」—— 那是偷懒，不是翻译。
+    #   现在：标签要么被手写表/词库真正改写，要么**保持人话**（资源 fallback）。
+    #   尾巴只留给"像一句话"的（上面 _sentence_like 那一支）。
+    return None
+
+
+HAND = {}
+if os.path.exists(HAND_FILE):
+    HAND = {k: v for k, v in json.load(open(HAND_FILE, encoding="utf-8")).items()
+            if not k.startswith("_")}
 
 
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "gen"
     keys = json.load(open(KEYS, encoding="utf-8"))
+    human_set = set(keys.values())
     old = json.load(open(ZZ, encoding="utf-8")) if os.path.exists(ZZ) else {}
     out = {}
+    n_hand = n_lex = n_tail = 0
     for k, v in keys.items():
         if k == "app_name":
             continue
         d = dragon(k, v)
+        if d == v:
+            d = None            # 跟人话一模一样 ⇒ 没必要占一条 zz 变体
         if d is not None:
             out[k] = d
+            if v in HAND:
+                n_hand += 1
+            elif d != v:
+                n_lex += 1          # 词库改写（含"短标签+尾巴"）
+            else:
+                n_tail += 1
     if cmd == "show":
         n = int(sys.argv[2]) if len(sys.argv) > 2 else 30
         for i, k in enumerate(sorted(out)):
@@ -126,8 +174,17 @@ def main():
                 print("%-14s %-34s → %s" % (k, keys[k][:33], out[k]))
     else:
         json.dump(out, open(ZZ, "w", encoding="utf-8"), ensure_ascii=False, indent=1, sort_keys=True)
-        print("zz.json：%d 条（原始 %d 条，%d 条仍回落人话）"
+        dead = sorted(h for h in HAND if h not in human_set)
+        print("zz.json：%d 条 / 原始 %d 条 ⇒ %d 条仍回落人话"
               % (len(out), len(keys), len(keys) - len(out)))
+        print("  组成：手写表 %d 条（命中率 %.0f%%）· 词库改写 %d 条 · 只加尾巴 %d 条"
+              % (n_hand, 100.0 * n_hand / max(1, len(HAND)), n_lex, n_tail))
+        if dead:
+            print("  ⚠️ 手写表里这 %d 条没对上任何原文（白写了，去看看）：" % len(dead))
+            for d in dead[:20]:
+                print("       %s" % d)
+
+        # ★ 兜底：一句都不该"原样返回但被当鳞片数成 tail"------不适用于此
 
 
 if __name__ == "__main__":
