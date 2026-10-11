@@ -18,7 +18,7 @@ import java.util.List;
  *
  * <h3>链路</h3>
  * <pre>
- *   ① 开关开（{@code fuckds_dj_on}）⇒ {@link com.nidyaber.fuckdsmanger.gm.GmSysPrompt}
+ *   ① 开关开（{@link #on()}，读 {@link #K_OFF} 的反面）⇒ {@link com.nidyaber.fuckdsmanger.gm.GmSysPrompt}
  *      会在系统提示词里补一段「点歌约定」（{@link #promptSection()}）
  *   ② 模型照约定在回复里写 {@code ⟦DJ:晴天-周杰伦⟧}
  *   ③ {@link GmRichText#scan} 认出这一族 ⇒ {@link GmRichTextHook} 调 {@link #handle}
@@ -35,22 +35,46 @@ import java.util.List;
  */
 public final class GmMusicDj {
 
-    /** 开关键（宿主 MMKV，类型 b）。UI 在「系统提示词 › 音乐卡展开」里写它。 */
-    public static final String K_ON = "fuckds_dj_on";
+    /**
+     * 开关的宿主键（宿主 MMKV，类型 b）—— ★ 是「**关**」的那一侧。
+     *
+     * <p>为什么不用 `_on`：看真身 —— {@code GmStore.read2} 对**没写过的键返回空串 ""**
+     * （`if (!sp.contains(key)) return "";`），于是 {@code GmRichText.boolOf} 的
+     * 类型探测（"true"/"1"/"false"/"0"）**一个都不匹配** ⇒
+     * 一路落到它自己的 {@code def} 参数上。
+     *
+     * <p>⇒ 用 `_on` + `def=false` 的话："没写过"读出来是 false ⇒ **永远关**（用户拨了才开）。
+     * 用「关」键 + `def=false` 才是我们要的：没写过 ⇒ false ⇒ **没关** ⇒ **开**（默认开）。
+     *
+     * <p>界面侧（{@code Music.kt}）拨动时写的也是这个键，值是**取反**后的。
+     */
+    public static final String K_OFF = "fuckds_dj_off";
 
     /** 旗标：{@code |hidden} ⇒ 连「♪ 正在给你放…」都不显示（悄悄放）。 */
     private static final String FLAG_HIDDEN = "hidden";
 
     private GmMusicDj() {}
 
-    /** 开关开着吗？（宿主里跑 ⇒ 读同一个 MMKV） */
+    /**
+     * 开关开着吗？（宿主里跑 ⇒ 读同一个 MMKV）
+     *
+     * <p>★★ 3.69.2 修了一个**双重 bug**（主人实测：模型压根不知道能点歌）：
+     * <ol>
+     *   <li>原来读的是 {@code fuckds_dj_on} —— 而 UI 从来只写 {@code fuckds_dj_off}
+     *       ⇒ 没写过 ⇒ {@code boolOf} 落到 def=false ⇒ **永远"关"** ✗</li>
+     *   <li>同时 {@code GmSysPrompt} 那边把 {@code _off} 的 def 写成了 {@code true}
+     *       ⇒ 没写过 ⇒ 读成"已关" ⇒ **约定永远不补** ✗</li>
+     * </ol>
+     * 现在两处**只认这一个方法**（约定注入也走它）⇒ 不可能再各读各的。
+     */
     public static boolean on() {
         Context ctx = GmUtil.app();
         if (ctx == null) return false;
         try {
-            return GmRichText.boolOf(ctx, K_ON, false);
+            // ★ 读「关」键，def=false：没写过 ⇒ false ⇒ 没关 ⇒ 开（默认开）
+            return !GmRichText.boolOf(ctx, K_OFF, false);
         } catch (Throwable t) {
-            return false;
+            return false;                 // 真出错时：宁愿"关"（不往提示词里塞东西）
         }
     }
 
@@ -95,7 +119,7 @@ public final class GmMusicDj {
             if (ctx == null) return null;
             if (!on()) {
                 // 开关关着（模型可能从旧对话里学样）⇒ 别放歌，也**别把标记漏出去**
-                GmUtil.logOnce("dj.off", "收到点歌标记但开关是关的（" + K_ON + "）—— 已吞掉");
+                GmUtil.logOnce("dj.off", "收到点歌标记但开关是关的（" + K_OFF + "）—— 已吞掉");
                 return null;
             }
 
@@ -198,7 +222,7 @@ public final class GmMusicDj {
         Context ctx = GmUtil.app();
         if (ctx == null) return null;
         try {
-            return GmStore.read2(ctx, K_ON, "b");
+            return GmStore.read2(ctx, K_OFF, "b");
         } catch (Throwable t) {
             return null;
         }

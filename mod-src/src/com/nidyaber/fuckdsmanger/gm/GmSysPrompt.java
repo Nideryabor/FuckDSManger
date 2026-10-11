@@ -539,9 +539,11 @@ public final class GmSysPrompt {
         try {
             Context ctx = GmUtil.app();
             if (ctx == null) return body;
-            boolean off = GmRichText.boolOf(ctx, "fuckds_dj_off", true);
-            if (off) return body;
-            return body + com.nidyaber.fuckdsmanger.bridge.GmMusicDj.promptSection();
+            // ★ 3.69.2：**只认 GmMusicDj.on()**（别再自己读键 —— 两边各读一次就是这个 bug 的来源）
+            if (!com.nidyaber.fuckdsmanger.bridge.GmMusicDj.on()) return body;
+            String dj = com.nidyaber.fuckdsmanger.bridge.GmMusicDj.promptSection();
+            GmUtil.logOnce("dj.section", "点歌约定已补入系统提示词（+" + dj.length() + " 字）");
+            return body + dj;
         } catch (Throwable t) {
             return body;                        // 任何异常都不影响主流程
         }
