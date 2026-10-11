@@ -11,6 +11,7 @@
 //  搜索走宿主：宿主自己有网络，搜索结果直接显示在悬浮卡上。
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -131,7 +132,7 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
     val queue = st.optInt("music_queue", 0)
 
     Scaffold(
-        topBar = { FdmTopBar("音乐", onBack = onBack) },
+        topBar = { FdmTopBar(stringResource(R.string.mus_001), onBack = onBack) },
         containerColor = MaterialTheme.colorScheme.surface,
     ) { pad ->
         Column(
@@ -141,22 +142,22 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                 .padding(bottom = 24.dp),
         ) {
             // ★ 2026-10-10（3.65.0）：「猜你想跳转」—— 音乐页顶上给一条去系统提示词的路
-            JumpHintCard(onOpen = { onNav("sysprompt_v2") }, text = "去「系统提示词」调音乐变量 ›")
+            JumpHintCard(onOpen = { onNav("sysprompt_v2") }, text = stringResource(R.string.mus_002))
             Spacer(Modifier.height(10.dp))
 
             // ───────── 迷你卡开关 ─────────
-            SectionLabel("悬浮迷你条")
+            SectionLabel(stringResource(R.string.mus_003))
             CardBox {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            "显示迷你条",
+                            stringResource(R.string.mus_004),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            "卡片上就是全部界面：封面 · 曲名&歌手 · 歌词 · 进度条 · 控件；" +
-                            "点 ♪ 还能搜歌。开关一开，每个页面都挂着它。",
+                            stringResource(R.string.mus_005) +
+                            stringResource(R.string.mus_006),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -187,34 +188,34 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            "悬浮条设置 ›",
+                            stringResource(R.string.mus_007),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            "卡片尺寸（也能拖四个角）· 「≡」拖动把手 · 它到底长什么样",
+                            stringResource(R.string.mus_008),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     Icon(
-                        Icons.Rounded.ChevronRight, "去设置",
+                        Icons.Rounded.ChevronRight, stringResource(R.string.mus_009),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
             // ───────── 当前状态 ─────────
-            SectionLabel("宿主里正在放")
+            SectionLabel(stringResource(R.string.mus_010))
             CardBox {                Text(
-                    if (name.isEmpty()) "还没选歌" else name,
+                    if (name.isEmpty()) stringResource(R.string.mus_011) else name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    if (name.isEmpty()) "去宿主里点卡片上的 ♪ 搜一首"
-                    else artist + "　·　" + fmtMs(pos) + " / " + fmtMs(dur) + "　·　队列 " + queue,
+                    if (name.isEmpty()) stringResource(R.string.mus_012)
+                    else artist + "　·　" + fmtMs(pos) + " / " + fmtMs(dur) + stringResource(R.string.mus_013) + queue,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -227,40 +228,40 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "这几个按钮也能用（走宿主进程里的播放器）；不过平时在宿主里直接点卡片更顺手。",
+                    stringResource(R.string.mus_014),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             // ───────── 登录 ─────────
-            SectionLabel("网易云账号")
+            SectionLabel(stringResource(R.string.mus_015))
             CardBox {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(
                             if (st.optBoolean("music_logged", false))
-                                "✅ 已登录 " + st.optString("music_user", "")
-                            else "未登录",
+                                stringResource(R.string.mus_016) + st.optString("music_user", "")
+                            else stringResource(R.string.mus_017),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            "不登录也能听 320k；登录后才能听会员曲 / 无损。",
+                            stringResource(R.string.mus_018),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Button(onClick = { onNav("musiclogin") }) { Text("登录") }
+                    Button(onClick = { onNav("musiclogin") }) { Text(stringResource(R.string.mus_019)) }
                 }
             }
 
             // ───────── 音源（伪装成哪种客户端）─────────
-            SectionLabel("音源伪装")
+            SectionLabel(stringResource(R.string.mus_020))
             CardBox {
                 Text(
-                    "有些歌对「客户端」比对「网页」更宽松。这里可以换一种身份去请求。\n" +
-                    "⚠️ 尼尼原来写的是 os=pc + UA=iPhone（**自相矛盾**），现已改成三档一致。",
+                    stringResource(R.string.mus_021) +
+                    stringResource(R.string.mus_022),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -277,7 +278,7 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                 }
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "换完要**重新点一下那首歌**才会用新身份去取地址（正在放的不会自动切）。",
+                    stringResource(R.string.mus_023),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -293,29 +294,29 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
             //    ⇒ 「变量为空」至少有三种原因（开关关着 / 真没在放歌 / 歌词开关关着），
             //      而模型看到的只是"空"。第一版示例还写了「没在放歌时两行整体消失」
             //      ＝ 我们替模型做了一个可能不准的断言。修法见下（不写断言 + {music_or_none}）。
-            SectionLabel("提示词音乐变量")
+            SectionLabel(stringResource(R.string.mus_024))
             CardBox {
                 Text(
-                    "让 AI 知道你在听什么。提示词里写这些占位符，会在**发消息那一刻**" +
-                    "替换成真值（所以歌词行、进度天然是实时的）：\n" +
-                    "· {music}           《歌名》 - 歌手 (1:23/3:42)\n" +
-                    "· {music_or_none}  ★ 同上，但**没在听**时明确写「没有在听歌」\n" +
+                    stringResource(R.string.mus_025) +
+                    stringResource(R.string.mus_026) +
+                    stringResource(R.string.mus_027) +
+                    stringResource(R.string.mus_028) +
                     "· {song}  {artist}  {album}\n" +
-                    "· {music_pos}  {music_dur}  {music_left}   已听 / 总长 / 剩余\n" +
+                    stringResource(R.string.mus_029) +
                     "· {music_state}   playing / paused\n" +
-                    "· {lyric}  {lyric_prev}  {lyric_next}   当前这一句 / 上一句 / 下一句",
+                    stringResource(R.string.mus_030),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "⚠️ 「空」不等於「没在放歌」——空有三种原因：\n" +
-                    "① 总开关关着　② 真没在放歌　③ 歌词开关关着 / 歌词还没缓存到。\n" +
-                    "所以本页**不替你做任何「空 = 没在听」的断言**，两种需求各给一个工具：\n" +
-                    "· 想「没在听就整句别出现」⇒ 用 [[ ]] 把整行包起来：\n" +
-                    "    [[正在听：{music}]]   ← 变量全空时整行（连 [[ ]]）一起删掉\n" +
-                    "· 想「让模型知道我没在听」⇒ 用 {music_or_none}：\n" +
-                    "    它只在【开关开着但真没在听】时写「没有在听歌」；开关关着时它也是空。",
+                    stringResource(R.string.mus_031) +
+                    stringResource(R.string.mus_032) +
+                    stringResource(R.string.mus_033) +
+                    stringResource(R.string.mus_034) +
+                    stringResource(R.string.mus_035) +
+                    stringResource(R.string.mus_036) +
+                    stringResource(R.string.mus_037),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -323,13 +324,13 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            "音乐变量",
+                            stringResource(R.string.mus_038),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            "总开关。关着时所有变量都替换成**空串** —— 绝不会把裸 {music} 发给模型。" +
-                            "开着之后，只要提示词里有音乐变量，注入就强制「每轮」（忽略系统提示词页的注入模式）。",
+                            stringResource(R.string.mus_039) +
+                            stringResource(R.string.mus_040),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -348,15 +349,15 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            "允许歌词变量（⚠️ 版权）",
+                            stringResource(R.string.mus_041),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            "默认关。开启后 {lyric} 系列才生效。\n" +
-                            "⚠️ 歌名/歌手/专辑是事实性信息；歌词是作品。项目对歌词的铁律是「只放内存」，" +
-                            "但那是**显示给自己看** —— 开启本项意味着歌词行会**随提示词上传给服务器、" +
-                            "并留在对话历史里**，性质完全不同。",
+                            stringResource(R.string.mus_042) +
+                            stringResource(R.string.mus_043) +
+                            stringResource(R.string.mus_044) +
+                            stringResource(R.string.mus_045),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -375,33 +376,33 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                 // ★ 2026-10-10（3.66.0）：这段说明**过时了**（还写着"调试 › 系统提示词 v2"）
                 //   ⇒ 整段搬进页面末尾的「功能原理 & 帮助」，这里只留一行指路。
                 Text(
-                    "✦ 功能原理 / 怎么让它生效 / 不生效怎么查 —— 见页面末尾的「功能原理 & 帮助」。",
+                    stringResource(R.string.mus_046),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             // ───────── 说明 ─────────
-            SectionLabel("说明")
+            SectionLabel(stringResource(R.string.mus_047))
             CardBox {
                 Text(
-                    "· 播放器跑在**宿主进程**里 ⇒ 从最近任务里把模块划掉，音乐不会断。\n" +
-                    "· 代价：划掉 DeepSeek 就停；也**没有通知栏播放控制**（宿主清单改不了，声明不了前台服务）。\n" +
-                    "· 想安静地听：把迷你卡拖到角落、或者在卡片上按 ✕ 收起（拨一下开关就回来）。",
+                    stringResource(R.string.mus_048) +
+                    stringResource(R.string.mus_049) +
+                    stringResource(R.string.mus_050),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             // ───────── 版权 ─────────
-            SectionLabel("版权")
+            SectionLabel(stringResource(R.string.mus_051))
             CardBox {
                 Text(
-                    "本功能**只做在线播放**：\n" +
-                    "· 音频：流式播放网易云 CDN 给的链接，**不下载、不落盘**\n" +
-                    "· 封面 / 歌词：由宿主自己联网取回，**只放在内存**，退出即消失\n" +
-                    "· 状态文件 `files/FDMmusic/state.json` 里只有事实性信息（歌名 / 歌手 / 进度 / 播放态）\n" +
-                    "听歌本身仍受网易云的版权约束，请勿用于转载或再分发。",
+                    stringResource(R.string.mus_052) +
+                    stringResource(R.string.mus_053) +
+                    stringResource(R.string.mus_054) +
+                    stringResource(R.string.mus_055) +
+                    stringResource(R.string.mus_056),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -411,7 +412,7 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
             //  ★ 2026-10-10（3.67.0）：主人「音乐菜单不是有个致谢吗，搬到关于页面里面」
             //    ⇒ 内容搬到「关于 › 致谢」，这里留一行指路。
             Text(
-                "（致谢已搬到「关于」页面）",
+                stringResource(R.string.mus_057),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

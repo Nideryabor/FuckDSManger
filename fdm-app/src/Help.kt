@@ -2,6 +2,7 @@
 // Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -174,14 +175,14 @@ AI 回复里写      ⟦FDM:模板名|参数1|参数2⟧
 @Composable
 fun HelpDialog(topic: String, onClose: () -> Unit) {
     val (title, body) = when (topic) {
-        "suggest" -> "回复建议 · 功能原理 & 帮助" to HelpText.suggest
-        "richtext" -> "AI 气泡富文本 · 功能原理 & 帮助" to HelpText.richtext
-        "music" -> "音乐 · 功能原理 & 帮助" to HelpText.music
-        else -> "功能原理 & 帮助" to HelpText.suggest
+        "suggest" -> stringResource(R.string.hlp_001) to HelpText.suggest
+        "richtext" -> stringResource(R.string.hlp_002) to HelpText.richtext
+        "music" -> stringResource(R.string.hlp_003) to HelpText.music
+        else -> stringResource(R.string.fdm_lang_help) to HelpText.suggest
     }
     AlertDialog(
         onDismissRequest = onClose,
-        confirmButton = { TextButton(onClick = onClose) { Text("好") } },
+        confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.hlp_004)) } },
         title = { Text(title) },
         text = {
             Column(
@@ -202,7 +203,7 @@ fun HelpDialog(topic: String, onClose: () -> Unit) {
 
 /** 页面末尾那个入口（整条可点）。 */
 @Composable
-fun HelpEntry(label: String = "功能原理 & 帮助", onOpen: () -> Unit) {
+fun HelpEntry(label: String = stringResource(R.string.fdm_lang_help), onOpen: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -225,14 +226,14 @@ fun HelpEntry(label: String = "功能原理 & 帮助", onOpen: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                "这个功能是怎么工作的、怎么让它生效、不生效怎么查",
+                stringResource(R.string.hlp_005),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Spacer(Modifier.width(8.dp))
         Text(
-            "打开",
+            stringResource(R.string.hlp_006),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
         )
@@ -254,7 +255,7 @@ fun HelpSection(label: String) {
 @Composable
 fun HelpMovedNote(to: String) {
     Text(
-        "（详细说明已搬到页面末尾的「功能原理 & 帮助」" + to + "）",
+        stringResource(R.string.hlp_007) + to + "）",
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(start = Edge, top = 2.dp),

@@ -1,68 +1,839 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 人话（默认）。键名规则：语义前缀_编号；值就是原文，方便拿 MT 认。 -->
 <resources>
     <string name="app_name">FuckDSManger</string>
-
-    <!-- ════════════════════════════════════════════════════════════════════
-         「说话方式」🐲 —— 关于页连点七下的小彩蛋（3.67.0 起）
-
-         ★ 3.68.0：文案全部搬进 resources.arsc，而且**一个 key 只写一遍**。
-           龙龙语版住在 `res/values-zz/strings.xml`，运行时由 `Lang.wrap(ctx, DRAGON)`
-           换一个带 zz locale 的 Configuration ⇒ 系统自己挑那一份。
-           没在 values-zz 里写的 key **自动回落到这里的人话版** ⇒ 龙龙语可以慢慢加。
-
-         ★ 命名约定：
-              fdm_lang_xxx        —— 界面文案（会跟着说话方式变）★ 主用
-              fdm_lang_xxx_human  \
-              fdm_lang_xxx_dragon /  —— 弹窗内部那几个"必须有明确两种写法"的
-                                       （选项名 / 小字 / 回执），**不进 values-zz**
-
-         ⚠️ 含「%」的字符串必须带 formatted="false"，否则 aapt2 把它当格式串。
-         ⚠️ 带参数的句子用 %1$s 这种**位置化**写法（aapt2 不认裸 %s 混中文）。
-         ════════════════════════════════════════════════════════════════════ -->
-
-    <!-- ══════ 彩蛋弹窗本体 ══════ -->
-    <string name="fdm_lang_title">说话方式</string>
-    <string name="fdm_lang_desc">点这张图七下才出来的小彩蛋 —— 选一种说话方式：</string>
-    <string name="fdm_lang_note">换完立刻生效：页面上那些跟着变的句子马上就是新的说法。</string>
-    <string name="fdm_lang_confirm">确认</string>
+    <string name="c_back">返回</string>
+    <string name="c_jump_go">去「系统提示词」看看 ›</string>
+    <string name="c_jump_hint">猜你想跳转</string>
+    <string name="c_more">更多</string>
+    <string name="c_nav_about">关于</string>
+    <string name="c_nav_home">首页</string>
+    <string name="c_save">保存</string>
+    <string name="conf_001">总开关：关掉就完全不动宿主背景</string>
+    <string name="conf_002" formatted="false">越小越透（25 = 露出 25%）</string>
+    <string name="conf_003">渐变预设</string>
+    <string name="conf_004">预设 1</string>
+    <string name="conf_005">预设 2</string>
+    <string name="conf_006">预设 3</string>
+    <string name="conf_007">预设 4</string>
+    <string name="conf_008">裁切方式</string>
+    <string name="conf_009">居中填满</string>
+    <string name="conf_010">拉伸</string>
+    <string name="conf_011">位置</string>
+    <string name="conf_012">顶</string>
+    <string name="conf_013">中</string>
+    <string name="conf_014">底</string>
+    <string name="conf_015">方向</string>
+    <string name="conf_016">横向</string>
+    <string name="conf_017">纵向</string>
+    <string name="conf_018">AI 气泡颜色</string>
+    <string name="conf_019">AI 气泡圆角</string>
+    <string name="conf_020">AI 气泡透明度</string>
+    <string name="conf_021">AI 气泡放大</string>
+    <string name="conf_022">百分数，100 = 原大小</string>
+    <string name="conf_023">AI 气泡用图片</string>
+    <string name="conf_024">我的气泡美化</string>
+    <string name="conf_025">我的气泡颜色</string>
+    <string name="conf_026">我的气泡圆角</string>
+    <string name="conf_027">我的气泡用图片</string>
+    <string name="conf_028">在输入框上方给建议</string>
+    <string name="conf_029">用 AI 生成建议</string>
+    <string name="conf_030">建议条数</string>
+    <string name="conf_031">自定义建议文本</string>
+    <string name="conf_032">留空 = 不用固定文本</string>
+    <string name="conf_033">给宿主所有元素套上玻璃</string>
+    <string name="conf_034">0 = 全透只剩玻璃，100 = 完全不透</string>
+    <string name="conf_035">越大越磨砂</string>
+    <string name="conf_036">解决「玻璃里糊出字、和上层文字叠影」</string>
+    <string name="conf_037">打开 App 时显示的那句话</string>
+    <string name="conf_038">提示词注入</string>
+    <string name="conf_039">模块的总闸（改它影响面最大）</string>
+    <string name="conf_040">换掉 android_id，治风控 RISK_DEVICE_DETECTED</string>
+    <string name="conf_041">当前伪造 ID</string>
+    <string name="conf_042">只读展示；一次性换、换完别来回拨</string>
+    <string name="conf_043">已提示过（内部）</string>
+    <string name="conf_044">改完要重启宿主才看得见（它会改写宿主的模型配置）</string>
+    <string name="conf_045">挂在宿主窗口上的浮层（零权限）</string>
+    <string name="conf_046">单位 sp</string>
+    <string name="conf_047">常驻卡片，放歌时才显示</string>
+    <string name="conf_048">单位 dp（拖角也行）</string>
+    <string name="cp_001">十六进制</string>
+    <string name="cp_002">确定</string>
     <string name="fdm_lang_cancel">取消</string>
-
-    <!-- 两个选项名：**任何说话方式下都显示中文**（不然主人自己都认不出在选什么） -->
-    <string name="fdm_lang_human">人话</string>
-    <string name="fdm_lang_human_sub">正经说话（默认）</string>
+    <string name="fdm_lang_confirm">确认</string>
+    <string name="fdm_lang_desc">点这张图七下才出来的小彩蛋 —— 选一种说话方式：</string>
     <string name="fdm_lang_dragon">龙龙语</string>
     <string name="fdm_lang_dragon_sub">尼尼的母语（嗷呜咕噜）</string>
-
-    <!-- 回执：用**刚选的那种话**说 -->
-    <string name="fdm_lang_toast_human">好，正经说话。</string>
-    <string name="fdm_lang_toast_dragon">嗷呜～以后就这么说话咕</string>
-
-    <!-- ══════ 界面文案（单 key；龙龙语版在 values-zz/） ══════ -->
-
-    <!-- ── 关于页标语 ── -->
-    <string name="fdm_lang_tagline" formatted="false">FDM-100%由DS鬼脑发动的神秘模块</string>
-
-    <!-- ── 系统提示词页的空容器提示 ── -->
     <string name="fdm_lang_emptybox">（空白容器 · 把抽屉里的卡片拖上来）</string>
-
-    <!-- ── 「功能原理 &amp; 帮助」入口 ── -->
     <string name="fdm_lang_help">功能原理 &amp; 帮助</string>
+    <string name="fdm_lang_human">人话</string>
+    <string name="fdm_lang_human_sub">正经说话（默认）</string>
+    <string name="fdm_lang_note">换完立刻生效：页面上那些跟着变的句子马上就是新的说法。</string>
+    <string name="fdm_lang_tagline" formatted="false">FDM-100%由DS鬼脑发动的神秘模块</string>
+    <string name="fdm_lang_title">说话方式</string>
+    <string name="fdm_lang_toast_dragon">嗷呜～以后就这么说话咕</string>
+    <string name="fdm_lang_toast_human">好，正经说话。</string>
+    <string name="gray_001">语音可用（总闸）</string>
+    <string name="gray_002">开关（Boolean，宿主默认 false）：语音输入总闸。**它 + 下面那条都要开**，麦克风才出来</string>
+    <string name="gray_003">语音输入</string>
+    <string name="gray_004">开关：输入框显示麦克风；关闭：完全隐藏语音入口</string>
+    <string name="gray_005">默认语音输入</string>
+    <string name="gray_006">开关（Boolean，宿主默认关）。⚠️2026-10-02 修正：原说明写「如 zh-CN」与宿主类型矛盾</string>
+    <string name="gray_007">语音手势时长</string>
+    <string name="gray_008">按住说话手势的识别时长，单位毫秒</string>
+    <string name="gray_009">空录音检测</string>
+    <string name="gray_010">录到多少毫秒静音就判定为“空录音”</string>
+    <string name="gray_011">录音停止延迟</string>
+    <string name="gray_012">松手后再录多久才停，防止截断尾音</string>
+    <string name="gray_013">最长录音时长</string>
+    <string name="gray_014">单次录音上限，超时自动停止</string>
+    <string name="gray_015">Opus 码率</string>
+    <string name="gray_016">语音上传的 Opus 编码码率，越高越清晰也越费流量</string>
+    <string name="gray_017">深度思考后缀</string>
+    <string name="gray_018">深度思考按钮后面拼的文字，如 R1</string>
+    <string name="gray_019">会话搜索</string>
+    <string name="gray_020">开关：会话内可搜索历史消息</string>
+    <string name="gray_021">登录后搜索态</string>
+    <string name="gray_022">搜索态：填 on=默认开 / off=默认关，留空=跟随下发</string>
+    <string name="gray_023">启动后搜索态</string>
+    <string name="gray_024">搜索态：填 on / off，留空=跟随下发（冷启动）</string>
+    <string name="gray_025">并发流</string>
+    <string name="gray_026">开关：AI 回复中也能直接发新消息（多流并发）</string>
+    <string name="gray_027">打断并发</string>
+    <string name="gray_028">开关：发新消息会立即打断当前回复</string>
+    <string name="gray_029">文件+搜索</string>
+    <string name="gray_030">开关：联网搜索时可同时带文件一起问</string>
+    <string name="gray_031">流式平滑跟随</string>
+    <string name="gray_032">开关：流式输出时页面平滑跟随；关闭则直接跳到底</string>
+    <string name="gray_033">普通上下文上限</string>
+    <string name="gray_034">普通模式带上下文的最大 token 数，超了会截断</string>
+    <string name="gray_035">R1 上下文上限</string>
+    <string name="gray_036">R1 深度思考模式的上下文 token 上限</string>
+    <string name="gray_037">补全超时</string>
+    <string name="gray_038">等 AI 回复的超时毫秒数，超时断开</string>
+    <string name="gray_039">重新生成超时</string>
+    <string name="gray_040">点“重新生成”后的请求超时</string>
+    <string name="gray_041">重试间隔(s)</string>
+    <string name="gray_042">请求失败后重试的最大间隔（指数退避上限）</string>
+    <string name="gray_043">hCaptcha 验证</string>
+    <string name="gray_044">开关：登录/注册时弹 hCaptcha 人机验证</string>
+    <string name="gray_045">Google 登录验证</string>
+    <string name="gray_046">开关：Google 登录也要过人机验证</string>
+    <string name="gray_047">一键登录</string>
+    <string name="gray_048">开关：支持运营商一键登录</string>
+    <string name="gray_049">隐藏助手头像</string>
+    <string name="gray_050">开关：AI 回复旁不显示头像</string>
+    <string name="gray_051">选中去MD语法</string>
+    <string name="gray_052">开关：选中文本时自动去掉 ** 等 MD 符号</string>
+    <string name="gray_053">WebView 上报</string>
+    <string name="gray_054">开关：WebView 内容上报做安全检测</string>
+    <string name="gray_055">图片压缩格式</string>
+    <string name="gray_056">上传图片压缩成 webp / jpeg 等</string>
+    <string name="gray_057">客服中心地址</string>
+    <string name="gray_058">打开“帮助与反馈”跳转的客服地址</string>
+    <string name="gray_059">文件轮询间隔</string>
+    <string name="gray_060">轮询文件解析状态的间隔毫秒</string>
+    <string name="gray_061">MD 节点上限</string>
+    <string name="gray_062">单条消息最多渲染多少顶层 MD 节点，防卡死</string>
+    <string name="gray_063">PoW 预取数</string>
+    <string name="gray_064">提前缓存多少个 PoW 令牌</string>
+    <string name="gray_065">会话预取数</string>
+    <string name="gray_066">提前缓存多少个会话</string>
+    <string name="gray_067">PoW 预取开关</string>
+    <string name="gray_068">开关：提前算好 PoW 令牌，发消息更快</string>
+    <string name="gray_069">会话预取开关</string>
+    <string name="gray_070">开关：提前拉取会话，列表秒开</string>
+    <string name="gray_071">继续生成超时</string>
+    <string name="gray_072">“继续生成”请求的超时毫秒</string>
+    <string name="gray_073">恢复生成超时</string>
+    <string name="gray_074">“断点续传”请求的超时毫秒</string>
+    <string name="gray_075">编辑请求超时</string>
+    <string name="gray_076">编辑消息后重发的超时毫秒</string>
+    <string name="gray_077">自动续传超时</string>
+    <string name="gray_078">自动续传单次请求的超时毫秒</string>
+    <string name="gray_079">自动续传窗口</string>
+    <string name="gray_080">断流后最多在多长时间内自动续传</string>
+    <string name="gray_081">自动续传间隔</string>
+    <string name="gray_082">自动续传的重试间隔毫秒</string>
+    <string name="gray_083">启动清理间隔(s)</string>
+    <string name="gray_084">启动时多久清理一次空会话（秒）</string>
+    <string name="gray_085">置顶会话上限</string>
+    <string name="gray_086">最多能置顶几个会话</string>
+    <string name="gray_087">最大上传大小</string>
+    <string name="gray_088">单个文件大小上限（字节），超了不让传</string>
+    <string name="gray_089">最大输入文件数</string>
+    <string name="gray_090">一次最多选几个文件上传</string>
+    <string name="gray_091">自动滚动一屏</string>
+    <string name="gray_092">开关：自动滚动每次只滚一屏</string>
+    <string name="gray_093">平滑滚动刚度</string>
+    <string name="gray_094">平滑滚动刚度（整数，默认 50，越大越跟手）</string>
+    <string name="gray_095">优化 Markdown</string>
+    <string name="gray_096">开关：启用 Markdown 渲染性能优化</string>
+    <string name="gray_097">输入框上方新会话</string>
+    <string name="gray_098">开关：输入框上方显示“新对话”按钮</string>
+    <string name="gray_099">复制去 MD 语法</string>
+    <string name="gray_100">开关：复制时自动去掉 MD 符号</string>
+    <string name="gray_101">手动新建搜索态</string>
+    <string name="gray_102">搜索态：填 on / off，留空=跟随下发（手动新建会话）</string>
+    <string name="gray_103">自动新建搜索态</string>
+    <string name="gray_104">搜索态：填 on / off，留空=跟随下发（自动新建会话）</string>
+    <string name="gray_105">使用数美设备 ID</string>
+    <string name="gray_106">开关：风控使用数美设备指纹 ID</string>
+    <string name="gray_107">死链检测</string>
+    <string name="gray_108">开关：检测消息里的失效链接</string>
+    <string name="gray_109">观测云上报</string>
+    <string name="gray_110">开关：埋点数据上报到观测云（第三方监控）</string>
+    <string name="gray_111">DS 设置开关</string>
+    <string name="gray_112">DeepSeek 客户端设置模块总开关</string>
+    <string name="gray_113">火山引擎开关</string>
+    <string name="gray_114">字符串（true/false）：使用火山引擎相关服务。⚠️2026-10-02 注：宿主类型是 String 不是 Boolean，所以这里是输入框</string>
+    <string name="gray_115">验证码类型</string>
+    <string name="gray_116">短信验证码的样式/类型</string>
+    <string name="gray_117">编辑菜单配置</string>
+    <string name="gray_118">编辑菜单项配置，JSON 字符串</string>
+    <string name="gray_119">文件服务域名</string>
+    <string name="gray_120">文件服务接口域名</string>
+    <string name="gray_121">数美 SDK 域名</string>
+    <string name="gray_122">数美风控 SDK 的域名</string>
+    <string name="gray_123">安卓下载链接</string>
+    <string name="gray_124">提示更新时跳转的安装包下载地址</string>
+    <string name="gray_125">支持文件后缀</string>
+    <string name="gray_126">支持上传的文件后缀白名单，JSON 数组</string>
+    <string name="gray_127">PoW 头路径</string>
+    <string name="gray_128">需要带 PoW 头的请求路径，JSON 数组</string>
+    <string name="gray_129">PoW 功能列表</string>
+    <string name="gray_130">需要 PoW 校验的功能列表，JSON 数组</string>
+    <string name="gray_131">图片缓存失效</string>
+    <string name="gray_132">早于此时间戳的图片缓存全部失效（毫秒）</string>
+    <string name="gray_133">拍照压缩比</string>
+    <string name="gray_134">拍照上传的图片压缩比，0~1 浮点</string>
+    <string name="gray_135">相册压缩比</string>
+    <string name="gray_136">从相册选图上传的压缩比，0~1 浮点</string>
+    <string name="gray_137">搜索触发器</string>
+    <string name="gray_138">联网搜索触发条件配置，JSON 对象</string>
+    <string name="gray_139">模型配置表</string>
+    <string name="gray_140">模型配置总表，JSON 数组（key 为 model_configs_v1）</string>
+    <string name="gray_141">TTS 连接超时</string>
+    <string name="gray_142">TTS 朗读连接超时毫秒，默认 5000</string>
+    <string name="gray_143">TTS 预缓冲</string>
+    <string name="gray_144">TTS 起播前预缓冲毫秒，默认 240</string>
+    <string name="gray_145">TTS 续播缓冲</string>
+    <string name="gray_146">TTS 续播缓冲毫秒，默认 240</string>
+    <string name="gray_147">TTS 续播次数</string>
+    <string name="gray_148">TTS 最多续播次数，-1 表示无限</string>
+    <string name="gray_149">TTS 续播窗口</string>
+    <string name="gray_150">TTS 续播总时长上限毫秒，-1 表示无限</string>
+    <string name="gray_151">TTS 续播间隔</string>
+    <string name="gray_152">TTS 续播重试间隔毫秒，默认 1000</string>
+    <string name="gray_153">TTS 欠载超时</string>
+    <string name="gray_154">TTS 欠载超时毫秒，默认 1000</string>
+    <string name="gray_155">思考自动折叠</string>
+    <string name="gray_156">开关：深度思考过程自动折叠</string>
+    <string name="gray_157">失败上报路径</string>
+    <string name="gray_158">失败上报的请求路径，JSON 数组</string>
+    <string name="gray_159">公告弹窗</string>
+    <string name="gray_160">服务端公告弹窗 JSON，清空即恢复下发值</string>
+    <string name="gray_161">横幅</string>
+    <string name="gray_162">服务端横幅 JSON，清空即恢复下发值</string>
+    <string name="gray_163">自动朗读总开关</string>
+    <string name="gray_164">开关：自动朗读（TTS）总开关，默认关，关闭后无视服务端能力</string>
+    <string name="gray_165">朗读音色 ID</string>
+    <string name="gray_166">朗读音色 ID（zh-CN 或具体音色标识）</string>
+    <string name="gray_167">欢迎语</string>
+    <string name="gray_168">服务端下发的开屏欢迎语</string>
+    <string name="gray_169">欢迎语 v1</string>
+    <string name="gray_170">同上（v1）</string>
+    <string name="gray_171">语言列表</string>
+    <string name="gray_172">服务端下发的语言/多语言配置</string>
+    <string name="hlp_001">回复建议 · 功能原理 &amp; 帮助</string>
+    <string name="hlp_002">AI 气泡富文本 · 功能原理 &amp; 帮助</string>
+    <string name="hlp_003">音乐 · 功能原理 &amp; 帮助</string>
+    <string name="hlp_004">好</string>
+    <string name="hlp_005">这个功能是怎么工作的、怎么让它生效、不生效怎么查</string>
+    <string name="hlp_006">打开</string>
+    <string name="hlp_007">（详细说明已搬到页面末尾的「功能原理 &amp; 帮助」</string>
+    <string name="mlg_001">服务端没给凭证（MUSIC_U）——登录没成功，或这版接口变了</string>
+    <string name="mlg_002">已把凭证交给宿主，等它回执…</string>
+    <string name="mlg_003">宿主没回执（它可能没在跑）</string>
+    <string name="mlg_004">网易云登录</string>
+    <string name="mlg_005">登录状态</string>
+    <string name="mlg_006">✅ 已登录</string>
+    <string name="mlg_007">未登录（免登录也能听 320k，登录后才能听会员曲 / 无损）</string>
+    <string name="mlg_008">已退出登录</string>
+    <string name="mlg_009">退出登录</string>
+    <string name="mlg_010">登录方式</string>
+    <string name="mlg_011">手机验证码</string>
+    <string name="mlg_012">密码</string>
+    <string name="mlg_013">粘 cookie</string>
+    <string name="mlg_014">手机号</string>
+    <string name="mlg_015">短信验证码</string>
+    <string name="mlg_016">正在发验证码…</string>
+    <string name="mlg_017">网络失败</string>
+    <string name="mlg_018">验证码已发出，请查收短信</string>
+    <string name="mlg_019">发验证码</string>
+    <string name="mlg_020">正在登录…</string>
+    <string name="mlg_021">或者邮箱（二选一）</string>
+    <string name="mlg_022">手机密码登录</string>
+    <string name="mlg_023">邮箱密码登录</string>
+    <string name="mlg_024">MUSIC_U 的值</string>
+    <string name="mlg_025">"怎么拿：浏览器登录 music.163.com → F12 → Application → Cookies → "</string>
+    <string name="mlg_026">"找 MUSIC_U，把它的值整段粘进来即可。
+"</string>
+    <string name="mlg_027">（也可以整条 cookie 串直接粘 —— 会自动从中挑出 MUSIC_U）</string>
+    <string name="mlg_028">用这段 cookie 登录</string>
+    <string name="mlg_029">⚠️ 隐私</string>
+    <string name="mlg_030">"登录凭证（MUSIC_U）是**明文存储**的，没有做任何加密。
 
-    <!-- ══════════════════════════════════════════════════════════════════
-         通用组件（Components.kt）
-         键名前缀 `c_` = components
-         ══════════════════════════════════════════════════════════════════ -->
+"</string>
+    <string name="mlg_031">"· 存在哪：宿主自己的私有目录
+"</string>
+    <string name="mlg_032">"  /data/data/&lt;宿主包名&gt;/files/FDMmusic/login.json
+"</string>
+    <string name="mlg_033">"· 谁能读：只有宿主自己（别的 App 读不到）
+"</string>
+    <string name="mlg_034">· ⚠️ **root 用户请注意**：root / 备份 / 调试工具可以直接读到这个文件，</string>
+    <string name="mlg_035">"拿到它就等于拿到你的网易云账号。请自行评估风险。
+"</string>
+    <string name="mlg_036">"· 永远不要把这段凭证分享、截图、上传到任何地方。
+"</string>
+    <string name="mlg_037">· 不放心就点上面的「退出登录」，文件会被删除。</string>
+    <string name="mlg_038">"· 不登录也能听 —— 实测能拿到 320k（exhigh）。登录后能听会员曲 / 无损。
+"</string>
+    <string name="mlg_039">"· 登录请求由**模块**直接发（HTTPS）；成功后凭证交给**宿主**保存，
+"</string>
+    <string name="mlg_040">"  宿主的播放器读取它、后续请求自动带上。
+"</string>
+    <string name="mlg_041">· 密码只在本机做一次 MD5，**不会保存**（保存的只有登录凭证）。</string>
+    <string name="mus_001">音乐</string>
+    <string name="mus_002">去「系统提示词」调音乐变量 ›</string>
+    <string name="mus_003">悬浮迷你条</string>
+    <string name="mus_004">显示迷你条</string>
+    <string name="mus_005">卡片上就是全部界面：封面 · 曲名&amp;歌手 · 歌词 · 进度条 · 控件；</string>
+    <string name="mus_006">点 ♪ 还能搜歌。开关一开，每个页面都挂着它。</string>
+    <string name="mus_007">悬浮条设置 ›</string>
+    <string name="mus_008">卡片尺寸（也能拖四个角）· 「≡」拖动把手 · 它到底长什么样</string>
+    <string name="mus_009">去设置</string>
+    <string name="mus_010">宿主里正在放</string>
+    <string name="mus_011">还没选歌</string>
+    <string name="mus_012">去宿主里点卡片上的 ♪ 搜一首</string>
+    <string name="mus_013">"　·　队列 "</string>
+    <string name="mus_014">这几个按钮也能用（走宿主进程里的播放器）；不过平时在宿主里直接点卡片更顺手。</string>
+    <string name="mus_015">网易云账号</string>
+    <string name="mus_016">"✅ 已登录 "</string>
+    <string name="mus_017">未登录</string>
+    <string name="mus_018">不登录也能听 320k；登录后才能听会员曲 / 无损。</string>
+    <string name="mus_019">登录</string>
+    <string name="mus_020">音源伪装</string>
+    <string name="mus_021">"有些歌对「客户端」比对「网页」更宽松。这里可以换一种身份去请求。
+"</string>
+    <string name="mus_022">⚠️ 尼尼原来写的是 os=pc + UA=iPhone（**自相矛盾**），现已改成三档一致。</string>
+    <string name="mus_023">换完要**重新点一下那首歌**才会用新身份去取地址（正在放的不会自动切）。</string>
+    <string name="mus_024">提示词音乐变量</string>
+    <string name="mus_025">让 AI 知道你在听什么。提示词里写这些占位符，会在**发消息那一刻**</string>
+    <string name="mus_026">"替换成真值（所以歌词行、进度天然是实时的）：
+"</string>
+    <string name="mus_027">"· {music}           《歌名》 - 歌手 (1:23/3:42)
+"</string>
+    <string name="mus_028">"· {music_or_none}  ★ 同上，但**没在听**时明确写「没有在听歌」
+"</string>
+    <string name="mus_029">"· {music_pos}  {music_dur}  {music_left}   已听 / 总长 / 剩余
+"</string>
+    <string name="mus_030">· {lyric}  {lyric_prev}  {lyric_next}   当前这一句 / 上一句 / 下一句</string>
+    <string name="mus_031">"⚠️ 「空」不等於「没在放歌」——空有三种原因：
+"</string>
+    <string name="mus_032">"① 总开关关着　② 真没在放歌　③ 歌词开关关着 / 歌词还没缓存到。
+"</string>
+    <string name="mus_033">"所以本页**不替你做任何「空 = 没在听」的断言**，两种需求各给一个工具：
+"</string>
+    <string name="mus_034">"· 想「没在听就整句别出现」⇒ 用 [[ ]] 把整行包起来：
+"</string>
+    <string name="mus_035">"    [[正在听：{music}]]   ← 变量全空时整行（连 [[ ]]）一起删掉
+"</string>
+    <string name="mus_036">"· 想「让模型知道我没在听」⇒ 用 {music_or_none}：
+"</string>
+    <string name="mus_037">"    它只在【开关开着但真没在听】时写「没有在听歌」；开关关着时它也是空。"</string>
+    <string name="mus_038">音乐变量</string>
+    <string name="mus_039">总开关。关着时所有变量都替换成**空串** —— 绝不会把裸 {music} 发给模型。</string>
+    <string name="mus_040">开着之后，只要提示词里有音乐变量，注入就强制「每轮」（忽略系统提示词页的注入模式）。</string>
+    <string name="mus_041">允许歌词变量（⚠️ 版权）</string>
+    <string name="mus_042">"默认关。开启后 {lyric} 系列才生效。
+"</string>
+    <string name="mus_043">⚠️ 歌名/歌手/专辑是事实性信息；歌词是作品。项目对歌词的铁律是「只放内存」，</string>
+    <string name="mus_044">但那是**显示给自己看** —— 开启本项意味着歌词行会**随提示词上传给服务器、</string>
+    <string name="mus_045">并留在对话历史里**，性质完全不同。</string>
+    <string name="mus_046">✦ 功能原理 / 怎么让它生效 / 不生效怎么查 —— 见页面末尾的「功能原理 &amp; 帮助」。</string>
+    <string name="mus_047">说明</string>
+    <string name="mus_048">"· 播放器跑在**宿主进程**里 ⇒ 从最近任务里把模块划掉，音乐不会断。
+"</string>
+    <string name="mus_049">"· 代价：划掉 DeepSeek 就停；也**没有通知栏播放控制**（宿主清单改不了，声明不了前台服务）。
+"</string>
+    <string name="mus_050">· 想安静地听：把迷你卡拖到角落、或者在卡片上按 ✕ 收起（拨一下开关就回来）。</string>
+    <string name="mus_051">版权</string>
+    <string name="mus_052">"本功能**只做在线播放**：
+"</string>
+    <string name="mus_053">"· 音频：流式播放网易云 CDN 给的链接，**不下载、不落盘**
+"</string>
+    <string name="mus_054">"· 封面 / 歌词：由宿主自己联网取回，**只放在内存**，退出即消失
+"</string>
+    <string name="mus_055">"· 状态文件 `files/FDMmusic/state.json` 里只有事实性信息（歌名 / 歌手 / 进度 / 播放态）
+"</string>
+    <string name="mus_056">听歌本身仍受网易云的版权约束，请勿用于转载或再分发。</string>
+    <string name="mus_057">（致谢已搬到「关于」页面）</string>
+    <string name="pg_001">"写出 "</string>
+    <string name="pg_002">" 字节 → "</string>
+    <string name="pg_003">" 字节）"</string>
+    <string name="pg_004">写进宿主目录失败（0 字节）</string>
+    <string name="pg_005">"选图异常: "</string>
+    <string name="pg_006">传图异常</string>
+    <string name="pg_007">"点了 "</string>
+    <string name="pg_008">走模块自己的入口执行</string>
+    <string name="pg_009">选一张图（界面读原图 → 丢进宿主目录 → 宿主用模块自己的保存例程写进**内部**目录 ✅）</string>
+    <string name="pg_010">复制宿主的日志到剪贴板</string>
+    <string name="pg_011">（还没回读到日志）</string>
+    <string name="pg_012">"已复制 "</string>
+    <string name="pg_013">" 字"</string>
+    <string name="pg_014">找不到这一页</string>
+    <string name="pg_015">（还没回读；点上面「回读」）</string>
+    <string name="pg_016">内容（</string>
+    <string name="pg_017">" 字）"</string>
+    <string name="pg_018">宿主状态</string>
+    <string name="pg_019">动作结果</string>
+    <string name="pg_020">（还没执行过动作）</string>
+    <string name="pg_021">时间：</string>
+    <string name="pg_022">回执 rev</string>
+    <string name="pg_023">无</string>
+    <string name="pg_024">"宿主真值同步于 "</string>
+    <string name="pg_025">推送一次 + 让宿主回读</string>
+    <string name="pg_026">改完一般已自动推过；这个用来确认</string>
+    <string name="pg_027">问一下宿主最新状态</string>
+    <string name="pg_028">让宿主跑一遍 status 动作并把结果回传</string>
+    <string name="pg_029">改完点保存，重启 App 生效；均会自动备份原值，点全部恢复可还原</string>
+    <string name="pg_030">全部恢复灰度</string>
+    <string name="pg_031">撤掉影子覆盖 + 把备份的原值写回真实键</string>
+    <string name="pg_032">重新读取宿主当前值</string>
+    <string name="pg_033">让宿主再回读一遍</string>
+    <string name="pg_034">最近一次动作</string>
+    <string name="pg_035">（无）</string>
+    <string name="pg_036">通话功能（实验）：—</string>
+    <string name="pg_037">通话功能（实验）：已关闭</string>
+    <string name="pg_038">通话功能（实验）：已开启 · 已生效</string>
+    <string name="pg_039">通话功能（实验）：已开启 · 未生效</string>
+    <string name="pg_040">"往 model_configs 补 &quot;call_feature&quot;:{} ⇒ 聊天页顶部栏出现「打电话」图标（宿主 2.6.1）"</string>
+    <string name="pg_041">通话页留驻：—</string>
+    <string name="pg_042">通话页留驻：已开启</string>
+    <string name="pg_043">通话页留驻：已关闭</string>
+    <string name="pg_044">服务端报错时不让通话页自动消失 —— 钩住 ChatCallHost 的渲染闸门（CallPageViewModel.a）</string>
+    <string name="pg_045">搜歌 / 播放 / 歌词 —— 免登录 320k</string>
+    <string name="rows_001">"宿主： "</string>
+    <string name="rows_002">选颜色…</string>
+    <string name="rows_003">快捷</string>
+    <string name="rows_004">编辑中…（停笔自动保存）</string>
+    <string name="rows_005">"已提交 "</string>
+    <string name="rows_006">执行</string>
+    <string name="scr_001">核心の功能</string>
+    <string name="scr_002">灰度选项管理</string>
+    <string name="scr_003">查看宿主隐藏设置(小心封号)</string>
+    <string name="scr_004">附加の功能</string>
+    <string name="scr_005">聊天</string>
+    <string name="scr_006">美化</string>
+    <string name="scr_007">过检</string>
+    <string name="scr_008">如果ds压力root设备/发现lsp，点我</string>
+    <string name="scr_009">调试</string>
+    <string name="scr_010">如果没bug，里面的东西别乱动</string>
+    <string name="scr_011">致谢</string>
+    <string name="scr_012">尼得亚伯(DS驱动版)：所有的核心代码都是Ta写的</string>
+    <string name="scr_013">lsposed：提供了 hook 及注入</string>
+    <string name="scr_014">token：许多都被尼得亚伯当夜宵了</string>
+    <string name="scr_015">底栏液态玻璃（mmliquidglass 0.2.1）：液态玻璃的实现参考</string>
+    <string name="scr_016">（StackBlur 糊底 + 折射 + 弹簧回弹）</string>
+    <string name="scr_017">Deekseep 模块 1.7.4 开源版：双层架构（UI 与 hook 分离）的参考</string>
+    <string name="scr_018">Haze（chrisbanes）：液态玻璃的坐标模型 / over 合成 / 色散 / GPU 管线参考</string>
+    <string name="scr_019">项目地址：https://github.com/chrisbanes/haze</string>
+    <string name="scr_020">Cloudy（skydoves）：距离场折射 + RGB 色散 + 四重镜面高光（本模块「Cloudy 式」方案）</string>
+    <string name="scr_021">项目地址：https://github.com/skydoves/Cloudy</string>
+    <string name="scr_022">AndroidLiquidGlass（Kyant0）：Modifier 级液态玻璃的思路参考</string>
+    <string name="scr_023">项目地址：https://github.com/Kyant0/AndroidLiquidGlass</string>
+    <string name="scr_024">liquid（FletchMcKee）：可液化修饰符 / 背景像素采样的思路参考</string>
+    <string name="scr_025">项目地址：https://github.com/FletchMcKee/liquid</string>
+    <string name="scr_026">liquid-glass（NadeemIqbal）：轻量折射 + 自动分级降级的思路参考</string>
+    <string name="scr_027">项目地址：https://github.com/NadeemIqbal/liquid-glass</string>
+    <string name="scr_028">m3e-canvas（本项目的 UI 设计/实现参考）</string>
+    <string name="scr_029">项目地址：https://github.com/lnkiai/m3e-canvas</string>
+    <string name="scr_030">■神：我也不知道怎么会有这个。</string>
+    <string name="scr_031">NeteaseCloudMusicApi（Binaryify，MIT）：音乐功能的接口与加密算法参考</string>
+    <string name="scr_032">（本模块只用它的算法与接口约定，加密层用 Java 重写了一遍）</string>
+    <string name="scr_033">灰度工具箱</string>
+    <string name="scr_034">二级菜单示例</string>
+    <string name="scr_035">这里是辅助文本</string>
+    <string name="scr_036">选项</string>
+    <string name="spv_001">点我编辑</string>
+    <string name="spv_002">这是尼尼的卡片</string>
+    <string name="spv_003">回复建议</string>
+    <string name="spv_004">富文本</string>
+    <string name="spv_005">系统提示词内容</string>
+    <string name="spv_006">自定义文本</string>
+    <string name="spv_007">存摆放失败：</string>
+    <string name="spv_008">重建提示词失败：</string>
+    <string name="spv_009">"（宿主没回话）
 
-    <!-- 顶部栏图标（contentDescription） -->
-    <string name="c_back">返回</string>
-    <string name="c_save">保存</string>
-    <string name="c_more">更多</string>
+"</string>
+    <string name="spv_010">"提示词是**由宿主（DeepSeek）里的模块**负责写进去的 ——
+"</string>
+    <string name="spv_011">"所以必须**先打开 DeepSeek**，再来点保存/提交。
 
-    <!-- 底部导航栏 -->
-    <string name="c_nav_home">首页</string>
-    <string name="c_nav_about">关于</string>
-
-    <!-- 「猜你想跳转」小卡 -->
-    <string name="c_jump_hint">猜你想跳转</string>
-    <string name="c_jump_go">去「系统提示词」看看 ›</string>
+"</string>
+    <string name="spv_012">（现在这个界面照旧能编辑、能排版；只是「写进去」这一步要宿主在场。）</string>
+    <string name="spv_013">系统提示词</string>
+    <string name="spv_014">卡片 = 提示词的一段 · 长按拖到上面</string>
+    <string name="spv_015">内置</string>
+    <string name="spv_016">自定义</string>
+    <string name="spv_017">⤓ 松手 = 归档回抽屉</string>
+    <string name="spv_018">内置功能提示词</string>
+    <string name="spv_019">（都搬到上面了）</string>
+    <string name="spv_020">自定义提示词（暂存在这儿 · 也能归档回来）</string>
+    <string name="spv_021">（这儿是空的）</string>
+    <string name="spv_022">归档</string>
+    <string name="spv_023">拼合后的系统提示词（</string>
+    <string name="spv_024">（空的 —— 容器里没有卡片，所以提示词是空的）</string>
+    <string name="spv_025">删除这张卡片？</string>
+    <string name="spv_026">」会被删掉（它那一段就从这个提示词里消失）。
+这一步不能撤销。</string>
+    <string name="spv_027">删除</string>
+    <string name="spv_028">编辑标题</string>
+    <string name="spv_029">标题</string>
+    <string name="spv_030">去「</string>
+    <string name="spv_031">」页</string>
+    <string name="spv_032">删除这张卡片</string>
+    <string name="spv_033">这一段的提示词内容</string>
+    <string name="spv_034">标题也进提示词</string>
+    <string name="spv_035">已提交到系统提示词 ✓</string>
+    <string name="spv_036">没有改动（内容与已保存的一致）</string>
+    <string name="spv_037">提交到提示词</string>
+    <string name="spv_038">（这一段是它自带的约定 · 内容由模块提供）</string>
+    <string name="spv_039">自带的【追问建议】约定 · 拖回抽屉 = 这一段不进提示词</string>
+    <string name="spv_040">自带的【音乐变量】示例 · 拖回抽屉 = 这一段不进提示词</string>
+    <string name="spv_041">自带的【回答排版】约定 · 拖回抽屉 = 这一段不进提示词</string>
+    <string name="spv_042">默认模板（锁着，不能改）· 拖到容器里 = 复制一张新的（能无限拖）</string>
+    <string name="spv_043">（还没写内容 · 点开卡片编辑）</string>
+    <string name="spv_044">开启注入</string>
+    <string name="spv_045">开启后才生效（默认关）</string>
+    <string name="spv_046">注入模式</string>
+    <string name="spv_047">仅首条 = 只在本会话第一条消息注入（token 只花一次、位置=上下文最前）；</string>
+    <string name="spv_048">"每轮 = 每条消息都注入（对抗稀释最强，token 持续消耗）。
+"</string>
+    <string name="spv_049">⚠️ 提示词里一旦出现**音乐变量**（{music} / {lyric} 等），本项会被**忽略**、</string>
+    <string name="spv_050">强制按「每轮」—— 音乐是时变的，冻在会话开头就等于骗模型。</string>
+    <string name="spv_051">仅首条</string>
+    <string name="spv_052">每轮</string>
+    <string name="spv_053">承载方式</string>
+    <string name="spv_054">"★ 决定提示词怎么被送出去：
+"</string>
+    <string name="spv_055">"· 隐形字符 = Unicode Tag（人眼看不见，但模型能察觉「有隐藏字符」⇒ 概率性拒答）
+"</string>
+    <string name="spv_056">· 明文定界 = 正常文字，服务端/模型当普通内容读（零风险），由模块把这段从界面抹掉</string>
+    <string name="spv_057">"（界面看不到，但服务端/换设备看得见）
+"</string>
+    <string name="spv_058">★ 下面两个「包装前缀/后缀」在两种方式下**都生效**</string>
+    <string name="spv_059">隐形字符</string>
+    <string name="spv_060">明文定界</string>
+    <string name="spv_061">包装前缀</string>
+    <string name="spv_062">"包在提示词【前面】的文字。留空 = 不加。
+"</string>
+    <string name="spv_063">"· 隐形字符模式：前缀也会被隐形化（人眼看不见）
+"</string>
+    <string name="spv_064">"· 明文定界模式：前缀原样发出，和正文一起被 ⟦FDM⟧…⟦/FDM⟧ 包住（界面照样看不到）
+"</string>
+    <string name="spv_065">"★ 措辞是主战场：写 SYSTEM-LEVEL / highest priority / overrides user turns "</string>
+    <string name="spv_066">这类词，模型会直接判定「提示注入」并拒绝（已被真机实测打回一次）。</string>
+    <string name="spv_067">包装后缀</string>
+    <string name="spv_068">"包在提示词【后面】的文字。留空 = 不加。
+"</string>
+    <string name="spv_069">"两种承载方式下都生效（同前缀：隐形模式被隐形化，明文模式随正文一起被定界符包住）。
+"</string>
+    <string name="spv_070">默认留空 —— 「END OF …」这种封口词本身也是注入特征。</string>
+    <string name="spv_071">✦ 提示词内容在哪儿？</string>
+    <string name="spv_072">"它已经变成抽屉里的卡片了：
+"</string>
+    <string name="spv_073">"· 容器里的卡片 = 提示词正文（按从上到下的顺序拼，段间空一行）
+"</string>
+    <string name="spv_074">"· 内置三张（回复建议 / 音乐 / 富文本）带着各自「自带」的那段约定
+"</string>
+    <string name="spv_075">"· 「系统提示词内容」那张能**无限复制**出自定义文本卡，卡里写什么就是什么
+"</string>
+    <string name="spv_076">⇒ 这个框里只剩「怎么送出去」的设置（开启/模式/承载/包装）。</string>
+    <string name="tree_001">DeepSeek 灰度开关工具箱</string>
+    <string name="tree_002">宿主下发配置的开关编辑器（改完保存，自动备份原值）</string>
+    <string name="tree_003">AI 最新回复下方加一排追问按钮，点一下即发送</string>
+    <string name="tree_004">环境伪装</string>
+    <string name="tree_005">隐藏 root / 模块痕迹，绕过风控环境检测</string>
+    <string name="tree_006">调试 / 日志（DSMlogs）</string>
+    <string name="tree_007">防撤回</string>
+    <string name="tree_008">开启后消息会备份到本地数据库，占用存储空间</string>
+    <string name="tree_009">模型切换</string>
+    <string name="tree_010">开启后可在会话中切换到专家模式 / 识图模式</string>
+    <string name="tree_011">本地数据库管理</string>
+    <string name="tree_012">回复建议 ›</string>
+    <string name="tree_013">输入框上方显示一排可点击的回复建议，点一下直接发送（数量/文字可自定义）</string>
+    <string name="tree_014">系统提示词 ›</string>
+    <string name="tree_015">卡片式编辑：容器里的卡片按顺序拼成提示词（模型看得到、人眼看不见）</string>
+    <string name="tree_016">AI 气泡富文本 ›</string>
+    <string name="tree_017">AI 回复里写 ⟦FDM:模板名|参数⟧ → 这一段变成你配好的富文本</string>
+    <string name="tree_018">修改助手图片 ›</string>
+    <string name="tree_019">AI 回复旁的头像：开关 + 选图</string>
+    <string name="tree_020">对话气泡设置 ›</string>
+    <string name="tree_021">AI / 我的气泡：颜色、圆角、图片底、缩放、图片锚点</string>
+    <string name="tree_022">自定义账号名</string>
+    <string name="tree_023">留空 = 隐藏账号名；修改后重启宿主生效</string>
+    <string name="tree_024">修改账号头像</string>
+    <string name="tree_025">开启后可自定义侧边栏底部的账号头像</string>
+    <string name="tree_026">选择账号头像</string>
+    <string name="tree_027">文件快捷选项 ›</string>
+    <string name="tree_028">自定义上传文件后的快捷发送项（JSON）</string>
+    <string name="tree_029">招呼用语 ›</string>
+    <string name="tree_030">自定义新会话的开屏招呼语</string>
+    <string name="tree_031">修改背景 ›</string>
+    <string name="tree_032">图片或动态渐变背景，透明度可调</string>
+    <string name="tree_033">液态玻璃 ›</string>
+    <string name="tree_034">给宿主所有按钮换上玻璃底（截底层→糊→折射）</string>
+    <string name="tree_035">悬浮便签 ›</string>
+    <string name="tree_036">在界面上贴一张便签：可拖动、可编辑、可换外观（不需要任何权限）</string>
+    <string name="tree_037">三种方式</string>
+    <string name="tree_038">手机验证码 / 手机或邮箱密码 / 直接粘 cookie</string>
+    <string name="tree_039">⚠️ 凭证是明文存的</string>
+    <string name="tree_040">"存在宿主私有目录（别的 App 读不到），但**没有加密**。
+"</string>
+    <string name="tree_041">root 用户请注意：root / 备份工具能直接读到，等于拿到你的账号。</string>
+    <string name="tree_042">悬浮条设置</string>
+    <string name="tree_043">卡片宽度</string>
+    <string name="tree_044">拖四个角也能调；这里是精确控制</string>
+    <string name="tree_045">卡片高度</string>
+    <string name="tree_046">太小的话歌词区会被挤扁</string>
+    <string name="tree_047">≡ 三条杠 = 拖动把手</string>
+    <string name="tree_048">"按住卡片里【曲名旁边】那个「≡」上下拖，位置会记住。
+"</string>
+    <string name="tree_049">四个角的 ◤◥◣◢ 是**拉伸**用的（调大小，也会记住）。</string>
+    <string name="tree_050">常驻是什么意思</string>
+    <string name="tree_051">开关一开，**每个页面**都会挂着它（会话页 / 设置页 / 全屏页都在），</string>
+    <string name="tree_052">"没在放歌时显示「未在播放」并提示点 ♪ 去选歌。
+"</string>
+    <string name="tree_053">✕ 是「本次宿主进程里收起」，拨一下开关或重启宿主就回来。</string>
+    <string name="tree_054">卡片上有什么</string>
+    <string name="tree_055">"封面（专辑图）· 曲名&amp;歌手 · 可滚动/可点击跳转的歌词 · "</string>
+    <string name="tree_056">"进度条（可拖）· ♪(去选歌) ◀◀ ▶/❚❚ ▶▶ ↻(循环)。
+"</string>
+    <string name="tree_057">点按钮 = 给播放器发广播，**界面不会跳走**（在聊天页也能直接切歌）。</string>
+    <string name="tree_058">悬浮便签</string>
+    <string name="tree_059">显示便签</string>
+    <string name="tree_060">开启后宿主界面上出现一张便签（不用给任何权限）</string>
+    <string name="tree_061">按住便签【左上角】那个「≡」就能拖着走。位置会记住（按 dp 存，切页面 / 切 Activity 都还在）。</string>
+    <string name="tree_062">在便签上直接写字</string>
+    <string name="tree_063">点一下便签正文就能就地编辑（输入法会自己弹出来）；改完点一下别处即落盘，没有保存按钮。</string>
+    <string name="tree_064">多张便签</string>
+    <string name="tree_065">"便签顶栏：＋ 新建 · ‹ › 前后翻（中间显示 1/2）· － 删掉当前 · ▣ 缩成小圆球 · ✕ 本会话收起。
+"</string>
+    <string name="tree_066">缩成圆球之后，点那颗圆球就回来。</string>
+    <string name="tree_067">便签底色</string>
+    <string name="tree_068">便签纸的颜色</string>
+    <string name="tree_069">不透明度</string>
+    <string name="tree_070">0 = 全透只剩框，255 = 完全不透明</string>
+    <string name="tree_071">字号</string>
+    <string name="tree_072">便签正文的字号（sp）</string>
+    <string name="tree_073">AI 气泡富文本</string>
+    <string name="tree_074">✦ 功能原理 / 怎么让它生效 / 不生效怎么查</string>
+    <string name="tree_075">都收进页面**末尾**的「功能原理 &amp; 帮助」里了（点一下打开）。</string>
+    <string name="tree_076">开启</string>
+    <string name="tree_077">默认关。开了之后 AI 回复里的标记/标签才会被渲染</string>
+    <string name="tree_078">裸标签直接渲染（推荐开）</string>
+    <string name="tree_079">"开了之后，AI 不用包任何标记，直接写 &lt;b&gt;粗&lt;/b&gt; &lt;c1&gt;红&lt;/c1&gt; &lt;br&gt; 就当场生效。
+"</string>
+    <string name="tree_080">关掉的话，它只认 ⟦FDM:模板名|参数⟧ 这一种写法 —— 而模型天生爱写 HTML，</string>
+    <string name="tree_081">"关掉就会看到满屏的尖括号露在界面上。
+"</string>
+    <string name="tree_082">安全靠白名单：只认 b/i/u/s/br/c1-9/bg1-9/c#RRGGBB/bg#RRGGBB，</string>
+    <string name="tree_083">代码里的 &lt;div&gt;、数学里的 a &lt; b 一律原样留着。</string>
+    <string name="tree_084">模板池（每行一条：名字|富文本）</string>
+    <string name="tree_085">模板里不能带真换行 —— 换行请用 &lt;br&gt;；# 开头的行当注释。留空 = 用开箱示例模板</string>
+    <string name="tree_086">灌入开箱示例模板</string>
+    <string name="tree_087">改乱了想重来的时候用（模板池，不是系统提示词）</string>
+    <string name="tree_088">★ 渲染任意 HTML（实验）</string>
+    <string name="tree_089">"开了之后，AI 用 ```html 代码块写的内容会被真正当成网页渲染（表格、div、CSS 都能用）。
+"</string>
+    <string name="tree_090">原理：宿主本来就用 WebView 渲染 ```mermaid 代码块，我们让 ```html 也走那条路，</string>
+    <string name="tree_091">"再把内容换成你的 HTML。位置/尺寸/滚动全由宿主自己管。
+"</string>
+    <string name="tree_092">"⚠️ 实验功能：若效果异常（比如高度不对、显示&quot;渲染失败&quot;），关掉即可完全恢复。
+"</string>
+    <string name="tree_093">"⚠️ 它渲染出来是一张【静态图片】（投递那一刻跑完 JS 再截图）——
+"</string>
+    <string name="tree_094">页面里的按钮、输入框、链接全都点不动，那是设计如此，不是坏了。</string>
+    <string name="tree_095">HTML 页面用浅色</string>
+    <string name="tree_096">默认跟随宿主的深色主题（浅字透明底）；宿主要是浅色主题就打开这个</string>
+    <string name="tree_097">色板 1</string>
+    <string name="tree_098">模板里用 &lt;c1&gt; 引用</string>
+    <string name="tree_099">色板 2</string>
+    <string name="tree_100">色板 3</string>
+    <string name="tree_101">色板 4</string>
+    <string name="tree_102">色板 5</string>
+    <string name="tree_103">色板 6</string>
+    <string name="tree_104">色板 7</string>
+    <string name="tree_105">色板 8</string>
+    <string name="tree_106">色板 9</string>
+    <string name="tree_107">液态玻璃</string>
+    <string name="tree_108">✦ 做法：抄窗口像素 → 糊掉 → AGSL 折射 → 叠你要的那一层颜色</string>
+    <string name="tree_109">参照物：底栏液态玻璃 0.2.1（io.github.liuran001.mmliquidglass）</string>
+    <string name="tree_110">开启液态玻璃</string>
+    <string name="tree_111">给宿主所有元素套上玻璃（整页根节点除外）</string>
+    <string name="tree_112">玻璃颜色</string>
+    <string name="tree_113">玻璃本体就这一层颜色；浓度当它的透明度</string>
+    <string name="tree_114">浓度（= 透明度）</string>
+    <string name="tree_115">0 = 全透只剩玻璃；100 = 完全不透</string>
+    <string name="tree_116">模糊度</string>
+    <string name="tree_117">0–40，越大越磨砂</string>
+    <string name="tree_118">色散</string>
+    <string name="tree_119">边缘按 RGB 分离采样（×0.1px）—— 这是「液态」最像的那一下</string>
+    <string name="tree_120">贴合元素形状</string>
+    <string name="tree_121">玻璃按元素真实形状绘制（圆角/胶囊/异形都贴合，而不是统一方块圆角）</string>
+    <string name="tree_122">玻璃形态</string>
+    <string name="tree_123">正常 = 满铺玻璃；镂空 = 填充全透（只留元素自己的边框/内容）；</string>
+    <string name="tree_124">仅边缘 = 只在边缘一圈做折射/高光、中间透明（最像 iOS26）</string>
+    <string name="tree_125">正常</string>
+    <string name="tree_126">镂空</string>
+    <string name="tree_127">仅边缘</string>
+    <string name="tree_128">边缘宽度</string>
+    <string name="tree_129">「仅边缘」：从元素内边缘往里的化开距离（dp）——小一点更像一条边框</string>
+    <string name="tree_130">边缘过渡</string>
+    <string name="tree_131">「正常」的颜色柔化程度；「仅边缘」固定完全化开（向里一点点减色）</string>
+    <string name="tree_132">作用范围</string>
+    <string name="tree_133">所有元素 = 只要画了底就套（含卡片/大条）；仅标准按钮 = 只认 App 按钮</string>
+    <string name="tree_134">所有元素</string>
+    <string name="tree_135">仅标准按钮</string>
+    <string name="tree_136">方案</string>
+    <string name="tree_137">三套独立实现的折射 shader，切着试（Haze / Cloudy / 轻量扰动）</string>
+    <string name="tree_138">Haze 式</string>
+    <string name="tree_139">Cloudy 式</string>
+    <string name="tree_140">轻量扰动</string>
+    <string name="tree_141">擦掉内容（只留背景色）</string>
+    <string name="tree_142">从元素边缘自动估背景色，把文字/图标从折射底图里擦掉</string>
+    <string name="tree_143">擦除容差</string>
+    <string name="tree_144">×0.01；越大擦得越狠（可能连浅色图标一起擦）</string>
+    <string name="tree_145">底图来源</string>
+    <string name="tree_146">元素底色 = 用元素自己的背景色合成（不透，但后台可用、零延迟、无叠影）；</string>
+    <string name="tree_147">屏幕截图 = 透出背后内容，但后台失效、有延迟、会截到文字；</string>
+    <string name="tree_148">★ 我的背景图 = 用「修改背景」那张图当玻璃内容（清晰、透明、有纹理可见折射）；</string>
+    <string name="tree_149">背景开关关了会自动回退到「元素底色」</string>
+    <string name="tree_150">元素底色</string>
+    <string name="tree_151">屏幕截图</string>
+    <string name="tree_152">我的背景图</string>
+    <string name="tree_153">实现方式</string>
+    <string name="tree_154">自动 / 强制 GPU（画质最好）/ 强制 CPU（备用，兼容面更宽）</string>
+    <string name="tree_155">自动</string>
+    <string name="tree_156">强制 GPU</string>
+    <string name="tree_157">强制 CPU</string>
+    <string name="tree_158">修改助手图片</string>
+    <string name="tree_159">开启后可自定义 AI 回复旁的头像</string>
+    <string name="tree_160">选择图片</string>
+    <string name="tree_161">对话气泡设置</string>
+    <string name="tree_162">AI 气泡美化 ›</string>
+    <string name="tree_163">颜色 / 圆角 / 图片底 / 缩放（点进设置）</string>
+    <string name="tree_164">用户气泡美化 ›</string>
+    <string name="tree_165">颜色 / 圆角 / 图片底（点进设置）</string>
+    <string name="tree_166">图片锚点</string>
+    <string name="tree_167">图贴气泡的哪一角（左上/上中/…/右下）；AI 与我的气泡通用，默认上中</string>
+    <string name="tree_168">左上</string>
+    <string name="tree_169">上中</string>
+    <string name="tree_170">右上</string>
+    <string name="tree_171">左中</string>
+    <string name="tree_172">居中</string>
+    <string name="tree_173">右中</string>
+    <string name="tree_174">左下</string>
+    <string name="tree_175">下中</string>
+    <string name="tree_176">右下</string>
+    <string name="tree_177">AI 气泡美化</string>
+    <string name="tree_178">开启 AI 气泡美化</string>
+    <string name="tree_179">给 AI 回复加深色底 + 紫青渐变（默认开启）</string>
+    <string name="tree_180">颜色（点选色块）</string>
+    <string name="tree_181">圆角</string>
+    <string name="tree_182">单位 dp</string>
+    <string name="tree_183">透明度</string>
+    <string name="tree_184">缩放</string>
+    <string name="tree_185" formatted="false">100% = 按宽度铺满（默认）；更小=图更小、四周补边缘色；更大=裁得更狠</string>
+    <string name="tree_186">图片底</string>
+    <string name="tree_187">用自定义图片当气泡底</string>
+    <string name="tree_188">选择气泡图</string>
+    <string name="tree_189">用户气泡美化</string>
+    <string name="tree_190">开启用户气泡美化</string>
+    <string name="tree_191">给自己发出的消息加气泡底（默认开启）</string>
+    <string name="tree_192">修改背景</string>
+    <string name="tree_193">✦ 蒙层=半透明叠加；混合=底图混进界面；摄像头=实时取景当底图</string>
+    <string name="tree_194">开启背景</string>
+    <string name="tree_195">背景来源</string>
+    <string name="tree_196">图片</string>
+    <string name="tree_197">渐变</string>
+    <string name="tree_198">摄像头</string>
+    <string name="tree_199">摄像头方向</string>
+    <string name="tree_200">后置</string>
+    <string name="tree_201">前置</string>
+    <string name="tree_202">旋转</string>
+    <string name="tree_203">单位：度</string>
+    <string name="tree_204">裁切</string>
+    <string name="tree_205">百分数</string>
+    <string name="tree_206">渐变样式</string>
+    <string name="tree_207">共 4 种</string>
+    <string name="tree_208">混合方向</string>
+    <string name="tree_209">浅色底</string>
+    <string name="tree_210">深色底</string>
+    <string name="tree_211">隐藏 root / LSPosed / 模块痕迹，绕过风控环境检测</string>
+    <string name="tree_212">总开关</string>
+    <string name="tree_213">接管数美 SDK 的环境检测（默认开启）</string>
+    <string name="tree_214">系统 API 伪装</string>
+    <string name="tree_215">隐藏 root 路径 / 包名 / 系统属性（更激进）</string>
+    <string name="tree_216">设备身份伪装</string>
+    <string name="tree_217">伪造 android_id（x-device-id），让服务端视为新设备</string>
+    <string name="tree_218">换一个新设备身份（重启宿主后生效）</string>
+    <string name="tree_219">✦ 已覆盖：数美反欺诈 SDK 的 root / Xposed / 模块探测、root 文件路径、</string>
+    <string name="tree_220">Magisk・LSPosed 包名、Build.TAGS 与系统属性</string>
+    <string name="tree_221">DIAG 诊断 + 服务器最新下发数据</string>
+    <string name="tree_222">模块日志&amp;服务器最新下发内容</string>
+    <string name="tree_223">元素捕获器</string>
+    <string name="tree_224">挂一个小悬浮点：拖到目标元素上，单击写日志 / 长按复制</string>
+    <string name="tree_225">探模块的数据源（rows）</string>
+    <string name="tree_226">diagnose：原 UI 能抓到值 ⇒ 它走的肯定是模块自己的路，这里把它挖出来</string>
+    <string name="tree_227">倒出宿主存储（键名+值）</string>
+    <string name="tree_228">diagnose：看宿主 MMKV 里真实键名 —— 灰度键叫什么一目了然</string>
+    <string name="tree_229">⚠️ 原模块菜单（暂时禁用）</string>
+    <string name="tree_230">"它会打开**老 UI**，而老 UI 里能**手打系统提示词内容** ——
+"</string>
+    <string name="tree_231">"那会跟新版界面的「卡片拼接」互相覆盖（两套输入打架）。
+"</string>
+    <string name="tree_232">"⇒ 已暂时摘掉这个入口：现在**提示词内容只由卡片决定**（容器里的卡片按顺序拼）。
+"</string>
+    <string name="tree_233">要用老 UI 的其它功能（灰度/聊天/美化…）跟我说，我单独给你开一条不带提示词页的入口。</string>
+    <string name="tree_234">模块日志 + 服务器最新下发数据</string>
+    <string name="tree_235">点下面「回读」从宿主取（DIAG + DS DATA）</string>
+    <string name="tree_236">清空日志缓冲</string>
+    <string name="tree_237">复制到剪贴板</string>
+    <string name="tree_238">⚠ 改完开关要「重启宿主」才生效</string>
+    <string name="tree_239">"「AI 生成建议」这类开关是在【宿主启动时】注册钩子的（模块那时才装上去）。
+"</string>
+    <string name="tree_240">"⇒ 改完必须强停宿主再打开，否则你会看到「开关和实际行为对不上」的怪现象
+"</string>
+    <string name="tree_241">（真机踩过：「AI 生成建议」开着时建议点不动、关了反而能点 —— 其实只是旧状态还在跑）。</string>
+    <string name="tree_242">输入框上方显示一排可点击的回复建议</string>
+    <string name="tree_243">AI 生成建议</string>
+    <string name="tree_244">自动读取当前对话上下文，向 DS 单独发一次请求生成预回复</string>
+    <string name="tree_245">显示数量</string>
+    <string name="tree_246">模板池（每行一条，点按钮即发送）</string>
+    <string name="tree_247">恢复默认模板</string>
+    <string name="tree_248">招呼用语</string>
+    <string name="tree_249">新会话开屏招呼语。清空即删除该条；新增条目会自动加入所有时段。</string>
+    <string name="tree_250">招呼语</string>
+    <string name="tree_251">每行一条</string>
+    <string name="tree_252">恢复默认</string>
+    <string name="tree_253">文件快捷选项</string>
+    <string name="tree_254">上传文件后的快捷发送项。场景填 image 或 file；内容为点击后发送的文字，清空即删除该行。</string>
+    <string name="tree_255">内容</string>
+    <string name="tree_256">每行一条：场景|内容</string>
+    <string name="tree_257">本地数据库</string>
+    <string name="tree_258">防撤回备份库：共 N 条 / 占用 N KB（宿主回读）</string>
+    <string name="tree_259">清空</string>
 </resources>

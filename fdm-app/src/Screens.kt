@@ -2,6 +2,7 @@
 // Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
@@ -58,21 +59,21 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(top = 8.dp, bottom = 16.dp),
         ) {
-            SectionLabel("核心の功能")
+            SectionLabel(stringResource(R.string.scr_001))
             FdmListItem(
-                title = "灰度选项管理",
-                supporting = "查看宿主隐藏设置(小心封号)",
+                title = stringResource(R.string.scr_002),
+                supporting = stringResource(R.string.scr_003),
                 leading = Icons.Rounded.EditNote,
                 shape = groupedShape(0, 1),
                 onClick = onGray,
             )
             FdmDivider()
-            SectionLabel("附加の功能")
+            SectionLabel(stringResource(R.string.scr_004))
             val extra = listOf(
-                Triple("聊天", Icons.Rounded.Sms, null as String?),
-                Triple("美化", Icons.Rounded.Mood, null),
-                Triple("过检", Icons.Rounded.AdminPanelSettings, "如果ds压力root设备/发现lsp，点我"),
-                Triple("调试", Icons.Rounded.Build, "如果没bug，里面的东西别乱动"),
+                Triple(stringResource(R.string.scr_005), Icons.Rounded.Sms, null as String?),
+                Triple(stringResource(R.string.scr_006), Icons.Rounded.Mood, null),
+                Triple(stringResource(R.string.scr_007), Icons.Rounded.AdminPanelSettings, stringResource(R.string.scr_008)),
+                Triple(stringResource(R.string.scr_009), Icons.Rounded.Build, stringResource(R.string.scr_010)),
             )
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 extra.forEachIndexed { i, (title, icon, sup) ->
@@ -153,33 +154,33 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
-                        "致谢",
+                        stringResource(R.string.scr_011),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     listOf(
-                        "尼得亚伯(DS驱动版)：所有的核心代码都是Ta写的",
-                        "lsposed：提供了 hook 及注入",
-                        "token：许多都被尼得亚伯当夜宵了",
-                        "底栏液态玻璃（mmliquidglass 0.2.1）：液态玻璃的实现参考"
-                                + "（StackBlur 糊底 + 折射 + 弹簧回弹）",
-                        "Deekseep 模块 1.7.4 开源版：双层架构（UI 与 hook 分离）的参考",
-                        "Haze（chrisbanes）：液态玻璃的坐标模型 / over 合成 / 色散 / GPU 管线参考",
-                        "项目地址：https://github.com/chrisbanes/haze",
-                        "Cloudy（skydoves）：距离场折射 + RGB 色散 + 四重镜面高光（本模块「Cloudy 式」方案）",
-                        "项目地址：https://github.com/skydoves/Cloudy",
-                        "AndroidLiquidGlass（Kyant0）：Modifier 级液态玻璃的思路参考",
-                        "项目地址：https://github.com/Kyant0/AndroidLiquidGlass",
-                        "liquid（FletchMcKee）：可液化修饰符 / 背景像素采样的思路参考",
-                        "项目地址：https://github.com/FletchMcKee/liquid",
-                        "liquid-glass（NadeemIqbal）：轻量折射 + 自动分级降级的思路参考",
-                        "项目地址：https://github.com/NadeemIqbal/liquid-glass",
-                        "m3e-canvas（本项目的 UI 设计/实现参考）",
-                        "项目地址：https://github.com/lnkiai/m3e-canvas",
-                        "■神：我也不知道怎么会有这个。",
+                        stringResource(R.string.scr_012),
+                        stringResource(R.string.scr_013),
+                        stringResource(R.string.scr_014),
+                        stringResource(R.string.scr_015)
+                                + stringResource(R.string.scr_016),
+                        stringResource(R.string.scr_017),
+                        stringResource(R.string.scr_018),
+                        stringResource(R.string.scr_019),
+                        stringResource(R.string.scr_020),
+                        stringResource(R.string.scr_021),
+                        stringResource(R.string.scr_022),
+                        stringResource(R.string.scr_023),
+                        stringResource(R.string.scr_024),
+                        stringResource(R.string.scr_025),
+                        stringResource(R.string.scr_026),
+                        stringResource(R.string.scr_027),
+                        stringResource(R.string.scr_028),
+                        stringResource(R.string.scr_029),
+                        stringResource(R.string.scr_030),
                         // ★ 3.67.0：从「音乐」页搬过来的那条
-                        "NeteaseCloudMusicApi（Binaryify，MIT）：音乐功能的接口与加密算法参考"
-                                + "（本模块只用它的算法与接口约定，加密层用 Java 重写了一遍）",
+                        stringResource(R.string.scr_031)
+                                + stringResource(R.string.scr_032),
                     ).forEach {
                         Text(
                             it,
@@ -266,18 +267,18 @@ fun GrayToolboxScreen(onBack: () -> Unit, onFeature: () -> Unit) {
     val ctx = LocalContext.current
     var option by remember { mutableStateOf(Prefs.toolboxOption(ctx)) }
     Scaffold(
-        topBar = { FdmTopBar("灰度工具箱", onBack = onBack) },
+        topBar = { FdmTopBar(stringResource(R.string.scr_033), onBack = onBack) },
         containerColor = MaterialTheme.colorScheme.surface,
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad).padding(top = 8.dp)) {
             FdmListItem(
-                title = "二级菜单示例",
-                supporting = "这里是辅助文本",
+                title = stringResource(R.string.scr_034),
+                supporting = stringResource(R.string.scr_035),
                 shape = groupedShape(0, 1),
                 onClick = onFeature,
             )
             Spacer(Modifier.height(12.dp))
-            FdmSwitchRow("选项", option) {
+            FdmSwitchRow(stringResource(R.string.scr_036), option) {
                 option = it
                 Prefs.setToolboxOption(ctx, it)   // 真实持久化，重启后仍在
             }

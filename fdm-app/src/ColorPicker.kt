@@ -2,6 +2,7 @@
 // Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -120,7 +121,7 @@ fun ColorWheelDialog(
                         },
                         singleLine = true,
                         isError = hexErr,
-                        label = { Text("十六进制") },
+                        label = { Text(stringResource(R.string.cp_001)) },
                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier.weight(1f),
                     )
@@ -239,10 +240,10 @@ fun ColorWheelDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(argb) }) { Text("确定") }
+            TextButton(onClick = { onConfirm(argb) }) { Text(stringResource(R.string.cp_002)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.fdm_lang_cancel)) }
         },
     )
 }

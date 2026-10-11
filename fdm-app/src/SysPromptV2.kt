@@ -2,6 +2,7 @@
 // Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.core.Spring
@@ -123,8 +124,8 @@ private const val T_TEXTSRC = "textsrc"    // 「系统提示词内容」源卡�
 private const val K_SRC = "textsrc"
 
 /** 新建副本的默认：标题「点我编辑」· 正文「这是尼尼的卡片」· 标题开关默认**关**。 */
-private const val DEF_TITLE = "点我编辑"
-private const val DEF_TEXT = "这是尼尼的卡片"
+private val DEF_TITLE_RES = R.string.spv_001
+private val DEF_TEXT_RES = R.string.spv_002
 
 /**
  * 一张卡片（可变状态，纯数据 —— 界面读它、改它，再由 [save] 落盘 + [compose] 重建提示词）。
@@ -157,21 +158,21 @@ private class CCard(
 }
 
 /** 卡片类型的展示信息（内置三张）。 */
-private fun typeTitle(type: String): String = when (type) {
-    T_SUGGEST -> "回复建议"
-    T_MUSIC -> "音乐"
-    T_RICHTEXT -> "富文本"
-    T_TEXTSRC -> "系统提示词内容"
-    else -> "自定义文本"
+private fun typeTitleRes(type: String): Int = when (type) {
+    T_SUGGEST -> R.string.spv_003
+    T_MUSIC -> R.string.mus_001
+    T_RICHTEXT -> R.string.spv_004
+    T_TEXTSRC -> R.string.spv_005
+    else -> R.string.spv_006
 }
 
 /** 默认卡片池（第一次进这个页面时的样子：内置三张 + 源卡片，都在抽屉里）。 */
-private fun defaultCards(): MutableMap<String, CCard> {
+private fun defaultCards(ctx: Context): MutableMap<String, CCard> {
     val m = mutableMapOf<String, CCard>()
-    m[T_SUGGEST] = CCard(T_SUGGEST, T_SUGGEST, typeTitle(T_SUGGEST), "")
-    m[T_MUSIC] = CCard(T_MUSIC, T_MUSIC, typeTitle(T_MUSIC), "")
-    m[T_RICHTEXT] = CCard(T_RICHTEXT, T_RICHTEXT, typeTitle(T_RICHTEXT), "")
-    m[K_SRC] = CCard(K_SRC, T_TEXTSRC, typeTitle(T_TEXTSRC), "")
+    m[T_SUGGEST] = CCard(T_SUGGEST, T_SUGGEST, ctx.getString(typeTitleRes(T_SUGGEST)), "")
+    m[T_MUSIC] = CCard(T_MUSIC, T_MUSIC, ctx.getString(typeTitleRes(T_MUSIC)), "")
+    m[T_RICHTEXT] = CCard(T_RICHTEXT, T_RICHTEXT, ctx.getString(typeTitleRes(T_RICHTEXT)), "")
+    m[K_SRC] = CCard(K_SRC, T_TEXTSRC, ctx.getString(typeTitleRes(T_TEXTSRC)), "")
     return m
 }
 
@@ -193,7 +194,7 @@ private class Saved(
      * 归一化：**卡片表里必须有抽屉/容器里出现的每一张卡**，
      * 而**认不出来的（类型没了/键是脏的）一律丢掉** —— 一个坏存档不该把页面卡死。
      */
-    fun normalized(): Saved {
+    fun normalized(ctx: Context): Saved {
         val cards2 = LinkedHashMap<String, CCard>()
         /**
          * ★ 2026-10-10（3.62.2）修 ——「**三个内置卡片被当夜宵吃了**」。
@@ -214,11 +215,11 @@ private class Saved(
         fun coerce(k: String) {
             val ex = cards[k]
             val c: CCard? = when (k) {
-                T_SUGGEST -> CCard(k, T_SUGGEST, typeTitle(T_SUGGEST), ex?.text ?: "")
-                T_MUSIC -> CCard(k, T_MUSIC, typeTitle(T_MUSIC), ex?.text ?: "")
-                T_RICHTEXT -> CCard(k, T_RICHTEXT, typeTitle(T_RICHTEXT), ex?.text ?: "")
+                T_SUGGEST -> CCard(k, T_SUGGEST, ctx.getString(typeTitleRes(T_SUGGEST)), ex?.text ?: "")
+                T_MUSIC -> CCard(k, T_MUSIC, ctx.getString(typeTitleRes(T_MUSIC)), ex?.text ?: "")
+                T_RICHTEXT -> CCard(k, T_RICHTEXT, ctx.getString(typeTitleRes(T_RICHTEXT)), ex?.text ?: "")
                 // ★ 3.64.3：它是**默认模板** ⇒ 内容固定为默认值（不再沿用旧的/播种来的文本）
-                K_SRC -> CCard(k, T_TEXTSRC, typeTitle(T_TEXTSRC), DEF_TEXT)
+                K_SRC -> CCard(k, T_TEXTSRC, ctx.getString(typeTitleRes(T_TEXTSRC)), ctx.getString(DEF_TEXT_RES))
                 else -> if (ex != null && ex.isText) ex else null
             }
             if (c != null && !cards2.containsKey(k)) cards2[k] = c
@@ -266,13 +267,13 @@ private fun readLayout(ctx: Context): Saved? {
                 }
                 cm[k] = CCard(
                     k, ty2,
-                    co.optString("title", typeTitle(ty2)),
+                    co.optString("title", ctx.getString(typeTitleRes(ty2))),
                     co.optString("text", ""),
                     co.optBoolean("withTitle", false),
                 )
             }
         }
-        Saved(arr("drawer"), arr("box"), arr("expanded").toSet(), cm, o.optInt("nextId", 1)).normalized()
+        Saved(arr("drawer"), arr("box"), arr("expanded").toSet(), cm, o.optInt("nextId", 1)).normalized(ctx)
     } catch (t: Throwable) {
         null      // 坏数据就当没存过
     }
@@ -297,7 +298,7 @@ private fun writeLayout(ctx: Context, drawer: List<String>, box: List<String>, e
         o.put("nextId", nextId)
         FdmPush.sp(ctx).edit().putString(LAYOUT_KEY, o.toString()).apply()
     } catch (t: Throwable) {
-        Toast.makeText(ctx, "存摆放失败：" + t, Toast.LENGTH_SHORT).show()
+        Toast.makeText(ctx, ctx.getString(R.string.spv_007) + t, Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -333,7 +334,7 @@ private fun compose(ctx: Context, box: List<String>, cards: Map<String, CCard>) 
         FdmPush.sendCmd(ctx, "prompt_compose", payload)
         FdmPush.sp(ctx).edit().putLong("dbg.compose_sent_at", System.currentTimeMillis()).apply()
     } catch (t: Throwable) {
-        Toast.makeText(ctx, "重建提示词失败：" + t, Toast.LENGTH_SHORT).show()
+        Toast.makeText(ctx, ctx.getString(R.string.spv_008) + t, Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -364,7 +365,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
             //   （存档里那个 expanded 不再恢复；下次提交会把空的写回去）
             expanded = emptySet()
         } else {
-            defaultCards().forEach { (k, c) -> cards[k] = c }
+            defaultCards(ctx).forEach { (k, c) -> cards[k] = c }
         }
         seeded = true
     }
@@ -479,10 +480,10 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                 }
             }
             promptPreview =
-                "（宿主没回话）\n\n" +
-                "提示词是**由宿主（DeepSeek）里的模块**负责写进去的 ——\n" +
-                "所以必须**先打开 DeepSeek**，再来点保存/提交。\n\n" +
-                "（现在这个界面照旧能编辑、能排版；只是「写进去」这一步要宿主在场。）"
+                ctx.getString(R.string.spv_009) +
+                ctx.getString(R.string.spv_010) +
+                ctx.getString(R.string.spv_011) +
+                ctx.getString(R.string.spv_012)
         }
     }
 
@@ -497,7 +498,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
     Scaffold(
         topBar = {
             FdmTopBar(
-                title = "系统提示词",
+                title = stringResource(R.string.spv_013),
                 onBack = onBack,
                 onSave = {                       // ★ 保存：先交出缓冲 → 重存 → 重建 → **弹出拼合结果**
                     commitAllBuffers()
@@ -562,7 +563,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                         if (c != null && c.type == T_TEXTSRC) {
                             // ★ 复制语义：能无限拖 —— 每拖一次就多一张独立副本
                             val nk = "text#" + nextId
-                            cards[nk] = CCard(nk, T_TEXT, DEF_TITLE, DEF_TEXT, false)
+                            cards[nk] = CCard(nk, T_TEXT, ctx.getString(DEF_TITLE_RES), ctx.getString(DEF_TEXT_RES), false)
                             nextId += 1
                             inBox = insertByY(inBox, nk, r.center.y)
                         } else {
@@ -795,15 +796,15 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                             // ── 提示 + 左右两列的切换（点标签也能切） ──
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    "卡片 = 提示词的一段 · 长按拖到上面",
+                                    stringResource(R.string.spv_014),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f),
                                 )
-                                DrawerTab("内置", colIdx == 0) { colIdx = 0 }
+                                DrawerTab(stringResource(R.string.spv_015), colIdx == 0) { colIdx = 0 }
                                 Spacer(Modifier.width(4.dp))
-                                DrawerTab("自定义", colIdx == 1) { colIdx = 1 }
+                                DrawerTab(stringResource(R.string.spv_016), colIdx == 1) { colIdx = 1 }
                             }
                             Box(
                                 Modifier
@@ -837,7 +838,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
-                                            "⤓ 松手 = 归档回抽屉",
+                                            stringResource(R.string.spv_017),
                                             style = MaterialTheme.typography.labelMedium,
                                             color = MaterialTheme.colorScheme.primary,
                                         )
@@ -865,14 +866,14 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                             verticalArrangement = Arrangement.spacedBy(8.dp),
                                         ) {
                                             Text(
-                                                "内置功能提示词",
+                                                stringResource(R.string.spv_018),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                             val bi = inDrawer.filter { cards[it]?.isBuiltin == true }
                                             if (bi.isEmpty()) {
                                                 Text(
-                                                    "（都搬到上面了）",
+                                                    stringResource(R.string.spv_019),
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 )
@@ -888,7 +889,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                             verticalArrangement = Arrangement.spacedBy(8.dp),
                                         ) {
                                             Text(
-                                                "自定义提示词（暂存在这儿 · 也能归档回来）",
+                                                stringResource(R.string.spv_020),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -899,7 +900,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                                             }
                                             if (cu.isEmpty()) {
                                                 Text(
-                                                    "（这儿是空的）",
+                                                    stringResource(R.string.spv_021),
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 )
@@ -921,7 +922,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                  */
                 if (dragId != null) {
                     Icon(
-                        Icons.Rounded.Archive, "归档",
+                        Icons.Rounded.Archive, stringResource(R.string.spv_022),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
@@ -962,16 +963,16 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
         AlertDialog(
             onDismissRequest = { more = false },
             confirmButton = {
-                TextButton(onClick = { more = false }) { Text("确认") }
+                TextButton(onClick = { more = false }) { Text(stringResource(R.string.fdm_lang_confirm)) }
             },
-            title = { Text("更多") },
+            title = { Text(stringResource(R.string.c_more)) },
             text = {
                 Column(
                     Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
                 ) {
-                    ItemsBlock(SysPromptItems, onNav = {})
+                    ItemsBlock(sysPromptItems(ctx), onNav = {})
                 }
             },
         )
@@ -982,9 +983,9 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
         AlertDialog(
             onDismissRequest = { promptPreview = null },
             confirmButton = {
-                TextButton(onClick = { promptPreview = null }) { Text("好") }
+                TextButton(onClick = { promptPreview = null }) { Text(stringResource(R.string.hlp_004)) }
             },
-            title = { Text("拼合后的系统提示词（" + txt.length + " 字）") },
+            title = { Text(stringResource(R.string.spv_023) + txt.length + stringResource(R.string.pg_017)) },
             text = {
                 Column(
                     Modifier
@@ -993,7 +994,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                         .verticalScroll(rememberScrollState()),
                 ) {
                     Text(
-                        if (txt.isEmpty()) "（空的 —— 容器里没有卡片，所以提示词是空的）" else txt,
+                        if (txt.isEmpty()) stringResource(R.string.spv_024) else txt,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -1008,8 +1009,8 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
         val t = cards[delKey]?.title ?: ""
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("删除这张卡片？") },
-            text = { Text("「" + t + "」会被删掉（它那一段就从这个提示词里消失）。\n这一步不能撤销。") },
+            title = { Text(stringResource(R.string.spv_025)) },
+            text = { Text("「" + t + stringResource(R.string.spv_026)) },
             confirmButton = {
                 TextButton(onClick = {
                     cards.remove(delKey)
@@ -1022,10 +1023,10 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     if (titleEditing == delKey) titleEditing = null
                     pendingDelete = null
                     commit()
-                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.spv_027), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { pendingDelete = null }) { Text("取消") }
+                TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.fdm_lang_cancel)) }
             },
         )
     }
@@ -1100,6 +1101,7 @@ private fun PromptCard(
     onDragEnd: () -> Unit,
     onDragCancel: () -> Unit,
 ) {
+    val ctx = LocalContext.current
     val scale = if (dragging) 1.03f else 1f
     Column(
         Modifier
@@ -1146,7 +1148,7 @@ private fun PromptCard(
             if (card.isText) {
                 IconButton(onClick = onTitleEditStart, modifier = Modifier.size(36.dp)) {
                     Icon(
-                        Icons.Rounded.Edit, "编辑标题",
+                        Icons.Rounded.Edit, stringResource(R.string.spv_028),
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1167,7 +1169,7 @@ private fun PromptCard(
                         value = titleBuf ?: card.title,
                         onValueChange = onTitleChange,
                         singleLine = true,
-                        label = { Text("标题") },
+                        label = { Text(stringResource(R.string.spv_029)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 2.dp)
@@ -1181,14 +1183,14 @@ private fun PromptCard(
                     )
                 } else {
                     Text(
-                        if (card.isText) card.title else typeTitle(card.type),
+                        if (card.isText) card.title else ctx.getString(typeTitleRes(card.type)),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }
                 Text(
-                    cardHint(card),
+                    cardHint(ctx, card),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
@@ -1197,12 +1199,12 @@ private fun PromptCard(
             // ★ ▸ 只有内置三张有；自定义文本卡在抽屉里则是**红色删除**
             if (card.isBuiltin) {
                 IconButton(onClick = onNav, modifier = Modifier.size(44.dp)) {
-                    Icon(Icons.Rounded.ChevronRight, "去「" + typeTitle(card.type) + "」页")
+                    Icon(Icons.Rounded.ChevronRight, stringResource(R.string.spv_030) + ctx.getString(typeTitleRes(card.type)) + stringResource(R.string.spv_031))
                 }
             } else if (showDelete) {
                 IconButton(onClick = onDelete, modifier = Modifier.size(44.dp)) {
                     Icon(
-                        Icons.Rounded.Delete, "删除这张卡片",
+                        Icons.Rounded.Delete, stringResource(R.string.spv_032),
                         tint = MaterialTheme.colorScheme.error,
                     )
                 }
@@ -1230,13 +1232,13 @@ private fun PromptCard(
                                 if (st.isFocused) bHadFocus = true
                                 else if (bHadFocus) { bHadFocus = false; onCommit() }
                             },
-                        placeholder = { Text(card.text.ifEmpty { DEF_TEXT }) },
-                        label = { Text("这一段的提示词内容") },
+                        placeholder = { Text(card.text.ifEmpty { ctx.getString(DEF_TEXT_RES) }) },
+                        label = { Text(stringResource(R.string.spv_033)) },
                     )
                     Spacer(Modifier.height(6.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "标题也进提示词",
+                            stringResource(R.string.spv_034),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f),
@@ -1253,10 +1255,10 @@ private fun PromptCard(
                         val changed = onCommit()
                         Toast.makeText(
                             ctx2,
-                            if (changed) "已提交到系统提示词 ✓" else "没有改动（内容与已保存的一致）",
+                            if (changed) ctx.getString(R.string.spv_035) else ctx.getString(R.string.spv_036),
                             Toast.LENGTH_SHORT,
                         ).show()
-                    }) { Text("提交到提示词") }
+                    }) { Text(stringResource(R.string.spv_037)) }
                 } else {
                     Box(
                         Modifier
@@ -1267,7 +1269,7 @@ private fun PromptCard(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            "（这一段是它自带的约定 · 内容由模块提供）",
+                            stringResource(R.string.spv_038),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -1279,12 +1281,12 @@ private fun PromptCard(
 }
 
 /** 卡片副标题（说明它是什么）。 */
-private fun cardHint(c: CCard): String = when (c.type) {
-    T_SUGGEST -> "自带的【追问建议】约定 · 拖回抽屉 = 这一段不进提示词"
-    T_MUSIC -> "自带的【音乐变量】示例 · 拖回抽屉 = 这一段不进提示词"
-    T_RICHTEXT -> "自带的【回答排版】约定 · 拖回抽屉 = 这一段不进提示词"
-    T_TEXTSRC -> "默认模板（锁着，不能改）· 拖到容器里 = 复制一张新的（能无限拖）"
-    else -> if (c.text.isEmpty()) "（还没写内容 · 点开卡片编辑）" else c.text.take(60)
+private fun cardHint(ctx: Context, c: CCard): String = when (c.type) {
+    T_SUGGEST -> ctx.getString(R.string.spv_039)
+    T_MUSIC -> ctx.getString(R.string.spv_040)
+    T_RICHTEXT -> ctx.getString(R.string.spv_041)
+    T_TEXTSRC -> ctx.getString(R.string.spv_042)
+    else -> if (c.text.isEmpty()) ctx.getString(R.string.spv_043) else c.text.take(60)
 }
 
 /**
@@ -1294,37 +1296,37 @@ private fun cardHint(c: CCard): String = when (c.type) {
  * 它变成了抽屉里那张「系统提示词内容」卡片（可编辑、可无限复制）。
  * 剩下的是"怎么把提示词送出去"的设置：开关 / 注入模式 / 承载方式 / 前缀 / 后缀。
  */
-private val SysPromptItems: List<It> = listOf(
-    It("开启注入", "开启后才生效（默认关）",
+private fun sysPromptItems(ctx: Context): List<It> = listOf(
+    It(ctx.getString(R.string.spv_044), ctx.getString(R.string.spv_045),
         K.SW, key = "fuckds_sysprompt_on", def = false),
-    It("注入模式", "仅首条 = 只在本会话第一条消息注入（token 只花一次、位置=上下文最前）；" +
-            "每轮 = 每条消息都注入（对抗稀释最强，token 持续消耗）。\n" +
-            "⚠️ 提示词里一旦出现**音乐变量**（{music} / {lyric} 等），本项会被**忽略**、" +
-            "强制按「每轮」—— 音乐是时变的，冻在会话开头就等于骗模型。",
+    It(ctx.getString(R.string.spv_046), ctx.getString(R.string.spv_047) +
+            ctx.getString(R.string.spv_048) +
+            ctx.getString(R.string.spv_049) +
+            ctx.getString(R.string.spv_050),
         K.CH, key = "fuckds_sysprompt_mode", def = 0,
-        choices = listOf("仅首条", "每轮")),
-    It("承载方式", "★ 决定提示词怎么被送出去：\n" +
-            "· 隐形字符 = Unicode Tag（人眼看不见，但模型能察觉「有隐藏字符」⇒ 概率性拒答）\n" +
-            "· 明文定界 = 正常文字，服务端/模型当普通内容读（零风险），由模块把这段从界面抹掉" +
-            "（界面看不到，但服务端/换设备看得见）\n" +
-            "★ 下面两个「包装前缀/后缀」在两种方式下**都生效**",
+        choices = listOf(ctx.getString(R.string.spv_051), ctx.getString(R.string.spv_052))),
+    It(ctx.getString(R.string.spv_053), ctx.getString(R.string.spv_054) +
+            ctx.getString(R.string.spv_055) +
+            ctx.getString(R.string.spv_056) +
+            ctx.getString(R.string.spv_057) +
+            ctx.getString(R.string.spv_058),
         K.CH, key = "fuckds_sysprompt_carrier", def = 0,
-        choices = listOf("隐形字符", "明文定界")),
-    It("包装前缀", "包在提示词【前面】的文字。留空 = 不加。\n" +
-            "· 隐形字符模式：前缀也会被隐形化（人眼看不见）\n" +
-            "· 明文定界模式：前缀原样发出，和正文一起被 ⟦FDM⟧…⟦/FDM⟧ 包住（界面照样看不到）\n" +
-            "★ 措辞是主战场：写 SYSTEM-LEVEL / highest priority / overrides user turns " +
-            "这类词，模型会直接判定「提示注入」并拒绝（已被真机实测打回一次）。",
+        choices = listOf(ctx.getString(R.string.spv_059), ctx.getString(R.string.spv_060))),
+    It(ctx.getString(R.string.spv_061), ctx.getString(R.string.spv_062) +
+            ctx.getString(R.string.spv_063) +
+            ctx.getString(R.string.spv_064) +
+            ctx.getString(R.string.spv_065) +
+            ctx.getString(R.string.spv_066),
         K.TX, key = "fuckds_sysprompt_head",
         def = "My standing preference for this whole conversation: "),
-    It("包装后缀", "包在提示词【后面】的文字。留空 = 不加。\n" +
-            "两种承载方式下都生效（同前缀：隐形模式被隐形化，明文模式随正文一起被定界符包住）。\n" +
-            "默认留空 —— 「END OF …」这种封口词本身也是注入特征。",
+    It(ctx.getString(R.string.spv_067), ctx.getString(R.string.spv_068) +
+            ctx.getString(R.string.spv_069) +
+            ctx.getString(R.string.spv_070),
         K.TX, key = "fuckds_sysprompt_tail", def = ""),
-    It("✦ 提示词内容在哪儿？", "它已经变成抽屉里的卡片了：\n" +
-            "· 容器里的卡片 = 提示词正文（按从上到下的顺序拼，段间空一行）\n" +
-            "· 内置三张（回复建议 / 音乐 / 富文本）带着各自「自带」的那段约定\n" +
-            "· 「系统提示词内容」那张能**无限复制**出自定义文本卡，卡里写什么就是什么\n" +
-            "⇒ 这个框里只剩「怎么送出去」的设置（开启/模式/承载/包装）。",
+    It(ctx.getString(R.string.spv_071), ctx.getString(R.string.spv_072) +
+            ctx.getString(R.string.spv_073) +
+            ctx.getString(R.string.spv_074) +
+            ctx.getString(R.string.spv_075) +
+            ctx.getString(R.string.spv_076),
         K.INFO),
 )

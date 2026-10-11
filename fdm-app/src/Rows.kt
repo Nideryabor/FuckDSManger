@@ -2,6 +2,7 @@
 // Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -114,7 +115,7 @@ fun SettingSwitch(
         }
         if (hostText != null) {
             Text(
-                "宿主： " + hostText,
+                stringResource(R.string.rows_001) + hostText,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )
@@ -140,7 +141,7 @@ fun SettingSlider(
         HintLine(hint)
         if (hostText != null) {
             Text(
-                "宿主： " + hostText,
+                stringResource(R.string.rows_001) + hostText,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )
@@ -169,7 +170,7 @@ fun SettingChoice(
         HintLine(hint)
         if (hostText != null) {
             Text(
-                "宿主： " + hostText,
+                stringResource(R.string.rows_001) + hostText,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )
@@ -191,6 +192,7 @@ fun SettingColor(
     label: String, value: Int, hostText: String?, hint: String?,
     onChange: (Int) -> Unit,
 ) {
+    val ctx = LocalContext.current
     var showWheel by remember { mutableStateOf(false) }
 
     RowShell {
@@ -213,18 +215,18 @@ fun SettingColor(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.width(12.dp))
-            OutlinedButton(onClick = { showWheel = true }) { Text("选颜色…") }
+            OutlinedButton(onClick = { showWheel = true }) { Text(stringResource(R.string.rows_002)) }
         }
 
         Spacer(Modifier.height(10.dp))
 
         // 快速色板（常用色一键选）
-        Text("快捷",
+        Text(stringResource(R.string.rows_003),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(6.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Conf.palette.forEach { c ->
+            Conf.palette(ctx).forEach { c ->
                 val selected = c == value
                 Box(
                     Modifier.size(if (selected) 30.dp else 26.dp)
@@ -244,7 +246,7 @@ fun SettingColor(
         HintLine(hint)
         if (hostText != null) {
             Text(
-                "宿主： " + hostText,
+                stringResource(R.string.rows_001) + hostText,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )
@@ -315,8 +317,8 @@ fun SettingText(
 
     RowShell {
         LabelLine(label, when {
-            focused -> "编辑中…（停笔自动保存）"
-            sentAt > 0L -> "已提交 " + java.text.SimpleDateFormat("HH:mm:ss",
+            focused -> stringResource(R.string.rows_004)
+            sentAt > 0L -> stringResource(R.string.rows_005) + java.text.SimpleDateFormat("HH:mm:ss",
                 java.util.Locale.getDefault()).format(java.util.Date(sentAt))
             else -> null
         })
@@ -338,7 +340,7 @@ fun SettingText(
         )
         if (hostText != null) {
             Text(
-                "宿主： " + hostText,
+                stringResource(R.string.rows_001) + hostText,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )
@@ -398,7 +400,7 @@ fun SettingAction(label: String, hint: String? = null, onClick: () -> Unit) {
                 LabelLine(label, null)
                 HintLine(hint)
             }
-            FilledTonalButton(onClick = onClick) { Text("执行") }
+            FilledTonalButton(onClick = onClick) { Text(stringResource(R.string.rows_006)) }
         }
     }
 }

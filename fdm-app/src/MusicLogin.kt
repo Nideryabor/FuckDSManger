@@ -16,6 +16,7 @@
 //  ⚠️ 明文存储：见「隐私」那张卡的说明 —— 主人特别交代要告诉用户。
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -129,14 +130,14 @@ fun MusicLoginPage(onBack: () -> Unit) {
     /** 登录成功后：把凭证送进宿主（只有宿主能写它自己的私有目录）。 */
     fun handOff(musicU: String, uid: String, nick: String) {
         if (musicU.isEmpty()) {
-            msg = "服务端没给凭证（MUSIC_U）——登录没成功，或这版接口变了"
+            msg = ctx.getString(R.string.mlg_001)
             return
         }
         // ★ 本地也留一份（键名刻意**不带 fuckds_ 前缀** ⇒ 不会被全量推给宿主，
         //   免得凭证又被塞进宿主的 MMKV、多一处副本）
         sp.edit().putString("music.token", musicU).apply()
         FdmPush.sendCmd(ctx, "music_login_save", "$musicU\u001f$uid\u001f$nick")
-        msg = "已把凭证交给宿主，等它回执…"
+        msg = ctx.getString(R.string.mlg_002)
         // ★ 不写"假成功"：读**宿主的真实回执**（last_result）再下结论
         scope.launch {
             delay(1200)
@@ -144,13 +145,13 @@ fun MusicLoginPage(onBack: () -> Unit) {
             FdmPush.sendCmd(ctx, "cfg_state", null)
             delay(600)
             val r = sp.getString("last_result", "") ?: ""
-            msg = if (r.isEmpty()) "宿主没回执（它可能没在跑）" else "宿主回执：$r"
+            msg = if (r.isEmpty()) ctx.getString(R.string.mlg_003) else "宿主回执：$r"
             tick++
         }
     }
 
     Scaffold(
-        topBar = { FdmTopBar("网易云登录", onBack = onBack) },
+        topBar = { FdmTopBar(stringResource(R.string.mlg_004), onBack = onBack) },
         containerColor = MaterialTheme.colorScheme.surface,
     ) { pad ->
         Column(
@@ -160,11 +161,11 @@ fun MusicLoginPage(onBack: () -> Unit) {
                 .padding(bottom = 24.dp),
         ) {
             // ───────── 当前状态 ─────────
-            SectionLabel("登录状态")
+            SectionLabel(stringResource(R.string.mlg_005))
             CardBox {
                 Text(
-                    if (logged) "✅ 已登录" + (if (user.isNotEmpty()) "：$user" else "")
-                    else "未登录（免登录也能听 320k，登录后才能听会员曲 / 无损）",
+                    if (logged) stringResource(R.string.mlg_006) + (if (user.isNotEmpty()) "：$user" else "")
+                    else stringResource(R.string.mlg_007),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -173,9 +174,9 @@ fun MusicLoginPage(onBack: () -> Unit) {
                     Button(onClick = {
                         FdmPush.sendCmd(ctx, "music_login_clear", null)
                         FdmPush.sp(ctx).edit().remove("music.token").apply()
-                        msg = "已退出登录"
+                        msg = ctx.getString(R.string.mlg_008)
                         tick++
-                    }) { Text("退出登录") }
+                    }) { Text(stringResource(R.string.mlg_009)) }
                 }
                 if (diag.isNotEmpty()) {
                     Spacer(Modifier.height(6.dp))
@@ -188,12 +189,12 @@ fun MusicLoginPage(onBack: () -> Unit) {
             }
 
             // ───────── 三条路 ─────────
-            SectionLabel("登录方式")
+            SectionLabel(stringResource(R.string.mlg_010))
             CardBox {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Tab("手机验证码", mode == Mode.CAPTCHA) { mode = Mode.CAPTCHA }
-                    Tab("密码", mode == Mode.PASSWORD) { mode = Mode.PASSWORD }
-                    Tab("粘 cookie", mode == Mode.COOKIE) { mode = Mode.COOKIE }
+                    Tab(stringResource(R.string.mlg_011), mode == Mode.CAPTCHA) { mode = Mode.CAPTCHA }
+                    Tab(stringResource(R.string.mlg_012), mode == Mode.PASSWORD) { mode = Mode.PASSWORD }
+                    Tab(stringResource(R.string.mlg_013), mode == Mode.COOKIE) { mode = Mode.COOKIE }
                 }
 
                 Spacer(Modifier.height(10.dp))
@@ -202,7 +203,7 @@ fun MusicLoginPage(onBack: () -> Unit) {
                     Mode.CAPTCHA -> {
                         OutlinedTextField(
                             value = phone, onValueChange = { phone = it.filter { c -> c.isDigit() } },
-                            label = { Text("手机号") }, singleLine = true,
+                            label = { Text(stringResource(R.string.mlg_014)) }, singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -210,7 +211,7 @@ fun MusicLoginPage(onBack: () -> Unit) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             OutlinedTextField(
                                 value = captcha, onValueChange = { captcha = it.filter { c -> c.isDigit() } },
-                                label = { Text("短信验证码") }, singleLine = true,
+                                label = { Text(stringResource(R.string.mlg_015)) }, singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.weight(1f),
                             )
@@ -219,36 +220,36 @@ fun MusicLoginPage(onBack: () -> Unit) {
                                 enabled = !busy && phone.length >= 6 && countdown == 0,
                                 onClick = {
                                     busy = true
-                                    msg = "正在发验证码…"
+                                    msg = ctx.getString(R.string.mlg_016)
                                     scope.launch {
                                         val r = withContext(Dispatchers.IO) {
                                             try {
                                                 GmMusicApi.captchaSent(phone, ctcode)
                                             } catch (t: Throwable) {
-                                                mapOf("code" to -1L, "msg" to (t.message ?: "网络失败"))
+                                                mapOf("code" to -1L, "msg" to (t.message ?: ctx.getString(R.string.mlg_017)))
                                             }
                                         }
                                         val code = (r["code"] as? Number)?.toLong() ?: -1L
-                                        msg = if (code == 200L) "验证码已发出，请查收短信"
+                                        msg = if (code == 200L) ctx.getString(R.string.mlg_018)
                                         else "发码失败：code=$code ${r["msg"]}"
                                         if (code == 200L) sentAt = System.currentTimeMillis()
                                         busy = false
                                     }
                                 },
-                            ) { Text(if (countdown > 0) "${countdown}s" else "发验证码") }
+                            ) { Text(if (countdown > 0) "${countdown}s" else stringResource(R.string.mlg_019)) }
                         }
                         Spacer(Modifier.height(10.dp))
                         Button(
                             enabled = !busy && phone.isNotEmpty() && captcha.isNotEmpty(),
                             onClick = {
                                 busy = true
-                                msg = "正在登录…"
+                                msg = ctx.getString(R.string.mlg_020)
                                 scope.launch {
                                     val r = withContext(Dispatchers.IO) {
                                         try {
                                             GmMusicApi.loginByCaptcha(phone, captcha, ctcode)
                                         } catch (t: Throwable) {
-                                            mapOf("code" to -1L, "msg" to (t.message ?: "网络失败"))
+                                            mapOf("code" to -1L, "msg" to (t.message ?: ctx.getString(R.string.mlg_017)))
                                         }
                                     }
                                     val code = (r["code"] as? Number)?.toLong() ?: -1L
@@ -264,26 +265,26 @@ fun MusicLoginPage(onBack: () -> Unit) {
                                     busy = false
                                 }
                             },
-                        ) { Text("登录") }
+                        ) { Text(stringResource(R.string.mus_019)) }
                     }
 
                     Mode.PASSWORD -> {
                         OutlinedTextField(
                             value = phone, onValueChange = { phone = it.filter { c -> c.isDigit() } },
-                            label = { Text("手机号") }, singleLine = true,
+                            label = { Text(stringResource(R.string.mlg_014)) }, singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(Modifier.height(6.dp))
                         OutlinedTextField(
                             value = email, onValueChange = { email = it },
-                            label = { Text("或者邮箱（二选一）") }, singleLine = true,
+                            label = { Text(stringResource(R.string.mlg_021)) }, singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(Modifier.height(6.dp))
                         OutlinedTextField(
                             value = pwd, onValueChange = { pwd = it },
-                            label = { Text("密码") }, singleLine = true,
+                            label = { Text(stringResource(R.string.mlg_012)) }, singleLine = true,
                             visualTransformation = PasswordVisualTransformation(),
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -292,7 +293,7 @@ fun MusicLoginPage(onBack: () -> Unit) {
                             enabled = !busy && pwd.isNotEmpty() && (phone.isNotEmpty() || email.isNotEmpty()),
                             onClick = {
                                 busy = true
-                                msg = "正在登录…"
+                                msg = ctx.getString(R.string.mlg_020)
                                 scope.launch {
                                     val md5 = GmMusicCrypto.md5Hex(pwd)
                                     val r = withContext(Dispatchers.IO) {
@@ -303,7 +304,7 @@ fun MusicLoginPage(onBack: () -> Unit) {
                                                 GmMusicApi.loginByEmail(email, md5)
                                             }
                                         } catch (t: Throwable) {
-                                            mapOf("code" to -1L, "msg" to (t.message ?: "网络失败"))
+                                            mapOf("code" to -1L, "msg" to (t.message ?: ctx.getString(R.string.mlg_017)))
                                         }
                                     }
                                     val code = (r["code"] as? Number)?.toLong() ?: -1L
@@ -319,20 +320,20 @@ fun MusicLoginPage(onBack: () -> Unit) {
                                     busy = false
                                 }
                             },
-                        ) { Text(if (phone.isNotEmpty()) "手机密码登录" else "邮箱密码登录") }
+                        ) { Text(if (phone.isNotEmpty()) stringResource(R.string.mlg_022) else stringResource(R.string.mlg_023)) }
                     }
 
                     Mode.COOKIE -> {
                         OutlinedTextField(
                             value = cookie, onValueChange = { cookie = it },
-                            label = { Text("MUSIC_U 的值") },
+                            label = { Text(stringResource(R.string.mlg_024)) },
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "怎么拿：浏览器登录 music.163.com → F12 → Application → Cookies → " +
-                            "找 MUSIC_U，把它的值整段粘进来即可。\n" +
-                            "（也可以整条 cookie 串直接粘 —— 会自动从中挑出 MUSIC_U）",
+                            stringResource(R.string.mlg_025) +
+                            stringResource(R.string.mlg_026) +
+                            stringResource(R.string.mlg_027),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -347,7 +348,7 @@ fun MusicLoginPage(onBack: () -> Unit) {
                                 }
                                 handOff(v, "", "")
                             },
-                        ) { Text("用这段 cookie 登录") }
+                        ) { Text(stringResource(R.string.mlg_028)) }
                     }
                 }
 
@@ -362,30 +363,30 @@ fun MusicLoginPage(onBack: () -> Unit) {
             }
 
             // ───────── 隐私（主人特别交代要说清楚）─────────
-            SectionLabel("⚠️ 隐私")
+            SectionLabel(stringResource(R.string.mlg_029))
             CardBox {
                 Text(
-                    "登录凭证（MUSIC_U）是**明文存储**的，没有做任何加密。\n\n" +
-                    "· 存在哪：宿主自己的私有目录\n" +
-                    "  /data/data/<宿主包名>/files/FDMmusic/login.json\n" +
-                    "· 谁能读：只有宿主自己（别的 App 读不到）\n" +
-                    "· ⚠️ **root 用户请注意**：root / 备份 / 调试工具可以直接读到这个文件，" +
-                    "拿到它就等于拿到你的网易云账号。请自行评估风险。\n" +
-                    "· 永远不要把这段凭证分享、截图、上传到任何地方。\n" +
-                    "· 不放心就点上面的「退出登录」，文件会被删除。",
+                    stringResource(R.string.mlg_030) +
+                    stringResource(R.string.mlg_031) +
+                    stringResource(R.string.mlg_032) +
+                    stringResource(R.string.mlg_033) +
+                    stringResource(R.string.mlg_034) +
+                    stringResource(R.string.mlg_035) +
+                    stringResource(R.string.mlg_036) +
+                    stringResource(R.string.mlg_037),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             // ───────── 说明 ─────────
-            SectionLabel("说明")
+            SectionLabel(stringResource(R.string.mus_047))
             CardBox {
                 Text(
-                    "· 不登录也能听 —— 实测能拿到 320k（exhigh）。登录后能听会员曲 / 无损。\n" +
-                    "· 登录请求由**模块**直接发（HTTPS）；成功后凭证交给**宿主**保存，\n" +
-                    "  宿主的播放器读取它、后续请求自动带上。\n" +
-                    "· 密码只在本机做一次 MD5，**不会保存**（保存的只有登录凭证）。",
+                    stringResource(R.string.mlg_038) +
+                    stringResource(R.string.mlg_039) +
+                    stringResource(R.string.mlg_040) +
+                    stringResource(R.string.mlg_041),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.ui.res.stringResource
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -151,17 +152,17 @@ private fun ItemRow(
                 ctx.contentResolver.openInputStream(uri)?.use { ins ->
                     java.io.FileOutputStream(dst).use { out -> ins.copyTo(out) }
                 }
-                FdmPush.sendCmd(ctx, "ui_step", "写出 " + dst.length() + " 字节 → " + dst.absolutePath)
+                FdmPush.sendCmd(ctx, "ui_step", ctx.getString(R.string.pg_001) + dst.length() + ctx.getString(R.string.pg_002) + dst.absolutePath)
                 if (dst.length() > 0) {
                     FdmPush.sendCmd(ctx, "img_path", kind + "|" + dst.absolutePath)
-                    Log.e(TAG, "传路径 $kind → " + dst.absolutePath + "（" + dst.length() + " 字节）")
+                    Log.e(TAG, "传路径 $kind → " + dst.absolutePath + "（" + dst.length() + ctx.getString(R.string.pg_003))
                 } else {
-                    Log.e(TAG, "写进宿主目录失败（0 字节）")
+                    Log.e(TAG, ctx.getString(R.string.pg_004))
                 }
                 bump()
             } catch (t: Throwable) {
-                FdmPush.sendCmd(ctx, "ui_step", "选图异常: " + t)
-                Log.e(TAG, "传图异常", t)
+                FdmPush.sendCmd(ctx, "ui_step", ctx.getString(R.string.pg_005) + t)
+                Log.e(TAG, ctx.getString(R.string.pg_006), t)
             }
         }
     }
@@ -169,7 +170,7 @@ private fun ItemRow(
     when (it.k) {
         K.SW -> SettingSwitch(it.label, valueParam as Boolean, it.key, host, it.hint) { v ->
             poke(bump)
-            Log.e(TAG, "点了 " + it.key + " = " + v)
+            Log.e(TAG, ctx.getString(R.string.pg_007) + it.key + " = " + v)
             saveLocal(ctx, it, v)                        // ★ 本地也存（界面要显示/重进要回显）
             if (it.cmd != null) FdmPush.sendCmd(ctx, it.cmd, v)
             else FdmPush.sendCmd(ctx, "cfg_put", it.key!! + "\u001f" + "b" + "\u001f" + v)
@@ -204,18 +205,18 @@ private fun ItemRow(
             FdmPush.sendCmd(ctx, "cfg_put", it.key!! + "\u001f" + "s" + "\u001f" + v); bump()
         }
         K.SUB -> SettingNav(it.label, it.hint) { onNav(it.sub!!) }
-        K.ACT -> SettingAction(it.label, it.hint ?: "走模块自己的入口执行") {
+        K.ACT -> SettingAction(it.label, it.hint ?: ctx.getString(R.string.pg_008)) {
             FdmPush.sendCmd(ctx, it.cmd!!, null); bump()
         }
-        K.PICK -> SettingAction(it.label, it.hint ?: "选一张图（界面读原图 → 丢进宿主目录 → 宿主用模块自己的保存例程写进**内部**目录 ✅）") {
+        K.PICK -> SettingAction(it.label, it.hint ?: ctx.getString(R.string.pg_009)) {
             picker.launch("image/*")     // ★ 调起**系统**选择器（不是让宿主弹 ✗）
         }
-        K.COPY -> SettingAction(it.label, it.hint ?: "复制宿主的日志到剪贴板") {
+        K.COPY -> SettingAction(it.label, it.hint ?: ctx.getString(R.string.pg_010)) {
             FdmPush.sendCmd(ctx, it.cmd ?: "dump_text", null)
-            val t = ctxSp(ctx).getString("cmd.dump_text", "（还没回读到日志）") ?: ""
+            val t = ctxSp(ctx).getString("cmd.dump_text", ctx.getString(R.string.pg_011)) ?: ""
             val cb = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             cb.setPrimaryClip(ClipData.newPlainText("FDM", t))
-            Log.e(TAG, "已复制 " + t.length + " 字")
+            Log.e(TAG, ctx.getString(R.string.pg_012) + t.length + ctx.getString(R.string.pg_013))
             bump()
         }
         K.INFO -> SettingInfo(it.label, it.hint ?: "")
@@ -276,7 +277,7 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
     val ctx = LocalContext.current
     var tick by remember { mutableIntStateOf(0) }
     val t = tick
-    val pg = Tree.page(id)
+    val pg = Tree.page(ctx, id)
     // ★ 2026-10-10（3.66.0）：「功能原理 & 帮助」子框（页面末尾那个入口打开它）
     var helpTopic by remember { mutableStateOf<String?>(null) }
     // 进页面索要"模块接口项"的真值（助手图片/账号名/防撤回/环境…），并等宿主回话后重画
@@ -324,7 +325,7 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
                 .padding(top = 8.dp, bottom = 24.dp),
         ) {
             if (pg == null) {
-                SettingInfo("找不到这一页", id)
+                SettingInfo(stringResource(R.string.pg_014), id)
                 return@Column
             }
             // ★ 2026-10-10（3.65.0）：「猜你想跳转」—— 回复建议 / 富文本顶上给一条去系统提示词的路
@@ -341,21 +342,21 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             if (id == "dump") {
                 // 日志内容本体（原 UI 是滚动的一张长文本）
-                val dump = ctxSp(ctx).getString("cmd.dump_text", "（还没回读；点上面「回读」）") ?: ""
-                SectionLabel("内容（" + dump.length + " 字）")
+                val dump = ctxSp(ctx).getString("cmd.dump_text", stringResource(R.string.pg_015)) ?: ""
+                SectionLabel(stringResource(R.string.pg_016) + dump.length + stringResource(R.string.pg_017))
                 SettingInfo("", dump)
                 Spacer(Modifier.height(12.dp))
             }
-            SectionLabel("宿主状态")
+            SectionLabel(stringResource(R.string.pg_018))
             val res = ctxSp(ctx).getString("last_result", null)
-            SettingInfo("动作结果", res ?: "（还没执行过动作）",
-                "时间：" + fmt(ctxSp(ctx).getLong("last_result_at", 0L)))
-            SettingInfo("回执 rev", if (Bridge.appliedRev(ctx) < 0) "无" else Bridge.appliedRev(ctx).toString(),
-                "宿主真值同步于 " + fmt(Bridge.hostAt(ctx)))
-            SettingAction("推送一次 + 让宿主回读", "改完一般已自动推过；这个用来确认") {
+            SettingInfo(stringResource(R.string.pg_019), res ?: stringResource(R.string.pg_020),
+                stringResource(R.string.pg_021) + fmt(ctxSp(ctx).getLong("last_result_at", 0L)))
+            SettingInfo(stringResource(R.string.pg_022), if (Bridge.appliedRev(ctx) < 0) stringResource(R.string.pg_023) else Bridge.appliedRev(ctx).toString(),
+                stringResource(R.string.pg_024) + fmt(Bridge.hostAt(ctx)))
+            SettingAction(stringResource(R.string.pg_025), stringResource(R.string.pg_026)) {
                 Bridge.push(ctx); tick++
             }
-            SettingAction("问一下宿主最新状态", "让宿主跑一遍 status 动作并把结果回传") {
+            SettingAction(stringResource(R.string.pg_027), stringResource(R.string.pg_028)) {
                 FdmPush.sendCmd(ctx, "avatar_status", null); tick++
             }
 
@@ -472,8 +473,8 @@ fun GrayPage(onBack: () -> Unit) {
             Spacer(Modifier.height(6.dp))
             CallPinRow { tick++ }
             Spacer(Modifier.height(14.dp))
-            SectionLabel("改完点保存，重启 App 生效；均会自动备份原值，点全部恢复可还原")
-            GrayTable.items.forEachIndexed { i, g ->
+            SectionLabel(stringResource(R.string.pg_029))
+            GrayTable.items(ctx).forEachIndexed { i, g ->
                 if (i > 0) Spacer(Modifier.height(6.dp))
                 GrayRow(g, hostVals[g.key]) { tick++ }
             }
@@ -482,14 +483,14 @@ fun GrayPage(onBack: () -> Unit) {
             //   实际只发了 `gray_all`（**回读**），**什么都没推** ——
             //   而每项改动在 GrayRow 里已经**实时写进宿主**了。
             //   ⇒ 删掉这个安慰剂（下面那个「重新读取」才是真的回读）。
-            SettingAction("全部恢复灰度", "撤掉影子覆盖 + 把备份的原值写回真实键") {
+            SettingAction(stringResource(R.string.pg_030), stringResource(R.string.pg_031)) {
                 FdmPush.sendCmd(ctx, "gray_restore_all", null); tick++
             }
-            SettingAction("重新读取宿主当前值", "让宿主再回读一遍") {
+            SettingAction(stringResource(R.string.pg_032), stringResource(R.string.pg_033)) {
                 FdmPush.sendCmd(ctx, "gray_all", null); tick++
             }
             Spacer(Modifier.height(8.dp))
-            SettingInfo("最近一次动作", ctxSp(ctx).getString("last_result", "（无）") ?: "（无）")
+            SettingInfo(stringResource(R.string.pg_034), ctxSp(ctx).getString("last_result", stringResource(R.string.pg_035)) ?: stringResource(R.string.pg_035))
         }
     }
 }
@@ -512,14 +513,14 @@ private fun CallFeatureRow(bump: () -> Unit) {
     val on = raw.startsWith("1")
     val feat = raw.endsWith("1")
     val label = when {
-        raw.isEmpty() -> "通话功能（实验）：—"
-        !on -> "通话功能（实验）：已关闭"
-        feat -> "通话功能（实验）：已开启 · 已生效"
-        else -> "通话功能（实验）：已开启 · 未生效"
+        raw.isEmpty() -> stringResource(R.string.pg_036)
+        !on -> stringResource(R.string.pg_037)
+        feat -> stringResource(R.string.pg_038)
+        else -> stringResource(R.string.pg_039)
     }
     SettingAction(
         label,
-        "往 model_configs 补 \"call_feature\":{} ⇒ 聊天页顶部栏出现「打电话」图标（宿主 2.6.1）",
+        stringResource(R.string.pg_040),
     ) {
         FdmPush.sendCmd(ctx, "call_set", if (on) "0" else "1")
         bump()
@@ -544,13 +545,13 @@ private fun CallPinRow(bump: () -> Unit) {
     val raw = ctxSp(ctx).getString("cmd.call_pin_state", "") ?: ""
     val on = raw.startsWith("1")
     val label = when {
-        raw.isEmpty() -> "通话页留驻：—"
-        on -> "通话页留驻：已开启"
-        else -> "通话页留驻：已关闭"
+        raw.isEmpty() -> stringResource(R.string.pg_041)
+        on -> stringResource(R.string.pg_042)
+        else -> stringResource(R.string.pg_043)
     }
     SettingAction(
         label,
-        "服务端报错时不让通话页自动消失 —— 钩住 ChatCallHost 的渲染闸门（CallPageViewModel.a）",
+        stringResource(R.string.pg_044),
     ) {
         FdmPush.sendCmd(ctx, "call_pin_set", if (on) "0" else "1")
         bump()
@@ -629,7 +630,7 @@ fun jsonToMap(s: String): Map<String, String> {
 private fun fmt(ms: Long): String =
     if (ms <= 0) "—" else SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(ms))
 
-/** 首页：照 `Tree.home` 渲染（原 UI 的五个入口） */
+/** 首页：照 `Tree.home(ctx)` 渲染（原 UI 的五个入口） */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TreeHome(onNav: (String) -> Unit, onAbout: () -> Unit) {
@@ -646,23 +647,23 @@ fun TreeHome(onNav: (String) -> Unit, onAbout: () -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(top = 8.dp, bottom = 16.dp),
         ) {
-            SectionLabel("核心の功能")
+            SectionLabel(stringResource(R.string.scr_001))
             FdmListItem(
-                title = "灰度选项管理",
-                supporting = "查看宿主隐藏设置(小心封号)",
+                title = stringResource(R.string.scr_002),
+                supporting = stringResource(R.string.scr_003),
                 leading = Icons.Rounded.EditNote,
                 shape = groupedShape(0, 1),
                 onClick = { onNav("gray") },
             )
             FdmDivider()
-            SectionLabel("附加の功能")
+            SectionLabel(stringResource(R.string.scr_004))
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 val extra = listOf(
-                    Triple("音乐", Icons.Rounded.MusicNote, "搜歌 / 播放 / 歌词 —— 免登录 320k"),
-                    Triple("过检", Icons.Rounded.AdminPanelSettings, "如果ds压力root设备/发现lsp，点我"),
-                    Triple("调试", Icons.Rounded.Build, "如果没bug，里面的东西别乱动"),
-                    Triple("聊天", Icons.Rounded.Sms, null as String?),
-                    Triple("美化", Icons.Rounded.Mood, null as String?),
+                    Triple(stringResource(R.string.mus_001), Icons.Rounded.MusicNote, stringResource(R.string.pg_045)),
+                    Triple(stringResource(R.string.scr_007), Icons.Rounded.AdminPanelSettings, stringResource(R.string.scr_008)),
+                    Triple(stringResource(R.string.scr_009), Icons.Rounded.Build, stringResource(R.string.scr_010)),
+                    Triple(stringResource(R.string.scr_005), Icons.Rounded.Sms, null as String?),
+                    Triple(stringResource(R.string.scr_006), Icons.Rounded.Mood, null as String?),
                 )
                 val ids = listOf("music", "env", "debug", "chat", "beauty")
                 extra.forEachIndexed { i, item ->
