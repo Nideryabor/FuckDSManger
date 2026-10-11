@@ -194,6 +194,7 @@
     <string name="mus_054">"· 封面 / 歌词：由大窝自己联网取回，**只放在内存**，退出即消失
 "</string>
     <string name="mus_056">听歌本身仍受网易云的版权约束，请勿用于转载或再分发，嗷呜咕。</string>
+    <string name="mus_dj">点歌给模型</string>
     <string name="pg_004">写进大窝目录没成（0 字节）</string>
     <string name="pg_008">走小挂自己的入口执行</string>
     <string name="pg_009">选一张图（界面读原图 → 丢进大窝目录 → 大窝用小挂自己的存好例程写进**内部**目录 ✅）</string>

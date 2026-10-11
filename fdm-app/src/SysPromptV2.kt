@@ -1274,11 +1274,6 @@ private fun PromptCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    // ★ 3.69.0 点歌：只有「音乐」卡有 —— 主人指定的位置（音乐卡展开时，正文下面一行）
-                    if (card.type == T_MUSIC) {
-                        Spacer(Modifier.height(8.dp))
-                        MusicDjRow(ctx)
-                    }
                 }
             }
         }
@@ -1288,41 +1283,16 @@ private fun PromptCard(
 /**
  * 点歌开关的宿主键 🐲 2026-10-11 · 3.69.0
  *
- * <p>⚠️ <b>为什么写的是「关」键（{@code fuckds_dj_off}）而不是「开」键</b>：
- * 宿主读布尔键的契约是**没写过 ⇒ 兜底 false**（见 `GmRichText.boolOf` 里那条注释 ——
- * `GmStore.read2(ctx,key,"b")` 对没写过的键直接给 "false"，压根走不到 `def`）。
- * 于是用 `_on` 的话：「没写过」= 关 —— 跟主人要的**默认开**正好相反，
- * 而且用户看不出问题（读出来永远是 false）。
- * 用「**关掉才写**」的键 ⇒ 没写过 = false = 没关 = **开** ✓
- * ⇒ 界面上这个开关是「开 = 让模型点歌」，**落库时取反**（整个工程里只有这里取反）。
- */
-private const val K_DJ_OFF = "fuckds_dj_off"
-
-/**
- * 「让模型点歌」开关（只挂在「音乐」卡展开区）。
+ * <p>⚠️ <b>键是「关」的那一侧</b>：宿主读布尔键的契约是**没写过 ⇒ 兜底 false**
+ * （`GmStore.read2(ctx,key,"b")` 对没写过的键直接给 "false"，压根走不到 `def`）。
+ * 用 `_on` 的话"没写过"= 关 —— 跟要的**默认开**正好相反。
+ * 用「关掉才写」的键 ⇒ 没写过 = false = 没关 = **开** ✓
  *
- * 开着 ⇒ 宿主往系统提示词里补一段约定（`GmMusicDj.promptSection()`），
- * 模型照约定写 `⟦DJ:歌名-歌手⟧` ⇒ 桥里的富文本 hook 认出标记 ⇒ 搜歌 + 起播。
+ * <p>开关本体在**音乐页**（{@code Music.kt} 的「点歌」一段）——
+ * 3.69.1 搬家：原来塞在「系统提示词 › 音乐卡展开区」里，
+ * 而**内置卡片是不可展开的**（`noExpand`）⇒ 那段 UI 永远进不去 ⇒ 按钮等于不存在 ✗
  */
-@Composable
-private fun MusicDjRow(ctx: Context) {
-    val sp = ctx.getSharedPreferences("fdm_ui", Context.MODE_PRIVATE)
-    val saved = sp.getString("cfg.$K_DJ_OFF", null)
-    // 没写过 ⇒ 默认开（跟桥里的默认保持一模一样）
-    val initialOn = saved == null || !Bridge.boolOf(saved)
-    SettingSwitch(
-        label = ctx.getString(R.string.spv_dj),
-        initial = initialOn,
-        // ★ key 传 null：不用 SettingSwitch 自带的「回执同步」——
-        //   它会把 `cfg.<key>` 的值直接当开关状态，而我们的落库是**取反**的 ⇒ 会显示反。
-        key = null,
-        hostText = null,
-        hint = ctx.getString(R.string.spv_dj_hint),
-    ) { v ->
-        sp.edit().putString("cfg.$K_DJ_OFF", Bridge.boolStr(!v)).apply()
-        FdmPush.sendCmd(ctx, "cfg_put", "${K_DJ_OFF}\u001fb\u001f" + (!v))
-    }
-}
+internal const val K_DJ_OFF = "fuckds_dj_off"
 
 /** 卡片副标题（说明它是什么）。 */
 private fun cardHint(ctx: Context, c: CCard): String = when (c.type) {

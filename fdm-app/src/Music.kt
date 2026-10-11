@@ -109,6 +109,20 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
             )
         )
     }
+    /**
+     * ★ 3.69.1 点歌开关（音乐页）。
+     *
+     * 注意存的是**反面**（`fuckds_dj_off`，见 [K_DJ_OFF] 的说明）：
+     *   没写过 ⇒ false ⇒ **没关** ⇒ 开关显示成**开**（默认开）
+     * 所以这里要 `?.let{...} ?: false`，**不能**用别处的 `sp.getString(..., null)` 读法 ——
+     * 那种读法在"没写过"时会落进 `Bridge.boolOf(null)`
+     * （工程里大多数布尔键"没写过=关"正好是想要的默认，这一个偏偏不是）。
+     */
+    var djOff by remember {
+        mutableStateOf(
+            sp.getString("cfg.$K_DJ_OFF", null)?.let { Bridge.boolOf(it) } ?: false
+        )
+    }
 
     // 定时问宿主要状态（宿主回 cmd.cfg_state）
     LaunchedEffect(tick) {
@@ -380,6 +394,41 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+
+            // ───────── 点歌（让模型给用户放歌）：2026-10-11 · 3.69.0 加、3.69.1 搬到这里 ─────────
+            //
+            //  ★ 主人 2026-10-11：「按钮塞进了系统提示词里面，但系统提示词的音乐卡片是打不开的，
+            //    所以还是把按钮转移到音乐栏目里面吧」。
+            //    —— 内置卡片本来就是**不可展开**的（PromptCard 的 noExpand），
+            //      所以原来塞在"音乐卡展开区"里的开关**永远进不去** ⇒ 等于不存在 ✗
+            SectionLabel(stringResource(R.string.mus_dj))
+            CardBox {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.spv_dj),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            stringResource(R.string.spv_dj_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        // ★ 显示的是「让模型点歌」，而存的是**关**（取反）—— 只有这一处取反
+                        checked = !djOff,
+                        onCheckedChange = { v ->
+                            djOff = !v
+                            FdmPush.sendCmd(ctx, "cfg_put", "$K_DJ_OFF\u001fb\u001f" + (!v))
+                            FdmPush.sp(ctx).edit()
+                                .putString("cfg.$K_DJ_OFF", Bridge.boolStr(!v)).apply()
+                            tick++
+                        },
+                    )
+                }
             }
 
             // ───────── 说明 ─────────
