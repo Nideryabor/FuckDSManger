@@ -141,8 +141,8 @@ public final class GmRichTextHook extends XC_MethodHook {
             // ★ 第一道闸：绝大多数调用（以及同一帧的反复重入）在这一行就结束
             if (!mayRender(text)) {
                 // ★ 3.69.4 诊断：闸没放行、但文本里像有 DJ ⇒ 记一次（这次就是它拦掉的）
-                if (text.indexOf("DJ") >= 0) {
-                    int k = text.indexOf("DJ");
+                if (text.indexOf("DJ:") >= 0) {
+                    int k = text.indexOf("DJ:");
                     GmUtil.logOnce("richHook.djgate",
                             "快速闸拦下了含 DJ 的文本（hasDj 没覆盖这种形态？）："
                                     + text.substring(Math.max(0, k - 10),

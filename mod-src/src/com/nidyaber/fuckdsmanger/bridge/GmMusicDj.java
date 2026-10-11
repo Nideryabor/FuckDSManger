@@ -8,6 +8,7 @@ import android.os.SystemClock;
 import com.nidyaber.fuckdsmanger.gm.GmRichText;
 import com.nidyaber.fuckdsmanger.gm.GmStore;
 import com.nidyaber.fuckdsmanger.gm.GmUtil;
+import com.nidyaber.fuckdsmanger.music.GmMusicApi;
 
 import java.util.List;
 
@@ -71,6 +72,34 @@ public final class GmMusicDj {
     private static final long DEDUP_MS = 15000L;
     private static final Object DEDUP_LOCK = new Object();
     private static final java.util.HashMap<String, Long> DEDUP = new java.util.HashMap<String, Long>();
+
+    /**
+     * ★★★ 3.69.6 接口报错后的冷却（真机实测 网易云 返回 code=405）。
+     *
+     * <p>为什么要有：接口拒绝时**继续重试只会越打越狠**（我们之前就因为重复执行打了 189 次，
+     * 很可能就是这么进的限流）。⇒ 一旦发现 code != 200，20 秒内**不再发搜索**，
+     * 并且这段窗口里只提示**一次**（不然吐司又刷屏）。
+     */
+    private static final long API_COOLDOWN_MS = 20000L;
+    private static volatile long sApiErrAt = 0L;
+
+    /** 还在冷却中吗？（冷却中就别发请求） */
+    private static boolean apiCooling() {
+        return SystemClock.uptimeMillis() - sApiErrAt < API_COOLDOWN_MS;
+    }
+
+    /**
+     * 记一次"接口拒绝"。
+     *
+     * @return true = 这次**要提示用户**（每个冷却窗口只提示一次）
+     */
+    private static boolean noteApiError(int code) {
+        long now = SystemClock.uptimeMillis();
+        boolean first = now - sApiErrAt >= API_COOLDOWN_MS;
+        sApiErrAt = now;
+        GmUtil.log("【DJ】搜索被接口拒绝：code=" + code + "（进入 " + (API_COOLDOWN_MS / 1000) + "s 冷却）");
+        return first;
+    }
 
     /** true = 这条点歌最近刚处理过（跳过：不搜、不播、不吐司）。 */
     private static boolean recentlyHandled(String key) {
@@ -189,11 +218,26 @@ public final class GmMusicDj {
             // ── ④ 搜 → 选 → 放（回调在主线程）──
             GmMusicPlayer pl = GmMusicPlayer.get();
             if (pl == null) return show;
+            // ★ 3.69.6：接口刚拒绝过 ⇒ 冷却期内不发请求（免得把风控越打越死）
+            if (apiCooling()) {
+                GmUtil.logOnce("dj.api.cool", "接口刚拒绝过 ⇒ 跳过本次点歌（冷却中）");
+                return show;
+            }
             // ★ 3.69.5：组合关键词（"歌名 歌手"）零结果时，**退回纯歌名**再搜一次。
             //   真机实测：`迷宫 王若琳` 有时搜不到，而纯歌名能搜到 ⇒ 多一次机会。
             pl.search(kw, 20, new GmMusicPlayer.Cb<List<GmMusicPlayer.Track>>() {
                 @Override
                 public void on(List<GmMusicPlayer.Track> list) {
+                    // ★★ 3.69.6：先分清「接口拒绝」和「真没搜到」——
+                    //    以前都当成"没搜到"，提示误导（歌明明有，是接口不给）
+                    int code = GmMusicApi.lastCode();
+                    if ((list == null || list.isEmpty()) && code != 200 && code != -1) {
+                        if (noteApiError(code)) {
+                            GmUtil.toast(GmUtil.app(), "♪ 网易云拒绝了搜索（code=" + code
+                                    + "）—— 可能被限流，稍后再试；一直不行就去音乐页重新登录");
+                        }
+                        return;                       // ★ 不做兜底搜索（别再打接口）
+                    }
                     if ((list == null || list.isEmpty()) && !fArtist.isEmpty()) {
                         GmMusicPlayer p2 = GmMusicPlayer.get();
                         if (p2 != null) {
@@ -247,6 +291,14 @@ public final class GmMusicDj {
                 if (pick == null && !list.isEmpty()) pick = list.get(0);
             }
             if (pick == null) {
+                int code = GmMusicApi.lastCode();
+                if (code != 200 && code != -1) {
+                    if (noteApiError(code)) {
+                        GmUtil.toast(GmUtil.app(), "♪ 网易云拒绝了搜索（code=" + code
+                                + "）—— 可能被限流，稍后再试；一直不行就去音乐页重新登录");
+                    }
+                    return;
+                }
                 GmUtil.toast(GmUtil.app(), "♪ 没搜到「" + fSong + "」");
                 GmUtil.log("【DJ】点歌失败（零结果）：" + fSong + " - " + fArtist);
                 return;

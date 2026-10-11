@@ -144,6 +144,23 @@ public final class GmMusicApi {
 
     /** 登录态（先留空；以后接登录就往这儿塞 MUSIC_U）。 */
     private static volatile String sMusicU = "";
+
+    /**
+     * ★★ 3.69.6：**上一次业务接口返回的 code**（-1 = 还没请求过）。
+     *
+     * <p>为什么需要它：真机实测 网易云 返回 {@code code=405}（接口拒绝：限流/登录失效），
+     * 而 {@code search()} 那时只会返回**空列表** —— 调用方**分不清**
+     * 「这首歌真的搜不到」和「接口不让搜」⇒ 用户看到的提示是
+     * 「♪ 没搜到「红色高跟鞋」」（**误导**：歌明明有，是接口不给）。
+     *
+     * <p>有了它：点歌侧可以先看 code，把话说清楚，并且**不再重试**（免得越打越狠）。
+     */
+    private static volatile int sLastCode = -1;
+
+    /** 上一次业务接口的 code（-1 = 还没请求过）。 */
+    public static int lastCode() {
+        return sLastCode;
+    }
     /** 匿名 token（对应原库的 anonymous_token；空串也能用，已实测）。 */
     private static volatile String sMusicA = "";
 
@@ -194,6 +211,11 @@ public final class GmMusicApi {
                 "application/x-www-form-urlencoded", ck.toString(), osUa());
         Map<String, Object> m = GmMusicJson.asObj(GmMusicJson.parse(raw));
         if (m == null) throw new IllegalStateException("响应不是 JSON：" + brief(raw));
+        // ★ 3.69.6：非 200 时把 code 与响应体打出来 —— 排查"接口为什么拒绝"的唯一线索
+        //   （body 只有 54 字，brief 会给全）
+        int c = (int) GmMusicJson.lng(m, "code", -1);
+        sLastCode = c;
+        if (c != 200) d("[MusicApi] " + uri + " 非 200 ⇒ code=" + c + " · " + brief(raw));
         return m;
     }
 
@@ -490,7 +512,9 @@ public final class GmMusicApi {
                 "limit", Integer.valueOf(limit <= 0 ? 30 : limit),
                 "offset", Integer.valueOf(offset < 0 ? 0 : offset));
         Map<String, Object> r = eapiPost("/api/search/get", data);
-        d("[MusicApi] search code=" + GmMusicJson.lng(r, "code", -1));
+        int sc = (int) GmMusicJson.lng(r, "code", -1);
+        sLastCode = sc;
+        d("[MusicApi] search code=" + sc);
         List<Map<String, Object>> out = new ArrayList<Map<String, Object>>();
         List<Object> songs = GmMusicJson.arr(GmMusicJson.sub(r, "result"), "songs");
         if (songs == null) {
