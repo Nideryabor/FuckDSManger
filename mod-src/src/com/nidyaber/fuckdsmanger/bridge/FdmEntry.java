@@ -43,13 +43,13 @@ public final class FdmEntry implements IXposedHookLoadPackage {
      *
      * 取名依据：`kf5` / `uia` / `fh6` 都是底座第一梯队挂的宿主类（见 `GmEntry.handleLoadPackage`）。
      */
-    private static final String[] HOST_ANCHORS = {"kh7", "qk7", "w2b"};   // 2.6.1 重定位（旧名 kf5/uia/fh6 在新宿主里是【别的类】）
+    private static final String[] HOST_ANCHORS = {"kf5", "uia", "fh6"};   // 基名（2.5.2）→ 经 GmRemap 解析到当前宿主版本名
 
     /** 任一锚点能找到 ⇒ 这就是宿主。名字无关；全找不到才判非宿主。 */
     private static boolean isHost(ClassLoader cl) {
         for (String a : HOST_ANCHORS) {
             try {
-                XposedHelpers.findClass(a, cl);
+                XposedHelpers.findClass(GmRemap.cls(a), cl);
                 return true;
             } catch (Throwable ignore) {
                 // 试下一个锚点

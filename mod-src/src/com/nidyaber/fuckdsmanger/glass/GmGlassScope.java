@@ -57,18 +57,18 @@ public final class GmGlassScope {
      * 宿主升级时按 {@code 专题/逆向方法-混淆指纹定位.md} 重新定位即可。
      */
     private static final String[][] BTN_ANCHORS = {
-            // ── 2026-10-02 重定位（宿主 2.6.1；旧值 uk8/zc/i52/yb5/a18/zl9 见 git 历史）──
-            {"xta", "a"}, {"xta", "b"}, {"xta", "c"},          // AppButton / AppFullWidthButton
-            {"l10", "a"}, {"l10", "b"}, {"l10", "c"}, {"l10", "d"}, // AppIconButton / Toggle
+            // ── 2026-10-16 重定位（宿主 2.6.2；旧值 xta/l10/v91/k53/hs7 是 2.6.1 名，见 git 历史）──
+            //    判据：SourceInfo 串（函数名 + .kt:行号）精确定位 + 形参逐位对齐
+            {"pic", "b"}, {"pic", "c"}, {"pic", "d"},              // AppButton(kt:298/339) / AppFullWidthButton(kt:412)
+            {"n93", "G"}, {"n93", "H"}, {"n93", "I"}, {"n93", "J"}, // AppIconButton(kt:80/55) / AppIconToggleButton(kt:228/203)
 
             // ── 3.30.1 追加：主人点名「深度思考这种可点击有事件的也是按钮」 ──
-            //    定位方式同 §「按钮真身」：用 source-info 字符串跑 dex_string_members
-            {"v91", "c"},     // AppSelectableChip.kt:68      ← 可选芯片（深度思考/专家模式这一族）
-            {"hs7", "c"},     // PromptTemplateView.kt:341    PromptFeatureChip
-            {"hs7", "d"},     // PromptTemplateView.kt:309    PromptFeatureSkeletonChip
-            {"l10", "h"},     // InputModeToggleButton.kt:37  输入模式开关
-            {"k53", "f"},     // ChatInputToggleableToolView.kt:90
-            {"k53", "o"},     // ChatInputToggleableToolView.kt:206  ToggleLottieIcon
+            {"jtb", "i"},     // InputModeToggleButton.kt:37   输入模式开关（l10.h → jtb.i）
+            {"ur6", "c"},     // AppSelectableChip.kt:68       可选芯片（深度思考/专家模式这一族，v91.c → ur6.c）
+            {"rd7", "a"},     // PromptTemplateView.kt:341     PromptFeatureChip（hs7.c → rd7.a）
+            {"rd7", "b"},     // PromptTemplateView.kt:309     PromptFeatureSkeletonChip（hs7.d → rd7.b）
+            {"p5b", "f"},     // ChatInputToggleableToolView.kt:90
+            {"p5b", "q"},     // ChatInputToggleableToolView.kt:206  ToggleLottieIcon（k53.o → p5b.q）
     };
 
     /**

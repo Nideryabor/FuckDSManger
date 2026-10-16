@@ -54,14 +54,14 @@ import de.robv.android.xposed.XposedBridge;
  */
 public final class GmSender {
 
-    // ─────────────────────── 候选混淆名（2.6.1 实测）───────────────────────
+    // ─────────────────────── 候选混淆名（2.6.2 实测）───────────────────────
 
-    /** 会话组件（= 2.5.2 的 ao1） */
-    private static final String[] CAND_GH2 = {"gh2"};
+    /** 会话组件（= 2.5.2 的 ao1）—— 经 GmRemap 解析 */
+    private static final String[] CAND_GH2 = {"ao1"};
     /** 消息主存储（= 2.5.2 的 wr）—— 字段 a=会话id、f=LinkedHashMap 消息表 */
     private static final String[] CAND_NS  = {"ns"};
-    /** 发送目标标识 —— <init>(long, String) */
-    private static final String[] CAND_M1A = {"m1a"};
+    /** 发送目标标识 —— <init>(long, String)（2.6.1=m1a → 2.6.2=f4a） */
+    private static final String[] CAND_M1A = {"f4a"};
 
     /** 发送方法名（静态） */
     private static final String M_SEND = "h0";
@@ -191,7 +191,7 @@ public final class GmSender {
     private static Class<?> load(ClassLoader cl, String[] cands) {
         for (String n : cands) {
             try {
-                Class<?> c = Class.forName(n, false, cl);
+                Class<?> c = Class.forName(GmRemap.cls(n), false, cl);
                 if (c != null) return c;
             } catch (Throwable ignore) {
                 // 换下一个候选

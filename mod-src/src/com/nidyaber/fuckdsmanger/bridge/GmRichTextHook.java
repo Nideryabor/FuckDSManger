@@ -61,19 +61,19 @@ public final class GmRichTextHook extends XC_MethodHook {
     // ─────────────────────── 候选混淆名（升级后重新反查，别猜）───────────────────────
 
     /** AnnotatedString —— implements CharSequence，字段 b=text */
-    private static final String[] CAND_KN = {"kn"};
+    private static final String[] CAND_KN = {"ln"};
     /** AnnotatedString.Builder —— 字段 a=StringBuilder、b=ArrayList；k()=toAnnotatedString */
-    private static final String[] CAND_IN = {"in"};
+    private static final String[] CAND_IN = {"jn"};
     /** SpanStyle —— toString "SpanStyle(color="，15 参构造器 */
-    private static final String[] CAND_SPAN = {"f0a"};
+    private static final String[] CAND_SPAN = {"y2a"};
     /** FontWeight —— 字段 a:I */
-    private static final String[] CAND_WEIGHT = {"ko4"};
+    private static final String[] CAND_WEIGHT = {"oo4"};
     /** FontStyle —— 字段 a:I（0=Normal 1=Italic） */
-    private static final String[] CAND_STYLE = {"io4"};
+    private static final String[] CAND_STYLE = {"mo4"};
     /** TextDecoration —— 字段 a:I（0=None 1=Underline 2=LineThrough） */
-    private static final String[] CAND_DECO = {"dia"};
+    private static final String[] CAND_DECO = {"xka"};
     /** MarkdownTextKt（R8 合并类）—— 里面那个 `p(AnnotatedString,Modifier,Colors,Config,Composer,II)` */
-    private static final String[] CAND_MT = {"fz2"};
+    private static final String[] CAND_MT = {"bz0"};
 
     // ─────────────────────── 宿主类句柄 ───────────────────────
 
@@ -735,7 +735,7 @@ public final class GmRichTextHook extends XC_MethodHook {
                 Class<?> c = Class.forName(name, false, cl);
                 Method target = null;
                 for (Method m : c.getDeclaredMethods()) {
-                    if (!"p".equals(m.getName())) continue;
+                    if (!"y".equals(m.getName())) continue;
                     if (!Modifier.isStatic(m.getModifiers())) continue;
                     if (m.getReturnType() != void.class) continue;
                     Class<?>[] ps = m.getParameterTypes();

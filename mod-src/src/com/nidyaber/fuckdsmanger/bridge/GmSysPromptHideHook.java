@@ -60,6 +60,7 @@ public final class GmSysPromptHideHook extends XC_MethodHook {
 
     /** Compose 文本基础类的候选真名（不确定有没有被 R8 改名 ⇒ 挨个试，找不到就跳过） */
     private static final String[] ANNOTATED_STRING_CANDS = {
+            "ln",                                        // 2.6.2 混淆名（kn→ln）—— androidx 全名已被 R8 改掉
             "androidx.compose.ui.text.AnnotatedString",
             "androidx.compose.ui.text.AnnotatedStringKt",
     };

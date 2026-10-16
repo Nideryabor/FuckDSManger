@@ -53,7 +53,7 @@ public final class GmHtmlHook extends XC_MethodHook {
     // ─────────────────────── 候选混淆名 ───────────────────────
 
     /** 语言判断工具（R8 合并类）—— 2.6.1 实测 `v7a`，里面的 `M(String,String,boolean)Z` */
-    private static final String[] CAND_LANG = {"v7a"};
+    private static final String[] CAND_LANG = {"oaa"};
 
     /**
      * 「持有 mermaid WebView」的那个混淆类 —— 从它身上<b>伸手拿</b> WebView 子类的 Class。
@@ -69,7 +69,7 @@ public final class GmHtmlHook extends XC_MethodHook {
      *
      * <p>2.6.1 实测：{@code wz6.d} 的类型就是 mermaid 的查看器 WebView。
      */
-    private static final String[] CAND_HOLDER = {"wz6"};
+    private static final String[] CAND_HOLDER = {"b07"};
 
     /** 兜底用的最小 mermaid 源码（换掉真源码后，宿主自己那段 JS 就不会报错） */
     private static final String SAFE_MERMAID = "graph TD;A[.]";
@@ -529,7 +529,7 @@ public final class GmHtmlHook extends XC_MethodHook {
                 Method[] ms = c.getDeclaredMethods();
                 for (int i = 0; i < ms.length; i++) {
                     Method m = ms[i];
-                    if (!"M".equals(m.getName())) continue;
+                    if (!"U".equals(m.getName())) continue;
                     if (!Modifier.isStatic(m.getModifiers())) continue;
                     if (m.getReturnType() != boolean.class) continue;
                     Class<?>[] ps = m.getParameterTypes();
@@ -538,7 +538,7 @@ public final class GmHtmlHook extends XC_MethodHook {
                     m.setAccessible(true);
                     XposedBridge.hookMethod(m, new LangHook());
                     hooked++;
-                    GmUtil.log("hookM html count=1 cls=" + name + ".M(String,String,boolean)");
+                    GmUtil.log("hookM html count=1 cls=" + name + ".U(String,String,boolean)");
                     break;
                 }
             } catch (Throwable t) {

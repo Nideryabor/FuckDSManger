@@ -52,18 +52,18 @@ import java.lang.reflect.Proxy;
  */
 public final class GmRichLink {
 
-    // ─────────────────────── 候选混淆名（2.6.1 实测；升级后重新反查，别猜）───────────────────────
+    // ─────────────────────── 候选混淆名（2.6.2 实测；升级后重新反查，别猜）───────────────────────
 
-    /** AnnotatedString.Builder —— 字段 a=StringBuilder、c=ArrayList；h(si6)=pushLink */
-    private static final String[] CAND_IN  = {"in"};
-    /** LinkAnnotation（sealed 父类）—— 抽象 a()Lti6; b()Lcla; */
-    private static final String[] CAND_SI6 = {"si6"};
-    /** LinkAnnotation.Clickable —— <init>(String tag, cla styles, ti6 listener) */
-    private static final String[] CAND_RI6 = {"ri6"};
-    /** TextLinkStyles —— <init>(f0a,f0a,f0a,f0a)，四个都可空 */
-    private static final String[] CAND_CLA = {"cla"};
-    /** LinkInteractionListener —— 接口，唯一方法 a(Lsi6;)V = onClick(link) */
-    private static final String[] CAND_TI6 = {"ti6"};
+    /** AnnotatedString.Builder —— 字段 a=StringBuilder、c=ArrayList；h(yi6)=pushLink */
+    private static final String[] CAND_IN  = {"jn"};
+    /** LinkAnnotation（sealed 父类）—— 抽象 a()Lzi6; b()Lvna; */
+    private static final String[] CAND_SI6 = {"yi6"};
+    /** LinkAnnotation.Clickable —— <init>(String tag, vna styles, zi6 listener) */
+    private static final String[] CAND_RI6 = {"wi6", "xi6"};
+    /** TextLinkStyles —— <init>(y2a,y2a,y2a,y2a)，四个都可空 */
+    private static final String[] CAND_CLA = {"vna"};
+    /** LinkInteractionListener —— 接口，唯一方法 a(Lyi6;)V = onClick(link) */
+    private static final String[] CAND_TI6 = {"zi6"};
 
     // ─────────────────────── 宿主类句柄 ───────────────────────
 

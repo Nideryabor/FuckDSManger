@@ -50,11 +50,11 @@ public final class GmCallPin {
 
     /**
      * ★ 锚点（宿主 2.6.1）：
-     *   `Loq1;`  = CallPageViewModel（有 `onAction$app(CallPageAction)` / `close$app(J)`）
+     *   `Lsq1;`  = CallPageViewModel（有 `onAction$app(CallPageAction)` / `close$app(J)`）
      *   `a()Z`   = 「要不要渲染通话页」的闸门
      * ⚠️ 这两个都是**混淆名** —— 宿主升级时必须跟着 `GmRemap` 一起重新定位。
      */
-    private static final String CLS_VM = "oq1";
+    private static final String CLS_VM = "sq1";   // 2.6.2 重定位（oq1 在新宿主里是别的类）
     private static final String M_SHOW = "a";
 
     /**

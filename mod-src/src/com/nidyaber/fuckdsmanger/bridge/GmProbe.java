@@ -21,7 +21,7 @@ import de.robv.android.xposed.XposedHelpers;
 public final class GmProbe {
 
     /** 探针开关：正式包请保持 false。 */
-    public static final boolean ENABLED = true;
+    public static final boolean ENABLED = false;   // 2026-10-16 关：设置行锚点已定案（t5.w），此探针的 2.6.1 目标名已失效
 
     /** 要挂的宿主类（2.6.1 实测：更新检查相关）。 */
     private static final String[] TARGETS = {

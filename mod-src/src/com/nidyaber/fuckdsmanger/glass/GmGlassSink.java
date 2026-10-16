@@ -72,9 +72,9 @@ public final class GmGlassSink {
     private GmGlassSink() {
     }
 
-    /** 画底原语的宿主类/方法（锚点）。2.5.2 = uia.v ⇒ 2.6.1 = qk7.D（2026-10-02 重定位）。 */
-    private static final String BG_CLS = "qk7";
-    private static final String BG_METHOD = "D";
+    /** 画底原语的宿主类/方法（锚点）。2.5.2 = uia.v ⇒ 2.6.1 = qk7.D ⇒ 2.6.2 = us6.z（2026-10-16 重定位·修正）。 */
+    private static final String BG_CLS = "us6";
+    private static final String BG_METHOD = "z";
 
     private static final Set<Class<?>> sHooked = new HashSet<Class<?>>();
     private static final List<Class<?>> sElements = new ArrayList<Class<?>>();

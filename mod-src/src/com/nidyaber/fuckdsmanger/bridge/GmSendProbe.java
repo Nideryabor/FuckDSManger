@@ -54,8 +54,8 @@ import de.robv.android.xposed.XposedHelpers;
  */
 public final class GmSendProbe {
 
-    /** 2.6.1 的会话提供接口（= 2.5.2 的 ao1）。宿主升级必变，跟 GmRemap 一起重定位。 */
-    private static final String[] CAND_GH2 = {"gh2"};
+    /** 会话提供接口（= 2.5.2 的 ao1）—— 经 GmRemap 解析，一处维护。 */
+    private static final String[] CAND_GH2 = {"ao1"};
 
     /** 触摸后的「用户操作窗口」—— 只有这个窗口内的命中才值得记。 */
     private static final long TOUCH_WINDOW = 1500L;
@@ -90,7 +90,7 @@ public final class GmSendProbe {
             Class<?> c = null;
             for (String n : CAND_GH2) {
                 try {
-                    c = Class.forName(n, false, cl);
+                    c = Class.forName(GmRemap.cls(n), false, cl);
                     if (c != null) break;
                 } catch (Throwable ignore) {
                     // 换下一个候选

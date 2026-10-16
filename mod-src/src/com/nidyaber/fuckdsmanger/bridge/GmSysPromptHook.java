@@ -104,10 +104,10 @@ public final class GmSysPromptHook extends XC_MethodHook {
      * 命中的那个类的 <b>&lt;clinit&gt;</b> 就是它的序列化器（`ca8.(fqn, obj, 10)`），
      * 而数据类本身 = 构造 {@code <init>(…)V} 且<b>参数签名吻合</b>的那个。
      *
-     * <p>当前实测：**2.6.1 (vc279) = `qv1`**。
+     * <p>当前实测：**2.6.2 (vc281) = `tv1`**（2.6.1 为 `qv1`）。
      */
     private static final String[] CANDIDATE_NAMES = {
-            "qv1",                                   // deepseek 2.6.1 (vc279) 实测
+            "tv1",                                   // deepseek 2.6.2 (vc281) 实测（2.6.1 是 qv1）
     };
 
     /**
