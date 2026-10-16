@@ -1,0 +1,127 @@
+文件	行号	模块类	API	锚点字面量	形态
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	90	GmEntry	findClass		类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	106	GmEntry	hookAllConstructors	 | 	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	172	GmEntry	findClass		类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	188	GmEntry	hookAllMethods	 | 	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	267	GmEntry	findClass		类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	283	GmEntry	hookAllMethods	 | 	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	356	GmEntry	findClass	android.app.Activity	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	372	GmEntry	hookAllMethods	 | 	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	464	GmEntry	findClass	kh7	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	478	GmEntry	findClass	qk7	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	565	GmEntry	findAndHookMethod	android.app.Activity	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	803	GmEntry	findClass	ao1	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	812	GmEntry	hookAllConstructors	J	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	832	GmEntry	findClass	h91	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	841	GmEntry	hookAllMethods	hook ctor ao1 FAIL	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	849	GmEntry	findClass	yp1	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	858	GmEntry	hookAllConstructors	hook h91.a (see ao1) OK	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	934	GmEntry	findAndHookConstructor	py5	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	999	GmEntry	findClass	yp1	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	1008	GmEntry	hookAllConstructors	isEmpty	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	1067	GmEntry	findClass	wr	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/GmEntry.smali	1076	GmEntry	hookAllConstructors	M	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmAlphaHook.smali	33	GmAlphaHook	setFloatField	c	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	537	GmBubble	findClass	pr6	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	543	GmBubble	getStaticObjectField	o	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	576	GmBubble	getObjectField	d	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	860	GmBubble	findClass	jq0	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1905	GmBubble	findClass	u19	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1919	GmBubble	callStaticMethod	b	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1942	GmBubble	findClass	pr6	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	1948	GmBubble	getStaticObjectField	o	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2130	GmBubble	findClass	qk7	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2136	GmBubble	callStaticMethod	C	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2175	GmBubble	findClass	qk7	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2181	GmBubble	callStaticMethod	D	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2360	GmBubble	findClass	qk7	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2366	GmBubble	callStaticMethod	D	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2453	GmBubble	findClass	qk7	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubble.smali	2459	GmBubble	callStaticMethod	C	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	77	GmBubbleCellHook	callMethod	C	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	245	GmBubbleCellHook	findClass	mr	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	315	GmBubbleCellHook	callMethod	C	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	337	GmBubbleCellHook	callMethod	C	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubbleCellHook.smali	458	GmBubbleCellHook	findClass	x97	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmBubbleFitHook.smali	30	GmBubbleFitHook	getObjectField	d	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	78	GmCallDialog	callMethod	D	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	113	GmCallDialog	callMethod	l	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	506	GmCallDialog	findClass	__gmGone_cn1	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	566	GmCallDialog	callMethod	J	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	610	GmCallDialog	callMethod	M	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	618	GmCallDialog	getObjectField	f	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	645	GmCallDialog	callMethod	x	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	923	GmCallDialog	callMethod	h	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	966	GmCallDialog	findClass	gh2	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	972	GmCallDialog	findClass	__gmGone_pr8	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	978	GmCallDialog	findClass	java.lang.String	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	984	GmCallDialog	findClass	java.util.List	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	990	GmCallDialog	findClass	ns	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1346	GmCallDialog	getObjectField	j	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1396	GmCallDialog	callMethod		成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1501	GmCallDialog	findClass	bz4	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1527	GmCallDialog	callMethod	s	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1633	GmCallDialog	callMethod	H	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1668	GmCallDialog	findClass	bz4	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1694	GmCallDialog	callMethod	s	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1940	GmCallDialog	callMethod	c	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	1952	GmCallDialog	callMethod	I	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	2009	GmCallDialog	callMethod	M	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmCallDialog.smali	2045	GmCallDialog	callMethod	N	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmDevice.smali	195	GmDevice	findClass	android.provider.Settings$Secure	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmDevice.smali	205	GmDevice	hookAllMethods	android.provider.Settings$Secure	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmDsHook2.smali	30	GmDsHook2	getObjectField	a	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmEntryHook.smali	32	GmEntryHook	findClass	s4b	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmEntryHook.smali	38	GmEntryHook	getStaticObjectField	a	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmEntryHook.smali	67	GmEntryHook	getIntField	a	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmEnv.smali	684	GmEnv	findClass		类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmEnv.smali	688	GmEnv	hookAllMethods		★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmEnv.smali	834	GmEnv	findClass	android.os.Build	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmEnv.smali	842	GmEnv	setStaticObjectField	TAGS	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmHello.smali	641	GmHello	callMethod	allKeys	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmNameHook.smali	45	GmNameHook	getIntField	a	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPaintModHook.smali	55	GmPaintModHook	findClass	jn0	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPainterHook.smali	257	GmPainterHook	findClass	af	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPainterHook.smali	275	GmPainterHook	findClass	an0	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	293	GmPrompt	findClass	com.tencent.mmkv.MMKV	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	303	GmPrompt	callStaticMethod	l	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	311	GmPrompt	getLongField	nativeHandle	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	341	GmPrompt	callMethod	decodeString	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	386	GmPrompt	findClass	com.tencent.mmkv.MMKV	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	396	GmPrompt	callStaticMethod	l	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	404	GmPrompt	getLongField	nativeHandle	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPrompt.smali	432	GmPrompt	callMethod	encodeString	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmPromptTextHook.smali	88	GmPromptTextHook	getIntField	a	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmReplyHook.smali	39	GmReplyHook	findClass	pz7	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmReplyHook.smali	45	GmReplyHook	getStaticObjectField	F	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmResumeHook.smali	66	GmResumeHook	findClass		类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmResumeHook.smali	74	GmResumeHook	hookAllMethods	pick hooks ensured	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmResumeHook.smali	169	GmResumeHook	findClass	kh7	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmResumeHook.smali	192	GmResumeHook	findClass	an0	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmRevokeHook.smali	49	GmRevokeHook	callMethod	j	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmStore.smali	91	GmStore	callMethod	allKeys	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmStore.smali	185	GmStore	findClass	com.tencent.mmkv.MMKV	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmStore.smali	195	GmStore	callStaticMethod	l	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestAi.smali	1730	GmSuggestAi	findClass	ns	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestAi.smali	1882	GmSuggestAi	findClass	dz9	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	74	GmSuggestHook	findClass	g87	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	322	GmSuggestHook	findClass	g87	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	527	GmSuggestHook	findClass	g87	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	563	GmSuggestHook	getObjectField	b	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	905	GmSuggestHook	getObjectField	b	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	913	GmSuggestHook	callMethod	setValue	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	918	GmSuggestHook	callMethod	c1	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	922	GmSuggestHook	callMethod	i1	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	960	GmSuggestHook	callMethod	b	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	1218	GmSuggestHook	findClass	g87	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	1295	GmSuggestHook	setObjectField		成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	1321	GmSuggestHook	setIntField	[建议] 字段写入失败（字段名/类型变了？）	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSuggestHook.smali	1562	GmSuggestHook	getObjectField	c	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSync.smali	47	GmSync	findClass	m97	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSync.smali	57	GmSync	hookAllMethods	m97	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSync.smali	61	GmSync	findClass	yt2	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSync.smali	71	GmSync	hookAllMethods	yt2	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSync.smali	75	GmSync	findClass	com.tencent.mmkv.MMKV	类名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmSync.smali	85	GmSync	hookAllMethods	com.tencent.mmkv.MMKV	★Hook落点
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmUAvatarHook.smali	50	GmUAvatarHook	getIntField	a	成员名
+tmp/base130_261/sm/com/nidyaber/fuckdsmanger/gm/GmVectorHook.smali	109	GmVectorHook	setObjectField	string	成员名
