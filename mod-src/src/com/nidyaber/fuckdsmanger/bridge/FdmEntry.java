@@ -94,6 +94,19 @@ public final class FdmEntry implements IXposedHookLoadPackage {
             XposedBridge.log("[FDM] ❌ 转发底座入口失败：" + t);
         }
 
+        // ②.5 「迟到绑定」补丁（2026-10-24 · 3.71.7）
+        //   冷启动时宿主的**第一次 onResume 跑在钩子生效之前** ⇒ 背景 View / 玻璃底图
+        //   那一次没人接 ⇒ 表现就是「重启后不生效，必须回 UI 再开关一次」。
+        //   这里在初始化完、界面出来之后**补跑一次**（幂等；成功后自己停）。
+        if (isHost(lp.classLoader)) {
+            try {
+                GmCatchUp.install(lp.classLoader);
+                XposedBridge.log("[FDM] 迟到绑定探针已排队（冷启动补一次 resume 链）");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] GmCatchUp.install 抛了（不影响其它钩子）：" + t);
+            }
+        }
+
         // ③ 「检查更新」换乘：底座的 View 弹窗（GmHomeUi）→ 我们的 Compose UI
         //    放在转发【之后】：底座那 51 条钩子先注册完，我们再往 GHomeUi.open 上补一钩。
         //    （install 内部自己判断在不在宿主进程 —— 找不到 GmHomeUi 就静默跳过）

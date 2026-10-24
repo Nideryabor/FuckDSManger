@@ -156,3 +156,6 @@ layoutinspect-mcp/backup/
 # 大体积历史快照（不进库；逃生包已单列）
 /backups/*.tar
 /backups/git-broken-*/
+
+# —— iOS 移植（暂不入库，381M · 主人要求先不推）——
+/ios-port/

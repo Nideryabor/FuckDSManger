@@ -54,16 +54,25 @@ public final class GmRichLink {
 
     // ─────────────────────── 候选混淆名（2.6.2 实测；升级后重新反查，别猜）───────────────────────
 
-    /** AnnotatedString.Builder —— 字段 a=StringBuilder、c=ArrayList；h(yi6)=pushLink */
-    private static final String[] CAND_IN  = {"jn"};
-    /** LinkAnnotation（sealed 父类）—— 抽象 a()Lzi6; b()Lvna; */
-    private static final String[] CAND_SI6 = {"yi6"};
-    /** LinkAnnotation.Clickable —— <init>(String tag, vna styles, zi6 listener) */
-    private static final String[] CAND_RI6 = {"wi6", "xi6"};
-    /** TextLinkStyles —— <init>(y2a,y2a,y2a,y2a)，四个都可空 */
-    private static final String[] CAND_CLA = {"vna"};
-    /** LinkInteractionListener —— 接口，唯一方法 a(Lyi6;)V = onClick(link) */
-    private static final String[] CAND_TI6 = {"zi6"};
+    /** AnnotatedString.Builder —— 字段 a=StringBuilder、c=ArrayList；h(yi6)=pushLink（jn → **kn**） */
+    private static final String[] CAND_IN  = {"kn", "jn"};
+    /** LinkAnnotation（sealed 父类）
+     *  <p>★ 2026-10-24（2.7.1 定位）：**`gm6`** —— `em6`/`fm6` 的 `.super` 就是它，
+     *  且 `kn.h(Lgm6;)I` 正是 pushLink 的唯一签名 ⇒ 铁证。
+     *  <p>⚠️ 旧值 `yi6` 在 2.7.1 里**被 R8 复用给了别的类**（`si6` 是个
+     *  `(sf9,hg9,I)` 的无关类）⇒ `isAssignableFrom` 永远 false ⇒
+     *  「建议链接能力未就绪 ⇒ 只剥标签」⇒ `<Suggestion>` 变成**点不动的死文字**。
+     *  这就是主人报的「点了建议没反应」的真凶。 */
+    private static final String[] CAND_SI6 = {"gm6", "yi6"};
+    /** LinkAnnotation.Clickable —— <init>(String tag, tra styles, hm6 listener)
+     *  <p>2.7.1 = `em6`（字符串 `LinkAnnotation.Clickable(tag=` 落在它身上） */
+    private static final String[] CAND_RI6 = {"em6", "wi6", "xi6"};
+    /** TextLinkStyles —— <init>(y2a,y2a,y2a,y2a)，四个都可空（vna → **tra**） */
+    private static final String[] CAND_CLA = {"tra", "vna"};
+    /** LinkInteractionListener —— 接口，唯一方法 a(Lem6;)V = onClick(link)
+     *  <p>★ 2026-10-24（2.7.1 定位）：**`hm6`** —— `em6`/`fm6` 的字段 `c:Lhm6;`
+     *  就是 listener 位；且它是 `public interface abstract`（可动态代理）⇒ 铁证。 */
+    private static final String[] CAND_TI6 = {"hm6", "zi6"};
 
     // ─────────────────────── 宿主类句柄 ───────────────────────
 

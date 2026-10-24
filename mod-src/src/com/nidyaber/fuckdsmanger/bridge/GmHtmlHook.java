@@ -52,8 +52,8 @@ public final class GmHtmlHook extends XC_MethodHook {
 
     // ─────────────────────── 候选混淆名 ───────────────────────
 
-    /** 语言判断工具（R8 合并类）—— 2.6.1 实测 `v7a`，里面的 `M(String,String,boolean)Z` */
-    private static final String[] CAND_LANG = {"oaa"};
+    /** 语言判断工具（R8 合并类）—— 2.6.1=`v7a` / 2.6.2=`oaa` / **2.7.1=`hea`** */
+    private static final String[] CAND_LANG = {"hea", "oaa"};
 
     /**
      * 「持有 mermaid WebView」的那个混淆类 —— 从它身上<b>伸手拿</b> WebView 子类的 Class。
@@ -69,7 +69,7 @@ public final class GmHtmlHook extends XC_MethodHook {
      *
      * <p>2.6.1 实测：{@code wz6.d} 的类型就是 mermaid 的查看器 WebView。
      */
-    private static final String[] CAND_HOLDER = {"b07"};
+    private static final String[] CAND_HOLDER = {"z37", "b07"};
 
     /** 兜底用的最小 mermaid 源码（换掉真源码后，宿主自己那段 JS 就不会报错） */
     private static final String SAFE_MERMAID = "graph TD;A[.]";
@@ -529,7 +529,11 @@ public final class GmHtmlHook extends XC_MethodHook {
                 Method[] ms = c.getDeclaredMethods();
                 for (int i = 0; i < ms.length; i++) {
                     Method m = ms[i];
-                    if (!"U".equals(m.getName())) continue;
+                    // 语言比较：2.6.2=`oaa.U`（equals+equalsIgnoreCase）
+                    //          → **2.7.1=`hea.G`**（方法体逐条相同：equals/equalsIgnoreCase）
+                    //   证据：oaa.T/U/Y ↔ hea.F/G/K，整体位移 3 位且方法体一一对应
+                    //         （T/F=endsWith · U/G=equals · Y/K=startsWith）
+                    if (!"G".equals(m.getName()) && !"U".equals(m.getName())) continue;
                     if (!Modifier.isStatic(m.getModifiers())) continue;
                     if (m.getReturnType() != boolean.class) continue;
                     Class<?>[] ps = m.getParameterTypes();

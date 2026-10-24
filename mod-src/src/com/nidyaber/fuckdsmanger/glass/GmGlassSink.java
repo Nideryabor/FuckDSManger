@@ -72,9 +72,16 @@ public final class GmGlassSink {
     private GmGlassSink() {
     }
 
-    /** 画底原语的宿主类/方法（锚点）。2.5.2 = uia.v ⇒ 2.6.1 = qk7.D ⇒ 2.6.2 = us6.z（2026-10-16 重定位·修正）。 */
-    private static final String BG_CLS = "us6";
-    private static final String BG_METHOD = "z";
+    /** 画底原语（3 参·颜色版）。2.5.2=uia.v ⇒ 2.6.1=qk7.D ⇒ 2.6.2=us6.z ⇒ **2.7.1=p68.C**。
+     *
+     *  <p>2.7.1 证据：`p68.C(Leg7;JLst9;)Leg7;` 对应 2.6.2 `us6.z(Lgc7;JLaq9;)Lgc7;` 逐位
+     *  （`gc7→eg7`、`aq9→st9`，方法名 z→C）。
+     *
+     *  <p>⚠️ 2.7.1 的 `us6` 被 R8 拆成 `p68` + `dz7` + `r0b`，画底原语落在 **`p68`**。
+     *  4 参 Brush 版（`us6.y`）也落在 `p68` → `p68.B`，只用于读签名、不挂钩子。
+     */
+    private static final String BG_CLS = "p68";
+    private static final String BG_METHOD = "C";
 
     private static final Set<Class<?>> sHooked = new HashSet<Class<?>>();
     private static final List<Class<?>> sElements = new ArrayList<Class<?>>();
@@ -131,6 +138,8 @@ public final class GmGlassSink {
     private static volatile Method sOutlineA = null;            // wv7.a()Lrr8;（边界/矩形兜底）
     private static volatile boolean sFitLogged = false;
     private static volatile boolean sFitFail = false;
+    /** 「轮廓原点不是 (0,0)」只记一次（3.71.12 加的）。 */
+    private static volatile boolean sFitOriginLogged = false;
 
     // ─────────── 「让行」判定（2026-10-02 · 修「玻璃抢走气泡图片底」）───────────
     //
@@ -737,6 +746,23 @@ public final class GmGlassSink {
                         why("fit.bad", "轮廓路径异常(" + (int) fb.width() + "x" + (int) fb.height()
                                 + " vs 元素 " + (int) w + "x" + (int) h + ") ⇒ 当拿不到处理");
                         fit = null;
+                    } else if (Math.abs(fb.left) > 0.5f || Math.abs(fb.top) > 0.5f) {
+                        // ★★ 2026-10-24（3.71.12）真机血案：主人报「按钮玻璃只有以这个按钮的
+                        //   相对左上角有，其他地方没有」。
+                        //   真因：`shape.createOutline` 回来的路径**不一定以 (0,0) 为原点**
+                        //   （元素不在它的父布局原点时就是偏移过的）。老代码只查了宽高
+                        //   ⇒ 尺寸合格 ⇒ 照样拿去 clipPath ⇒ 交集只剩「元素左上角那一小块」
+                        //   ⇒ 看上去就是一块硬边矩形，右下大半没有玻璃。
+                        //   修法：**平移回原点**（保留贴合形状），并记一次日志。
+                        fit.offset(-fb.left, -fb.top);
+                        if (!sFitOriginLogged) {
+                            sFitOriginLogged = true;
+                            GmUtil.log("【GmGlass】轮廓原点 ≠ (0,0) ⇒ 已平移回原点"
+                                    + "（元素 " + (int) w + "x" + (int) h
+                                    + " · 原 bounds=(" + (int) fb.left + "," + (int) fb.top
+                                    + "," + (int) fb.right + "," + (int) fb.bottom + ")"
+                                    + " · 这是「玻璃只在左上角」的根因）");
+                        }
                     }
                 }
                 sNodeFit.put(element, new Object[]{w, h, fit});
@@ -1313,25 +1339,75 @@ public final class GmGlassSink {
      * 高 32 位 = width，低 32 位 = height）。判据只认「0 参 + 返回 long」，不认名字。
      */
     static float dim(Object scope, int which) {
-        for (Method m : scope.getClass().getMethods()) {
-            if (m.getParameterCount() != 0) continue;
-            if (m.getReturnType() != long.class) continue;
-            try {
-                long packed = (Long) m.invoke(scope);
-                float a = Float.intBitsToFloat((int) (packed >> 32));
-                float b = Float.intBitsToFloat((int) (packed & 0xffffffffL));
-                if (a > 1f && b > 1f) {
-                    if (!sDimLogged) {
-                        sDimLogged = true;
-                        GmUtil.log("【GmGlass】尺寸拿法：" + m.getName() + "()J → "
-                                + (int) a + " x " + (int) b);
+        // ★★ 2026-10-24（3.71.13）真机血案 —— 「玻璃只有元素左上角有」的根因 ★★
+        //
+        //   旧写法：遍历所有「0 参、返回 long」的方法，**取第一个**两个分量都 > 1 的。
+        //   但 Compose 的 DrawScope 上有**两个**这种 getter：
+        //       getSize()   → Size   （打包成 long）
+        //       getCenter() → Offset （打包成 long）
+        //   宿主（2.7.1）里它们是 `P0()J` 和 `k()J`，**getMethods() 顺序不保证**
+        //   ⇒ 实测命中的是 getCenter！
+        //
+        //   证据：屏幕 1440x3168 px，日志却报「上玻璃的尺寸#1：720x1584」
+        //        —— 720x1584 正是**中心点坐标**。
+        //   后果（两个症状，一个原因）：
+        //     ① 玻璃按「中心点尺寸」画 ⇒ 只覆盖 (0,0)~(720,1584) ⇒ 只有左上角一块；
+        //     ② 整页根的真实尺寸被当成 720x1584 ⇒ isFullPage() 认不出根节点
+        //        ⇒ 整页也被上玻璃 ⇒ 全屏乱铺玻璃。
+        //
+        //   修法（不依赖名字）：**DrawScope 恒有 center = size / 2**。
+        //   把所有候选都取出来，能配成「一半关系」的那一对里，**大的就是 size**。
+        try {
+            java.util.List<float[]> cands = new java.util.ArrayList<>();
+            java.util.List<Method> cms = new java.util.ArrayList<>();
+            for (Method m : scope.getClass().getMethods()) {
+                if (m.getParameterCount() != 0) continue;
+                if (m.getReturnType() != long.class) continue;
+                try {
+                    long packed = (Long) m.invoke(scope);
+                    float a = Float.intBitsToFloat((int) (packed >> 32));
+                    float b = Float.intBitsToFloat((int) (packed & 0xffffffffL));
+                    if (a > 1f && b > 1f && !Float.isNaN(a) && !Float.isNaN(b)) {
+                        cands.add(new float[]{a, b});
+                        cms.add(m);
                     }
-                    return which == 0 ? a : b;
+                } catch (Throwable ignore) {
                 }
-            } catch (Throwable ignore) {
             }
+            if (cands.isEmpty()) return -1f;
+
+            float[] pick = cands.get(0);
+            String pickHow = "首个候选";
+            // 找「一半关系」：A ≈ B/2 ⇒ A 是 center，B 是 size
+            outer:
+            for (int i = 0; i < cands.size(); i++) {
+                for (int j = 0; j < cands.size(); j++) {
+                    if (i == j) continue;
+                    float[] a = cands.get(i), b = cands.get(j);
+                    if (Math.abs(a[0] * 2f - b[0]) <= 1.5f && Math.abs(a[1] * 2f - b[1]) <= 1.5f) {
+                        pick = b;                       // 大的那个 = size
+                        pickHow = cms.get(i).getName() + " 是 center ⇒ 取 "
+                                + cms.get(j).getName();
+                        break outer;
+                    }
+                }
+            }
+            if (!sDimLogged) {
+                sDimLogged = true;
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < cands.size(); i++) {
+                    sb.append(cms.get(i).getName()).append("()=")
+                            .append((int) cands.get(i)[0]).append("x")
+                            .append((int) cands.get(i)[1]).append(' ');
+                }
+                GmUtil.log("【GmGlass】尺寸拿法：" + pickHow + " → "
+                        + (int) pick[0] + " x " + (int) pick[1]
+                        + " · 候选{m" + sb.toString().trim() + "}");
+            }
+            return which == 0 ? pick[0] : pick[1];
+        } catch (Throwable ignore) {
+            return -1f;
         }
-        return -1f;
     }
 
     private static volatile boolean sDimLogged = false;

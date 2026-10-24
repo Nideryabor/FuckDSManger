@@ -60,13 +60,15 @@ public final class GmSender {
     private static final String[] CAND_GH2 = {"ao1"};
     /** 消息主存储（= 2.5.2 的 wr）—— 字段 a=会话id、f=LinkedHashMap 消息表 */
     private static final String[] CAND_NS  = {"ns"};
-    /** 发送目标标识 —— <init>(long, String)（2.6.1=m1a → 2.6.2=f4a） */
-    private static final String[] CAND_M1A = {"f4a"};
+    /** 发送目标标识 —— <init>(long, String)（2.6.1=m1a → 2.6.2=f4a → **2.7.1=u7a**） */
+    private static final String[] CAND_M1A = {"u7a", "f4a"};
 
-    /** 发送方法名（静态） */
-    private static final String M_SEND = "h0";
-    /** 取消息存储的方法名（实例） */
-    private static final String M_NS = "W";
+    /** 发送方法名（静态）。2.6.2=`h0` → **2.7.1=`j0`**
+     *  <p>证据：`kh2.h0(Lkh2;String;List;List;String;Lf4a;Lns;ZZZZ)V`
+     *  → `oj2.j0(Loj2;String;List;List;String;Lu7a;Lps;ZZZZ)V`（11 参逐位全对） */
+    private static final String M_SEND = "j0";
+    /** 取消息存储的方法名（实例）。2.6.2=`W()Lns;` → **2.7.1=`Y()Lps;`** */
+    private static final String M_NS = "Y";
 
     // ─────────────────────── 句柄 ───────────────────────
 

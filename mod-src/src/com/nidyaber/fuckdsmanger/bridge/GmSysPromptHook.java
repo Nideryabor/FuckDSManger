@@ -107,7 +107,8 @@ public final class GmSysPromptHook extends XC_MethodHook {
      * <p>当前实测：**2.6.2 (vc281) = `tv1`**（2.6.1 为 `qv1`）。
      */
     private static final String[] CANDIDATE_NAMES = {
-            "tv1",                                   // deepseek 2.6.2 (vc281) 实测（2.6.1 是 qv1）
+            "sx1",                                   // deepseek 2.7.1 (vc287) 实测 ★ 新值优先
+            "tv1",                                   // deepseek 2.6.2 (vc281)
     };
 
     /**

@@ -60,20 +60,25 @@ public final class GmRichTextHook extends XC_MethodHook {
 
     // ─────────────────────── 候选混淆名（升级后重新反查，别猜）───────────────────────
 
-    /** AnnotatedString —— implements CharSequence，字段 b=text */
-    private static final String[] CAND_KN = {"ln"};
-    /** AnnotatedString.Builder —— 字段 a=StringBuilder、b=ArrayList；k()=toAnnotatedString */
-    private static final String[] CAND_IN = {"jn"};
-    /** SpanStyle —— toString "SpanStyle(color="，15 参构造器 */
-    private static final String[] CAND_SPAN = {"y2a"};
-    /** FontWeight —— 字段 a:I */
-    private static final String[] CAND_WEIGHT = {"oo4"};
-    /** FontStyle —— 字段 a:I（0=Normal 1=Italic） */
-    private static final String[] CAND_STYLE = {"mo4"};
-    /** TextDecoration —— 字段 a:I（0=None 1=Underline 2=LineThrough） */
-    private static final String[] CAND_DECO = {"xka"};
-    /** MarkdownTextKt（R8 合并类）—— 里面那个 `p(AnnotatedString,Modifier,Colors,Config,Composer,II)` */
-    private static final String[] CAND_MT = {"bz0"};
+    /** AnnotatedString —— implements CharSequence，字段 b=text（2.6.2=ln → **2.7.1=mn**） */
+    private static final String[] CAND_KN = {"mn", "ln"};
+    /** AnnotatedString.Builder —— 字段 a=StringBuilder、b=ArrayList；k()=toAnnotatedString（jn → **kn**） */
+    private static final String[] CAND_IN = {"kn", "jn"};
+    /** SpanStyle —— toString "SpanStyle(color="，15 参构造器（y2a → **m6a**） */
+    private static final String[] CAND_SPAN = {"m6a", "y2a"};
+    /** FontWeight —— 字段 a:I（oo4 → **wq4**） */
+    private static final String[] CAND_WEIGHT = {"wq4", "oo4"};
+    /** FontStyle —— 字段 a:I（0=Normal 1=Italic）（mo4 → **uq4**） */
+    private static final String[] CAND_STYLE = {"uq4", "mo4"};
+    /** TextDecoration —— 字段 a:I（0=None 1=Underline 2=LineThrough）（xka → **yoa**） */
+    private static final String[] CAND_DECO = {"yoa", "xka"};
+    /** MarkdownTextKt（R8 合并类）—— 里面那个 `k(AnnotatedString,Modifier,Colors,Config,Composer,II)`
+     *  <p>2.6.2=`bz0.y(Lln;Lgc7;Lkoa;Lk;Lby4;II)V`
+     *  <p>**2.7.1=`q13.k(Lmn;Leg7;Ljsa;Lk;Ln05;II)V`** ★ 七参逐位全对
+     *  （`ln→mn` `gc7→eg7` `koa→jsa` `k→k`(未改名) `by4→n05`），方法名 `y→k`
+     *  <p>⚠️ 2.7.1 的 `bz0` 是**别的类**（同名换主人）⇒ 已从候选里移除，
+     *  否则 findClass 成功但方法对不上，只会浪费一次尝试。 */
+    private static final String[] CAND_MT = {"q13", "bz0"};
 
     // ─────────────────────── 宿主类句柄 ───────────────────────
 
@@ -735,7 +740,8 @@ public final class GmRichTextHook extends XC_MethodHook {
                 Class<?> c = Class.forName(name, false, cl);
                 Method target = null;
                 for (Method m : c.getDeclaredMethods()) {
-                    if (!"y".equals(m.getName())) continue;
+                    // 方法名：2.6.2=`y` → **2.7.1=`k`**（都接受，按签名再筛）
+                    if (!"k".equals(m.getName()) && !"y".equals(m.getName())) continue;
                     if (!Modifier.isStatic(m.getModifiers())) continue;
                     if (m.getReturnType() != void.class) continue;
                     Class<?>[] ps = m.getParameterTypes();
