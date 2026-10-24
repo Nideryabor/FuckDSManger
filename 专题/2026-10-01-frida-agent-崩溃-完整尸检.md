@@ -314,7 +314,7 @@ agent-17.19.0-nojni   Segmentation fault        ❌
    ```
 2. **`frida-ps`** —— 列全机进程 ✅
    ```
-   PID  Name      →  DeepSeek / RikkaHub / WeChat / ...
+   PID  Name      →  <目标App> / <其他进程> / ...（具体进程名已脱敏）
    ```
 3. **注入 `sleep`（pid 779）**
    ```
