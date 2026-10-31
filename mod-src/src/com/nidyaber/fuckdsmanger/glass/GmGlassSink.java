@@ -72,16 +72,17 @@ public final class GmGlassSink {
     private GmGlassSink() {
     }
 
-    /** 画底原语（3 参·颜色版）。2.5.2=uia.v ⇒ 2.6.1=qk7.D ⇒ 2.6.2=us6.z ⇒ **2.7.1=p68.C**。
+    /** 画底原语（3 参·颜色版）。2.5.2=uia.v ⇒ 2.6.1=qk7.D ⇒ 2.6.2=us6.z ⇒ 2.7.1=p68.C ⇒ **2.7.2=x98.t**。
      *
-     *  <p>2.7.1 证据：`p68.C(Leg7;JLst9;)Leg7;` 对应 2.6.2 `us6.z(Lgc7;JLaq9;)Lgc7;` 逐位
-     *  （`gc7→eg7`、`aq9→st9`，方法名 z→C）。
+     *  <p>2.7.2 证据：`x98.t(Lyj7;JLsy9;)Lyj7;` = 2.7.1 `p68.C(Leg7;JLst9;)Leg7;` 经类型映射
+     *  （`eg7→yj7`、`st9→sy9`）逐位翻译后**全树唯一**；且**调用点数量 119 = 119**（规则 O）。
      *
-     *  <p>⚠️ 2.7.1 的 `us6` 被 R8 拆成 `p68` + `dz7` + `r0b`，画底原语落在 **`p68`**。
-     *  4 参 Brush 版（`us6.y`）也落在 `p68` → `p68.B`，只用于读签名、不挂钩子。
+     *  <p>⚠️ 2.7.2 又把碎片重排了：2.7.1 的 `p68`+`dz7`+`r0b` → 2.7.2 的
+     *  `x98`(画底原语) + `qu7`(ChatFloatingToolViewV2) + `z2c`/`g83`/`j37`/`zi9`。
+     *  4 参 Brush 版（`us6.y` → `p68.B`）现在在 `x98.s`（调用点 13=13），只用于读签名、不挂钩子。
      */
-    private static final String BG_CLS = "p68";
-    private static final String BG_METHOD = "C";
+    private static final String BG_CLS = "x98";
+    private static final String BG_METHOD = "t";
 
     private static final Set<Class<?>> sHooked = new HashSet<Class<?>>();
     private static final List<Class<?>> sElements = new ArrayList<Class<?>>();

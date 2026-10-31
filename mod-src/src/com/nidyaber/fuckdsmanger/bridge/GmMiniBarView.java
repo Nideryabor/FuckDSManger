@@ -5,19 +5,39 @@ package com.nidyaber.fuckdsmanger.bridge;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Outline;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
+import android.view.animation.PathInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AbsListView;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -30,73 +50,188 @@ import java.util.List;
 /**
  * 迷你播放卡 🐲（纯代码画，零资源依赖）
  *
- * <p>**两个页面**（♪ 按钮来回切）：
+ * <p><b>2026-10-25 · v3：毛玻璃 + iOS 蓝 + 过渡动效 + 封面铺满整卡</b>
+ *
+ * <p>主人 v2（3.71.20）看了真机后的三条意见：
+ * <blockquote>
+ *   ① 没有高斯模糊和 iOS 蓝，灰色很丑<br>
+ *   ② 到聚焦页没有平滑过渡且动效不足<br>
+ *   ③ 聚焦页隐藏歌词遮罩时封面图片没法覆盖标题栏
+ * </blockquote>
+ *
+ * <h3>① 毛玻璃（v3 新）</h3>
+ * 思路：<b>抓宿主窗口在自己身下的那块像素 → 暴力模糊 → 当卡片底图</b>。
  * <pre>
- *  ① 播放页                        ② 搜索页
- *  ┌───────────┬──────────────┐    ┌──────────────────────────┐
- *  │           │ ≡ 曲名&歌手 ✕ │    │ [搜点什么…        ] [搜] │
- *  │   封面     ├──────────────┤    ├──────────────────────────┤
- *  │           │              │    │ 结果 / 队列（可滚动）      │
- *  ├───────────┤    歌词       │    │ ▶ 稻香 · 周杰伦           │
- *  │0:00[━●━]0:00│            │    │ ▶ 晴天 · 周杰伦           │
- *  │♪ ◀◀ ▶ ▶▶ ↻│              │    │ …                        │
- *  └───────────┴──────────────┘    └──────────────────────────┘
+ *   vBgTint   ← 竖向深蓝渐变（**不透明**，只留极轻微通透感）
+ *   glow      ← 顶部 64dp 柔光（玻璃厚度）
+ *   rim       ← 底部受光亮边
+ *   vHairline ← 1dp 内描边（玻璃边）
+ * </pre>
+ * ★ 2026-10-25 定稿：**不抓屏**。抓屏两条死路见 build() 里 ① 的注释。
+ *
+ * <h3>② 动效（v3 新）</h3>
+ * 一个 {@link android.animation.ValueAnimator} 驱动 {@link #layoutT}（0=常态 / 1=聚焦），
+ * {@link #applyPlayLayout} 每帧按插值算出<b>所有</b>控件的矩形与透明度。
+ * <p>缓动 {@code PathInterpolator(0.4, 0, 0.2, 1)}（≈ iOS 的 ease-in-out），300ms。
+ *
+ * <h3>③ 封面铺满整卡（v3 改结构）</h3>
+ * v2 把封面放在 {@code body} 里 ⇒ 顶栏在 body 外面 ⇒ <b>永远够不到标题栏</b>。
+ * <p>v3 改成<b>绝对定位</b>：{@code pagePlay} 整卡大小，封面/歌词/进度条/按钮全部
+ * 用 {@link FrameLayout.LayoutParams} + {@code setX/setY} 摆位，顶栏是浮在最上层的兄弟节点。
+ * ⇒ 聚焦时封面矩形就是 {@code (0,0,w,h)}，标题栏自然被它盖住（字靠白色阴影可读，同 iOS）。
+ *
+ * <h3>三态</h3>
+ * <pre>
+ *  常态：封面84小方块 + 歌词窄条 + 进度条 + 按钮（居中）
+ *  聚焦：封面铺满整卡 + 渐变暗膜 + 全歌词可滚（当前句白粗居中）
+ *  纯图：聚焦时双击 ⇒ 只留封面
  * </pre>
  *
- * <p>每一块都是**圆角矩形**（主人给的图）。
- * <p>它跟播放器（{@link GmMusicPlayer}）**同一个进程** ⇒ 直接读状态、直接调方法，
- * 不用广播。封面与歌词都由播放器去联网，**只在内存**（版权要求，见 GmMusicPlayer 文件头）。
+ * <h3>★ 沿自 iOS 的血泪三条（别删）</h3>
+ * <ul>
+ *   <li>{@code onSingleTapConfirmed} <b>不是</b> {@code onSingleTapUp}</li>
+ *   <li>歌词缓存键 = songId + <b>源长度</b>（长度变了就重建）</li>
+ *   <li>index 越界必须判（前奏时 curLine = -1）</li>
+ * </ul>
  */
 final class GmMiniBarView extends FrameLayout {
 
-    private static final int C_CARD = 0xF218181C;
-    private static final int C_PANEL = 0x26FFFFFF;
-    private static final int C_TXT = 0xFFF2F2F2;
-    private static final int C_SUB = 0x99FFFFFF;
-    private static final int C_ACC = 0xFF8AB4F8;
+    /* ══════════════════════════════ 配色 ══════════════════════════════
+     *
+     * ★ v3 全换：v2 的 0xF218181C 是"纯灰板"，主人说丑。
+     *   iOS 那边是 SystemThinMaterialDark（半透明深+模糊），这里靠
+     *   「模糊底图 + 深蓝半透明罩」逼近。
+     */
 
-    private static final int PANEL_R = 12;
+    /** iOS 系统蓝（dark mode 的 systemBlue = #0A84FF）。v2 的 0xFF5CC7FF 太浅，像天蓝。 */
+    private static final int C_ACC = 0xFF0A84FF;
+    /** 强调色的亮版（高光、按钮亮态用）。 */
+    private static final int C_ACC_HI = 0xFF4FA8FF;
+
+    /** 文字：不是纯白，掺一点蓝，跟毛玻璃更配。 */
+    private static final int C_TXT = 0xFFF5F7FA;
+    private static final int C_SUB = 0x9EF5F7FA;
+
+    /* ★★ 2026-10-25 定稿：**不走抓屏模糊**了（必然闪 + 抓到的图没信息量 = 脏灰）。
+     *   改成纯材质：竖向深蓝渐变 + 顶部柔光 + 底部亮边 + 内描边。
+     *   主人要求"透明度提高" ⇒ alpha 给到 0xF2~0xFA（只留极轻微通透）。 */
+
+    /** 卡片主色：竖向渐变（偏亮的顶 → 更深的底）。 */
+    private static final int C_CARD_TOP = 0xF2161A24;
+    private static final int C_CARD_BOT = 0xFA0C0E14;
+    /** 兜底纯色（同系，别是死灰）。 */
+    private static final int C_SOLID = 0xF2101218;
+
+    /** 玻璃面板（搜索页输入框、列表底）。 */
+    private static final int C_PANEL = 0x1FFFFFFF;
+    /** 按钮底 / 亮态。 */
+    private static final int C_BTN = 0x1FFFFFFF;
+    private static final int C_BTN_HI = 0x400A84FF;
+
+    /* ══════════════════════════════ 尺寸（dp） ══════════════════════════════ */
+
+    private static final int PAD = 10;
+    private static final int TOPBAR_H = 28;
+    private static final int BODY_GAP = 8;
+    private static final int SEEK_H = 22;
+    private static final int SEEK_GAP = 6;
+    private static final int BTN_H = 30;
+    private static final int COVER_SIDE = 84;
+    private static final int LRC_ROW_H = 28;
     private static final int CARD_R = 16;
+    private static final int COVER_R = 10;
+    private static final int LRC_HALF = 10;
 
-    static final int MIN_W = 190;
-    static final int MIN_H = 120;
-    static final int MAX_W = 640;
-    static final int MAX_H = 720;
+    /* 按钮行：◀◀ ❚❚ ▶▶ ↻ ⇄
+     * ⚠️ iOS 是 44/52/44/32/32 + 8dp = 236pt，但安卓最小卡宽 240 − 10×2 = 220dp
+     *    ⇒ 照抄会两头裁掉 ◀◀ / ⇄。缩成 42/50/42/30/30 + 6dp = 218dp。 */
+    private static final int[] BTN_W = {42, 50, 42, 30, 30};
+    private static final int BTN_GAP = 6;
+
+    static final int MIN_W = 240;
+    static final int MIN_H = 150;
+    static final int MAX_W = 560;
+    static final int MAX_H = 560;
     static final int DEF_W = 330;
     static final int DEF_H = 210;
 
+    /** 过渡时长（iOS 是 0.28s）。 */
+    private static final long ANIM_MS = 300L;
+
     private static final int[] CORNER_SYM = {'\u25E4', '\u25E5', '\u25E3', '\u25E2'};
-    private static final int HANDLE = 0;
 
     private final Activity act;
+    private final Handler ui = new Handler(Looper.getMainLooper());
 
     // ── 页容器 ──
     private FrameLayout pagePlay, pageSearch;
 
-    // ── 播放页 ──
-    private TextView vTitle, vArtist, vPos, vDur, vBtnPlay, vBtnLoop, vBtnNote;
+    // ── 卡片材质（纯绘制，零抓屏 · 2026-10-25 定稿） ──
+    /** 主体：竖向深蓝渐变。 */
+    private View vBgTint;
+    /** 1dp 内描边（玻璃边）。 */
+    private View vHairline;
+
+    // ── 播放页 · 顶栏（浮在最上层） ──
+    private LinearLayout vTopBar;
+    private TextView vTitle, vBtnPage, vBtnBack, vBtnClose;
+
+    // ── 播放页 · 中部 ──
     private ImageView vCover;
+    private View vScrim;
+    private ListView vLyric;
+    private LyricAdapter vLrcAdapter;
+    private View vCoverRoundMask;       /* 常态给封面上圆角（用 Outline 裁剪） */
+
+    // ── 播放页 · 底部 ──
+    private LinearLayout vSeekRow, vBtnRow;
+    private TextView vPos, vDur;
     private SeekBar vSeek;
-    private ScrollView vLyricScroll;
-    private LinearLayout vLyricBox;
+    private TextView vBtnPrev, vBtnPlay, vBtnNext, vBtnLoop, vBtnShuffle;
 
     // ── 搜索页 ──
     private EditText vKw;
     private LinearLayout vListBox;
     private TextView vListTitle;
+    /** 标题行右侧那个「搜索结果 ⇄ 播放队列」切换按钮（文字要随态变）。 */
+    private TextView vListSwitch;
     private ScrollView vListScroll;
     private boolean showQueue = false;
     private List<GmMusicPlayer.Track> results = new ArrayList<GmMusicPlayer.Track>();
     private boolean searching = false;
+    /** 搜索页是否打开（抓背景时要判断，别把播放页顶出来）。 */
+    private boolean searchPageOpen = false;
 
-    // ── 歌词状态 ──
+    // ── 歌词 ──
     private long lrcId = -1L;
+    private int lrcSrcLen = -2;
+    private long lrcAskId = -1L;
+    private final List<String> lrcText = new ArrayList<String>();
     private final List<Long> lrcMs = new ArrayList<Long>();
-    private final List<TextView> lrcViews = new ArrayList<TextView>();
     private int curLine = -1;
+    private boolean lrcFollow = true;
+    private boolean lrcJustBuilt = false;
+    private Runnable lrcUnlock = null;
+
+    // ── 态 ──
+    private boolean focusMode = false;
+    private boolean pureImage = false;
+    /** 布局插值：0 = 常态，1 = 聚焦。所有控件的位置/透明度都由它算。 */
+    private float layoutT = 0f;
+    private android.animation.ValueAnimator layoutAnim;
+
+    // ── 手势 ──
+    private GestureDetector gdLyric, gdCard;
+    private final Drag cardDrag = new Drag();
+
+    // ── 其它 ──
     private long coverWanted = -1L;
     private int curDur = 0;
     private boolean seekTouching = false;
+    private long lastTouchLog = 0L;
+    private boolean lastLoopOne = false, lastShuffle = false;
+    private String lastPlayGlyph = "";
+    private String lastTitle = "";
 
     GmMiniBarView(Activity act) {
         super(act);
@@ -104,19 +239,17 @@ final class GmMiniBarView extends FrameLayout {
         build();
     }
 
-    // ══════════════════════════════ 小工具 ══════════════════════════════
+    /* ══════════════════════════════ 小工具 ══════════════════════════════ */
 
-    private FrameLayout panel() {
-        FrameLayout f = new FrameLayout(getContext());
-        f.setBackground(round(C_PANEL, PANEL_R));
-        return f;
+    private int dp(float v) {
+        return GmMiniBar.dp(getContext(), v);
     }
 
     private GradientDrawable round(int color, int rDp) {
         GradientDrawable d = new GradientDrawable();
         d.setShape(GradientDrawable.RECTANGLE);
         d.setColor(color);
-        d.setCornerRadius(GmMiniBar.dp(getContext(), rDp));
+        d.setCornerRadius(dp(rDp));
         return d;
     }
 
@@ -129,16 +262,15 @@ final class GmMiniBarView extends FrameLayout {
         return t;
     }
 
-    /** 按钮的**点击区域**要够大 —— 太小的话手指总点不中（主人报过"按钮不生效"）。 */
-    private static final int BTN_H = 38;
+    private FrameLayout.LayoutParams lp(int wDp, int hDp) {
+        return new FrameLayout.LayoutParams(dp(wDp), dp(hDp));
+    }
 
-    private TextView btn(String s, float sp, final String tag, final Runnable r) {
+    private TextView boxBtn(String s, float sp, final String tag, final Runnable r) {
         TextView t = tv(s, sp, C_TXT);
         t.setGravity(Gravity.CENTER);
         t.setSingleLine(true);
-        // ★ 撑大点击区：左右各 4dp 内边距 + 固定高度
-        int p = GmMiniBar.dp(getContext(), 4);
-        t.setPadding(p, 0, p, 0);
+        t.setBackground(round(C_BTN, 9));
         t.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -153,39 +285,50 @@ final class GmMiniBarView extends FrameLayout {
         return t;
     }
 
-    /** 老签名的快捷方式（不需要单独的日志 tag）。 */
-    private TextView btn(String s, float sp, final Runnable r) {
-        return btn(s, sp, s, r);
+    private Drawable thumbDrawable() {
+        GradientDrawable d = new GradientDrawable();
+        d.setShape(GradientDrawable.OVAL);
+        d.setColor(0xF2FFFFFF);
+        int s = dp(14);
+        d.setSize(s, s);
+        return d;
     }
 
-    /** 包裹权重：宽度按权重分，**高度固定**（免得点击区被挤成一行字）。 */
-    private LinearLayout.LayoutParams w(LinearLayout.LayoutParams p, float weight) {
-        p.width = 0;
-        p.weight = weight;
-        p.height = GmMiniBar.dp(getContext(), BTN_H);
-        p.topMargin = GmMiniBar.dp(getContext(), 2);
-        p.bottomMargin = GmMiniBar.dp(getContext(), 2);
-        return p;
+    /** 聚焦态的渐变暗膜（0.62 / 0.28 / 0.72），保证封面上的白字读得清。 */
+    private Drawable scrimDrawable() {
+        return new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0x9E000000, 0x47000000, 0xB8000000});
     }
 
     private static GmMusicPlayer pl() {
         return GmMusicPlayer.get();
     }
 
-    // ══════════════════════════════ 构造 ══════════════════════════════
+    private static String fmt(int ms) {
+        if (ms <= 0) return "0:00";
+        int s = ms / 1000;
+        return String.format("%d:%02d", s / 60, s % 60);
+    }
+
+    /* ══════════════════════════════ 构造 ══════════════════════════════ */
 
     private void build() {
         Context c = getContext();
-        GradientDrawable card = round(C_CARD, CARD_R);
-        card.setStroke(GmMiniBar.dp(c, 1), 0x33FFFFFF);
-        setBackground(card);
-        setClipToPadding(false);
 
-        // ★★ 2026-10-06 修「按钮不生效」：
-        //   ① 根布局 setClickable(true) —— 让卡片是个**实体**，
-        //      落在卡片上的触摸不会穿透到下面宿主的界面
-        //   ② setFilterTouchesWhenObscured(false) —— 免得某些情况下
-        //      系统认为"被遮挡"而把触摸吞掉
+        // 根：透明 + 圆角 outline（子视图靠 setClipToOutline 裁圆角）
+        setBackgroundColor(Color.TRANSPARENT);
+        setClipToOutline(true);
+        try {
+            setOutlineProvider(new ViewOutlineProvider() {
+                @Override
+                public void getOutline(View view, Outline outline) {
+                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(CARD_R));
+                }
+            });
+        } catch (Throwable ignore) {
+        }
+
+        // ★ 让卡片是个**实体**：落在卡片上的触摸不会穿透到下面宿主的界面
         setClickable(true);
         setFocusable(true);
         try {
@@ -193,79 +336,235 @@ final class GmMiniBarView extends FrameLayout {
         } catch (Throwable ignore) {
         }
 
-        pagePlay = new FrameLayout(c);
-        buildPlayPage(pagePlay);
-        addView(pagePlay, new FrameLayout.LayoutParams(
+        /* ---------- ① 卡片材质（四层，从下往上，**零抓屏**） ----------
+         *
+         * ★★ 2026-10-25 定稿（主人拍板走这条）
+         *   "抓屏模糊"两条死路：
+         *     ① 保真就得藏自己 2 帧 ⇒ **必然闪**（延迟也躲不掉，手松开时眼睛就在那儿）
+         *     ② 抓的是"卡片身下那块"，可那儿本来就没内容 ⇒ 模糊完是一坨脏灰
+         *   ⇒ 改用**纯材质**：不透明深蓝渐变 + 顶部柔光 + 内描边。
+         *     iOS 深色模式的 ThinMaterial 本来也很暗，视觉上很接近，而且**零闪、不脏**。
+         *
+         *   vCard    ：竖向深蓝渐变（顶 0xF2161A24 → 底 0xFA0C0E14）
+         *   glow     ：顶部 64dp 柔光（"玻璃厚度感"）
+         *   rim      ：底部 1px 亮边（受光面，让卡片"浮起来"）
+         *   vHairline：1dp 内描边（见 ⑤）
+         */
+        vBgTint = new View(c);
+        vBgTint.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{C_CARD_TOP, C_CARD_TOP, C_CARD_BOT}));
+        addView(vBgTint, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
+        // 顶部柔光 —— "玻璃厚度感"的关键，别删
+        View glow = new View(c);
+        glow.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0x26FFFFFF, 0x0FFFFFFF, 0x00FFFFFF}));
+        FrameLayout.LayoutParams glp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, 0);
+        glp.height = dp(64);
+        addView(glow, glp);
+
+        // 底部亮边（受光面）—— 没有它，深色卡片看起来像"贴纸"
+        View rim = new View(c);
+        rim.setBackground(new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
+                new int[]{0x14FFFFFF, 0x00FFFFFF}));
+        FrameLayout.LayoutParams rlp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, 0);
+        rlp.height = dp(40);
+        rlp.topMargin = 0;
+        addView(rim, rlp);
+        // rim 要贴底：用 LayoutParams.gravity
+        rlp.gravity = Gravity.BOTTOM;
+
+        /* ---------- ② 播放页（封面/歌词/进度/按钮都在里面，绝对定位） ---------- */
+        pagePlay = new FrameLayout(c);
+        pagePlay.setClipChildren(false);
+        addView(pagePlay, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        buildPlayPage(pagePlay);
+
+        /* ---------- ③ 搜索页 ---------- */
         pageSearch = new FrameLayout(c);
         buildSearchPage(pageSearch);
         pageSearch.setVisibility(GONE);
         addView(pageSearch, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
-        // 四角拉伸
+        /* ---------- ④ 顶栏（浮在封面之上 ⇒ 聚焦时字压在图上，同 iOS） ---------- */
+        buildTopBar();
+
+        /* ---------- ⑤ 玻璃内描边 ---------- */
+        vHairline = new View(c);
+        GradientDrawable hair = new GradientDrawable();
+        hair.setShape(GradientDrawable.RECTANGLE);
+        hair.setColor(Color.TRANSPARENT);
+        hair.setCornerRadius(dp(CARD_R));
+        hair.setStroke(dp(1), 0x3DFFFFFF);
+        vHairline.setBackground(hair);
+        vHairline.setClickable(false);
+        addView(vHairline, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
+        /* ---------- ⑥ 四角拉伸（tag 从 1000 起，默认 tag 是 0） ---------- */
         for (int i = 0; i < 4; i++) {
             TextView h = tv(String.valueOf((char) CORNER_SYM[i]), 9, 0x66FFFFFF);
             h.setGravity(Gravity.CENTER);
+            h.setTag(Integer.valueOf(1000 + i));
             h.setOnTouchListener(new Resize(i));
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                    GmMiniBar.dp(c, 26), GmMiniBar.dp(c, 26));
+            FrameLayout.LayoutParams lph = new FrameLayout.LayoutParams(dp(26), dp(26));
             switch (i) {
-                case 0: lp.gravity = Gravity.TOP | Gravity.START; break;
-                case 1: lp.gravity = Gravity.TOP | Gravity.END; break;
-                case 2: lp.gravity = Gravity.BOTTOM | Gravity.START; break;
-                default: lp.gravity = Gravity.BOTTOM | Gravity.END; break;
+                case 0:  lph.gravity = Gravity.TOP | Gravity.START;    break;
+                case 1:  lph.gravity = Gravity.TOP | Gravity.END;      break;
+                case 2:  lph.gravity = Gravity.BOTTOM | Gravity.START; break;
+                default: lph.gravity = Gravity.BOTTOM | Gravity.END;   break;
             }
-            addView(h, lp);
+            addView(h, lph);
         }
+
+        installGestures();
     }
 
-    // ───────────── 播放页 ─────────────
+    /* ══════════════════════════════ 顶栏 ══════════════════════════════ */
+
+    private void buildTopBar() {
+        Context c = getContext();
+        vTopBar = new LinearLayout(c);
+        vTopBar.setOrientation(LinearLayout.HORIZONTAL);
+        vTopBar.setGravity(Gravity.CENTER_VERTICAL);
+        vTopBar.setPadding(dp(PAD), 0, dp(PAD), 0);
+
+        vBtnPage = boxBtn("\u266A", 13, "切到搜索页", new Runnable() {
+            @Override
+            public void run() {
+                showSearchPage(true);
+            }
+        });
+        vBtnPage.setTextColor(C_ACC_HI);
+        vTopBar.addView(vBtnPage, lp(TOPBAR_H, TOPBAR_H));
+
+        vBtnBack = boxBtn("\u2039", 20, "退出聚焦", new Runnable() {
+            @Override
+            public void run() {
+                exitFocus();
+            }
+        });
+        vBtnBack.setVisibility(GONE);
+        vTopBar.addView(vBtnBack, lp(TOPBAR_H, TOPBAR_H));
+
+        vTitle = tv("还没有歌 —— 点 \u266A 搜一首", 13, C_TXT);
+        vTitle.setSingleLine(true);
+        vTitle.setEllipsize(TextUtils.TruncateAt.END);
+        vTitle.setGravity(Gravity.CENTER_VERTICAL);
+        try {
+            vTitle.setTypeface(Typeface.DEFAULT_BOLD);
+        } catch (Throwable ignore) {
+        }
+        // ★ 标题压在封面图上时必须靠阴影才读得清（同 iOS）
+        try {
+            vTitle.setShadowLayer(4f, 0f, 1f, 0x99000000);
+        } catch (Throwable ignore) {
+        }
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.MATCH_PARENT, 1f);
+        tlp.leftMargin = dp(6);
+        tlp.rightMargin = dp(6);
+        vTopBar.addView(vTitle, tlp);
+
+        vBtnClose = boxBtn("\u2715", 11, "本次收起", new Runnable() {
+            @Override
+            public void run() {
+                GmMiniBar.closeSession();
+            }
+        });
+        vTopBar.addView(vBtnClose, lp(TOPBAR_H, TOPBAR_H));
+
+        FrameLayout.LayoutParams blp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, dp(TOPBAR_H));
+        blp.topMargin = dp(PAD);
+        addView(vTopBar, blp);
+    }
+
+    /* ══════════════════════════════ 播放页内容（绝对定位） ══════════════════════════════ */
 
     private void buildPlayPage(FrameLayout root) {
         Context c = getContext();
-        int gap = GmMiniBar.dp(c, 6);
 
-        LinearLayout content = new LinearLayout(c);
-        content.setOrientation(LinearLayout.HORIZONTAL);
-        content.setPadding(gap, gap, gap, gap);
-
-        // 左列：封面 / UI控件
-        LinearLayout left = new LinearLayout(c);
-        left.setOrientation(LinearLayout.VERTICAL);
-
-        FrameLayout pCover = panel();
+        /* ---- 封面（★ 在 pagePlay 里 ⇒ 聚焦时能铺满整卡，含顶栏区域） ---- */
         vCover = new ImageView(c);
         vCover.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        vCover.setBackground(round(C_PANEL, PANEL_R));
+        vCover.setBackgroundColor(0x14FFFFFF);
+        vCover.setClipToOutline(true);
         try {
-            vCover.setClipToOutline(true);
+            vCover.setOutlineProvider(new ViewOutlineProvider() {
+                @Override
+                public void getOutline(View view, Outline outline) {
+                    float r = (1f - layoutT) * dp(COVER_R);
+                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), r);
+                }
+            });
         } catch (Throwable ignore) {
         }
-        pCover.addView(vCover, new FrameLayout.LayoutParams(
+        root.addView(vCover, new FrameLayout.LayoutParams(dp(COVER_SIDE), dp(COVER_SIDE)));
+
+        /* ---- 渐变暗膜 ---- */
+        vScrim = new View(c);
+        vScrim.setBackground(scrimDrawable());
+        vScrim.setAlpha(0f);
+        root.addView(vScrim, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        LinearLayout.LayoutParams lpCover =
-                new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.15f);
-        lpCover.bottomMargin = gap;
-        left.addView(pCover, lpCover);
 
-        FrameLayout pCtl = panel();
-        LinearLayout ctl = new LinearLayout(c);
-        ctl.setOrientation(LinearLayout.VERTICAL);
-        ctl.setPadding(GmMiniBar.dp(c, 6), GmMiniBar.dp(c, 6), GmMiniBar.dp(c, 6), GmMiniBar.dp(c, 4));
+        /* ---- 歌词 ---- */
+        vLyric = new ListView(c);
+        vLyric.setDivider(null);
+        vLyric.setDividerHeight(0);
+        try {
+            vLyric.setSelector(new ColorDrawable(0x00000000));
+        } catch (Throwable ignore) {
+        }
+        vLyric.setVerticalScrollBarEnabled(false);
+        vLyric.setCacheColorHint(0);
+        vLyric.setBackgroundColor(0);
+        vLyric.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        vLyric.setItemsCanFocus(false);
+        vLyric.setClipToPadding(false);
+        vLyric.setPadding(dp(2), 0, dp(2), 0);
+        vLrcAdapter = new LyricAdapter();
+        vLyric.setAdapter(vLrcAdapter);
+        root.addView(vLyric, new FrameLayout.LayoutParams(dp(100), dp(40)));
 
-        LinearLayout rowSeek = new LinearLayout(c);
-        rowSeek.setOrientation(LinearLayout.HORIZONTAL);
-        rowSeek.setGravity(Gravity.CENTER_VERTICAL);
-        vPos = tv("0:00", 9, C_SUB);
-        rowSeek.addView(vPos);
+        /* ---- 进度条行 ---- */
+        vSeekRow = new LinearLayout(c);
+        vSeekRow.setOrientation(LinearLayout.HORIZONTAL);
+        vSeekRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        vPos = tv("0:00", 10, C_SUB);
+        vPos.setGravity(Gravity.CENTER);
+        vPos.setSingleLine(true);
+        try {
+            vPos.setShadowLayer(3f, 0f, 1f, 0x99000000);
+        } catch (Throwable ignore) {
+        }
+        vSeekRow.addView(vPos, new LinearLayout.LayoutParams(dp(40),
+                LinearLayout.LayoutParams.MATCH_PARENT));
+
         vSeek = new SeekBar(c);
         vSeek.setMax(1000);
+        vSeek.setPadding(dp(6), 0, dp(6), 0);
+        vSeek.setMinimumHeight(0);
+        try {
+            vSeek.setThumb(thumbDrawable());
+            vSeek.setThumbOffset(0);
+            vSeek.setSplitTrack(false);
+            vSeek.setProgressTintList(android.content.res.ColorStateList.valueOf(C_ACC));
+            vSeek.setProgressBackgroundTintList(
+                    android.content.res.ColorStateList.valueOf(0x38FFFFFF));
+        } catch (Throwable ignore) {
+        }
         vSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
-                if (fromUser && curDur > 0) vPos.setText(fmt(curDur * prog / 1000));
+                if (fromUser && curDur > 0) vPos.setText(fmt((int) ((long) curDur * prog / 1000L)));
             }
 
             @Override
@@ -276,150 +575,663 @@ final class GmMiniBarView extends FrameLayout {
             @Override
             public void onStopTrackingTouch(SeekBar sb) {
                 seekTouching = false;
-                if (curDur > 0 && pl() != null) pl().seekTo(curDur * sb.getProgress() / 1000);
+                GmMusicPlayer p = pl();
+                if (curDur > 0 && p != null)
+                    p.seekTo((int) ((long) curDur * sb.getProgress() / 1000L));
             }
         });
-        rowSeek.addView(vSeek, new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        vDur = tv("0:00", 9, C_SUB);
-        rowSeek.addView(vDur);
-        ctl.addView(rowSeek);
-
-        LinearLayout rowBtn = new LinearLayout(c);
-        rowBtn.setOrientation(LinearLayout.HORIZONTAL);
-        rowBtn.setGravity(Gravity.CENTER_VERTICAL);
-
-        vBtnNote = btn("\u266A", 13, new Runnable() {         // ♪ → 切到搜索页
-            @Override
-            public void run() {
-                showSearchPage(true);
-            }
-        });
-        vBtnNote.setTextColor(C_ACC);
-        rowBtn.addView(vBtnNote, w(new LinearLayout.LayoutParams(0, 26), 1f));
-
-        rowBtn.addView(btn("\u25C0\u25C0", 11, new Runnable() {
-            @Override
-            public void run() {
-                if (pl() != null) pl().prev();
-            }
-        }), w(new LinearLayout.LayoutParams(0, 26), 1f));
-
-        vBtnPlay = btn("\u25B6", 14, new Runnable() {
-            @Override
-            public void run() {
-                if (pl() != null) pl().toggle();
-            }
-        });
-        rowBtn.addView(vBtnPlay, w(new LinearLayout.LayoutParams(0, 26), 1f));
-
-        rowBtn.addView(btn("\u25B6\u25B6", 11, new Runnable() {
-            @Override
-            public void run() {
-                if (pl() != null) pl().next();
-            }
-        }), w(new LinearLayout.LayoutParams(0, 26), 1f));
-
-        vBtnLoop = btn("\u21BB", 12, new Runnable() {
-            @Override
-            public void run() {
-                if (pl() != null) pl().setLoop((pl().state().loop + 1) % 3);
-            }
-        });
-        rowBtn.addView(vBtnLoop, w(new LinearLayout.LayoutParams(0, 26), 1f));
-
-        ctl.addView(rowBtn);
-        pCtl.addView(ctl, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        left.addView(pCtl, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.0f));
-
-        content.addView(left, new LinearLayout.LayoutParams(0,
+        vSeekRow.addView(vSeek, new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.MATCH_PARENT, 1f));
 
-        // 右列：曲名&歌手 / 歌词
-        LinearLayout right = new LinearLayout(c);
-        right.setOrientation(LinearLayout.VERTICAL);
-
-        FrameLayout pInfo = panel();
-        LinearLayout info = new LinearLayout(c);
-        info.setOrientation(LinearLayout.HORIZONTAL);
-        info.setGravity(Gravity.CENTER_VERTICAL);
-        info.setPadding(GmMiniBar.dp(c, 6), GmMiniBar.dp(c, 4), GmMiniBar.dp(c, 6), GmMiniBar.dp(c, 4));
-
-        TextView handle = tv("\u2261", 13, C_SUB);
-        handle.setGravity(Gravity.CENTER);
-        handle.setClickable(true);
-        handle.setOnTouchListener(new Drag());
-        info.addView(handle, new LinearLayout.LayoutParams(GmMiniBar.dp(c, 30),
+        vDur = tv("0:00", 10, C_SUB);
+        vDur.setGravity(Gravity.CENTER);
+        vDur.setSingleLine(true);
+        try {
+            vDur.setShadowLayer(3f, 0f, 1f, 0x99000000);
+        } catch (Throwable ignore) {
+        }
+        vSeekRow.addView(vDur, new LinearLayout.LayoutParams(dp(40),
                 LinearLayout.LayoutParams.MATCH_PARENT));
 
-        LinearLayout tbox = new LinearLayout(c);
-        tbox.setOrientation(LinearLayout.VERTICAL);
-        tbox.setGravity(Gravity.CENTER_VERTICAL);
-        vTitle = tv("未在播放", 12, C_TXT);
-        vTitle.setSingleLine(true);
-        vTitle.setEllipsize(TextUtils.TruncateAt.END);
-        vArtist = tv("点 ♪ 去选歌", 9, C_SUB);
-        vArtist.setSingleLine(true);
-        vArtist.setEllipsize(TextUtils.TruncateAt.END);
-        tbox.addView(vTitle);
-        tbox.addView(vArtist);
-        LinearLayout.LayoutParams lpBox = new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        lpBox.leftMargin = GmMiniBar.dp(c, 2);
-        info.addView(tbox, lpBox);
+        root.addView(vSeekRow, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, dp(SEEK_H)));
 
-        TextView close = tv("\u2715", 11, C_SUB);
-        close.setGravity(Gravity.CENTER);
-        close.setOnClickListener(new View.OnClickListener() {
+        /* ---- 按钮行（居中） ---- */
+        vBtnRow = new LinearLayout(c);
+        vBtnRow.setOrientation(LinearLayout.HORIZONTAL);
+        vBtnRow.setGravity(Gravity.CENTER);
+
+        LinearLayout btnBox = new LinearLayout(c);
+        btnBox.setOrientation(LinearLayout.HORIZONTAL);
+        btnBox.setGravity(Gravity.CENTER_VERTICAL);
+
+        vBtnPrev = boxBtn("\u25C0\u25C0", 11, "上一首", new Runnable() {
             @Override
-            public void onClick(View v) {
-                GmMiniBar.closeSession();
+            public void run() {
+                GmMusicPlayer p = pl();
+                if (p != null) p.prev();
             }
         });
-        info.addView(close, new LinearLayout.LayoutParams(GmMiniBar.dp(c, 34),
-                LinearLayout.LayoutParams.MATCH_PARENT));
+        vBtnPlay = boxBtn("\u25B6", 14, "播放/暂停", new Runnable() {
+            @Override
+            public void run() {
+                GmMusicPlayer p = pl();
+                if (p != null) p.toggle();
+            }
+        });
+        vBtnPlay.setBackground(round(0x33FFFFFF, 9));      /* 主按钮亮一点 */
+        vBtnNext = boxBtn("\u25B6\u25B6", 11, "下一首", new Runnable() {
+            @Override
+            public void run() {
+                GmMusicPlayer p = pl();
+                if (p != null) p.next();
+            }
+        });
+        vBtnLoop = boxBtn("\u21BB", 12, "循环", new Runnable() {
+            @Override
+            public void run() {
+                GmMusicPlayer p = pl();
+                if (p == null) return;
+                p.setLoop(p.state().loop == GmMusicPlayer.LOOP_ONE
+                        ? GmMusicPlayer.LOOP_LIST : GmMusicPlayer.LOOP_ONE);
+            }
+        });
+        vBtnShuffle = boxBtn("\u21C4", 13, "随机", new Runnable() {
+            @Override
+            public void run() {
+                GmMusicPlayer p = pl();
+                if (p == null) return;
+                p.setLoop(p.state().loop == GmMusicPlayer.LOOP_SHUFFLE
+                        ? GmMusicPlayer.LOOP_LIST : GmMusicPlayer.LOOP_SHUFFLE);
+            }
+        });
 
-        pInfo.addView(info, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        LinearLayout.LayoutParams lpInfo = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, GmMiniBar.dp(c, 46));
-        lpInfo.bottomMargin = gap;
-        right.addView(pInfo, lpInfo);
+        TextView[] bs = {vBtnPrev, vBtnPlay, vBtnNext, vBtnLoop, vBtnShuffle};
+        for (int i = 0; i < bs.length; i++) {
+            LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(dp(BTN_W[i]), dp(BTN_H));
+            if (i > 0) bl.leftMargin = dp(BTN_GAP);
+            btnBox.addView(bs[i], bl);
+        }
 
-        FrameLayout pLrc = panel();
-        vLyricScroll = new ScrollView(c);
-        vLyricBox = new LinearLayout(c);
-        vLyricBox.setOrientation(LinearLayout.VERTICAL);
-        vLyricBox.setPadding(GmMiniBar.dp(c, 8), GmMiniBar.dp(c, 6),
-                GmMiniBar.dp(c, 8), GmMiniBar.dp(c, 6));
-        vLyricScroll.addView(vLyricBox);
-        pLrc.addView(vLyricScroll, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        right.addView(pLrc, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.0f));
-
-        content.addView(right, new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.MATCH_PARENT, 1f));
-
-        root.addView(content, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        vBtnRow.addView(btnBox, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, dp(BTN_H)));
+        root.addView(vBtnRow, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, dp(BTN_H)));
 
         setLyricHint("——");
     }
 
-    // ───────────── 搜索页 ─────────────
+    /* ══════════════════════════════ ★ 布局核心：按 layoutT 插值 ══════════════════════════════
+     *
+     *  0 = 常态：
+     *      封面 (PAD, bodyTop, 84, 84)
+     *      歌词 (PAD+84+10, bodyTop, w-…, bodyH)
+     *      进度条 (PAD, seekTop, w-2PAD, 22)
+     *      按钮行 (PAD, btnTop, w-2PAD, 30)
+     *      顶栏 三键可见，返回键隐藏，scrim alpha 0
+     *
+     *  1 = 聚焦：
+     *      封面 (0, 0, w, h)          ← ★ 整卡，含标题栏区域
+     *      歌词 (PAD, bodyTop, w-2PAD, h-PAD-bodyTop)
+     *      进度条 / 按钮行 alpha 0
+     *      顶栏 ♪ 和 ✕ 隐藏、返回键出现，scrim alpha 1
+     */
+
+    private void applyPlayLayout() {
+        applyPlayLayout(layoutT);
+    }
+
+    private void applyPlayLayout(float t) {
+        try {
+            int w = getWidth(), h = getHeight();
+            if (w <= 0 || h <= 0) return;
+            if (t < 0f) t = 0f;
+            if (t > 1f) t = 1f;
+
+            final int P = dp(PAD);
+            final int topH = dp(TOPBAR_H);
+            final int bodyTop = P + topH + dp(BODY_GAP);
+            final int btnH = dp(BTN_H);
+            final int seekH = dp(SEEK_H);
+            final int seekGap = dp(SEEK_GAP);
+
+            final int btnTop = h - P - btnH;
+            final int seekTop = btnTop - seekGap - seekH;
+            final int bodyBottom = seekTop - seekGap;
+
+            int bodyH = bodyBottom - bodyTop;
+            if (bodyH < dp(40)) bodyH = dp(40);
+
+            int side = dp(COVER_SIDE);
+            if (side > bodyH) side = Math.max(dp(36), bodyH);
+
+            /* ---- 封面：小方块 → 整卡 ---- */
+            float cL = lerp(P, 0, t);
+            float cT = lerp(bodyTop, 0, t);
+            float cR = lerp(P + side, w, t);
+            float cB = lerp(bodyTop + side, h, t);
+
+            /* ---- 歌词：右侧窄条 → 铺满顶栏以下 ---- */
+            float lL = lerp(P + side + dp(LRC_HALF), P, t);
+            float lT = lerp(bodyTop, bodyTop, t);
+            float lR = lerp(w - P, w - P, t);
+            float lB = lerp(bodyTop + bodyH, h - P, t);
+
+            setBounds(vCover, cL, cT, cR, cB);
+            setBounds(vLyric, lL, lT, lR, lB);
+            setBounds(vScrim, 0, 0, w, h);
+            setBounds(vSeekRow, P, seekTop, w - P, seekTop + seekH);
+            setBounds(vBtnRow, P, btnTop, w - P, btnTop + btnH);
+
+            /* ---- 透明度 ---- */
+            float inv = 1f - t;
+            vSeekRow.setAlpha(inv);
+            vBtnRow.setAlpha(inv);
+            /* ★★ 2026-10-25 主人报：「在只显示封面的情况下更改大小会出现遮罩」
+             *   真因：纯图态（pureImage）是靠 animate().alpha(0) 把 vScrim 淡掉的，
+             *   但 applyPlayLayout 每帧无条件 vScrim.setAlpha(t)
+             *   ⇒ 一改大小就触发 onSizeChanged → applyPlayLayout → 遮罩又变回 1。
+             *   ⇒ 纯图态必须在这一层也保持 0。 */
+            vScrim.setAlpha(pureImage ? 0f : t);
+            vBtnPage.setAlpha(inv);
+            vBtnClose.setAlpha(inv);
+            vBtnBack.setAlpha(t);
+
+            /* ---- 显示/隐藏 ----
+             * ★★ alpha=0 的 View **照样吃触摸**！聚焦态底部那片必须 GONE，
+             *    否则点封面下半部分会一直"切态"，永远做不了双击纯图。
+             *    只在动画收尾才切 GONE（中途切会让动画闪）。 */
+            boolean bottomGone = t > 0.98f;
+            vSeekRow.setVisibility(bottomGone ? View.GONE : View.VISIBLE);
+            vBtnRow.setVisibility(bottomGone ? View.GONE : View.VISIBLE);
+            vBtnPage.setVisibility(bottomGone ? View.GONE : View.VISIBLE);
+            vBtnClose.setVisibility(bottomGone ? View.GONE : View.VISIBLE);
+            vBtnBack.setVisibility(t > 0.02f ? View.VISIBLE : View.GONE);
+
+            /* ---- 封面圆角：10dp → 0（聚焦后交给卡片裁剪） ---- */
+            try {
+                vCover.invalidateOutline();
+            } catch (Throwable ignore) {
+            }
+
+            /* ---- 标题压在图上时更亮 ---- */
+            vTitle.setTextColor(blend(C_TXT, 0xFFFFFFFF, t));
+        } catch (Throwable e) {
+            GmUtil.logFail("【GmMiniBar】摆版面失败", e);
+        }
+    }
+
+    /** 直接设矩形（用 setX/setY + layoutParams 宽高，不走 requestLayout 的位置部分）。 */
+    private void setBounds(View v, float l, float t, float r, float b) {
+        try {
+            int iw = Math.max(1, Math.round(r - l));
+            int ih = Math.max(1, Math.round(b - t));
+            ViewGroup.LayoutParams gp = v.getLayoutParams();
+            if (gp != null && (gp.width != iw || gp.height != ih)) {
+                gp.width = iw;
+                gp.height = ih;
+                v.setLayoutParams(gp);
+            }
+            v.setX(l);
+            v.setY(t);
+        } catch (Throwable ignore) {
+        }
+    }
+
+    private static float lerp(float a, float b, float t) {
+        return a + (b - a) * t;
+    }
+
+    /** 两个 ARGB 之间按 t 混合（含 alpha）。 */
+    private static int blend(int from, int to, float t) {
+        int a = (int) lerp(Color.alpha(from), Color.alpha(to), t);
+        int r = (int) lerp(Color.red(from), Color.red(to), t);
+        int g = (int) lerp(Color.green(from), Color.green(to), t);
+        int b = (int) lerp(Color.blue(from), Color.blue(to), t);
+        return Color.argb(a, r, g, b);
+    }
+
+    /* ══════════════════════════════ 歌词列表 ══════════════════════════════ */
+
+    private final class LyricAdapter extends BaseAdapter {
+        @Override
+        public int getCount() {
+            return lrcText.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return (i >= 0 && i < lrcText.size()) ? lrcText.get(i) : null;
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @Override
+        public View getView(int pos, View convert, ViewGroup parent) {
+            Context c = getContext();
+            TextView t;
+            if (convert instanceof TextView) {
+                t = (TextView) convert;
+            } else {
+                t = new TextView(c);
+                t.setSingleLine(true);
+                t.setEllipsize(TextUtils.TruncateAt.END);
+                t.setGravity(Gravity.CENTER_VERTICAL);
+                t.setIncludeFontPadding(false);
+                t.setPadding(0, 0, 0, 0);
+                t.setLayoutParams(new AbsListView.LayoutParams(
+                        AbsListView.LayoutParams.MATCH_PARENT, dp(LRC_ROW_H)));
+            }
+
+            String s = (pos >= 0 && pos < lrcText.size()) ? lrcText.get(pos) : "";
+            t.setText(s.length() == 0 ? "\u266A" : s);
+
+            boolean focus = layoutT > 0.5f;
+            boolean cur = (pos == curLine);
+            if (cur) {
+                t.setTextSize(TypedValue.COMPLEX_UNIT_SP, focus ? 17f : 15f);
+                t.setTypeface(Typeface.DEFAULT_BOLD);
+                // 当前句用强调蓝（iOS 蓝），比纯白更有"音乐感"
+                t.setTextColor(focus ? 0xFFFFFFFF : C_ACC_HI);
+                t.setShadowLayer(3f, 0, 0, 0x8C000000);
+            } else {
+                t.setTextSize(TypedValue.COMPLEX_UNIT_SP, focus ? 13f : 12.5f);
+                t.setTypeface(Typeface.DEFAULT);
+                t.setTextColor(focus ? 0xB0FFFFFF : 0x8AF5F7FA);
+                t.setShadowLayer(2f, 0, 0, 0x66000000);
+            }
+            return t;
+        }
+    }
+
+    private void setLyricHint(String s) {
+        try {
+            lrcText.clear();
+            lrcMs.clear();
+            curLine = -1;
+            lrcText.add(s);
+            if (vLrcAdapter != null) vLrcAdapter.notifyDataSetChanged();
+        } catch (Throwable ignore) {
+        }
+    }
+
+    /**
+     * 同步歌词（0.5 秒一拍）。
+     *
+     * <p>★★ 缓存键 = <b>songId + 源长度</b>。iOS 吃过亏：只比 songId 的话，
+     * 「歌词还在下载时先建了 0 行缓存」之后永远空白。
+     */
+    private void syncLyric(GmMusicPlayer.State s) {
+        try {
+            GmMusicPlayer p = pl();
+            long id = (s != null && s.track != null) ? s.track.id : -1L;
+
+            if (id < 0) {
+                if (lrcId != -1L || lrcText.size() != 1) {
+                    lrcId = -1L;
+                    lrcSrcLen = -2;
+                    lrcAskId = -1L;
+                    setLyricHint("——");
+                }
+                return;
+            }
+            if (p == null) return;
+
+            String src = p.cachedLyric(id);
+            int len = (src == null) ? -1 : src.length();
+
+            if (len <= 0) {
+                if (lrcId != id) {
+                    lrcId = id;
+                    lrcSrcLen = -2;
+                    setLyricHint("歌词加载中…");
+                }
+                if (lrcAskId != id) {
+                    lrcAskId = id;
+                    p.lyric(id, new GmMusicPlayer.Cb<String>() {
+                        @Override
+                        public void on(String v) {
+                            /* 下一拍 cachedLyric() 就有值了 */
+                        }
+                    });
+                }
+                return;
+            }
+
+            if (lrcId == id && len == lrcSrcLen) return;
+
+            lrcId = id;
+            lrcSrcLen = len;
+            rebuildLyric(src);
+        } catch (Throwable t) {
+            GmUtil.logFail("【GmMiniBar】同步歌词失败", t);
+        }
+    }
+
+    private void rebuildLyric(String src) {
+        try {
+            Object[] p = GmMusicPlayer.parseLrc(src);
+            long[] ms = (p != null && p.length > 0) ? (long[]) p[0] : null;
+            String[] tx = (p != null && p.length > 1) ? (String[]) p[1] : null;
+
+            lrcText.clear();
+            lrcMs.clear();
+            curLine = -1;
+
+            if (ms == null || tx == null || ms.length == 0) {
+                lrcText.add("这首歌没有歌词");
+                if (vLrcAdapter != null) vLrcAdapter.notifyDataSetChanged();
+                return;
+            }
+
+            for (int i = 0; i < ms.length; i++) {
+                String s = tx[i] == null ? "" : tx[i].trim();
+                lrcText.add(s.length() == 0 ? "\u266A" : s);
+                lrcMs.add(Long.valueOf(ms[i]));
+            }
+            lrcJustBuilt = true;
+            lrcFollow = true;
+            if (vLrcAdapter != null) vLrcAdapter.notifyDataSetChanged();
+        } catch (Throwable t) {
+            GmUtil.logFail("【GmMiniBar】铺歌词失败", t);
+        }
+    }
+
+    /** 高亮当前句 + 居中。★ 前奏时 idx = -1，不许拿去当数组下标。 */
+    private void highlight(int pos) {
+        try {
+            if (lrcMs.isEmpty()) return;
+            int idx = -1;
+            for (int i = 0; i < lrcMs.size(); i++) {
+                if (lrcMs.get(i).longValue() <= pos) idx = i;
+                else break;
+            }
+            boolean force = lrcJustBuilt;
+            lrcJustBuilt = false;
+            if (idx == curLine && !force) return;
+            curLine = idx;
+            if (vLyric != null) vLyric.invalidateViews();
+            lyricScrollToCurrent(true);
+        } catch (Throwable ignore) {
+        }
+    }
+
+    private void lyricScrollToCurrent(boolean anim) {
+        try {
+            if (!lrcFollow) return;
+            int row = curLine;
+            if (row < 0 || row >= lrcText.size()) return;
+            int h = vLyric.getHeight();
+            if (h <= 0) return;
+            int off = Math.max(0, (h - dp(LRC_ROW_H)) / 2);
+            if (anim) vLyric.smoothScrollToPositionFromTop(row, off);
+            else vLyric.setSelectionFromTop(row, off);
+        } catch (Throwable ignore) {
+        }
+    }
+
+    private void scheduleFollowResume() {
+        cancelFollowResume();
+        lrcUnlock = new Runnable() {
+            @Override
+            public void run() {
+                lrcUnlock = null;
+                lrcFollow = true;
+                GmUtil.log("【GmMiniBar】歌词自动跟随恢复");
+                lyricScrollToCurrent(true);
+            }
+        };
+        ui.postDelayed(lrcUnlock, 3000L);
+    }
+
+    private void cancelFollowResume() {
+        if (lrcUnlock != null) {
+            ui.removeCallbacks(lrcUnlock);
+            lrcUnlock = null;
+        }
+    }
+
+    /* ══════════════════════════════ ★ 三态 + 过渡动画 ══════════════════════════════ */
+
+    private void setFocusMode(boolean on) {
+        if (focusMode == on) return;
+        focusMode = on;
+        if (on) pureImage = false;
+
+        lrcFollow = true;
+        cancelFollowResume();
+
+        animateLayout(on ? 1f : 0f);
+
+        /* ★ 这里**故意不重抓底图** —— v3 就是在这儿抓的，结果一动就闪。
+         *   v4 的底图是整窗缩略图，按窗口坐标裁切 ⇒ 卡片铺满/收回都不需要重抓。 */
+
+        // 换态后歌词字号/颜色变了，重绑一次
+        ui.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (vLrcAdapter != null) vLrcAdapter.notifyDataSetChanged();
+                    lyricScrollToCurrent(false);
+                } catch (Throwable ignore) {
+                }
+            }
+        }, ANIM_MS + 20);
+
+        GmUtil.log("【GmMiniBar】布局 → " + (on ? "聚焦（全歌词）" : "常态"));
+    }
+
+    /** 驱动 layoutT 的动画（缓动 ≈ iOS ease-in-out）。 */
+    private void animateLayout(float to) {
+        try {
+            if (layoutAnim != null) {
+                layoutAnim.cancel();
+                layoutAnim = null;
+            }
+            final float from = layoutT;
+            if (Math.abs(from - to) < 0.001f) {
+                layoutT = to;
+                applyPlayLayout(layoutT);
+                return;
+            }
+            android.animation.ValueAnimator a =
+                    android.animation.ValueAnimator.ofFloat(from, to);
+            a.setDuration(ANIM_MS);
+            try {
+                a.setInterpolator(new PathInterpolator(0.4f, 0f, 0.2f, 1f));
+            } catch (Throwable ignore) {
+                a.setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f));
+            }
+            a.addUpdateListener(new android.animation.ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(android.animation.ValueAnimator an) {
+                    layoutT = ((Float) an.getAnimatedValue()).floatValue();
+                    applyPlayLayout(layoutT);
+                }
+            });
+            layoutAnim = a;
+            a.start();
+        } catch (Throwable e) {
+            layoutT = to;
+            applyPlayLayout(layoutT);
+        }
+    }
+
+    private void exitFocus() {
+        if (pureImage) exitPure();
+        setFocusMode(false);
+    }
+
+    /** 聚焦 → 纯图（只留封面）。 */
+    private void togglePureImage() {
+        if (!focusMode) return;
+        pureImage = !pureImage;
+        GmUtil.log("【GmMiniBar】" + (pureImage ? "双击 → 纯图（隐藏歌词+暗膜）" : "双击 → 恢复歌词"));
+        if (pureImage) {
+            /* ★ 歌词必须 INVISIBLE 不能只 alpha=0：安卓透明度不影响触摸，
+             *   全透明的 ListView 照样吃事件 ⇒ 纯图态就没法从封面上拖卡了。 */
+            vLyric.setVisibility(View.INVISIBLE);
+            fadeOut(vScrim, vTopBar);
+        } else {
+            vLyric.setVisibility(View.VISIBLE);
+            fadeIn(vScrim, vTopBar);
+            try {
+                vLrcAdapter.notifyDataSetChanged();
+            } catch (Throwable ignore) {
+            }
+        }
+    }
+
+    private void exitPure() {
+        if (!pureImage) return;
+        pureImage = false;
+        vLyric.setVisibility(View.VISIBLE);
+        fadeIn(vScrim, vTopBar);
+        try {
+            vLrcAdapter.notifyDataSetChanged();
+        } catch (Throwable ignore) {
+        }
+        GmUtil.log("【GmMiniBar】双击 → 恢复歌词");
+    }
+
+    private void fadeOut(View... vs) {
+        for (View v : vs) {
+            if (v == null) continue;
+            v.animate().alpha(0f).setDuration(220L)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+        }
+    }
+
+    private void fadeIn(View... vs) {
+        for (View v : vs) {
+            if (v == null) continue;
+            v.animate().alpha(1f).setDuration(220L)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+        }
+    }
+
+    /* ══════════════════════════════ 手势 ══════════════════════════════ */
+
+    private void installGestures() {
+        gdLyric = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                if (pureImage) {
+                    exitPure();
+                    setFocusMode(false);
+                    return true;
+                }
+                setFocusMode(!focusMode);
+                return true;
+            }
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                if (!focusMode) return false;
+                togglePureImage();
+                return true;
+            }
+
+            @Override
+            public void onLongPress(MotionEvent e) {
+                if (!focusMode || pureImage) return;
+                try {
+                    int pos = vLyric.pointToPosition((int) e.getX(), (int) e.getY());
+                    if (pos < 0 || pos >= lrcMs.size()) return;
+                    long at = lrcMs.get(pos).longValue();
+                    GmMusicPlayer p = pl();
+                    if (p != null) p.seekTo((int) at);
+                    lrcFollow = true;
+                    curLine = pos;
+                    vLyric.invalidateViews();
+                    lyricScrollToCurrent(true);
+                    GmUtil.log("【GmMiniBar】长按歌词第 " + pos + " 行 → 跳到 "
+                            + (at / 1000.0) + "s（" + lrcText.get(pos) + "）");
+                } catch (Throwable ignore) {
+                }
+            }
+        });
+
+        vLyric.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent e) {
+                try {
+                    gdLyric.onTouchEvent(e);
+                } catch (Throwable ignore) {
+                }
+                return false;      /* ★ 不吞 —— ListView 自己还要滚 */
+            }
+        });
+
+        vLyric.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView v, int st) {
+                if (st == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
+                    lrcFollow = false;
+                    scheduleFollowResume();
+                    GmUtil.log("【GmMiniBar】用户开始滑歌词 → 暂停跟随 3 秒");
+                }
+            }
+
+            @Override
+            public void onScroll(AbsListView v, int a, int b, int c) {
+            }
+        });
+
+        /* 卡片级手势（纯图态用） */
+        gdCard = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                if (!pureImage) return false;
+                exitPure();
+                setFocusMode(false);
+                return true;
+            }
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                if (!pureImage) return false;
+                exitPure();
+                return true;
+            }
+        });
+
+        setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent e) {
+                try {
+                    gdCard.onTouchEvent(e);
+                } catch (Throwable ignore) {
+                }
+                cardDrag.onTouch(v, e);
+                return false;
+            }
+        });
+    }
+
+    /* ══════════════════════════════ 搜索页 ══════════════════════════════ */
 
     private void buildSearchPage(FrameLayout root) {
         Context c = getContext();
-        int gap = GmMiniBar.dp(c, 6);
+        int gap = dp(PAD);
 
         LinearLayout col = new LinearLayout(c);
         col.setOrientation(LinearLayout.VERTICAL);
-        col.setPadding(gap, gap, gap, gap);
+        col.setPadding(gap, gap + dp(TOPBAR_H) + dp(BODY_GAP), gap, gap);
 
-        // 第一行：输入框 + 搜 + 返回
         LinearLayout row = new LinearLayout(c);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
@@ -430,9 +1242,8 @@ final class GmMiniBarView extends FrameLayout {
         vKw.setTextColor(C_TXT);
         vKw.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
         vKw.setSingleLine(true);
-        vKw.setBackground(round(C_PANEL, PANEL_R));
-        vKw.setPadding(GmMiniBar.dp(c, 8), GmMiniBar.dp(c, 6),
-                GmMiniBar.dp(c, 8), GmMiniBar.dp(c, 6));
+        vKw.setBackground(round(C_PANEL, 12));
+        vKw.setPadding(dp(8), dp(6), dp(8), dp(6));
         vKw.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
         vKw.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -441,103 +1252,96 @@ final class GmMiniBarView extends FrameLayout {
                 return true;
             }
         });
+        vKw.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent e) {
+                try {
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                } catch (Throwable ignore) {
+                }
+                return false;
+            }
+        });
         row.addView(vKw, new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
-        row.addView(btn("搜", 12, new Runnable() {
+        row.addView(boxBtn("\u641C", 12, "搜索", new Runnable() {
             @Override
             public void run() {
                 doSearch();
             }
-        }), lpDp(c, 34, 30));
+        }), lpDp(34));
 
-        row.addView(btn("\u2715", 11, new Runnable() {
+        row.addView(boxBtn("\u2715", 11, "回播放页", new Runnable() {
             @Override
             public void run() {
                 showSearchPage(false);
             }
-        }), lpDp(c, 30, 30));
+        }), lpDp(30));
         col.addView(row);
 
-        // 列表标题（搜索 / 队列 切换）
         LinearLayout rowTitle = new LinearLayout(c);
         rowTitle.setOrientation(LinearLayout.HORIZONTAL);
         rowTitle.setGravity(Gravity.CENTER_VERTICAL);
         vListTitle = tv("搜索结果", 10, C_SUB);
         rowTitle.addView(vListTitle, new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        rowTitle.addView(btn("\u21C4 队列", 10, new Runnable() {
+        /* ★ 2026-10-25 主人：「这里是播放队列，上面的队列按钮应该换成搜索结果」
+         *   ⇒ 按钮文字 = **点了会去哪儿**，不是"我现在在哪"。
+         *     在队列里 ⇒ 显示「⇄ 搜索结果」；在搜索结果里 ⇒ 显示「⇄ 队列」。 */
+        vListSwitch = boxBtn("\u21C4 队列", 10, "切换 搜索结果/队列", new Runnable() {
             @Override
             public void run() {
                 showQueue = !showQueue;
                 refreshList();
             }
-        }));
+        });
+        rowTitle.addView(vListSwitch);
         LinearLayout.LayoutParams lpTitle = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lpTitle.topMargin = GmMiniBar.dp(c, 4);
+        lpTitle.topMargin = dp(4);
         col.addView(rowTitle, lpTitle);
 
-        // 列表
-        FrameLayout pList = panel();
+        FrameLayout pList = new FrameLayout(c);
+        pList.setBackground(round(C_PANEL, 12));
         vListScroll = new ScrollView(c);
         vListBox = new LinearLayout(c);
         vListBox.setOrientation(LinearLayout.VERTICAL);
-        vListBox.setPadding(GmMiniBar.dp(c, 6), GmMiniBar.dp(c, 4),
-                GmMiniBar.dp(c, 6), GmMiniBar.dp(c, 4));
+        vListBox.setPadding(dp(6), dp(4), dp(6), dp(4));
         vListScroll.addView(vListBox);
         pList.addView(vListScroll, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         LinearLayout.LayoutParams lpList = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
-        lpList.topMargin = GmMiniBar.dp(c, 4);
+        lpList.topMargin = dp(4);
         col.addView(pList, lpList);
 
         root.addView(col, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
     }
 
-    private LinearLayout.LayoutParams lpDp(Context c, int wDp, int hDp) {
-        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
-                GmMiniBar.dp(c, wDp), GmMiniBar.dp(c, BTN_H));
-        p.leftMargin = GmMiniBar.dp(c, 4);
+    private LinearLayout.LayoutParams lpDp(int wDp) {
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(dp(wDp), dp(BTN_H));
+        p.leftMargin = dp(4);
         return p;
-    }
-
-    /** ★ 触摸到达卡片的证据（限流：2 秒最多一条）——定位"按钮不生效"用。 */
-    private long lastTouchLog = 0L;
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        try {
-            if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                long now = System.currentTimeMillis();
-                if (now - lastTouchLog > 2000) {
-                    lastTouchLog = now;
-                    GmUtil.log("【GmMiniBar】👋 触摸到达卡片 ("
-                            + (int) ev.getX() + "," + (int) ev.getY() + ")"
-                            + " 位置=(" + GmMiniBar.px2dp(getContext(), getX())
-                            + "," + GmMiniBar.px2dp(getContext(), getY()) + ")dp"
-                            + " 尺寸=" + GmMiniBar.px2dp(getContext(), getWidth())
-                            + "×" + GmMiniBar.px2dp(getContext(), getHeight()) + "dp");
-                }
-            }
-        } catch (Throwable ignore) {
-        }
-        return super.dispatchTouchEvent(ev);
     }
 
     private void showSearchPage(boolean search) {
         try {
-            pagePlay.setVisibility(search ? GONE : VISIBLE);
-            pageSearch.setVisibility(search ? VISIBLE : GONE);
+            searchPageOpen = search;
             if (search) {
+                // 进搜索页前必须退出聚焦，否则封面盖着
+                if (focusMode) setFocusMode(false);
+                pagePlay.setVisibility(GONE);
+                pageSearch.setVisibility(VISIBLE);
                 refreshList();
                 vKw.requestFocus();
                 InputMethodManager imm = (InputMethodManager)
                         getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 if (imm != null) imm.showSoftInput(vKw, InputMethodManager.SHOW_IMPLICIT);
             } else {
+                pageSearch.setVisibility(GONE);
+                pagePlay.setVisibility(VISIBLE);
                 InputMethodManager imm = (InputMethodManager)
                         getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 if (imm != null) imm.hideSoftInputFromWindow(vKw.getWindowToken(), 0);
@@ -550,10 +1354,11 @@ final class GmMiniBarView extends FrameLayout {
     private void doSearch() {
         final String kw = vKw.getText().toString().trim();
         if (kw.length() == 0 || searching) return;
-        if (pl() == null) return;
+        final GmMusicPlayer p = pl();
+        if (p == null) return;
         searching = true;
         vListTitle.setText("搜索中…");
-        pl().search(kw, 20, new GmMusicPlayer.Cb<List<GmMusicPlayer.Track>>() {
+        p.search(kw, 20, new GmMusicPlayer.Cb<List<GmMusicPlayer.Track>>() {
             @Override
             public void on(List<GmMusicPlayer.Track> v) {
                 searching = false;
@@ -568,9 +1373,13 @@ final class GmMiniBarView extends FrameLayout {
         try {
             vListBox.removeAllViews();
             Context c = getContext();
+            GmMusicPlayer p = pl();
+            if (vListSwitch != null) {
+                vListSwitch.setText(showQueue ? "\u21C4 搜索结果" : "\u21C4 队列");
+            }
             if (showQueue) {
-                List<GmMusicPlayer.Track> q = pl() == null
-                        ? new ArrayList<GmMusicPlayer.Track>() : pl().queue();
+                List<GmMusicPlayer.Track> q = p == null
+                        ? new ArrayList<GmMusicPlayer.Track>() : p.queue();
                 vListTitle.setText("播放队列（" + q.size() + "）");
                 if (q.isEmpty()) {
                     vListBox.addView(hintRow("队列是空的"));
@@ -581,45 +1390,41 @@ final class GmMiniBarView extends FrameLayout {
                     vListBox.addView(row(q.get(i), String.valueOf(i + 1), new Runnable() {
                         @Override
                         public void run() {
-                            if (pl() != null) pl().playAt(ii);
+                            GmMusicPlayer pp = pl();
+                            if (pp != null) pp.playAt(ii);
                         }
                     }, new Runnable() {
                         @Override
                         public void run() {
-                            if (pl() != null) pl().removeAt(ii);
+                            GmMusicPlayer pp = pl();
+                            if (pp != null) pp.removeAt(ii);
                             refreshList();
                         }
-                    }, c));
+                    }, "\uFF0D", "从队列移除", c));    /* ★ 队列里是减号（主人要的） */
                 }
             } else {
-                vListTitle.setText(results.isEmpty() ? "搜索结果" : "搜索结果（" + results.size() + "）");
+                vListTitle.setText(results.isEmpty() ? "搜索结果"
+                        : "搜索结果（" + results.size() + "）");
                 if (results.isEmpty()) {
                     vListBox.addView(hintRow(searching ? "搜着呢…" : "搜一首吧"));
                     return;
                 }
-                for (GmMusicPlayer.Track t : results) {
-                    vListBox.addView(row(t, "\u25B6", new Runnable() {
-                        @Override
-                        public void run() {
-                        }
-                    }, null, c));
-                }
-                // 上面那个是占位，重新逐行绑（要捕获 track）
-                vListBox.removeAllViews();
                 for (final GmMusicPlayer.Track t : results) {
                     vListBox.addView(row(t, "\u25B6", new Runnable() {
                         @Override
                         public void run() {
-                            if (pl() != null) pl().play(t);   // 点一下就开始放
+                            GmMusicPlayer pp = pl();
+                            if (pp != null) pp.play(t);
                             showSearchPage(false);
                         }
                     }, new Runnable() {
                         @Override
                         public void run() {
-                            if (pl() != null) pl().enqueue(t);   // ＋ 入队
+                            GmMusicPlayer pp = pl();
+                            if (pp != null) pp.enqueue(t);
                             refreshList();
                         }
-                    }, c));
+                    }, "\uFF0B", "加入队列", c));
                 }
             }
         } catch (Throwable t) {
@@ -629,23 +1434,32 @@ final class GmMiniBarView extends FrameLayout {
 
     private TextView hintRow(String s) {
         TextView t = tv(s, 10, C_SUB);
-        t.setPadding(0, GmMiniBar.dp(getContext(), 6), 0, 0);
+        t.setPadding(0, dp(6), 0, 0);
         return t;
     }
 
-    /** 列表一行：符号 + 歌名/歌手 + 右侧动作。 */
+    /**
+     * 列表一行。
+     *
+     * @param sym      左边那个符号（搜索结果用 ▶ / 队列用序号）
+     * @param rightSym 右边那个按钮的字：搜索结果 {@code ＋}＝加入队列，
+     *                 队列里 {@code －}＝从队列移除
+     *                 （主人 2026-10-25：「歌曲旁边的加号应该换成减号」）
+     * @param rightTip 那个按钮点下去会干嘛（日志用）
+     */
     private LinearLayout row(final GmMusicPlayer.Track t, String sym,
-                             final Runnable onClick, final Runnable onRight, Context c) {
+                             final Runnable onClick, final Runnable onRight,
+                             String rightSym, String rightTip, Context c) {
         LinearLayout r = new LinearLayout(c);
         r.setOrientation(LinearLayout.HORIZONTAL);
         r.setGravity(Gravity.CENTER_VERTICAL);
-        int p = GmMiniBar.dp(c, 3);
+        int p = dp(3);
         r.setPadding(p, p, p, p);
         r.setBackground(round(0x14FFFFFF, 8));
 
-        TextView s = tv(sym, 10, C_ACC);
+        TextView s = tv(sym, 10, C_ACC_HI);
         s.setGravity(Gravity.CENTER);
-        r.addView(s, new LinearLayout.LayoutParams(GmMiniBar.dp(c, 18),
+        r.addView(s, new LinearLayout.LayoutParams(dp(18),
                 LinearLayout.LayoutParams.WRAP_CONTENT));
 
         LinearLayout box = new LinearLayout(c);
@@ -653,30 +1467,31 @@ final class GmMiniBarView extends FrameLayout {
         TextView n = tv(t.name, 11, C_TXT);
         n.setSingleLine(true);
         n.setEllipsize(TextUtils.TruncateAt.END);
-        TextView a = tv(t.artist, 9, C_SUB);
+        TextView a = tv(t.artist == null ? "" : t.artist, 9, C_SUB);
         a.setSingleLine(true);
         a.setEllipsize(TextUtils.TruncateAt.END);
         box.addView(n);
         box.addView(a);
         LinearLayout.LayoutParams lb = new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        lb.leftMargin = GmMiniBar.dp(c, 4);
+        lb.leftMargin = dp(4);
         r.addView(box, lb);
 
         if (onRight != null) {
-            TextView plus = tv("\uFF0B", 12, C_ACC);
-            plus.setGravity(Gravity.CENTER);
-            plus.setOnClickListener(new View.OnClickListener() {
+            final String tip = rightTip == null ? "操作" : rightTip;
+            TextView side = tv(rightSym == null ? "\uFF0B" : rightSym, 14, C_ACC_HI);
+            side.setGravity(Gravity.CENTER);
+            side.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     try {
+                        GmUtil.log("【GmMiniBar】👆 点了 " + tip + "：" + t.name);
                         onRight.run();
                     } catch (Throwable ignore) {
                     }
                 }
             });
-            r.addView(plus, new LinearLayout.LayoutParams(GmMiniBar.dp(c, 34),
-                    GmMiniBar.dp(c, BTN_H)));
+            r.addView(side, new LinearLayout.LayoutParams(dp(34), dp(BTN_H)));
         }
 
         if (onClick != null) {
@@ -693,21 +1508,51 @@ final class GmMiniBarView extends FrameLayout {
         return r;
     }
 
-    // ══════════════════════════════ 状态刷新（播放器直接回调） ══════════════════════════════
+    /* ══════════════════════════════ 状态刷新 ══════════════════════════════ */
 
     void applyState(GmMusicPlayer.State s) {
         try {
-            if (s == null) return;
-            GmMusicPlayer.Track t = s.track;
-            boolean has = t != null;
-            vTitle.setText(has ? t.name : "未在播放");
-            vArtist.setText(has ? (t.artist.length() == 0 ? "—" : t.artist)
-                    : (s.preparing ? "加载中…" : "点 ♪ 去选歌"));
-            if (s.error != null && s.error.length() > 0) vArtist.setText(s.error);
+            if (s == null || vTitle == null) return;
 
-            vBtnLoop.setText(s.loop == GmMusicPlayer.LOOP_ONE ? "\u2460"
-                    : (s.loop == GmMusicPlayer.LOOP_SHUFFLE ? "\u2936" : "\u21BB"));
-            vBtnPlay.setText(s.playing ? "\u275A\u275A" : "\u25B6");
+            GmMusicPlayer.Track t = s.track;
+            boolean has = (t != null);
+            boolean err = (s.error != null && s.error.length() > 0);
+
+            String title;
+            if (err) {
+                title = s.error;
+            } else if (has) {
+                String a = t.artist == null ? "" : t.artist.trim();
+                title = a.length() == 0 ? t.name : (t.name + " \u00B7 " + a);
+            } else {
+                title = s.preparing ? "加载中…" : "还没有歌 —— 点 \u266A 搜一首";
+            }
+            if (!title.equals(lastTitle)) {
+                lastTitle = title;
+                vTitle.setText(title);
+            }
+
+            String glyph = (s.playing ? "\u275A\u275A" : "\u25B6") + (err ? "!" : "");
+            if (!glyph.equals(lastPlayGlyph)) {
+                lastPlayGlyph = glyph;
+                vBtnPlay.setText(s.playing ? "\u275A\u275A" : "\u25B6");
+                vBtnPlay.setTextColor(err ? 0xFFFF6B6B : C_TXT);
+            }
+
+            boolean loopOne = (s.loop == GmMusicPlayer.LOOP_ONE);
+            boolean shuffle = (s.loop == GmMusicPlayer.LOOP_SHUFFLE);
+            if (loopOne != lastLoopOne || shuffle != lastShuffle) {
+                lastLoopOne = loopOne;
+                lastShuffle = shuffle;
+                vBtnLoop.setText(loopOne ? "\u21BB1" : "\u21BB");
+                vBtnLoop.setTextColor(loopOne ? C_ACC_HI : C_TXT);
+                vBtnShuffle.setTextColor(shuffle ? C_ACC_HI : C_TXT);
+                try {
+                    vBtnLoop.setBackground(round(loopOne ? C_BTN_HI : C_BTN, 9));
+                    vBtnShuffle.setBackground(round(shuffle ? C_BTN_HI : C_BTN, 9));
+                } catch (Throwable ignore) {
+                }
+            }
 
             curDur = s.dur;
             vDur.setText(fmt(s.dur));
@@ -719,20 +1564,13 @@ final class GmMiniBarView extends FrameLayout {
                 }
             }
 
-            // 封面（由播放器联网，只在内存）
             if (has) ensureCover(t.id);
             else {
                 coverWanted = -1L;
-                vCover.setImageBitmap(null);
+                if (vCover != null) vCover.setImageBitmap(null);
             }
 
-            // 歌词（同上）
-            if (has) ensureLyric(t.id);
-            else {
-                lrcId = -1L;
-                setLyricHint("——");
-            }
-
+            syncLyric(s);
             highlight(s.pos);
         } catch (Throwable e) {
             GmUtil.logFail("【GmMiniBar】刷新失败", e);
@@ -742,7 +1580,7 @@ final class GmMiniBarView extends FrameLayout {
     private void ensureCover(final long id) {
         if (coverWanted == id) return;
         coverWanted = id;
-        vCover.setImageBitmap(null);
+        if (vCover != null) vCover.setImageBitmap(null);
         GmMusicPlayer p = pl();
         if (p == null) return;
         p.cover(id, new GmMusicPlayer.Cb<Bitmap>() {
@@ -758,120 +1596,66 @@ final class GmMiniBarView extends FrameLayout {
         });
     }
 
-    private void ensureLyric(final long id) {
-        if (lrcId == id) return;
-        lrcId = id;
-        setLyricHint("歌词加载中…");
-        GmMusicPlayer p = pl();
-        if (p == null) return;
-        p.lyric(id, new GmMusicPlayer.Cb<String>() {
-            @Override
-            public void on(String lrc) {
-                try {
-                    if (lrcId != id) return;
-                    if (lrc == null || lrc.length() == 0) {
-                        setLyricHint("这首歌没有歌词");
-                    } else {
-                        buildLyric(lrc);
-                    }
-                } catch (Throwable ignore) {
+    /* ══════════════════════════════ 心跳 ══════════════════════════════
+     *  ★ GmMusicPlayer 的心跳是 `if (mp != null) notifyState()` —— 没歌 / 播完 /
+     *    暂停时 mp 可能为 null ⇒ 一次都不推。而"歌词下载完 → 卡片补上"正好在这段时间。
+     *    ⇒ 卡片自己再来一拍（iOS 也是卡片自己定时器驱动）。
+     */
+
+    private final Runnable tick = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                GmMusicPlayer p = pl();
+                if (p != null) applyState(p.state());
+            } catch (Throwable ignore) {
+            }
+            ui.postDelayed(this, 500L);
+        }
+    };
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        try {
+            ui.removeCallbacks(tick);
+            ui.postDelayed(tick, 500L);
+            ui.post(new Runnable() {
+                @Override
+                public void run() {
+                    applyPlayLayout(layoutT);
                 }
-            }
-        });
-    }
+            });
 
-    private static String fmt(int ms) {
-        if (ms <= 0) return "0:00";
-        int s = ms / 1000;
-        return String.format("%d:%02d", s / 60, s % 60);
-    }
-
-    private void setLyricHint(String s) {
-        try {
-            vLyricBox.removeAllViews();
-            lrcViews.clear();
-            lrcMs.clear();
-            curLine = -1;
-            TextView t = tv(s, 10, C_SUB);
-            t.setGravity(Gravity.CENTER);
-            t.setPadding(0, GmMiniBar.dp(getContext(), 12), 0, 0);
-            vLyricBox.addView(t);
         } catch (Throwable ignore) {
         }
     }
 
-    private void buildLyric(String src) {
+    @Override
+    protected void onDetachedFromWindow() {
         try {
-            vLyricBox.removeAllViews();
-            lrcViews.clear();
-            lrcMs.clear();
-            curLine = -1;
-            Object[] p = GmMusicPlayer.parseLrc(src);
-            long[] ms = (long[]) p[0];
-            String[] tx = (String[]) p[1];
-            if (ms.length == 0) {
-                setLyricHint("这首歌没有歌词");
-                return;
+            ui.removeCallbacks(tick);
+            cancelFollowResume();
+            if (layoutAnim != null) {
+                layoutAnim.cancel();
+                layoutAnim = null;
             }
-            int dp2 = GmMiniBar.dp(getContext(), 2);
-            for (int i = 0; i < ms.length; i++) {
-                final long at = ms[i];
-                TextView t = tv(tx[i], 10, C_SUB);
-                t.setPadding(0, dp2, 0, dp2);
-                t.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        GmMusicPlayer pp = pl();
-                        if (pp != null) pp.seekTo((int) at);      // 点歌词 = 跳过去
-                    }
-                });
-                vLyricBox.addView(t, new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT));
-                lrcViews.add(t);
-                lrcMs.add(Long.valueOf(at));
-            }
-        } catch (Throwable t) {
-            GmUtil.logFail("【GmMiniBar】铺歌词失败", t);
+        } catch (Throwable ignore) {
         }
+        super.onDetachedFromWindow();
     }
 
-    private void highlight(int pos) {
-        if (lrcMs.isEmpty()) return;
-        int idx = -1;
-        for (int i = 0; i < lrcMs.size(); i++) {
-            if (lrcMs.get(i).longValue() <= pos) idx = i;
-            else break;
-        }
-        if (idx == curLine) return;
-        curLine = idx;
+    @Override
+    protected void onSizeChanged(int w, int h, int ow, int oh) {
+        super.onSizeChanged(w, h, ow, oh);
         try {
-            for (int i = 0; i < lrcViews.size(); i++) {
-                TextView t = lrcViews.get(i);
-                boolean on = (i == idx);
-                t.setTextColor(on ? C_ACC : C_SUB);
-                t.setTextSize(TypedValue.COMPLEX_UNIT_SP, on ? 11.5f : 10f);
-            }
-            if (idx >= 0 && idx < lrcViews.size()) {
-                final int top = lrcViews.get(idx).getTop();
-                final View tv2 = lrcViews.get(idx);
-                vLyricScroll.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            int h = vLyricScroll.getHeight();
-                            int th = tv2.getHeight();
-                            vLyricScroll.smoothScrollTo(0, Math.max(0, top - h / 2 + th / 2));
-                        } catch (Throwable ignore) {
-                        }
-                    }
-                });
-            }
+            applyPlayLayout(layoutT);
+            /* 尺寸变了：**不用重抓任何东西** —— 材质是纯绘制，跟着 View 尺寸自动画。 */
         } catch (Throwable ignore) {
         }
     }
 
-    // ══════════════════════════════ 初始摆放 ══════════════════════════════
+    /* ══════════════════════════════ 初始摆放 ══════════════════════════════ */
 
     void bootstrap() {
         post(new Runnable() {
@@ -883,22 +1667,20 @@ final class GmMiniBarView extends FrameLayout {
                     int ph = p == null ? 0 : p.getHeight();
                     int y = GmMiniBar.loadY(-1);
                     if (y < 0) {
-                        // ★★ 2026-10-06 修「按钮不生效」：
-                        //   原来贴底只留 24dp ⇒ **按钮行正好落在系统手势导航区里**，
-                        //   触摸被系统接走（看着就像按钮坏了）。
-                        //   改成**上抬 96dp**，稳稳避开手势区。
-                        setY(ph > 0 ? Math.max(0, ph - getHeight() - GmMiniBar.dp(c, 96))
-                                : GmMiniBar.dp(c, 360));
+                        // ★ 之前贴底只留 24dp ⇒ 按钮行落在系统手势区里，触摸被系统接走。
+                        //   改成上抬 96dp。
+                        setY(ph > 0 ? Math.max(0, ph - getHeight() - dp(96)) : dp(360));
                     } else {
-                        setY(GmMiniBar.dp(c, y));
+                        setY(dp(y));
                     }
                     int x = GmMiniBar.loadX(-1);
-                    setX(x < 0 ? GmMiniBar.dp(c, 10) : GmMiniBar.dp(c, x));
+                    setX(x < 0 ? dp(10) : dp(x));
                     clamp();
                     post(new Runnable() {
                         @Override
                         public void run() {
                             clamp();
+                            applyPlayLayout(layoutT);
                         }
                     });
                 } catch (Throwable ignore) {
@@ -925,11 +1707,35 @@ final class GmMiniBarView extends FrameLayout {
         }
     }
 
-    // ══════════════════════════════ 拖动 ══════════════════════════════
+    /* ══════════════════════════════ 触摸探针 ══════════════════════════════ */
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        try {
+            if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                long now = System.currentTimeMillis();
+                if (now - lastTouchLog > 2000) {
+                    lastTouchLog = now;
+                    GmUtil.log("【GmMiniBar】👋 触摸到达卡片 ("
+                            + (int) ev.getX() + "," + (int) ev.getY() + ")"
+                            + " 位置=(" + GmMiniBar.px2dp(getContext(), getX())
+                            + "," + GmMiniBar.px2dp(getContext(), getY()) + ")dp"
+                            + " 尺寸=" + GmMiniBar.px2dp(getContext(), getWidth())
+                            + "×" + GmMiniBar.px2dp(getContext(), getHeight()) + "dp");
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    /* ══════════════════════════════ 拖动 ══════════════════════════════ */
 
     private final class Drag implements View.OnTouchListener {
         private float rx, ry;
         private int sx, sy;
+        /** ★ 这一次手势**真的移动过**吗（没动就别重抓背景，否则点一下就闪）。 */
+        private boolean moved;
 
         @Override
         public boolean onTouch(View v, MotionEvent e) {
@@ -940,16 +1746,24 @@ final class GmMiniBarView extends FrameLayout {
                         sy = (int) getY();
                         rx = e.getRawX();
                         ry = e.getRawY();
+                        moved = false;
                         try {
                             ViewGroup par = (ViewGroup) getParent();
                             if (par != null) par.requestDisallowInterceptTouchEvent(true);
                         } catch (Throwable ignore) {
                         }
                         return true;
-                    case MotionEvent.ACTION_MOVE:
-                        setX(sx + (e.getRawX() - rx));      // 横竖都能拖
-                        setY(sy + (e.getRawY() - ry));
+                    case MotionEvent.ACTION_MOVE: {
+                        float nx = sx + (e.getRawX() - rx);
+                        float ny = sy + (e.getRawY() - ry);
+                        /* 超过 3px 才算"真拖"（手指轻微抖动不算） */
+                        if (!moved && (Math.abs(nx - sx) > 3f || Math.abs(ny - sy) > 3f)) {
+                            moved = true;
+                        }
+                        setX(nx);
+                        setY(ny);
                         return true;
+                    }
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
                         try {
@@ -958,8 +1772,16 @@ final class GmMiniBarView extends FrameLayout {
                         } catch (Throwable ignore) {
                         }
                         clamp();
-                        GmMiniBar.savePos(GmMiniBar.px2dp(getContext(), getX()),
-                                GmMiniBar.px2dp(getContext(), getY()));
+                        /* ★★ 2026-10-25 主人报：「点击卡片空白处都会闪一下」
+                         *   真因：Drag 挂在整卡 setOnTouchListener 上，ACTION_DOWN 就 return true
+                         *        ⇒ **任何一次点击**都会走到 ACTION_UP（当时会去抓屏 ⇒ 闪）
+                         *        ⇒ 抓背景要"藏自己 40ms" ⇒ 闪。
+                         *   修法：这次手势**没真的移动过**就什么都不做。 */
+                        if (moved) {
+                            GmMiniBar.savePos(GmMiniBar.px2dp(getContext(), getX()),
+                                    GmMiniBar.px2dp(getContext(), getY()));
+                            /* ★ 只存位置。材质是纯绘制 ⇒ **不重抓、不闪**。 */
+                        }
                         return true;
                     default:
                         return false;
@@ -971,12 +1793,14 @@ final class GmMiniBarView extends FrameLayout {
         }
     }
 
-    // ══════════════════════════════ 拉伸 ══════════════════════════════
+    /* ══════════════════════════════ 拉伸（起点+总位移，别改成累加增量） ══════════════════════════════ */
 
     private final class Resize implements View.OnTouchListener {
         private final int corner;
         private float rx, ry;
         private int sx, sy, sw, sh;
+        /** ★ 尺寸**真的变过**吗（没变就别重抓背景）。 */
+        private boolean resized;
 
         Resize(int corner) {
             this.corner = corner;
@@ -994,6 +1818,7 @@ final class GmMiniBarView extends FrameLayout {
                         sy = (int) getY();
                         sw = getWidth();
                         sh = getHeight();
+                        resized = false;
                         try {
                             ViewGroup par = (ViewGroup) getParent();
                             if (par != null) par.requestDisallowInterceptTouchEvent(true);
@@ -1007,8 +1832,8 @@ final class GmMiniBarView extends FrameLayout {
                         int nw = (int) (left ? sw - dx : sw + dx);
                         int nh = (int) (top ? sh - dy : sh + dy);
                         int nx = sx, ny = sy;
-                        int minW = GmMiniBar.dp(c, MIN_W), minH = GmMiniBar.dp(c, MIN_H);
-                        int maxW = GmMiniBar.dp(c, MAX_W), maxH = GmMiniBar.dp(c, MAX_H);
+                        int minW = dp(MIN_W), minH = dp(MIN_H);
+                        int maxW = dp(MAX_W), maxH = dp(MAX_H);
                         if (nw < minW) {
                             if (left) nx = sx + (sw - minW);
                             nw = minW;
@@ -1019,6 +1844,7 @@ final class GmMiniBarView extends FrameLayout {
                         }
                         if (nw > maxW) nw = maxW;
                         if (nh > maxH) nh = maxH;
+                        if (nw != sw || nh != sh) resized = true;
                         setX(nx);
                         setY(ny);
                         ViewGroup.LayoutParams lp = getLayoutParams();
@@ -1035,9 +1861,12 @@ final class GmMiniBarView extends FrameLayout {
                         } catch (Throwable ignore) {
                         }
                         clamp();
-                        GmMiniBar.saveSize(GmMiniBar.px2dp(c, getWidth()),
-                                GmMiniBar.px2dp(c, getHeight()),
-                                GmMiniBar.px2dp(c, getX()), GmMiniBar.px2dp(c, getY()));
+                        if (resized) {
+                            GmMiniBar.saveSize(GmMiniBar.px2dp(c, getWidth()),
+                                    GmMiniBar.px2dp(c, getHeight()),
+                                    GmMiniBar.px2dp(c, getX()), GmMiniBar.px2dp(c, getY()));
+                            /* 同上：只存尺寸，不重抓。 */
+                        }
                         return true;
                     default:
                         return false;

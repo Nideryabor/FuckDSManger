@@ -53,7 +53,10 @@ public final class GmHtmlHook extends XC_MethodHook {
     // ─────────────────────── 候选混淆名 ───────────────────────
 
     /** 语言判断工具（R8 合并类）—— 2.6.1=`v7a` / 2.6.2=`oaa` / **2.7.1=`hea`** */
-    private static final String[] CAND_LANG = {"hea", "oaa"};
+    private static final String[] CAND_LANG = {"nja", "hea", "oaa"};
+    // ★ 2.7.2 = **nja**（abstract class, super Lmja）
+    //   证据：`M(Ljava/lang/String;Ljava/lang/String;Z)Z` 全树唯一命中；
+    //   相邻重载 L(String,String,Z)Z / J(String)Z / O(I,String)String 与 2.7.1 的 hea 同族
 
     /**
      * 「持有 mermaid WebView」的那个混淆类 —— 从它身上<b>伸手拿</b> WebView 子类的 Class。
@@ -358,7 +361,7 @@ public final class GmHtmlHook extends XC_MethodHook {
             // ★ 关键取舍：装载落点在、语言闸门不在 ⇒ **整体不启用**。
             //   ```html 根本走不到 WebView 那条路，装了也没人调用；
             //   而装一半（语言闸门在、装载不在）会让界面顶着"mermaid 渲染失败"——比不做还糟。
-            sWhy = "语言闸门 v7a.M(String,String,boolean) 没找到（装载落点已就绪但不启用）";
+            sWhy = "语言闸门 M(String,String,boolean) 没找到（2.7.2 应为 nja；装载落点已就绪但不启用）";
             GmUtil.log("hookM FAIL html → " + sWhy);
             return 0;
         }
@@ -533,7 +536,9 @@ public final class GmHtmlHook extends XC_MethodHook {
                     //          → **2.7.1=`hea.G`**（方法体逐条相同：equals/equalsIgnoreCase）
                     //   证据：oaa.T/U/Y ↔ hea.F/G/K，整体位移 3 位且方法体一一对应
                     //         （T/F=endsWith · U/G=equals · Y/K=startsWith）
-                    if (!"G".equals(m.getName()) && !"U".equals(m.getName())) continue;
+                    // 方法名：2.6.2=`U` → 2.7.1=`G` → **2.7.2=`M`**
+                    //   （2.7.2 实测 `nja.M(String,String,Z)Z` 全树唯一；相邻重载 L/J/O 同族）
+                    if (!"M".equals(m.getName()) && !"G".equals(m.getName()) && !"U".equals(m.getName())) continue;
                     if (!Modifier.isStatic(m.getModifiers())) continue;
                     if (m.getReturnType() != boolean.class) continue;
                     Class<?>[] ps = m.getParameterTypes();
@@ -542,7 +547,7 @@ public final class GmHtmlHook extends XC_MethodHook {
                     m.setAccessible(true);
                     XposedBridge.hookMethod(m, new LangHook());
                     hooked++;
-                    GmUtil.log("hookM html count=1 cls=" + name + ".U(String,String,boolean)");
+                    GmUtil.log("hookM html count=1 cls=" + name + "." + m.getName() + "(String,String,boolean)");
                     break;
                 }
             } catch (Throwable t) {

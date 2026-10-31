@@ -161,7 +161,60 @@ layoutinspect-mcp/backup/
 /ios-port/
 
 # ============================================================
-#  2026-10-24 · 隐私防护（抓包/诊断数据里常带真实标识）
+#  ★★★ 2026-10-25 数据类目录 —— 第三道锁
+#
+#  背景：「只提交 ios-port 的源码和文档」是个很自然的想法，但那个目录里
+#        躺着**真实用户数据**，比源码危险得多：
+#
+#     iphone/*.db          真·聊天记录库（100 个会话 / 544KB）
+#     iphone/*.ips         崩溃日志（进程 / 内存 / 路径）
+#     iphone/*-blob*.bin   服务端下发设置 blob
+#     analysis/mmkv-dump/  MMKV 真身解析（user / modelConfig / welcomeMsg）
+#     analysis/raw-evidence/  原始证据（mmkv.default 256KB）
+#     analysis/*-ipa/      解包后的宿主 App
+#     uitree/              视图树 dump
+#     dist/ out/ *.ipa     产物
+#
+#  `/ios-port/` 那条一去掉，上面这些就全裸 ⇒ 按目录名再挡一遍。
+# ============================================================
+ios-port/iphone/
+ios-port/analysis/mmkv-dump/
+ios-port/analysis/raw-evidence/
+ios-port/analysis/*-ipa/
+ios-port/analysis/main.strings
+ios-port/uitree/
+ios-port/tmp/
+ios-port/dist/
+ios-port/out/
+ios-port/backups/
+ios-port/app/
+# 兜底：任何位置的聊天库 / MMKV / 崩溃日志 / blob
+*.db
+*.db-shm
+*.db-wal
+*.ips
+*.mmkv
+*-blob*.bin
+
+# ============================================================
+#  ★★ 2026-10-25 口令文件 —— 双保险
+#
+#  第一道：上面 `/ios-port/` 已经把整个目录挡在外面（现在生效的就是它）。
+#  第二道：下面这几条**不依赖目录级忽略**，任何位置都挡 ——
+#          万一哪天有人去掉 `/ios-port/` 想「只提交源码」，
+#          .env 系文件仍然进不去。
+#
+#  ⚠️ 目标是「.env 永远不进库」，不是「藏起来」。所以：
+#     · 模板 .env.example 只放占位符，可以入库
+#     · 任何 .env.bak-* 快照都是真口令，一并不许进
+# ============================================================
+.env
+.env.*
+.env.bak*
+*.env.bak*
+# 模板放行（占位符，无真实口令）
+!.env.example
+
 #  ⚠️ 提醒：抓包分析写进文档时「只写结论，不抄样本」
 #     设备清单 / user uuid / uid / token / 手机号 —— 看一眼就够，别落盘
 # ============================================================
@@ -170,3 +223,6 @@ layoutinspect-mcp/backup/
 /tmp/
 # iOS 侧 dump（含真实 MMKV / 聊天库）
 /ios-port/
+
+# 含提权细节，禁止入库/打包
+专题/2026-10-30-提权通道与防护失效.md

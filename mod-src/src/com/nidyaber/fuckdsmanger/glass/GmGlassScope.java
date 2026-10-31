@@ -57,22 +57,21 @@ public final class GmGlassScope {
      * 宿主升级时按 {@code 专题/逆向方法-混淆指纹定位.md} 重新定位即可。
      */
     private static final String[][] BTN_ANCHORS = {
-            // ── 2026-10-24 重定位（宿主 **2.7.1** / vc287）──
-            //    判据：SourceInfo 串 **行号一条没变**（AppButton.kt:298 仍是 298）+ 形参逐位对齐
-            //    工具：tools/locate_by_sourceinfo.py（本轮新建）
-            //    ⚠️ 上一轮（2.6.2）的值 pic/n93/ur6/rd7/p5b 全部作废
-            {"kmc", "b"}, {"kmc", "c"}, {"kmc", "d"},              // AppButton(298/339) / AppFullWidthButton(412)
-            {"rb3", "a"}, {"rb3", "b"}, {"rb3", "c"}, {"rb3", "d"}, // AppIconButton(80/55) / AppIconToggleButton(228/203)
+            // ── 2026-10-31 重定位（宿主 **2.7.2** / vc289）──
+            //    判据：SourceInfo 串（`类.方法 (File.kt:行)`）精确对位，工具 tools/si_exact.py
+            //    ⚠️ 上一轮（2.7.1）的值 kmc/rb3/x4c/lv6/oh7/fxb 全部作废
+            //    ⚠️ 注意 kmc 在 2.7.2 的「Modifier.paint 真身」是 qx6，但**按钮**跑去了 zi9
+            //       ⇒ 这里必须写死 zi9，不能走 GmRemap.cls("kmc")（那会返回 qx6）
+            {"zi9", "a"}, {"zi9", "b"}, {"zi9", "c"},     // AppButton(102/298) / AppButton(339) / AppFullWidthButton(412)
+            {"de",  "G"}, {"de",  "H"}, {"de",  "I"}, {"de",  "J"}, // AppIconButton(80/55/164/228) / AppIconToggleButton(203)
 
             // ── 3.30.1 追加：主人点名「深度思考这种可点击有事件的也是按钮」 ──
-            //    ⚠️ 2.7.1：这三条跟着各自业务域被 R8 拆到了不同碎片！
-            //       jtb 在 2.7.1 拆成 szb(消息单元) + x4c(输入/横幅/通话设置) + fxb(对话框/工具栏)
-            {"x4c", "q"},     // InputModeToggleButton.kt:37   输入模式开关（jtb.i → x4c.q）
-            {"lv6", "c"},     // AppSelectableChip.kt:68       可选芯片（深度思考/专家模式，ur6.c → lv6.c）
-            {"oh7", "b"},     // PromptTemplateView.kt:341     PromptFeatureChip（rd7.a → oh7.b）
-            {"oh7", "c"},     // PromptTemplateView.kt:309     PromptFeatureSkeletonChip（rd7.b → oh7.c）
-            {"fxb", "h"},     // ChatInputToggleableToolView.kt:90（p5b.f → fxb.h）
-            {"fxb", "r"},     // ChatInputToggleableToolView.kt:206  ToggleLottieIcon（p5b.q → fxb.r）
+            {"vcc", "i"},     // InputModeToggleButton.kt:37   输入模式开关（x4c.q → vcc.i）
+            {"a41", "b"},     // AppSelectableChip.kt:33/68    可选芯片（深度思考/专家模式，lv6.c → a41.b）
+            {"h67", "c"},     // PromptTemplateView.kt:341     PromptFeatureChip（oh7.b → h67.c）
+            {"h67", "d"},     // PromptTemplateView.kt:309     PromptFeatureSkeletonChip（oh7.c → h67.d）
+            {"mdb", "k"},     // ChatInputToggleableToolView.kt:90（fxb.h → mdb.k）
+            {"mdb", "z"},     // ChatInputToggleableToolView.kt:206  ToggleLottieIcon（fxb.r → mdb.z）
     };
 
     /**

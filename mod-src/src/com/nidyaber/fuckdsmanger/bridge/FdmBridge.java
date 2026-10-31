@@ -644,7 +644,91 @@ public final class FdmBridge {
         } catch (Throwable t) {
             GmUtil.logFail("【FdmBridge】pin 表写入失败（只靠影子键了）", t);
         }
+        // ★ 3.72.8 · 补 A/B 分组号（放在最后：主通道 / 缓存 / 影子 / pin 都写完再补）
+        try {
+            abIdPatch(ctx, sp, bare);
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】补 _id_ 失败（不影响主通道）", t);
+        }
     }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  A/B 分组号（`kv_remote_settings_id_<键>`）🐲 2026-10-31（3.72.8）
+    // ══════════════════════════════════════════════════════════════════
+    /**
+     * 宿主每个灰度键都配一个 `kv_remote_settings_id_<键>`（int64）。
+     *
+     * <h3>为什么必须补（真因是读过宿主 2.7.2 的 `mj7.b()` 才明白的）</h3>
+     * 宿主把每个下发键做成一对 {@code (key, "kv_remote_settings_id_"+key)}：
+     * <pre>
+     *   if (新 desc 里带这个 key) {
+     *       拿本轮的 id → 盖掉 _id_ → 刷 kv_remote_settings_&lt;key&gt; → 进内存 map
+     *   } else {
+     *       走「老缓存的 _id_」那条路            ← 不写 = 这条不成立
+     *   }
+     * </pre>
+     * 而我们的实例是**会话中途才初始化**的 ⇒ 永远不会再收到一次下发 ⇒
+     * 凡是「我们新写进去、宿主自己没下发过」的键，`_id_` 是空的 ⇒
+     * **它永远进不了宿主那个内存 map**，而宿主 {@code getXxx} 优先读 map ⇒
+     * 表现就是「键写了、面板上有值、宿主不认」。
+     *
+     * <h3>两条安全约束</h3>
+     * <ul>
+     *   <li><b>只在缺失时补</b> —— 宿主已有真 id 就一个字节都不动（覆盖真 id 等于伪造下发批次）。</li>
+     *   <li><b>不知道就不写</b> —— 值取自 {@link #AB_IDS}（= 本机真实下发的那份），
+     *       表里没有的键宁可不写，也不编一个假 id 骗服务端。</li>
+     * </ul>
+     */
+    private static void abIdPatch(Context ctx, SharedPreferences sp, String bare) {
+        if (bare == null || bare.isEmpty() || bare.startsWith("key_")) return;  // 本地键没有 _id_
+        String idKey = "kv_remote_settings_id_" + bare;
+        try {
+            if (sp.contains(idKey)) return;                                     // ★ 宿主已有 ⇒ 不碰
+        } catch (Throwable ignore) {
+        }
+        String vid = null;
+        for (String[] p : AB_IDS) {
+            if (p[0].equals(bare)) {
+                vid = p[1];
+                break;
+            }
+        }
+        if (vid == null) return;
+        GmStore.write(ctx, idKey, vid, "l");                                    // type=l（long）
+        GmUtil.log("【FdmBridge】✅ 补 A/B 分组号 " + idKey + " = " + vid + "（宿主原本没有）");
+    }
+
+    /**
+     * AB 分组号真值表 —— 键 → `kv_remote_settings_id_<键>` 的值。
+     *
+     * <p>来源：**`tmp/abcfg-2.7.2.json`**（2026-10-31 从宿主 2.7.2 的 AB 配置里解出来的全量 22 项，
+     * 逐项 `val` + `vid`）。宿主升级后要重新抓一份 —— 见
+     * `专题/2026-10-31-火山引擎二进制与灰度实读.md`。
+     */
+    private static final String[][] AB_IDS = {
+            {"android_apk_link", "20189068"},
+            {"authed_pow_functions", "20185740"},
+            {"dead_link_detection", "20192926"},
+            {"deep_think_button_suffix", "20205441"},
+            {"ds_settings_enabled", "20218786"},
+            {"enable_google_sign_in_captcha", "20186036"},
+            {"hcaptcha_enabled", "20194470"},
+            {"launch_clean_session_interval_seconds", "20186799"},
+            {"max_input_files", "20185664"},
+            {"max_upload_file_size", "20185380"},
+            {"normal_history_and_file_token_limit", "20220303"},
+            {"one_tap_login_enabled", "20196881"},
+            {"pow_header_paths", "20189347"},
+            {"query_files_time_interval", "20186902"},
+            {"query_title_time_interval", "20187746"},
+            {"r1_history_and_file_token_limit", "20220302"},
+            {"report_http_biz_error", "20187030"},
+            {"should_use_sm_device_id", "20185402"},
+            {"show_new_chat_button_above_input", "20211224"},
+            {"sm_pass_code_type", "20185378"},
+            {"stop_stream_wait_times", "20186226"},
+            {"support_chat_file_exts", "20217168"},
+    };
 
     /** pin 表是否已经从存储里全量同步过（幂等标记）。 */
     private static volatile boolean sPinsSynced = false;

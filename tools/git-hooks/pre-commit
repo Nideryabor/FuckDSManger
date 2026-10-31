@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# ============================================================
+#  pre-commit —— 提交前的最后一道闸（尼得亚伯 · 2026-10-25）
+#
+#  为什么需要它：
+#    .gitignore 是**建议**不是**保证**。这些情况它拦不住：
+#      · git add -f            强制加
+#      · git commit -a         已跟踪文件的改动
+#      · git mv                改名绕过
+#      · 以后有人改 .gitignore
+#    而 hook 是在 git 真正落提交那一刻跑的 —— 拦得住上面全部。
+#
+#  守什么：
+#    ① .env 系文件
+#    ② 里面的**真口令值**（万一被贴进某个 md）
+#    ③ 真实容器 UUID / 用户 UUID
+#    ④ 聊天库 / 崩溃日志 / MMKV / blob
+#    ⑤ 单文件 > 20MB（防止误提交 ipa / dylib / 解包 App）
+#
+#  装：
+#    cp tools/git-hooks/pre-commit .git/hooks/pre-commit
+#    chmod +x .git/hooks/pre-commit
+#
+#  临时绕过（**想清楚再用**）：
+#    git commit --no-verify
+# ============================================================
+set -u
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$ROOT" || exit 0
+
+fail=0
+say() { printf '\033[31m✗ %s\033[0m\n' "$1"; fail=1; }
+warn() { printf '\033[33m⚠ %s\033[0m\n' "$1"; }
+
+# 本次要提交的文件（新增/修改/改名，含 -f 强加的）
+FILES=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null)
+[ -z "$FILES" ] && exit 0
+
+# ---------- ① .env 系 ----------
+ENVHIT=$(printf '%s\n' "$FILES" | grep -E '(^|/)\.env($|\.)|\.env\.bak' || true)
+if [ -n "$ENVHIT" ]; then
+    say "有 .env 系文件被暂存了（口令就在这里）："
+    printf '%s\n' "$ENVHIT" | sed 's/^/     /'
+fi
+
+# ---------- ② 真口令值 ----------
+ENVF="$ROOT/ios-port/.env"
+if [ -f "$ENVF" ]; then
+    PW=$(awk -F= '/^IPHONE_PW=/{printf "%s",$2}' "$ENVF" 2>/dev/null)
+    if [ -n "${PW:-}" ]; then
+        HIT=""
+        while IFS= read -r f; do
+            [ -f "$f" ] || continue
+            grep -qF -- "$PW" "$f" 2>/dev/null && HIT="$HIT $f"
+        done <<EOF
+$FILES
+EOF
+        [ -n "$HIT" ] && say "口令明文出现在这些文件里：$HIT"
+    fi
+
+    # ---------- ③ 真实 UUID ----------
+    CONT=$(basename "$(dirname "$(awk -F= '/^APP_DOCS=/{print $2}' "$ENVF" 2>/dev/null)")" 2>/dev/null)
+    UIDS=""
+    [ -n "${CONT:-}" ] && UIDS="$CONT"
+    for db in "$ROOT"/ios-port/iphone/*.db; do
+        [ -f "$db" ] || continue
+        b=$(basename "$db" .db)
+        case "$b" in *-*-*-*-*) UIDS="$UIDS $b"; break ;; esac
+    done
+    for u in $UIDS; do
+        HIT=""
+        while IFS= read -r f; do
+            [ -f "$f" ] || continue
+            grep -qF -- "$u" "$f" 2>/dev/null && HIT="$HIT $f"
+        done <<EOF
+$FILES
+EOF
+        [ -n "$HIT" ] && say "真实 UUID（$(printf '%s' "$u" | cut -c1-8)…）出现在：$HIT"
+    done
+fi
+
+# ---------- ④ 数据类文件 ----------
+DATAHIT=$(printf '%s\n' "$FILES" | grep -E '\.(db|db-shm|db-wal|ips|mmkv)$|-blob[^/]*\.bin$|/iphone/|/mmkv-dump/|/raw-evidence/|/-ipa/' || true)
+if [ -n "$DATAHIT" ]; then
+    say "有真实数据/解包产物被暂存了："
+    printf '%s\n' "$DATAHIT" | sed 's/^/     /'
+fi
+
+# ---------- ⑤ 大文件 ----------
+while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    sz=$(stat -c%s "$f" 2>/dev/null || echo 0)
+    if [ "$sz" -gt 20971520 ]; then
+        warn "$(printf '%s' "$f") 有 $((sz/1048576))MB（>20MB），确定要提交？"
+    fi
+done <<EOF
+$FILES
+EOF
+
+if [ "$fail" = 1 ]; then
+    printf '\n\033[31m提交已阻断。\033[0m\n'
+    printf '  想清楚后强行提交：git commit --no-verify\n'
+    printf '  相关说明：ios-port/docs/54 · docs/55\n\n'
+    exit 1
+fi
+exit 0

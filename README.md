@@ -93,6 +93,7 @@
 | 灰度机制怎么设计的 | `专题/灰度/00-灰度机制与思路.md` |
 | 提示词怎么不被看见 | `专题/系统提示词-不留痕投递.md` |
 | 怎么让模块自己发消息 | `专题/发送链路-gh2.S-2026-10-05.md` |
+| **想抓设备日志（LSPosed / 崩溃 / app 运行）** | `tools/logs/README.md`（网关，`sh devlog.sh sync`） |
 | 怎么构建 | `pipeline/README-构建.md` + `mod-src/README.md` |
 | **能不能商用 / 第三方资源归属** | `LICENSE` + `THIRD-PARTY-NOTICES.md` |
 | 还没做完的事 | `专题/待办与遗留.md` · `大纲.md` |

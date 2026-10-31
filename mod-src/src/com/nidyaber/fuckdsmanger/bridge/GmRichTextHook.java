@@ -61,24 +61,35 @@ public final class GmRichTextHook extends XC_MethodHook {
     // ─────────────────────── 候选混淆名（升级后重新反查，别猜）───────────────────────
 
     /** AnnotatedString —— implements CharSequence，字段 b=text（2.6.2=ln → **2.7.1=mn**） */
-    private static final String[] CAND_KN = {"mn", "ln"};
+    private static final String[] CAND_KN = {"sn", "mn", "ln"};
+    // ★ 2.7.2 = **sn**：implements CharSequence + a:List/b:String/c:ArrayList/d:ArrayList
+    //   + ctor (String,List)&(List,String) 与 2.7.1 的 mn 逐位同（只多一个 static e:Lng9;）
+    //   ⚠️ 2.7.2 的 mn 已换主人（1 字段）⇒ 必须放第一位
     /** AnnotatedString.Builder —— 字段 a=StringBuilder、b=ArrayList；k()=toAnnotatedString（jn → **kn**） */
-    private static final String[] CAND_IN = {"kn", "jn"};
+    private static final String[] CAND_IN = {"qn", "kn", "jn"};
+    // ★ 2.7.2 = **qn**：a:StringBuilder + b:ArrayList（= Builder 的指纹）
     /** SpanStyle —— toString "SpanStyle(color="，15 参构造器（y2a → **m6a**） */
-    private static final String[] CAND_SPAN = {"m6a", "y2a"};
+    private static final String[] CAND_SPAN = {"tba", "m6a", "y2a"};
+    // ★ 2.7.2 = **tba**（15 字段 / 15 参构造器 / 含 "SpanStyle(" 串）
+    //   证据：ctor `(JJ,fs4,ds4,es4,vq4,String,J,il0,jwa,kr6,J,cua,ny9)`
+    //   对照 2.7.1 m6a `(JJ,wq4,uq4,vq4,mp4,String,J,pk0,zqa,mp6,J,yoa,nt9)` 逐位同序
+    //   ⚠️ 2.7.2 的 m6a/y2a 已换主人（1~2 字段）⇒ 必须把 tba 放第一位
     /** FontWeight —— 字段 a:I（oo4 → **wq4**） */
-    private static final String[] CAND_WEIGHT = {"wq4", "oo4"};
+    private static final String[] CAND_WEIGHT = {"fs4", "wq4", "oo4"};   // 2.7.2 = fs4（b~/f:自引用 + a:I，与 wq4 全同）
     /** FontStyle —— 字段 a:I（0=Normal 1=Italic）（mo4 → **uq4**） */
-    private static final String[] CAND_STYLE = {"uq4", "mo4"};
+    private static final String[] CAND_STYLE = {"ds4", "uq4", "mo4"};    // 2.7.2 = ds4（a:I）
     /** TextDecoration —— 字段 a:I（0=None 1=Underline 2=LineThrough）（xka → **yoa**） */
-    private static final String[] CAND_DECO = {"yoa", "xka"};
+    private static final String[] CAND_DECO = {"cua", "yoa", "xka"};     // 2.7.2 = cua（b~/d:自引用 + a:I，与 yoa 全同）
     /** MarkdownTextKt（R8 合并类）—— 里面那个 `k(AnnotatedString,Modifier,Colors,Config,Composer,II)`
      *  <p>2.6.2=`bz0.y(Lln;Lgc7;Lkoa;Lk;Lby4;II)V`
      *  <p>**2.7.1=`q13.k(Lmn;Leg7;Ljsa;Lk;Ln05;II)V`** ★ 七参逐位全对
      *  （`ln→mn` `gc7→eg7` `koa→jsa` `k→k`(未改名) `by4→n05`），方法名 `y→k`
      *  <p>⚠️ 2.7.1 的 `bz0` 是**别的类**（同名换主人）⇒ 已从候选里移除，
      *  否则 findClass 成功但方法对不上，只会浪费一次尝试。 */
-    private static final String[] CAND_MT = {"q13", "bz0"};
+    private static final String[] CAND_MT = {"k27", "q13", "bz0"};
+    // ★ 2.7.2 = **k27**：`.method public static final b(Lsn;Lyj7;Lbya;Lk;Lr15;II)V`
+    //   全树唯一命中（`sn`=AnnotatedString 已确认；`yj7`=Modifier、`bya`=Colors、`r15`=Composer 均与表一致）
+    //   方法名 `k`(2.7.1) → **`b`**(2.7.2)
 
     // ─────────────────────── 宿主类句柄 ───────────────────────
 
@@ -741,7 +752,8 @@ public final class GmRichTextHook extends XC_MethodHook {
                 Method target = null;
                 for (Method m : c.getDeclaredMethods()) {
                     // 方法名：2.6.2=`y` → **2.7.1=`k`**（都接受，按签名再筛）
-                    if (!"k".equals(m.getName()) && !"y".equals(m.getName())) continue;
+                    // 方法名：2.6.2=`y` → 2.7.1=`k` → **2.7.2=`b`**（都接受，按签名再筛）
+                    if (!"b".equals(m.getName()) && !"k".equals(m.getName()) && !"y".equals(m.getName())) continue;
                     if (!Modifier.isStatic(m.getModifiers())) continue;
                     if (m.getReturnType() != void.class) continue;
                     Class<?>[] ps = m.getParameterTypes();
@@ -782,7 +794,7 @@ public final class GmRichTextHook extends XC_MethodHook {
                 // ① SpanStyle
                 cSpan = load(cl, CAND_SPAN);
                 if (cSpan == null) return bail("SpanStyle 没找到");
-                if (cSpan.getDeclaredFields().length < 14) return bail("f0a 字段数不足，不像 SpanStyle");
+                if (cSpan.getDeclaredFields().length < 14) return bail("SpanStyle 候选字段数不足（2.7.2 应为 tba/15 字段），不像 SpanStyle");
                 for (Constructor<?> ct : cSpan.getDeclaredConstructors()) {
                     Class<?>[] ps = ct.getParameterTypes();
                     if (ps.length == 15 && ps[0] == long.class && ps[1] == long.class

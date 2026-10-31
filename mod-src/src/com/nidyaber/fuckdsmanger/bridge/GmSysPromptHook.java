@@ -104,10 +104,14 @@ public final class GmSysPromptHook extends XC_MethodHook {
      * 命中的那个类的 <b>&lt;clinit&gt;</b> 就是它的序列化器（`ca8.(fqn, obj, 10)`），
      * 而数据类本身 = 构造 {@code <init>(…)V} 且<b>参数签名吻合</b>的那个。
      *
-     * <p>当前实测：**2.6.2 (vc281) = `tv1`**（2.6.1 为 `qv1`）。
+     * <p>当前实测：**2.7.2 (vc289) = `ly1`**（2.7.1 为 `sx1`、2.6.2 为 `tv1`）。
      */
     private static final String[] CANDIDATE_NAMES = {
-            "sx1",                                   // deepseek 2.7.1 (vc287) 实测 ★ 新值优先
+            "ly1",                                   // deepseek 2.7.2 (vc289) 实测 ★ 新值优先
+                                                     //   证据：字段 12/12 逐位同序（Companion/l:[Lqh6;/a:St/b:Int/c:St/d:List/e:Z/f:Z/g:St/h:Z/i:St/j:St/k:St）
+                                                     //        + ctor 逐位 `(String,Integer,String,ArrayList,ZZString,Z,String,String,I)V`
+                                                     //        + 反射：2.7.2 全树唯一命中该构造器前缀
+            "sx1",                                   // deepseek 2.7.1 (vc287)
             "tv1",                                   // deepseek 2.6.2 (vc281)
     };
 
