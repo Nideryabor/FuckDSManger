@@ -1317,6 +1317,11 @@ public final class FdmBridge {
                 GmMiniBar.setOn(ctx, v);
                 return true;
             }
+            // ★ 2026-10-31 · 回复建议条：同上（拨开关当场长出来/收掉）
+            if (GmSugBar.K_ON.equals(key)) {
+                GmSugBar.setOn(ctx, v);
+                return true;
+            }
         } catch (Throwable t) {
             GmUtil.log("【FdmBridge】" + key + " 专用入口失败（退回裸写）：" + t);
         }
@@ -1924,6 +1929,7 @@ public final class FdmBridge {
                 try { o.put("probe_on", GmProbe.shown()); } catch (Throwable ignore) { }
                 try { o.put("note_on", GmNote.isOn(ctx)); } catch (Throwable ignore) { }
                 try { o.put("bar_on", GmMiniBar.isOn(ctx)); } catch (Throwable ignore) { }
+                try { o.put("sugbar_on", GmSugBar.enabled(ctx)); } catch (Throwable ignore) { }
                 // ★ 2026-10-10（3.62.0）：把「系统提示词内容」也回传 ——
                 //   新版界面用它给「系统提示词内容」那张源卡片**播种**（第一次读一次，
                 //   免得主人原来写的字在模型换成卡片之后没地方找）。

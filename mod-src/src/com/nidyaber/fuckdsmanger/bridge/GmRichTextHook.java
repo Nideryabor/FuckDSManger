@@ -296,10 +296,70 @@ public final class GmRichTextHook extends XC_MethodHook {
             if (emitPlain(nb, orig, text, cur, text.length(), bare)) changed = true;
         }
 
+        // ★ 2026-10-31：把这一条消息里收到的建议**一次性交出去**（建议条模式才用得上）。
+        //   放在这里而不是 emitSuggest 里逐条交，是为了让"这一条消息的整组建议"
+        //   作为一个整体上屏（否则一条一条替换，界面会抖）。
+        publishBar();
+
         // ★ 一个字都没动（例如整条只是 "a < b" 这种误命中）⇒ 返回 null，
         //   别白白造一个新 AnnotatedString 去顶替原来的
         if (!changed) return null;
         return mToKn.invoke(nb);
+    }
+
+    // ═══════════════════════════ ①.5 建议条（旁路，默认关）═══════════════════════════
+    //
+    //  主人 2026-10-31 给的思路（iOS 那边本来就这么干）：
+    //    「hook AI 类，把气泡里的回复建议内容抹掉，单独几个气泡以最后一条 AI 气泡为基准
+    //      跟在后面」⇒ 绕开宿主那层选中手势，自己画。
+    //
+    //  Android 这边做不到"往 LazyColumn 里插条目"（那是 Compose 的事，我们没有 compose 编译器），
+    //  所以落成**窗口上自己的一层 View**（{@link GmSugBar}）—— 位置在输入框上沿，
+    //  也就是"最后一条 AI 气泡下面"那个位置。触摸事件到我们手里，宿主的手势层碰不到它。
+
+    /** 本次 rebuild 期间收到的建议（跨线程不安全没关系：rebuild 只在组合线程跑） */
+    private static final ThreadLocal<java.util.ArrayList<GmSugBar.Chip>> sBar =
+            new ThreadLocal<java.util.ArrayList<GmSugBar.Chip>>() {
+                @Override
+                protected java.util.ArrayList<GmSugBar.Chip> initialValue() {
+                    return new java.util.ArrayList<GmSugBar.Chip>();
+                }
+            };
+
+    /** 建议条开关（500ms 缓存，理由同 {@link #bareCached()}：这里是每帧都过的热点）。 */
+    private static volatile boolean sBarOn = false;
+    private static volatile long sBarAt = 0L;
+
+    private static boolean sugBarOn() {
+        long now = System.currentTimeMillis();
+        if (sBarAt == 0L || now - sBarAt > 500L) {
+            try {
+                sBarOn = GmSugBar.enabled(com.nidyaber.fuckdsmanger.gm.GmUtil.app());
+            } catch (Throwable t) {
+                sBarOn = false;
+            }
+            sBarAt = now;
+        }
+        return sBarOn;
+    }
+
+    private static void sugBarAdd(GmRichText.Seg s) {
+        try {
+            sBar.get().add(new GmSugBar.Chip(s.sugLabel, s.sugPayload));
+        } catch (Throwable t) {
+            GmUtil.logFail("richHook.sugBarAdd", t);
+        }
+    }
+
+    private static void publishBar() {
+        try {
+            java.util.ArrayList<GmSugBar.Chip> list = sBar.get();
+            if (list.isEmpty()) return;
+            list.clear();
+            GmSugBar.publish(list);
+        } catch (Throwable t) {
+            GmUtil.logFail("richHook.publishBar", t);
+        }
     }
 
     /**
@@ -469,6 +529,14 @@ public final class GmRichTextHook extends XC_MethodHook {
      * 绝不让 {@code <Suggestion>} 这一串露在界面上（那比不渲染更难看）。
      */
     private static void emitSuggest(Object nb, GmRichText.Seg s) throws Exception {
+        // ★ 2026-10-31：**建议条模式**（`fuckds_sugbar_on`）—— 气泡里只留白，
+        //   建议改由我们自己画的那条 View 显示（主人给的 iOS 思路）。
+        //   为什么要这条旁路：2.7.2 的 InlineTextSelection 在文字节点之上铺了选中手势层，
+        //   下面那些"塞进 AnnotatedString 的链接"点不到 ⇒ 换成摸得到的 View 承载。
+        if (sugBarOn()) {
+            sugBarAdd(s);
+            return;                       // ★ 一个字节都不往气泡里写（这正是"抹掉"）
+        }
         if (GmRichLink.ready()) {
             GmRichLink.emitLink(nb, "fdm_sug", s.sugLabel, s.sugPayload);
             GmUtil.logOnce("richHook.sug." + s.sugPayload.hashCode(),

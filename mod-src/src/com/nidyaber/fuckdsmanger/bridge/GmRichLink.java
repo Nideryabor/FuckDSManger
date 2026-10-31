@@ -52,27 +52,28 @@ import java.lang.reflect.Proxy;
  */
 public final class GmRichLink {
 
-    // ─────────────────────── 候选混淆名（2.6.2 实测；升级后重新反查，别猜）───────────────────────
+    // ─────────────────────── 候选混淆名（升级后重新反查，别猜）───────────────────────
 
-    /** AnnotatedString.Builder —— 字段 a=StringBuilder、c=ArrayList；h(yi6)=pushLink（jn → **kn**） */
-    private static final String[] CAND_IN  = {"kn", "jn"};
-    /** LinkAnnotation（sealed 父类）
-     *  <p>★ 2026-10-24（2.7.1 定位）：**`gm6`** —— `em6`/`fm6` 的 `.super` 就是它，
-     *  且 `kn.h(Lgm6;)I` 正是 pushLink 的唯一签名 ⇒ 铁证。
-     *  <p>⚠️ 旧值 `yi6` 在 2.7.1 里**被 R8 复用给了别的类**（`si6` 是个
-     *  `(sf9,hg9,I)` 的无关类）⇒ `isAssignableFrom` 永远 false ⇒
-     *  「建议链接能力未就绪 ⇒ 只剥标签」⇒ `<Suggestion>` 变成**点不动的死文字**。
-     *  这就是主人报的「点了建议没反应」的真凶。 */
-    private static final String[] CAND_SI6 = {"gm6", "yi6"};
-    /** LinkAnnotation.Clickable —— <init>(String tag, tra styles, hm6 listener)
-     *  <p>2.7.1 = `em6`（字符串 `LinkAnnotation.Clickable(tag=` 落在它身上） */
-    private static final String[] CAND_RI6 = {"em6", "wi6", "xi6"};
-    /** TextLinkStyles —— <init>(y2a,y2a,y2a,y2a)，四个都可空（vna → **tra**） */
-    private static final String[] CAND_CLA = {"tra", "vna"};
-    /** LinkInteractionListener —— 接口，唯一方法 a(Lem6;)V = onClick(link)
-     *  <p>★ 2026-10-24（2.7.1 定位）：**`hm6`** —— `em6`/`fm6` 的字段 `c:Lhm6;`
-     *  就是 listener 位；且它是 `public interface abstract`（可动态代理）⇒ 铁证。 */
-    private static final String[] CAND_TI6 = {"hm6", "zi6"};
+    /** AnnotatedString.Builder —— 字段 a=StringBuilder、b/c=ArrayList；h(link)=pushLink
+     *  <p>2.5.2 `in` · 2.6.x `jn` → `kn` · 2.7.1 `kn` · **2.7.2 `qn`**
+     *  <p>★ 2026-10-31：`qn` 逐条对上了 —— `implements Appendable` / `a:StringBuilder`
+     *  / `b:ArrayList` / `h(Lho6;)I`（pushLink）/ `e(String)`（append）/ `f()`（pop）/ `k()Lsn;` */
+    private static final String[] CAND_IN  = {"qn", "kn", "jn", "in"};
+    /** LinkAnnotation.Clickable —— <init>(String tag, styles, listener)
+     *  <p>2.6.2 `wi6` · 2.7.1 `em6` · **2.7.2 `fo6`**（串 `LinkAnnotation.Clickable(tag=` 落在它身上；
+     *  `.super Lho6;`、字段 `a:String` / `b:Lgxa;` / `c:Lio6;`） */
+    private static final String[] CAND_RI6 = {"fo6", "em6", "wi6", "xi6"};
+
+    // ★★ 2026-10-31 大改：**只猜两个名字，其余全部结构派生**
+    //
+    //   原来五个类各自拿候选名硬撞（kn/gm6/em6/tra/hm6），升级后只要有一个名字被 R8
+    //   复用给别的类，就会「找得到类、结构却不对」⇒ 自检失败 ⇒ 建议按钮降级成死文字。
+    //   2.7.1 的 `yi6` 就这么坑过一次，2.7.2 又轮到整串（五个全换）⇒ 主人报「点不动」。
+    //
+    //   现在的做法：**只认 Builder**（它的指纹最硬：pushLink 是唯一的 `(X)I` 单参返回 int），
+    //   然后从 `h(X)I` 的**参数类型**反推出 LinkAnnotation 父类 `X`，
+    //   再从 Clickable 的构造器 `(String, Y, Z)` 推出 `Y`=TextLinkStyles、`Z`=Listener。
+    //   **一个名字变了只影响一条候选**，其余自己是算出来的。
 
     // ─────────────────────── 宿主类句柄 ───────────────────────
 
@@ -126,61 +127,66 @@ public final class GmRichLink {
             if (sTried) return sReady;
             sTried = true;
             try {
-                cIn  = load(cl, CAND_IN);
-                cSi6 = load(cl, CAND_SI6);
-                cRi6 = load(cl, CAND_RI6);
-                cCla = load(cl, CAND_CLA);
-                cTi6 = load(cl, CAND_TI6);
+                // ① Builder —— 唯一需要"猜名字"的地方，但要过结构自检才认
+                cIn = null;
+                for (String n : CAND_IN) {
+                    Class<?> c = load(cl, new String[]{n});
+                    if (c != null && isBuilder(c)) {
+                        cIn = c;
+                        break;
+                    }
+                }
+                if (cIn == null) return bail("Builder 没找到（候选 " + join(CAND_IN) + " 都不像）");
 
-                if (cIn  == null) return bail("Builder(in) 没找到");
-                if (cSi6 == null) return bail("LinkAnnotation(si6) 没找到");
-                if (cRi6 == null) return bail("LinkAnnotation.Clickable(ri6) 没找到");
-                if (cCla == null) return bail("TextLinkStyles(cla) 没找到");
-                if (cTi6 == null) return bail("LinkInteractionListener(ti6) 没找到");
+                // ② LinkAnnotation 父类 ← pushLink 的**参数类型**（不猜名字）
+                Method push = findPushLink(cIn);
+                if (push == null) return bail("Builder 里没有 h(X)I（pushLink）");
+                cSi6 = push.getParameterTypes()[0];
 
-                // ★ 结构自检（防"名字被复用"挂错类）
-                if (!cSi6.isAssignableFrom(cRi6)) return bail("ri6 不是 si6 的子类（不像 Clickable）");
-                if (!cTi6.isInterface()) return bail("ti6 不是接口（没法动态代理）");
-
-                // ri6 <init>(String, cla, ti6)
-                for (Constructor<?> ct : cRi6.getDeclaredConstructors()) {
-                    Class<?>[] ps = ct.getParameterTypes();
-                    if (ps.length == 3 && ps[0] == String.class && ps[1] == cCla && ps[2] == cTi6) {
+                // ③ Clickable ← 候选名里唯一「是 cSi6 子类 + 有 (String,?,?) 构造器」的
+                cRi6 = null;
+                for (String n : CAND_RI6) {
+                    Class<?> c = load(cl, new String[]{n});
+                    if (c == null || !cSi6.isAssignableFrom(c)) continue;
+                    Constructor<?> ct = pickCtor(c, cSi6);
+                    if (ct != null) {
+                        cRi6 = c;
                         ctRi6 = ct;
                         break;
                     }
                 }
-                if (ctRi6 == null) return bail("ri6 的 (String,cla,ti6) 构造器没找到");
+                if (cRi6 == null) return bail("Clickable 没找到（候选 " + join(CAND_RI6) + " 都对不上）");
                 ctRi6.setAccessible(true);
 
-                // cla <init>(SpanStyle×4) —— 参数类型就是 SpanStyle 的混淆名，我们只数个数
+                // ④ TextLinkStyles / Listener ← 直接从构造器参数推出来
+                Class<?>[] ps = ctRi6.getParameterTypes();       // (String, styles, listener)
+                cCla = ps[1];
+                cTi6 = ps[2];
+                if (!cTi6.isInterface()) return bail("listener 位不是接口（没法动态代理）：" + cTi6.getName());
+
+                ctCla = null;
                 for (Constructor<?> ct : cCla.getDeclaredConstructors()) {
                     if (ct.getParameterCount() == 4) {
                         ctCla = ct;
                         break;
                     }
                 }
-                if (ctCla == null) return bail("cla 的 4 参构造器没找到");
+                if (ctCla == null) return bail("TextLinkStyles 的 4 参构造器没找到");
                 ctCla.setAccessible(true);
 
-                // Builder 三件套：h(si6)=pushLink · e(String)=append · f()=pop
-                for (Method m : cIn.getDeclaredMethods()) {
-                    if (!"h".equals(m.getName())) continue;
-                    Class<?>[] ps = m.getParameterTypes();
-                    if (ps.length == 1 && ps[0] == cSi6 && m.getReturnType() == int.class) {
-                        mPushLink = m;
-                        break;
-                    }
-                }
-                if (mPushLink == null) return bail("Builder.h(si6)I（pushLink）没找到");
+                // ⑤ Builder 三件套
+                mPushLink = push;
                 mPushLink.setAccessible(true);
-
                 mAppendStr = pick(cIn, "e", String.class);
                 mPop = pick(cIn, "f");
                 if (mAppendStr == null) return bail("Builder.e(String) 没找到");
                 if (mPop == null) return bail("Builder.f()（pop）没找到");
 
-                sWhy = "自检全过（in/si6/ri6/cla/ti6）";
+                sWhy = "自检全过（Builder=" + cIn.getSimpleName()
+                        + " · Link=" + cSi6.getSimpleName()
+                        + " · Clickable=" + cRi6.getSimpleName()
+                        + " · Styles=" + cCla.getSimpleName()
+                        + " · Listener=" + cTi6.getSimpleName() + "）";
                 sReady = true;
                 GmUtil.log("richLink 自检 OK：" + sWhy);
                 return true;
@@ -195,6 +201,66 @@ public final class GmRichLink {
                 return false;
             }
         }
+    }
+
+    private static String join(String[] a) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : a) {
+            if (sb.length() > 0) sb.append('/');
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Builder 指纹 —— 三样都要对：
+     * <ol>
+     *   <li>{@code implements Appendable}（AnnotatedString.Builder 就是 Appendable）</li>
+     *   <li>有 {@code a:StringBuilder} 字段（内容就在这里长出来）</li>
+     *   <li>有 {@code h(X)I} 单参返回 int 的方法（唯一 = pushLink）</li>
+     * </ol>
+     * 只对上名字、对不上指纹的 ⇒ **不认**（R8 会把名字挪给别的类，2.7.1 的 {@code yi6} 就坑过）。
+     */
+    private static boolean isBuilder(Class<?> c) {
+        try {
+            if (!Appendable.class.isAssignableFrom(c)) return false;
+        } catch (Throwable t) {
+            return false;
+        }
+        boolean hasSb = false;
+        try {
+            hasSb = c.getDeclaredField("a").getType() == StringBuilder.class;
+        } catch (Throwable ignore) {
+        }
+        if (!hasSb) return false;
+        return findPushLink(c) != null;
+    }
+
+    /** 找 {@code h(X)I}：单参、返回 int。2.7.1/2.7.2 都叫 h；变了名字也能认出来。 */
+    private static Method findPushLink(Class<?> c) {
+        for (Method m : c.getDeclaredMethods()) {
+            if (m.getParameterCount() != 1) continue;
+            if (m.getReturnType() != int.class) continue;
+            Class<?> p = m.getParameterTypes()[0];
+            if (p.isPrimitive() || p == String.class) continue;
+            if (p.getName().startsWith("java.")) continue;
+            if (!"h".equals(m.getName())) continue;      // 名字先按 h 认（两代都没改）
+            return m;
+        }
+        return null;
+    }
+
+    /** 找 {@code (String, styles, listener)} 构造器，且 listener 是接口、styles 不是接口。 */
+    private static Constructor<?> pickCtor(Class<?> c, Class<?> linkSuper) {
+        for (Constructor<?> ct : c.getDeclaredConstructors()) {
+            Class<?>[] ps = ct.getParameterTypes();
+            if (ps.length != 3) continue;
+            if (ps[0] != String.class) continue;
+            if (!ps[2].isInterface()) continue;
+            if (ps[1].isInterface()) continue;
+            return ct;
+        }
+        return null;
     }
 
     private static boolean bail(String why) {

@@ -261,5 +261,19 @@ public final class FdmEntry implements IXposedHookLoadPackage {
                 XposedBridge.log("[FDM] 迷你播放条安装失败（不影响其它钩子）：" + t);
             }
         }
+
+        // ⑫ 回复建议条（2026-10-31）：把 <Suggestion> 从气泡里拿出来，自己在窗口上画一排。
+        //    · 为什么：2.7.2 的 InlineTextSelection 在文字节点之上铺了选中手势层，
+        //      气泡内那些"可点击链接"（GmRichLink）点不到 ⇒ 换成我们自己的 View（摸得到）
+        //    · 跟便签 / 迷你卡同一套路数（挂 decorView、零权限、全程 try/catch）
+        //    · 开关默认关（fuckds_sugbar_on = false）：关着就走气泡内链接那条老路
+        if (isHost(lp.classLoader)) {
+            try {
+                GmSugBar.install(lp.classLoader);
+                XposedBridge.log("[FDM] 回复建议条已安装");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] 回复建议条安装失败（不影响其它钩子）：" + t);
+            }
+        }
     }
 }
