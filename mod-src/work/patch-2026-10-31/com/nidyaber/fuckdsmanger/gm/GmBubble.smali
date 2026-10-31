@@ -2088,6 +2088,40 @@
 .method public static ubMod(Ljava/lang/ClassLoader;Ljava/lang/Object;)Ljava/lang/Object;
     .registers 9
 
+    # ★ 2026-10-31（3.73.6）用户气泡：**先试 GmPrims（按签名），成功就直接返回**。
+    #   只传 p0/p1 ⇒ 没有任何可能 Undefined 的寄存器。
+    #   失败就落回下面原有的 B / C 两条路（一个字节都没删）。
+    invoke-static {p0, p1}, Lcom/nidyaber/fuckdsmanger/bridge/GmPrims;->backgroundAutoBrush(Ljava/lang/ClassLoader;Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v0
+
+    if-nez v0, :ub_auto_color
+
+    const-string v1, "[气泡] 用户气泡"
+
+    const-string v2, "图片底已由 GmPrims 按签名补上"
+
+    invoke-static {v1, v2}, Lcom/nidyaber/fuckdsmanger/gm/GmUtil;->logOnce(Ljava/lang/String;Ljava/lang/String;)V
+
+    return-object v0
+
+    :ub_auto_color
+    invoke-static {p0, p1}, Lcom/nidyaber/fuckdsmanger/bridge/GmPrims;->backgroundAutoColor(Ljava/lang/ClassLoader;Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v0
+
+    if-nez v0, :ub_auto_end
+
+    const-string v1, "[气泡] 用户气泡"
+
+    const-string v2, "颜色/圆角已由 GmPrims 按签名补上"
+
+    invoke-static {v1, v2}, Lcom/nidyaber/fuckdsmanger/gm/GmUtil;->logOnce(Ljava/lang/String;Ljava/lang/String;)V
+
+    return-object v0
+
+    :ub_auto_end
+    # ★ 按签名两条都没成 ⇒ 落回下面的老路子（B / C 按名字）
     const-string v6, "[DIAG] ubMod 进入"
 
     invoke-static {v6}, Lcom/nidyaber/fuckdsmanger/gm/GmUtil;->log(Ljava/lang/String;)V
@@ -2151,10 +2185,11 @@
 
     move-result-object v3
 
-    # ★ 2026-10-31（3.72.11）：用户气泡的刷子底 —— 同样不按名字调了。
-    #   2.7.1 是 `B(Leg7;Lnr0;Lst9;I)Leg7;`，2.7.2 变成 `s(Lyj7;Ljs0;Lsy9;I)Lyj7;`。
-    #   ⇒ 走 GmPrims（按签名找），名字再变也不炸。
-    invoke-static {p0, v2}, Lcom/nidyaber/fuckdsmanger/bridge/GmPrims;->backgroundBrush(Ljava/lang/ClassLoader;[Ljava/lang/Object;)Ljava/lang/Object;
+    # ★ 2026-10-24（3.71.9）：用户气泡的**刷子版**画底原语 —— 与 AI 气泡同一个锚点位移。
+    #   2.7.1 里这里是 `B(Leg7;Lnr0;Lst9;I)Leg7;`（原来的 "y" 被 R8 复用给别的函数了）。
+    const-string v4, "B"
+
+    invoke-static {v3, v4, v2}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;
 
     move-result-object v6
 
@@ -2201,10 +2236,11 @@
 
     move-result-object v3
 
-    # ★ 2026-10-31（3.72.11）：**不再按名字调了**。
-    #   2.7.1 是 `C(Leg7;JLst9;)Leg7;`，2.7.2 变成 `t(Lyj7;JLsy9;)Lyj7;`。
-    #   ⇒ 走 GmPrims（按签名找）。
-    invoke-static {p0, v2}, Lcom/nidyaber/fuckdsmanger/bridge/GmPrims;->background(Ljava/lang/ClassLoader;[Ljava/lang/Object;)Ljava/lang/Object;
+    # ★ 2026-10-24（3.71.9）：用户气泡的**颜色/圆角版**画底原语。
+    #   2.7.1 里是 `C(Leg7;JLst9;)Leg7;`（原来的 "z" 同样被 R8 复用了）。
+    const-string v4, "C"
+
+    invoke-static {v3, v4, v2}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;
 
     move-result-object v6
 
@@ -2381,12 +2417,19 @@
 
     aput-object v4, v2, v3
 
-    # ★ 2026-10-31（3.72.11）：**不再按名字调 "z"**。
-    #   2.7.2 的颜色版背景原语 = `x98.t(Modifier,long,Shape)Modifier`，
-    #   而 `z(View)View` 是 R8 挪过去的**另一个函数** ⇒ 按名调必 NoSuchMethodError
-    #   （真机日志：x98#z[class y6a, class Long, class ib9]）。
-    #   ⇒ 交给 GmPrims.background：按签名找 + 缓存，名字再变也不炸。
-    invoke-static {p0, v2}, Lcom/nidyaber/fuckdsmanger/bridge/GmPrims;->background(Ljava/lang/ClassLoader;[Ljava/lang/Object;)Ljava/lang/Object;
+    const-string v0, "qk7"
+
+    invoke-static {v0}, Lcom/nidyaber/fuckdsmanger/bridge/GmRemap;->cls(Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v0
+
+    invoke-static {v0, p0}, Lde/robv/android/xposed/XposedHelpers;->findClass(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;
+
+    move-result-object v0
+
+    const-string v1, "z"
+
+    invoke-static {v0, v1, v2}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;
 
     move-result-object v0
     :try_end_41
@@ -2412,6 +2455,25 @@
 
     invoke-static {v1, v0}, Lcom/nidyaber/fuckdsmanger/gm/GmUtil;->logFail(Ljava/lang/String;Ljava/lang/Throwable;)V
 
+    # \u2605 2026-10-31\uff083.73.6\uff09**\u8fd9\u91cc\u53ea\u80fd\u78b0 p0 / p1**\u3002
+    #   \u4e0a\u4e00\u7248\u5728\u8fd9\u91cc\u7528\u4e86 v2\uff08args \u6570\u7ec4\uff09\u548c v4\uff08shape\uff09\uff0c\u800c\u5b83\u4eec
+    #   **\u5728\u5f02\u5e38\u8def\u5f84\u4e0a\u53ef\u80fd\u6ca1\u8d4b\u503c** \u21d2 ART \u6821\u9a8c\u5668\u5224 Undefined
+    #   \u21d2 `VerifyError: Verifier rejected class GmBubble` \u21d2 **\u6574\u4e2a\u7c7b\u4e0d\u52a0\u8f7d** \u21d2
+    #   \u6c14\u6ce1/\u80cc\u666f/\u7528\u6237\u6c14\u6ce1\u5168\u90e8\u4e00\u8d77\u6302\uff08\u771f\u673a 13:34 \u5c31\u8fd9\u4e48\u70b8\u7684\uff09\u3002
+    #   \u73b0\u5728\u53ea\u628a p0/p1 \u9012\u8fdb\u53bb\uff0c\u989c\u8272\u548c shape \u7531 Java \u4fa7\u81ea\u5df1\u53d6\u3002
+    invoke-static {p0, p1}, Lcom/nidyaber/fuckdsmanger/bridge/GmPrims;->backgroundAutoColor(Ljava/lang/ClassLoader;Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v0
+
+    if-eqz v0, :gmp_color_ret
+
+    const-string v1, "[\u6c14\u6ce1] \u5e95\u8272\u5df2\u9760 GmPrims \u8865\u4e0a\uff08\u65e7\u540d\u5b57\u5728 2.7.2 \u5df2\u4f5c\u5e9f\uff09"
+
+    invoke-static {v1}, Lcom/nidyaber/fuckdsmanger/gm/GmUtil;->logOnce(Ljava/lang/String;)V
+
+    return-object v0
+
+    :gmp_color_ret
     return-object p1
 .end method
 
@@ -2507,17 +2569,49 @@
     return-object v0
 
     :bub_ready
-    # ★ 2026-10-31（3.72.11）：**不再按名字调**。2.7.2 里刷子版背景原语从 B/y 变成了 `s`，
-    #   而按名字撞的下场就是 NoSuchMethodError（真机 2026-10-31 日志：x98#z[y6a,Long,ib9]）。
-    #   ⇒ 交给桥侧的 GmPrims：它按**签名**（首参=返回类型 + 第 3 参是 Shape）找方法并缓存，
-    #      名字再变也不会炸；找不到就返回 null（调用方退回不注入）。
-    invoke-static {p0, v4}, Lcom/nidyaber/fuckdsmanger/bridge/GmPrims;->backgroundBrush(Ljava/lang/ClassLoader;[Ljava/lang/Object;)Ljava/lang/Object;
+    # ★ 先试 2.7.1 的锚点 B(Modifier, Brush, Shape, int)
+    :try_start_bub_b
+    const-string v6, "B"
+
+    invoke-static {v5, v6, v4}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v0
+    :try_end_bub_b
+    .catchall {:try_start_bub_b .. :try_end_bub_b} :catch_bub_b
+
+    goto :bub_call_done
+
+    :catch_bub_b
+    move-exception v6
+
+    # 退 2.6.x 的老名 y（老宿主上 B 可能不存在）
+    :try_start_bub_y
+    const-string v6, "y"
+
+    invoke-static {v5, v6, v4}, Lde/robv/android/xposed/XposedHelpers;->callStaticMethod(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v0
+    :try_end_bub_y
+    .catchall {:try_start_bub_y .. :try_end_bub_y} :catch_bub_y
+
+    goto :bub_call_done
+
+    :catch_bub_y
+    move-exception v6
+
+    const-string v6, "[\u6c14\u6ce1] \u56fe\u7247\u7248\u6ce8\u5165\u5931\u8d25\uff08B / y \u4e24\u4e2a\u951a\u70b9\u90fd\u4e0d\u5b58\u5728\uff09"
+
+    invoke-static {v6}, Lcom/nidyaber/fuckdsmanger/gm/GmUtil;->log(Ljava/lang/String;)V
+
+    # \u2605 2026-10-31\uff083.73.6\uff09\u540c wrap()\uff1a**\u53ea\u78b0 p0 / p1**\u3002
+    #   v4\uff08args\uff09/v5\uff08qk7 \u7c7b\uff09\u5728\u5f02\u5e38\u8def\u5f84\u4e0a\u53ef\u80fd Undefined \u21d2 VerifyError\u3002
+    invoke-static {p0, p1}, Lcom/nidyaber/fuckdsmanger/bridge/GmPrims;->backgroundAutoBrush(Ljava/lang/ClassLoader;Ljava/lang/Object;)Ljava/lang/Object;
 
     move-result-object v0
 
     if-eqz v0, :bub_call_done
 
-    const-string v6, "[\u6c14\u6ce1] \u56fe\u7247\u7248\u6ce8\u5165\u5931\u8d25\uff08GmPrims \u627e\u4e0d\u5230\u5237\u5b50\u80cc\u666f\u539f\u8bed\uff09"
+    const-string v6, "[\u6c14\u6ce1] \u56fe\u7247\u7248\u6ce8\u5165\u5931\u8d25\uff08GmPrims \u4e5f\u6ca1\u6210\uff09"
 
     invoke-static {v6}, Lcom/nidyaber/fuckdsmanger/gm/GmUtil;->log(Ljava/lang/String;)V
 

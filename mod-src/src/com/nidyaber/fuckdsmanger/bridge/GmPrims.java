@@ -166,16 +166,40 @@ public final class GmPrims {
      */
     public static Object background(ClassLoader cl, Object[] args) {
         try {
-            if (args == null || args.length < 3) return null;
+            if (args == null || args.length < 3) {
+                GmUtil.logOnce("GmPrims.bgColor.argc", "【GmPrims】颜色背景：参数个数不对（" + (args == null ? "null" : String.valueOf(args.length)) + "，要 3）");
+                return null;
+            }
             Object mod = args[0], color = args[1], shape = args[2];
-            if (mod == null || shape == null) return null;
-            if (!(color instanceof Long)) return null;
+            if (mod == null || shape == null) {
+                GmUtil.logOnce("GmPrims.bgColor.null",
+                        "【GmPrims】颜色背景：有参数是 null → mod=" + tn(mod) + " shape=" + tn(shape));
+                return null;
+            }
+            if (!(color instanceof Long)) {
+                GmUtil.logOnce("GmPrims.bgColor.color", "【GmPrims】颜色背景：颜色不是 Long（" + tn(color) + "）");
+                return null;
+            }
             prepare(cl, shape, null);
             Method m = sBgColor;
-            if (m == null) return null;
+            if (m == null) {
+                GmUtil.logOnce("GmPrims.bgColor.nom", "【GmPrims】颜色背景：没找到原语（候选见自检日志）");
+                return null;
+            }
             Class<?>[] ps = m.getParameterTypes();
-            if (!ps[0].isInstance(mod) || !ps[2].isInstance(shape)) return null;
-            return m.invoke(null, mod, Long.valueOf(((Long) color).longValue()), shape);
+            boolean ok0 = ps[0].isInstance(mod);
+            boolean ok2 = ps[2].isInstance(shape);
+            if (!ok0 || !ok2) {
+                GmUtil.logOnce("GmPrims.bgColor.type",
+                        "【GmPrims】颜色背景：参数类型不匹配 —— "
+                                + "ps0=" + ps[0].getSimpleName() + " vs mod(" + tn(mod) + ")=" + ok0 + " · "
+                                + "ps2=" + ps[2].getSimpleName() + " vs shape(" + tn(shape) + ")=" + ok2
+                                + " · 方法=" + name(m));
+                return null;
+            }
+            Object r = m.invoke(null, mod, Long.valueOf(((Long) color).longValue()), shape);
+            GmUtil.logOnce("GmPrims.bgColor.ok", "【GmPrims】颜色背景 OK（" + name(m) + " → " + tn(r) + "）");
+            return r;
         } catch (Throwable t) {
             GmUtil.logOnce("GmPrims.bgColor", "【GmPrims】颜色背景调用失败：" + t);
             return null;
@@ -190,18 +214,141 @@ public final class GmPrims {
      */
     public static Object backgroundBrush(ClassLoader cl, Object[] args) {
         try {
-            if (args == null || args.length < 4) return null;
+            if (args == null || args.length < 4) {
+                GmUtil.logOnce("GmPrims.bgBrush.argc", "【GmPrims】刷子背景：参数个数不对（" + (args == null ? "null" : String.valueOf(args.length)) + "，要 4）");
+                return null;
+            }
             Object mod = args[0], brush = args[1], shape = args[2], alpha = args[3];
-            if (mod == null || brush == null || shape == null) return null;
             int a = (alpha instanceof Integer) ? ((Integer) alpha).intValue() : 0;
+            if (mod == null || brush == null || shape == null) {
+                GmUtil.logOnce("GmPrims.bgBrush.null",
+                        "【GmPrims】刷子背景：有参数是 null → mod=" + tn(mod) + " brush=" + tn(brush) + " shape=" + tn(shape));
+                return null;
+            }
             prepare(cl, shape, brush);
             Method m = sBgBrush;
-            if (m == null) return null;
+            if (m == null) {
+                GmUtil.logOnce("GmPrims.bgBrush.nom",
+                        "【GmPrims】刷子背景：没找到原语（候选见自检日志）");
+                return null;
+            }
             Class<?>[] ps = m.getParameterTypes();
-            if (!ps[0].isInstance(mod) || !ps[1].isInstance(brush) || !ps[2].isInstance(shape)) return null;
-            return m.invoke(null, mod, brush, shape, Integer.valueOf(a));
+            boolean ok0 = ps[0].isInstance(mod);
+            boolean ok1 = ps[1].isInstance(brush);
+            boolean ok2 = ps[2].isInstance(shape);
+            if (!ok0 || !ok1 || !ok2) {
+                GmUtil.logOnce("GmPrims.bgBrush.type",
+                        "【GmPrims】刷子背景：参数类型不匹配 —— "
+                                + "ps0=" + ps[0].getSimpleName() + " vs mod(" + tn(mod) + ")=" + ok0 + " · "
+                                + "ps1=" + ps[1].getSimpleName() + " vs brush(" + tn(brush) + ")=" + ok1 + " · "
+                                + "ps2=" + ps[2].getSimpleName() + " vs shape(" + tn(shape) + ")=" + ok2
+                                + " · 方法=" + name(m));
+                return null;
+            }
+            Object r = m.invoke(null, mod, brush, shape, Integer.valueOf(a));
+            GmUtil.logOnce("GmPrims.bgBrush.ok", "【GmPrims】刷子背景 OK（" + name(m) + " → " + tn(r) + "）");
+            return r;
         } catch (Throwable t) {
             GmUtil.logOnce("GmPrims.bgBrush", "【GmPrims】刷子背景调用失败：" + t);
+            return null;
+        }
+    }
+
+    /** 类型名（诊断用）：把实例写成 `全名(简名)` 或 null。 */
+    private static String tn(Object o) {
+        if (o == null) return "null";
+        try {
+            Class<?> c = o.getClass();
+            return c.getSimpleName();
+        } catch (Throwable t) {
+            return "?";
+        }
+    }
+
+    // ═══════════════════════════ ③ 全自动入口（smali 侧只传两个参数）═══════════════════════════
+    //
+    //  ★ 2026-10-31（3.73.6）为什么要有这一层：
+    //    上一版我在 GmBubble 的 catch 处理器里重建 {modifier, color, shape} 数组，
+    //    用的寄存器（v2/v4）在**异常路径上可能没赋值** ⇒ ART 校验器直接判 Undefined
+    //    ⇒ `VerifyError: Verifier rejected class GmBubble` ⇒ **整个类不加载**
+    //    ⇒ 所有气泡逻辑（含老代码）一起死，表现成"背景没了、用户气泡不显示"。
+    //
+    //    教训：**smali 的 catch 处理器里只能碰"一定已定义"的寄存器**——
+    //    在这里就是形参 p0/p1。所以把 color/shape/brush 的重建全部搬到 Java，
+    //    smali 侧退化成「p0 + p1 进，结果出」，没有寄存器可踩。
+
+    /**
+     * 反射入口：{@code GmBubble} 里的 public static。
+     *
+     * <p>为什么必须反射：{@code GmBubble} 在底座（classes.dex，包 {@code gm}），
+     * 本类在桥（classes2.dex，包 {@code bridge}）—— 跨包 + 可能跨 ClassLoader，
+     * 直连会 {@code IllegalAccessError} / {@code NoClassDefFoundError}。
+     *
+     * <p>**两个 loader 都试**（先宿主这份，再自己这份）—— 哪份能看见 {@code GmBubble} 用哪份。
+     */
+    private static Object callGm(ClassLoader cl, String m, Class<?>[] sig, Object[] args) {
+        ClassLoader[] tries = new ClassLoader[]{cl, GmPrims.class.getClassLoader()};
+        for (ClassLoader l : tries) {
+            if (l == null) continue;
+            try {
+                Class<?> c = Class.forName("com.nidyaber.fuckdsmanger.gm.GmBubble", true, l);
+                Method mm = c.getDeclaredMethod(m, sig);
+                mm.setAccessible(true);
+                return mm.invoke(null, args);
+            } catch (Throwable ignore) {
+                // 换下一个 loader
+            }
+        }
+        GmUtil.logOnce("GmPrims.callGm." + m, "【GmPrims】反射调 GmBubble." + m + " 失败（两个 ClassLoader 都没成）");
+        return null;
+    }
+
+    /**
+     * 颜色版背景 —— **只给 ClassLoader 和 Modifier**，颜色/形状自己去 GmBubble 取。
+     *
+     * @return 新的 Modifier；任何一步不行 ⇒ null（调用方必须容忍）
+     */
+    public static Object backgroundAutoColor(ClassLoader cl, Object mod) {
+        try {
+            if (mod == null) return null;
+            Object shape = callGm(cl, "shape", new Class<?>[]{ClassLoader.class}, new Object[]{cl});
+            if (shape == null) {
+                GmUtil.logOnce("GmPrims.autoColor.shape", "【GmPrims】颜色底：GmBubble.shape 拿到 null");
+                return null;
+            }
+            Object colorObj = callGm(cl, "colorLong", new Class<?>[]{}, new Object[]{});
+            long color = (colorObj instanceof Long) ? ((Long) colorObj).longValue() : 0L;
+            // 顺手把"底色到底是多少"记下来（排查时最有用的一条）
+            GmUtil.logOnce("GmPrims.autoColor.dbg",
+                    "【GmPrims】颜色底：color=0x" + Long.toHexString(color)
+                            + " shape=" + tn(shape) + " mod=" + tn(mod));
+            return background(cl, new Object[]{mod, Long.valueOf(color), shape});
+        } catch (Throwable t) {
+            GmUtil.logOnce("GmPrims.autoColor", "【GmPrims】颜色底自动入口失败：" + t);
+            return null;
+        }
+    }
+
+    /**
+     * 刷子版背景 —— **只给 ClassLoader 和 Modifier**，Brush/形状自己去 GmBubble 取。
+     *
+     * @return 新的 Modifier；任何一步不行 ⇒ null
+     */
+    public static Object backgroundAutoBrush(ClassLoader cl, Object mod) {
+        try {
+            if (mod == null) return null;
+            Object shape = callGm(cl, "shape", new Class<?>[]{ClassLoader.class}, new Object[]{cl});
+            Object brush = callGm(cl, "imgBrush", new Class<?>[]{ClassLoader.class}, new Object[]{cl});
+            if (shape == null || brush == null) {
+                GmUtil.logOnce("GmPrims.autoBrush.dep",
+                        "【GmPrims】图片底：依赖没就绪 → shape=" + tn(shape) + " brush=" + tn(brush));
+                return null;
+            }
+            GmUtil.logOnce("GmPrims.autoBrush.dbg",
+                    "【GmPrims】图片底：shape=" + tn(shape) + " brush=" + tn(brush) + " mod=" + tn(mod));
+            return backgroundBrush(cl, new Object[]{mod, brush, shape, Integer.valueOf(0)});
+        } catch (Throwable t) {
+            GmUtil.logOnce("GmPrims.autoBrush", "【GmPrims】图片底自动入口失败：" + t);
             return null;
         }
     }
