@@ -309,6 +309,18 @@ public final class GmPrims {
      * @return 新的 Modifier；任何一步不行 ⇒ null（调用方必须容忍）
      */
     public static Object backgroundAutoColor(ClassLoader cl, Object mod) {
+        return backgroundAutoColorOf(cl, mod, false);
+    }
+
+    /**
+     * 同上，但可选择用**用户气泡**的配色。
+     *
+     * <p>★ 2026-10-31（3.73.7）：用户气泡有自己的颜色（{@code GmBubble.uColorLong()}），
+     * 原来这里写死 {@code colorLong()}（助手色）⇒ 用户气泡被染成助手色或干脆没变化。
+     *
+     * @param userColor true = 用 {@code uColorLong()}（用户气泡色）
+     */
+    public static Object backgroundAutoColorOf(ClassLoader cl, Object mod, boolean userColor) {
         try {
             if (mod == null) return null;
             Object shape = callGm(cl, "shape", new Class<?>[]{ClassLoader.class}, new Object[]{cl});
@@ -316,13 +328,19 @@ public final class GmPrims {
                 GmUtil.logOnce("GmPrims.autoColor.shape", "【GmPrims】颜色底：GmBubble.shape 拿到 null");
                 return null;
             }
-            Object colorObj = callGm(cl, "colorLong", new Class<?>[]{}, new Object[]{});
+            Object colorObj = callGm(cl, userColor ? "uColorLong" : "colorLong",
+                    new Class<?>[]{}, new Object[]{});
             long color = (colorObj instanceof Long) ? ((Long) colorObj).longValue() : 0L;
-            // 顺手把"底色到底是多少"记下来（排查时最有用的一条）
-            GmUtil.logOnce("GmPrims.autoColor.dbg",
-                    "【GmPrims】颜色底：color=0x" + Long.toHexString(color)
-                            + " shape=" + tn(shape) + " mod=" + tn(mod));
-            return background(cl, new Object[]{mod, Long.valueOf(color), shape});
+            GmUtil.logOnce("GmPrims.autoColor.dbg" + (userColor ? ".u" : ".a"),
+                    "【GmPrims】颜色底(" + (userColor ? "用户" : "助手") + ")：color=0x"
+                            + Long.toHexString(color) + " shape=" + tn(shape) + " mod=" + tn(mod));
+            Object r = background(cl, new Object[]{mod, Long.valueOf(color), shape});
+            if (r == null) {
+                GmUtil.logOnce("GmPrims.autoColor.fail" + (userColor ? ".u" : ".a"),
+                        "【GmPrims】颜色底(" + (userColor ? "用户" : "助手") + ") 没造出来 —— "
+                                + "颜色版原语=" + (sBgColor == null ? "无" : name(sBgColor)));
+            }
+            return r;
         } catch (Throwable t) {
             GmUtil.logOnce("GmPrims.autoColor", "【GmPrims】颜色底自动入口失败：" + t);
             return null;

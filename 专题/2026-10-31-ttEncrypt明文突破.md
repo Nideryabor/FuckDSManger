@@ -60,13 +60,13 @@ EncryptorUtil.a(int size, byte[] data)
 
 ```
 os / platform / sdk_lib / os_version / os_api
-device_model       : PJZ110
-device_brand       : OnePlus
-device_manufacturer: OnePlus
+device_model       : <真机测试>（已脱敏）
+device_brand       : <真机测试>（已脱敏）
+device_manufacturer: <真机测试>（已脱敏）
 cpu_abi            : arm64-v8a
-resolution         : 3168x1440
-density_dpi        : 640
-rom / rom_version  : V.55bc87c-… / PJZ110_15.0.0.861(CN01)
+resolution         : <真机测试>（已脱敏）
+density_dpi        : <真机测试>（已脱敏）
+rom / rom_version  : <真机测试>（已脱敏）
 is_harmony_os      : 0
 package            : com.deepseek.chat.a
 app_version        : 2.7.2      version_code: 289
@@ -74,7 +74,7 @@ sig_hash           : e89b158e4bcf988ebd09eb83f5378e87   ← ★ 就是 APK 签�
 bd_did             : <设备ID>
 install_id / clientudid / openudid / cdid   ← 四个独立设备标识
 register_time / language / timezone / region / tz_name / sim_region
-carrier            : 中国移动    mcc_mnc: 46000
+carrier            : <真机测试>（已脱敏）    mcc_mnc: <已脱敏>
 access             : wifi
 aid                : 675113 / 240734 / 20005455
 sdk_version_name   : 0.2.5 / 6.17.6

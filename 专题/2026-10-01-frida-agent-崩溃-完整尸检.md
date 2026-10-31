@@ -185,8 +185,8 @@ fd 101: /proc/32419/auxv                     (unowned)   ← ★ 它开了自己
 
 ### 环境指纹（本次补全）
 
-- OnePlus **PJZ110 (OP5D0DL1)** · Android **15 / SDK 35** · `ro.board.platform = sun` (qcom)
-- 内核 `6.6.66-android15-OP-WILD`（clang 19，GKI 风味）
+- 真机测试（机型 / 序列号已脱敏） · Android **15 / SDK 35** · `ro.board.platform = sun` (qcom)
+- 内核 `6.6.66-android15-<OEM>-WILD`（clang 19，GKI 风味）
 - root = **KernelSU + susfs v2.2.0**
 - `sys.use_memfd = false`；`/proc/sys/vm/memfd_noexec` 存在（无 root 读不了）
 

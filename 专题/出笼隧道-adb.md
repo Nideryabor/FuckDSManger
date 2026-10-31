@@ -173,7 +173,7 @@ sh tools/出笼隧道/ro.sh 'head -c 200 /data/data/<包>/shared_prefs/fdm_ui.xm
 
 | 项 | 值 |
 |---|---|
-| 设备 | OnePlus **PJZ110** / Android 15 |
+| 设备 | 真机测试 / Android 15 |
 | Root | **KernelSU-Next**（`com.rifsxd.ksunext`）+ `susfs4ksu` 模块 |
 | 框架 | LSPosed（`org.lsposed.manager`） |
 | 宿主 | `com.deepseek.chat.a` v2.5.2 (vc273) |
