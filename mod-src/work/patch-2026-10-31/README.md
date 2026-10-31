@@ -25,10 +25,16 @@ sh 做包.sh <版本> <vc>
 |---|---|---|
 | `GmNameHook.smali` | 3.72.7 | 账号名分支下标 `0x8` → **`0x9`**（2.7.1 起宿主往 `when` 里插了新分支，`8` 已成 `session_list` 埋点）+ 命中时打一行日志 |
 | `GmDialog.smali` | 3.72.8 | `KEYS/NAMES/TYPES` 三数组 **86 → 90**，末尾补 4 个 AB 键：`max_input_files`(i) · `query_title_time_interval`(i) · `report_http_biz_error`(b) · `stop_stream_wait_times`(i) |
+| `gm/GmBubble.smali` | 3.73.3 | 4 处 `callStaticMethod(cls, "z"/"B"/"C", …)` 全部换成 `GmPrims.background / backgroundBrush`（按签名找，不再猜名字） |
+| `gm/GmBubblePaintHook.smali` | 3.73.3 | `beforeHookedMethod` 顶部加闸：**返回值不是接口就跳过**（Modifier 链式函数才碰） |
+| `GmEntry.smali` | 3.73.3 | `yp1` 的两条假 `FAIL` 改成实话（`logOnce` + 不带堆栈） |
 
-真因与验收见 **`版本/3.72.7~3.72.8.md`**。
+真因与验收见 **`版本/3.72.7~3.72.8.md`** 与 **`版本/3.73.1~3.73.3.md`**。
 
 ## 原版备份
 
 - `backups/GmNameHook-2026-10-31.smali.bak`
 - `backups/GmDialog-2026-10-31.smali.bak`
+- `backups/GmBubble-2026-10-31.smali.bak`
+- `backups/GmBubblePaintHook-2026-10-31.smali.bak`
+- `backups/GmEntry-2026-10-31.smali.bak`
