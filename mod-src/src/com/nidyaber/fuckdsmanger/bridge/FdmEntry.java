@@ -235,6 +235,19 @@ public final class FdmEntry implements IXposedHookLoadPackage {
             }
         }
 
+        // ⑨ 气泡背景 v1（2026-10-31 从零重起）：
+        //    挂点全部来自 2.7.2 的真实静态分析（okb.e → clip(t82.t) → x98.t → yi0 → zi0 → draw），
+        //    在**绘制期**改底色节点 ⇒ 不受 Compose 重组判据影响；形状/裁剪全交给宿主。
+        //    日志写宿主外部目录 files/fdm-bubble.log（adb 可读），不再靠猜。
+        if (isHost(lp.classLoader)) {
+            try {
+                com.nidyaber.fuckdsmanger.gm.GmBubbleBg.install(lp.classLoader);
+                XposedBridge.log("[FDM] 气泡背景 v1 已安装");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] 气泡背景 v1 安装失败（不影响其它钩子）：" + t);
+            }
+        }
+
         // ⑩ 悬浮便签（2026-10-06）：往宿主窗口的 decorView 里塞一张便签浮层。
         //    · 零权限（不用「显示在其他应用上层」）—— 宿主本来就有窗口，我们只是加个子 View
         //    · 钩 `android.app.Activity`（框架类，名字永远不变）的 onResume/onPause

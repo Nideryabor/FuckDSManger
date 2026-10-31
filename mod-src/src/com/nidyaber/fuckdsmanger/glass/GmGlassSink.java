@@ -209,6 +209,283 @@ public final class GmGlassSink {
         } catch (Throwable t) {
             GmUtil.logFail("【GmGlass】画底原语挂载失败", t);
         }
+
+        // ★ 3.73.45：包进 try —— 3.73.44 就是这里抛了异常没人接，
+        //   导致整个 GmGlassSink.install() 静默失败（日志一条都没有）。
+        try {
+            installBubble(cl);
+        } catch (Throwable t) {
+            GmUtil.logFail("【气泡底】installBubble 抛异常", t);
+        }
+    }
+
+    // ═══════════════════ 气泡图片底（输出拦截）═══════════════════
+    //
+    // 为什么走"输出拦截"而不是"改入参"：
+    //   frida 实测确认 —— 往 l23.n(MessageBubbleLayout) 的 args[2] 里塞新 Modifier
+    //   全链路成功（图解码 ✅ BitmapShader ✅ RuntimeShader ✅ ks0 ✅ 写回 ✅），
+    //   但**画面不变**。原因：Compose 的重组判据（changed 位图）是编译期常量，
+    //   外部替换入参不会让它重画。x98.t 的 setResult 无效也是同一个原因。
+    //
+    //   ⇒ 唯一可行的位置是**绘制期**：元素已经拿到 Canvas，直接 drawBitmap 即可。
+    //
+    // 复用 GmGlass 的现成机制：
+    //   · 钩 x98.t 的 afterHookedMethod ⇒ 从返回的 Modifier 链尾掏「背景元素对象」
+    //   · 元素类里找 draw(DrawScope)：1 参 · 返回 void · 参数是**接口**
+    //   · 绘制期 catchCanvas() → Canvas → drawBitmap
+    //
+    // 与玻璃的关系：draw 钩子里「有 brush 就 return（放行）」那条规则保留不动，
+    //   本分支只在**没有 brush** 的元素上接管，两者互斥、不会打架。
+
+    /** 气泡图片底：开关（跟用户气泡开关联动） */
+    private static volatile boolean sBubbleOn = true;
+    /** 记录「气泡背景元素」的类 */
+    private static final Set<Class<?>> sBubbleElemCls = new HashSet<Class<?>>();
+    /** 每个元素对应的「是不是用户气泡」（true=用户 / false=助手） */
+    private static final java.util.Map<Object, Boolean> sElemUser =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<Object, Boolean>());
+    /** 已经画过几次（诊断用） */
+    private static volatile int sBubblePaintCount = 0;
+    private static volatile int sBubbleEnter = 0;
+    private static volatile int sBubbleIndepEnter = 0;
+    /** ★ 强引用：hook 对象被 GC 后回调会静默失效（今天踩过） */
+    private static volatile XC_MethodHook sBubbleHook = null;
+    private static volatile boolean sBubbleLogged = false;
+
+    /** 位图缓存：按文件名区分用户/助手 */
+    private static final java.util.Map<String, android.graphics.Bitmap> sBubbleBmp =
+            new java.util.concurrent.ConcurrentHashMap<String, android.graphics.Bitmap>();
+
+    private static void installBubble(ClassLoader cl) {
+        // ★ 3.73.46：**双保险** —— 两套都上，谁活着谁干活。
+        //   ① PrimitiveHook 里的收集分支（sBubbleWanted）
+        //   ② 独立 hook（有些 ROM 的 XposedBridge 对同一方法多次 hookMethod 会覆盖）
+        try {
+            sBubbleWanted = true;
+            GmUtil.log("【气泡底】① 收集分支已启用");
+        } catch (Throwable t) {
+            GmUtil.logFail("【气泡底】① 启用失败", t);
+        }
+
+        try {
+            Class<?> bg = XposedHelpers.findClass(BG_CLS, cl);
+            for (Method m : bg.getDeclaredMethods()) {
+                if (!BG_METHOD.equals(m.getName())) continue;
+                Class<?>[] p = m.getParameterTypes();
+                if (p.length != 3) continue;
+                if (p[1] != long.class) continue;
+                if (!p[0].isInterface()) continue;
+                sBubbleHook = new BubblePrimitiveHook(p[0]);
+                XposedBridge.hookMethod(m, sBubbleHook);
+                GmUtil.log("【气泡底】② 独立 hook 已挂 " + BG_CLS + "->" + BG_METHOD);
+                return;
+            }
+            GmUtil.log("【气泡底】② 没找到 " + BG_CLS + "->" + BG_METHOD);
+        } catch (Throwable t) {
+            GmUtil.logFail("【气泡底】② 挂载失败", t);
+        }
+    }
+
+    /** 是否启用气泡图片底（PrimitiveHook 里据此收集元素） */
+    private static volatile boolean sBubbleWanted = false;
+
+    /** PrimitiveHook.afterHookedMethod 里调用：收集气泡背景元素 */
+    private static void collectBubbleElement(Class<?> modifierCls, Object ret) {
+        if (!sBubbleWanted) return;
+        try {
+            if (sBubbleEnter < 8) {
+                sBubbleEnter++;
+                GmUtil.log("【气泡底】进入#" + sBubbleEnter + " ret="
+                        + (ret == null ? "null" : "obj"));
+            }
+            if (ret == null) return;
+            Object el = lastElement(modifierCls, ret);
+            if (el == null) {
+                if (sBubbleEnter < 8) GmUtil.log("【气泡底】lastElement=null");
+                return;
+            }
+            // ★ 3.73.47：GmBubble 是**底座里的 smali 类**（没有 Java 源码），
+            //   而 XposedHelpers.findClass(名字, null) 在 R8 改名后找不到。
+            //   ⇒ 用**本类自己的 ClassLoader** 去找，它在同一个 dex 里。
+            boolean user = false;
+            try {
+                Class<?> gb = Class.forName(
+                        "com.nidyaber.fuckdsmanger.gm.GmBubble",
+                        false, GmGlassSink.class.getClassLoader());
+                user = gb.getField("sUDepth").getInt(null) > 0;
+            } catch (Throwable ignore) {
+            }
+            sElemUser.put(el, user);
+            Class<?> ec = el.getClass();
+            if (!sBubbleElemCls.contains(ec)) {
+                int k = hookDrawLike(ec);
+                if (k > 0) {
+                    sBubbleElemCls.add(ec);
+                    GmUtil.log("【气泡底】元素类 " + ec.getName() + " → 挂上 " + k + " 个 draw");
+                } else if (sBubbleEnter < 8) {
+                    GmUtil.log("【气泡底】元素类 " + ec.getName() + " 没找到 draw");
+                }
+            }
+        } catch (Throwable t) {
+            GmUtil.logOnce("bubble.collect.err", "【气泡底】收集出错：" + t);
+        }
+    }
+
+    /** 钩画底原语：只负责"这次背景属于谁"，然后在元素上打记号。 */
+    private static final class BubblePrimitiveHook extends XC_MethodHook {
+        private final Class<?> modifierCls;
+        private volatile int attempts = 0;
+
+        BubblePrimitiveHook(Class<?> modifierCls) {
+            this.modifierCls = modifierCls;
+        }
+
+        @Override
+        protected void afterHookedMethod(MethodHookParam param) {
+            try {
+                if (!sBubbleOn) return;
+                // ★ 3.73.46 无条件首条：证明这个独立 hook 真的被回调了
+                if (sBubbleIndepEnter < 3) {
+                    sBubbleIndepEnter++;
+                    GmUtil.log("【气泡底】② 独立hook进入#" + sBubbleIndepEnter);
+                }
+
+                // ★ 无条件诊断（前 6 次）：确认钩子到底进没进、读取到什么
+                if (sBubbleEnter < 6) {
+                    sBubbleEnter++;
+                    boolean uOn2 = false;
+                    String err = "";
+                    try {
+                        Class<?> gb = XposedHelpers.findClass(
+                                "com.nidyaber.fuckdsmanger.gm.GmBubble", null);
+                        uOn2 = XposedHelpers.getStaticBooleanField(gb, "sUOn");
+                    } catch (Throwable t) {
+                        err = " err=" + t.getClass().getSimpleName() + ":" + t.getMessage();
+                    }
+                    GmUtil.log("【气泡底】进入#" + sBubbleEnter
+                            + " uOn=" + uOn2
+                            + " inBtn=" + GmGlassScope.inButton()
+                            + " ret=" + (param.getResult() == null ? "null" : "obj")
+                            + err);
+                }
+
+                // ★ 3.73.47：不再依赖 sUOn（它是用户气泡开关，且反射读不到）。
+                //   只要求"不在按钮作用域" —— 气泡不是按钮。
+                if (GmGlassScope.inButton()) return;
+
+                Object ret = param.getResult();
+                if (ret == null) return;
+
+                // 从 Modifier 链尾掏出元素
+                Object el = lastElement(modifierCls, ret);
+                if (el == null) return;
+
+                // 这次调用是不是用户气泡？
+                //   用 GmBubble 的 sUDepth —— 但绘制期它可能是 0。
+                //   ⇒ 记成"可能是用户"，真正判角色留到绘制期用宽高/位置判断
+                boolean user = false;
+                try {
+                    Class<?> gb = XposedHelpers.findClass(
+                            "com.nidyaber.fuckdsmanger.gm.GmBubble", null);
+                    user = XposedHelpers.getStaticIntField(gb, "sUDepth") > 0;
+                } catch (Throwable ignore) {
+                }
+                sElemUser.put(el, user);
+
+                // 元素类 → 钩它的 draw（每个类只挂一次）
+                Class<?> ec = el.getClass();
+                if (!sBubbleElemCls.contains(ec)) {
+                    int k = hookDrawLike(ec);
+                    if (k > 0) {
+                        sBubbleElemCls.add(ec);
+                        GmUtil.log("【气泡底】元素类 " + ec.getName() + " → 挂上 " + k + " 个 draw");
+                    }
+                }
+            } catch (Throwable ignore) {
+            }
+        }
+    }
+
+    /**
+     * 绘制期：如果是气泡背景元素，就把图贴上去并吃掉原绘制。
+     *
+     * @return true = 已接管（调用方 setResult(null)）；false = 放行
+     */
+    private static boolean paintBubble(Object drawScope, Object element) {
+        if (!sBubbleOn) return false;
+        Boolean user = sElemUser.get(element);
+        if (user == null) return false;            // 不是气泡背景元素
+
+        Canvas c = null;
+        try {
+            catchCanvas(drawScope.getClass());
+            c = sCurCanvas.get();
+        } catch (Throwable ignore) {
+        }
+        if (c == null) return false;
+
+        float w = dim(drawScope, 0);
+        float h = dim(drawScope, 1);
+        if (w <= 1f || h <= 1f) return false;
+
+        android.graphics.Bitmap bmp = bubbleBitmap(user);
+        if (bmp == null || bmp.isRecycled()) {
+            if (!sBubbleLogged) {
+                sBubbleLogged = true;
+                GmUtil.log("【气泡底】图不可用 ⇒ 放行原绘制");
+            }
+            return false;
+        }
+
+        try {
+            // 圆角裁剪 —— 用宿主 Shape 的话要反射太多，这里用固定圆角，
+            // 与气泡本身的圆角（22dp 左右）基本对齐
+            float r = Math.min(Math.min(w, h) * 0.28f, 34f);
+            int save = c.save();
+            sPath.reset();
+            sRect.set(0, 0, w, h);
+            sPath.addRoundRect(sRect, r, r, Path.Direction.CW);
+            c.clipPath(sPath);
+            Rect src = new Rect(0, 0, bmp.getWidth(), bmp.getHeight());
+            Rect dst = new Rect(0, 0, (int) w, (int) h);
+            sBitmapPaint.setAlpha(255);
+            c.drawBitmap(bmp, src, dst, sBitmapPaint);
+            c.restoreToCount(save);
+
+            int n = ++sBubblePaintCount;
+            if (n == 1 || n == 10 || n % 100 == 0) {
+                GmUtil.log("【气泡底】已画 #" + n + " " + (int) w + "x" + (int) h
+                        + (user ? "（用户）" : "（助手）"));
+            }
+            return true;
+        } catch (Throwable t) {
+            GmUtil.logFail("【气泡底】绘制失败", t);
+            return false;
+        }
+    }
+
+    /** 取气泡底图（用户 / 助手各一张），带缓存。 */
+    private static android.graphics.Bitmap bubbleBitmap(boolean user) {
+        String name = user ? "img_ububble.png" : "img_bubble.png";
+        android.graphics.Bitmap b = sBubbleBmp.get(name);
+        if (b != null && !b.isRecycled()) return b;
+        try {
+            android.content.Context ctx = GmUtil.app();
+            if (ctx == null) return null;
+            java.io.File f = new java.io.File(ctx.getFilesDir(), name);
+            if (!f.exists() || f.length() == 0) {
+                // 退回公共目录
+                f = new java.io.File("/sdcard/Pictures/FDM/" + name);
+            }
+            if (!f.exists() || f.length() == 0) return null;
+            b = android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath());
+            if (b == null) return null;
+            sBubbleBmp.put(name, b);
+            GmUtil.log("【气泡底】载入 " + name + " " + b.getWidth() + "x" + b.getHeight());
+            return b;
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     // ══════════════════════ ① 摸出「背景元素」类 ══════════════════════
@@ -245,6 +522,10 @@ public final class GmGlassSink {
         protected void afterHookedMethod(MethodHookParam param) {
             Object ret = param.getResult();
             if (ret == null) return;
+
+            // ★ 3.73.44 气泡图片底：在这里收集气泡背景元素（复用同一个 hook，
+            //   不另挂 —— 另挂会被 XposedBridge 覆盖掉）
+            collectBubbleElement(modifierCls, ret);
 
             // ★ 组合期：这个背景是按钮里面画的 ⇒ 把刚造出来的那个「元素对象」打上记号。
             //   （这一步必须在组合期做，绘制期再来认已经晚了）
@@ -634,6 +915,13 @@ public final class GmGlassSink {
                 //   组合期记的记号，绘制期才认得出 —— 这是 3.30.0 的关键一步。
                 if (GmGlassCfg.get().scope == GmGlassCfg.SCOPE_BUTTONS_ONLY
                         && !sBtnNodes.contains(param.thisObject)) {
+                    return;
+                }
+
+                // ★ 3.73.40 气泡图片底：**先**试气泡（输出拦截），不是气泡才走玻璃
+                if (paintBubble(scope, param.thisObject)) {
+                    param.setResult(null);     // 原实心底不画了，图已经贴上
+                    sFailStreak = 0;
                     return;
                 }
 
