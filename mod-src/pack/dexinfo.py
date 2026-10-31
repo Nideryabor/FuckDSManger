@@ -294,15 +294,106 @@ def missing_refs(dex_list):
     return out
 
 
+def _u32(data, off):
+    return int.from_bytes(data[off:off + 4], "little")
+
+
+def _uleb(data, off):
+    """读一个 uleb128，返回 (值, 新偏移)。"""
+    result = 0
+    shift = 0
+    while True:
+        b = data[off]
+        off += 1
+        result |= (b & 0x7F) << shift
+        if not b & 0x80:
+            return result, off
+        shift += 7
+
+
+def code_ranges(data):
+    """★ 2026-10-31：收集所有 code_item 里 **insns 的字节区间**（左闭右开）。
+
+    为什么需要它（自检 ④ 误报过两次）：
+      `find_res_ids` 原来是**纯字节级**扫 b"\\x13\\x00"/b"\\x14\\x00"。
+      dex 的数据区（debug_info、call_site_ids、encoded array…）里随便几个字节
+      凑出 `14 00 00 00 58 7f 01 00` 就被当成 `const 0x7f580000` ⇒ 假报警
+      ⇒ 明明底座干净，出包却卡在 ④（3.73.30 与历史 3.73.1x 各栽一次）。
+      ⇒ 现在只认「真的落在某个方法字节码里、且 2 字节对齐」的匹配。
+
+    路径：class_defs → class_data（uleb 计数 + encoded fields/methods）→ code_off → insns。
+    """
+    if len(data) < 0x70 or data[:4] != b"dex\n":
+        return []
+    class_defs_size = _u32(data, 0x60)
+    class_defs_off = _u32(data, 0x64)
+    out = []
+    for i in range(class_defs_size):
+        base = class_defs_off + i * 32
+        if base + 32 > len(data):
+            break
+        class_data_off = _u32(data, base + 24)
+        if class_data_off == 0 or class_data_off >= len(data):
+            continue
+        o = class_data_off
+        try:
+            sf, o = _uleb(data, o)
+            inf, o = _uleb(data, o)
+            dm, o = _uleb(data, o)
+            vm, o = _uleb(data, o)
+            for _ in range(sf + inf):
+                _, o = _uleb(data, o)      # field_idx_diff
+                _, o = _uleb(data, o)      # access_flags
+            for _ in range(dm + vm):
+                _, o = _uleb(data, o)      # method_idx_diff
+                _, o = _uleb(data, o)      # access_flags
+                code_off, o = _uleb(data, o)
+                if code_off == 0 or code_off + 16 > len(data):
+                    continue
+                insns_size = _u32(data, code_off + 12)
+                start = code_off + 16
+                end = start + insns_size * 2
+                if end > len(data):
+                    continue
+                out.append((start, end))
+        except (IndexError, ValueError):
+            continue
+    out.sort()
+    return out
+
+
 def find_res_ids(data):
-    """扫 dex 里疑似「硬编码的资源 id」常量（0x7f****** / 0x7e******）。"""
+    """扫 dex 里疑似「硬编码的资源 id」常量（0x7f****** / 0x7e******）。
+
+    ⚠️ 只看**方法字节码区间内的 2 字节对齐位置**（见 code_ranges 的由来）。
+    """
     out = set()
+    ranges = []
+    try:
+        ranges = code_ranges(data)
+    except Exception:
+        ranges = []
+    starts = [r[0] for r in ranges]
+
+    def in_code(off):
+        if ranges:
+            import bisect
+            k = bisect.bisect_right(starts, off) - 1
+            if k < 0:
+                return False
+            a, b = ranges[k]
+            return a <= off < b and (off - a) % 2 == 0
+        return True          # 解析不了就退回老行为（宁可误报，不要漏报）
+
     for op, size in ((b"\x13\x00", 2), (b"\x14\x00", 4)):
         pos = 0
         while True:
             i = data.find(op, pos)
             if i < 0:
                 break
+            if not in_code(i):
+                pos = i + 1
+                continue
             v = int.from_bytes(data[i + 2:i + 2 + size], "little")
             if 0x7E000000 <= v <= 0x7FFFFFFF:
                 out.add(v)

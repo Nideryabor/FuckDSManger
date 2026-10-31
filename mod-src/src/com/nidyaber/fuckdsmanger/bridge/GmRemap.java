@@ -87,6 +87,11 @@ public final class GmRemap {
         {"gz3", "bz4", "ez4", "q15", "v25"},         // GmCallDialog 用 ★ fp_match 100% 4/4
         {"it9", "d9b", "xbb", "zfb", "olb"},         // 账号数据类 ★ Companion:Lyfb + f:[Lnf6
         {"u19", "u19", "m49", "x79", "jb9"},         // Shape 工厂 ★ a()/b(F)/c(FFFF)/d(FFI)/e() 全同
+        // ★ 2026-10-31（3.73.19）：宿主「通用表面容器」AppSurface(Modifier, Shape, color, contentColor, …)
+        //   它是**气泡**的载体（每个消息气泡都套一层它）。气泡背景只能在这一层改。
+        //   真机实证：caller=l23.a:167 → 用户气泡(色=-9223372036854775808) / 透明外壳(色=0)
+        //   注意：同一方法也被大量按钮/卡片用 ⇒ 调用方**必须再加颜色与计数器过滤**。
+        {"l23", "l23", "l23", "appsurface", "l23"},   // AppSurface ★ 2.7.2 = l23.a(Lyj7;Lsy9;JJLr33;Lr15;I)V
         {"g56", "g87", "ja7", "he7", "gi7"},         // 建议/快捷项 item 类 ★ fp_match 100% 7/7
         {"yp1", "yp1", "yp1", null, null},          // 语音门控（GmAsrHook / GmSeeHook）
                                                //   ⚠️ 2.7.1 **同名已换主人**：变成 implements Ld15 的
