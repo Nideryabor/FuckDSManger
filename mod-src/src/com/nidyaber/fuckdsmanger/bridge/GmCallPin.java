@@ -54,7 +54,11 @@ public final class GmCallPin {
      *   `a()Z`   = 「要不要渲染通话页」的闸门
      * ⚠️ 这两个都是**混淆名** —— 宿主升级时必须跟着 `GmRemap` 一起重新定位。
      */
-    private static final String CLS_VM = "ps1";   // 2.7.1 重定位（2.6.2=sq1）
+    private static final String[] CAND_VM = {
+            "it1",        // ★ 2026-11-01 真机定位（2.7.2）：ChatCallHost.kt:32 那句闸门就是它
+            "ps1",        // 2.7.1（已不存在）
+            "sq1",        // 2.6.2（2.7.2 已被复用成别的类，结构校验会挡掉）
+    };
     private static final String M_SHOW = "a";
 
     /**
@@ -94,8 +98,13 @@ public final class GmCallPin {
      * （那里已经有 ClassLoader 和「只跑一次」的保证）。
      */
     public static void install(ClassLoader cl) {
+        Class<?> c = pick(cl);
+        if (c == null) {
+            // 锚点不在（宿主升级改名 / 不是宿主）⇒ 静默放弃，不打扰宿主
+            GmUtil.log("[留驻] 没找到通话页闸门类（候选 " + join(CAND_VM) + " 都不像）⇒ 跳过（预期）");
+            return;
+        }
         try {
-            Class<?> c = XposedHelpers.findClass(CLS_VM, cl);
             XposedHelpers.findAndHookMethod(c, M_SHOW, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
@@ -123,10 +132,75 @@ public final class GmCallPin {
                     }
                 }
             });
-            GmUtil.log("[留驻] 已挂钩子 " + CLS_VM + "." + M_SHOW + "Z（通话页留驻）");
+            GmUtil.log("[留驻] 已挂钩子 " + c.getName() + "." + M_SHOW + "Z（通话页留驻）");
         } catch (Throwable t) {
-            // 锚点不在（宿主升级改名 / 不是宿主）⇒ 静默放弃，不打扰宿主
             GmUtil.logFail("[留驻] 钩子安装失败（不影响宿主）", t);
         }
+    }
+    // ═══════════════════════════ 结构定位（2.7.2 起用）═══════════════════════════
+
+    /**
+     * 从候选名里挑出**真正的通话页 ViewModel**。
+     *
+     * <p>★ 2026-11-01（主人实测：「通话按钮成功，勾住失败」）：
+     * 锚点原来写死 `ps1`（2.7.1），而 2.7.2 里它是 **`it1`**
+     * —— 铁证在 `g83.smali:15658`（= ChatCallHost.kt:32）：
+     * <pre>
+     *   :cond_38
+     *   invoke-virtual {p0}, Lit1;->a()Z      ← ★ 就是那句「要不要渲染通话页」
+     * </pre>
+     *
+     * <p>而且 2.7.2 把 `sq1` 这个旧短名**复用给了别的类**
+     * （现在只剩一个 `serializer()`）⇒ 光看名字会认错，
+     * 所以这里加**结构校验**：必须有 `a()Z`，且类里要有通话相关的引用。
+     */
+    private static Class<?> pick(ClassLoader cl) {
+        for (String n : CAND_VM) {
+            Class<?> c;
+            try {
+                c = XposedHelpers.findClass(n, cl);
+            } catch (Throwable ignore) {
+                continue;
+            }
+            if (c == null) continue;
+            // ① 必须有 a()Z
+            boolean hasGate = false;
+            for (java.lang.reflect.Method m : c.getDeclaredMethods()) {
+                if (M_SHOW.equals(m.getName()) && m.getParameterCount() == 0
+                        && m.getReturnType() == boolean.class) {
+                    hasGate = true;
+                    break;
+                }
+            }
+            if (!hasGate) continue;
+            // ② 类的字段/引用里要有 Lzda;（Compose State）—— 闸门读的就是它
+            boolean hasState = false;
+            try {
+                for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                    if ("Lzda;".equals(f.getType().getName().replace('.', '/'))) {
+                        hasState = true;
+                        break;
+                    }
+                    if ("zda".equals(f.getType().getSimpleName())) {
+                        hasState = true;
+                        break;
+                    }
+                }
+            } catch (Throwable ignore) {
+            }
+            if (!hasState) continue;
+            GmUtil.log("[留驻] 结构校验通过：" + n + "（a()Z + Compose State 字段）");
+            return c;
+        }
+        return null;
+    }
+
+    private static String join(String[] a) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : a) {
+            if (sb.length() > 0) sb.append('/');
+            sb.append(s);
+        }
+        return sb.toString();
     }
 }

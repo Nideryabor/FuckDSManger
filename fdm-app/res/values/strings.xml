@@ -409,8 +409,8 @@
     <string name="pg_027">问一下宿主最新状态</string>
     <string name="pg_028">让宿主跑一遍 status 动作并把结果回传</string>
     <string name="pg_029">改完点保存，重启 App 生效；均会自动备份原值，点全部恢复可还原</string>
-    <string name="pg_030">全部恢复灰度</string>
-    <string name="pg_031">撤掉影子覆盖 + 把备份的原值写回真实键</string>
+    <string name="pg_030">重置灰度（服务器重下发）</string>
+    <string name="pg_031">删掉宿主里的灰度缓存（kv_remote_settings_*）⇒ 宿主下次启动会向服务器重新拉一份。比"从备份还原"更彻底。</string>
     <string name="pg_032">重新读取宿主当前值</string>
     <string name="pg_033">让宿主再回读一遍</string>
     <string name="pg_034">最近一次动作</string>
@@ -424,6 +424,8 @@
     <string name="pg_042">通话页留驻：已开启</string>
     <string name="pg_043">通话页留驻：已关闭</string>
     <string name="pg_044">服务端报错时不让通话页自动消失 —— 钩住 ChatCallHost 的渲染闸门（CallPageViewModel.a）</string>
+    <string name="pg_047">通话功能</string>
+    <string name="pg_048">通话页留驻</string>
     <string name="pg_045">搜歌 / 播放 / 歌词 —— 免登录 320k</string>
     <string name="rows_001">"宿主： "</string>
     <string name="rows_002">选颜色…</string>

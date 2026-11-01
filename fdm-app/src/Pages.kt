@@ -518,11 +518,16 @@ private fun CallFeatureRow(bump: () -> Unit) {
         feat -> stringResource(R.string.pg_038)
         else -> stringResource(R.string.pg_039)
     }
-    SettingAction(
-        label,
+    // ★ 2026-11-01 主人：「那几个通话页面有关的按钮改成开关式的」
+    //   原来是 SettingAction（点一下切换，看不出当前状态）⇒ 换成真开关。
+    SettingSwitch(
+        stringResource(R.string.pg_047),
+        on,                                   // 当前状态 = 开关初值
+        "call_feature",                        // 用它在本地记住回执
+        label,                                 // 把宿主回传的状态串显示在下面
         stringResource(R.string.pg_040),
-    ) {
-        FdmPush.sendCmd(ctx, "call_set", if (on) "0" else "1")
+    ) { v ->
+        FdmPush.sendCmd(ctx, "call_set", if (v) "1" else "0")
         bump()
     }
 }
@@ -549,11 +554,15 @@ private fun CallPinRow(bump: () -> Unit) {
         on -> stringResource(R.string.pg_042)
         else -> stringResource(R.string.pg_043)
     }
-    SettingAction(
+    // ★ 2026-11-01 同上：改成开关式
+    SettingSwitch(
+        stringResource(R.string.pg_048),
+        on,
+        "call_pin",
         label,
         stringResource(R.string.pg_044),
-    ) {
-        FdmPush.sendCmd(ctx, "call_pin_set", if (on) "0" else "1")
+    ) { v ->
+        FdmPush.sendCmd(ctx, "call_pin_set", if (v) "1" else "0")
         bump()
     }
 }

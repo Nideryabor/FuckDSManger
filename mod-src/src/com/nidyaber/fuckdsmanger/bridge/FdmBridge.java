@@ -2184,52 +2184,68 @@ public final class FdmBridge {
                 back = "已回读 " + o.length() + " 个灰度值";
                 GmUtil.log("【FdmBridge】灰度样例：" + sample);
             } else if ("gray_restore_all".equals(cmd)) {
-                // ★★ 2026-10-02 重写（Bug A1）：
-                //   旧写法只撤 `fuckds_pin_*` 影子键，注释还写着「原值就没被动过」——
-                //   可 `grayWrite` 从 3.24.0 起**主写的是宿主真实键**（`kv_settings_<bare>`）
-                //   ⇒ 真实键的改动永远回不去，这个按钮等于**假的**。
-                //   现在三件事一起做：① 撤影子键 ② 把备份写回真实键 ③ 清内存 pin 表。
+                // ★★ 2026-11-01 重写（主人的定义）：**重置灰度 = 把宿主的灰度 MMKV 删掉**
+                //
+                //   原理：灰度的真身是火山 AppLog 拉下来、SDK 解好之后**明文落在
+                //   `kv_remote_settings_*` 里的那份缓存**（见 `专题/2026-11-01-灰测全量提取.md`）。
+                //   把它删干净 ⇒ 宿主下次启动发现本地没有 ⇒ **重新向服务端拉一份**。
+                //
+                //   这比"从备份还原"更彻底：
+                //     · 备份还原只是回到"我们第一次改之前"的值，而那份值本身可能已经是我们改过的
+                //     · 删掉就是真的没有了，服务器给什么就是什么
+                //
+                //   一并删掉的还有：影子键 / 备份键 / 内存 pin 表（都是我们自己造的中间物）。
                 SharedPreferences sp = GmStore.get(ctx);
-                SharedPreferences.Editor ed = sp.edit();
-                int n = 0;
-                int rest = 0;
+                int delReal = 0, delPin = 0, delBak = 0;
+
+                // ① 删宿主真实键：kv_remote_settings_* / kv_settings_*（按 GRAY 表逐项删）
                 for (String[] g : GRAY) {
                     String bare = g[0].startsWith("kv_remote_settings_")
                             ? g[0].substring("kv_remote_settings_".length()) : g[0];
-                    String type = g.length > 1 ? g[1] : "s";
                     boolean bareKey = bare.startsWith("key_");        // 宿主本地键（不带前缀）
-                    // ① 撤影子键（三种键形都撤）
-                    ed.remove("fuckds_pin_kv_remote_settings_" + bare);
-                    ed.remove("fuckds_pin_kv_settings_" + bare);
-                    ed.remove("fuckds_pin_" + bare);
-                    // ② 还原真实键（从备份；**没备过就跳过** —— 绝不动手）
-                    //    ⚠️ 备份恒是**字符串**（grayWrite 存的就是 String）⇒ getString 安全；
-                    //    「原本压根没这个键」用 BAK_NONE 哨兵表示 ⇒ 这里 remove 回去
                     for (String real : bareKey ? new String[]{bare}
-                            : new String[]{"kv_settings_" + bare, "kv_remote_settings_" + bare}) {
-                        String bak = sp.getString("fuckds_bak_" + real, null);
-                        if (bak == null) continue;
+                            : new String[]{"kv_remote_settings_" + bare, "kv_settings_" + bare}) {
                         try {
-                            if (BAK_NONE.equals(bak)) {
-                                GmStore.remove(ctx, real);            // 原本没有 ⇒ 删回去
-                            } else {
-                                // ★ 参数顺序：键 → 值 → 类型（跟底座真身一致）
-                                GmStore.write(ctx, real, bak, type);
+                            if (sp.contains(real)) {
+                                GmStore.remove(ctx, real);
+                                delReal++;
                             }
-                            rest++;
                         } catch (Throwable ignore) {
                         }
                     }
-                    n++;
                 }
-                ed.apply();
-                // ③ 清空内存 pin 表（否则底座的读侧替换还活着）
+
+                // ② 删我们自己的中间物：影子键 + 备份键
+                try {
+                    SharedPreferences.Editor ed = sp.edit();
+                    for (String[] g : GRAY) {
+                        String bare = g[0].startsWith("kv_remote_settings_")
+                                ? g[0].substring("kv_remote_settings_".length()) : g[0];
+                        boolean bareKey = bare.startsWith("key_");
+                        for (String real : bareKey ? new String[]{bare}
+                                : new String[]{"kv_remote_settings_" + bare, "kv_settings_" + bare}) {
+                            if (sp.contains("fuckds_pin_" + real)) delPin++;
+                            if (sp.contains("fuckds_bak_" + real)) delBak++;
+                            ed.remove("fuckds_pin_" + real);
+                            ed.remove("fuckds_bak_" + real);
+                        }
+                        ed.remove("fuckds_pin_" + bare);
+                    }
+                    ed.apply();
+                } catch (Throwable t) {
+                    GmUtil.logFail("【FdmBridge】清影子/备份失败", t);
+                }
+
+                // ③ 清空内存 pin 表（否则底座的读侧替换还活着，删了也白删）
                 try {
                     java.util.HashMap<String, String> m = pins();
                     m.clear();
                 } catch (Throwable ignore) {
                 }
-                back = "已恢复灰度 " + n + " 项：撤影 " + n + " · 还原真值 " + rest;
+
+                back = "已重置灰度：删宿主真值 " + delReal + " 项 · 影子 " + delPin
+                        + " · 备份 " + delBak + " ⇒ 宿主下次启动会向服务器重新拉一份";
+                GmUtil.log("【FdmBridge】" + back);
             } else if ("call_state".equals(cmd)) {
                 // ★ 通话开关（宿主 2.6.1）：ModelConfig.call_feature 空标记对象
                 //   返回 "开关|已生效"，例如 "1|1"
