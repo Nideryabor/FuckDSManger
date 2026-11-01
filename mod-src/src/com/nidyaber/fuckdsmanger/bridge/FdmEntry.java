@@ -164,6 +164,17 @@ public final class FdmEntry implements IXposedHookLoadPackage {
         //     }
         // }
 
+        // ⑥.5 加密取证探针（2026-11-01）：把宿主自己的 AES 解密结果掏出来。
+        //     用途：解火山引擎 AB 配置（tab.volces.com/service/2/abtest_config/，抓包是密文）。
+        //     ⚠️ 默认关（键 fuckds_crypto_probe），关着一个钩子都不挂。
+        if (isHost(lp.classLoader)) {
+            try {
+                GmCryptoProbe.install(lp.classLoader);
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] GmCryptoProbe 安装失败（不影响其它钩子）：" + t);
+            }
+        }
+
         // ⑦ 系统提示词 · 显示侧隐藏（2026-10-03）
         //    明文承载的一半：prompt 里带着 ⟦FDM⟧提示词⟦/FDM⟧ 明文发出去（模型零风险），
         //    但要在渲染前把这一段从气泡里**删掉** —— 用户看到的就只是他自己写的那句话。

@@ -1,0 +1,65 @@
+key	来源	AB分组vid	生效值(内存)	缓存值(MMKV)
+alert	mmkv			null
+allow_file_with_search	mmkv			True
+android_apk_link	both	20189068	https://download.deepseek.com/app?utm_source=android_app	https://download.deepseek.com/app?utm_source=android_app
+authed_pow_functions	both	20185740	['search', 'deep_think', 'completion', 'file']	["search","deep_think","completion","file"]
+auto_resume_interval_ms	mmkv			1000
+auto_resume_max_time_ms	mmkv			5000
+auto_resume_request_timeout_ms	mmkv			3000
+banner	mmkv			null
+camera_compress_ratio	mmkv			0.8
+completion_request_timeout_ms	mmkv			60000
+continue_request_timeout_ms	mmkv			60000
+dead_link_detection	both	20192926	True	True
+deep_think_button_suffix	both	20205441		False
+ds_settings_enabled	both	20218786	True	True
+edit_request_timeout_ms	mmkv			60000
+enable_google_sign_in_captcha	both	20186036	False	True
+enable_wechat_upload	mmkv			True
+files_host	mmkv			files.deepseeksvc.com
+hcaptcha_enabled	both	20194470	True	True
+hide_assistant_avatar	mmkv			False
+hif_max_retry_interval_secs	mmkv			600
+image_cache_invalidate_before	mmkv			1777444200000
+input_default_voice	mmkv			False
+input_view_voice_gesture_duration_ms	mmkv			250
+languages	mmkv			[]
+launch_clean_session_interval_seconds	both	20186799	21600	21600
+max_duration_ms	mmkv			120000
+max_input_files	mem	20185664	50	
+max_upload_file_size	both	20185380	104857600	104857600
+model_configs_v1	mmkv			[{"model_type":"default","name":"快速模式","description":"","welcome_msg":"使用快速模式开始对话","is_default":true,"enabled":true,"switchable":true,"show_model_name_in_session":false,"edit_quota":5,"regenerate_quota":5,"input_character_limit":2621440,"think_feature":{},"search_feature":{},"regenerate_options":nul
+normal_history_and_file_token_limit	both	20220303	890880	890880
+one_tap_login_enabled	both	20196881	True	True
+optimize_markdown	mmkv			True
+opus_bitrate	mmkv			200000
+photo_picker_compress_ratio	mmkv			0.8
+picture_compress_format	mmkv			webp
+pow_header_paths	both	20189347	['/api/v0/users/register', '/api/v0/users/register_by_mobile', '/api/v0/users/login_by_mobile_sms', '/api/v0/users/oauth/google/login', '/api/v0/users/create_sms_verification_code', '/api/v0/users/create_email_verification_code']	["/api/v0/users/register","/api/v0/users/register_by_mobile","/api/v0/users/login_by_mobile_sms","/api/v0/users/oauth/google/login","/api/v0/users/create_sms_verification_code","/api/v0/users/create_email_verification_code"]
+pow_prefetch	mmkv			True
+pow_prefetch_count	mmkv			True
+providers_v1	mmkv			[{"provider_id":"dhb","brand_icon":"https://cdn.deepseek.com/search-providers/dhb.svg","brand_name":"电话邦","inline_display":"icon_text","priority":0,"citation_dedupe_scope":"message"},{"provider_id":"zhihu","brand_icon":"https://cdn.deepseek.com/search-providers/zhihu.png","brand_name":"知乎","inline_d
+query_files_time_interval	both	20186902	3000	1000
+query_title_time_interval	mem	20187746	100000000	
+r1_history_and_file_token_limit	both	20220302	890880	890880
+record_empty_detect_time_ms	mmkv			5000
+regenerate_request_timeout_ms	mmkv			60000
+report_http_biz_error	mem	20187030	True	
+resume_request_timeout_ms	mmkv			60000
+search_state_on_automatically_created_chat	mmkv			on
+search_state_on_launch	mmkv			on
+search_state_on_login	mmkv			on
+search_state_on_manually_created_chat	mmkv			keep
+search_state_trigger	mmkv			{"trigger":"on","trigger_version":1}
+session_prefetch	mmkv			True
+should_use_sm_device_id	both	20185402	True	True
+show_new_chat_button_above_input	both	20211224	False	False
+sm_pass_code_type	both	20185378	spatial_select	spatial_select
+sm_sdk_host	mmkv			https://fp-it.fengkongcloud.com
+sse_auto_scroll_one_screen	mmkv			True
+sse_smooth_follow	mmkv			True
+stop_stream_wait_times	mem	20186226	1000	
+support_chat_file_exts	both	20217168	['pdf', 'png', 'jpg', 'jpeg', 'svg', 'svgz', 'bmp', 'gif', 'webp', 'ico', 'xbm', 'dib', 'pjp', 'tif', 'pjpeg', 'avif', 'apng', 'tiff', 'jfif', 'txt', 'md', 'csv', 'tsv', 'html', 'json', 'log', 'dot', 'go', 'h', 'c', 'cpp', 'cxx', 'cc', 'cs', 'java', 'js', 'css', 'jsp', 'php', 'py', 'py3', 'asp', 'ya	["wxml","wxss","wxs","axml","acss","sjs","swan","ttml","ttss","qml","qss","pdf","png","jpg","jpeg","svg","svgz","bmp","gif","webp","ico","xbm","dib","pjp","tif","pjpeg","avif","apng","tiff","jfif","txt","md","csv","tsv","html","json","log","dot","go","h","c","cpp","cxx","cc","cs","java","js","css","
+voice_input_enabled	mmkv			True
+volcengine_enabled	mmkv			true
+welcome_msg	mmkv			{"messages":[{"id":0,"text":"你好，我能帮什么忙吗？"},{"id":1,"text":"你好，有什么我能帮你的吗？"},{"id":2,"text":"你好，让我们开始聊天吧"},{"id":3,"text":"嗨！今天想聊些什么？"},{"id":4,"text":"欢迎回来，随时开始吧"},{"id":5,"text":"欢迎回来，想从哪里开始？"},{"id":6,"text":"早上好，今天有什么计划？"},{"id":7,"text":"早上好，今天想做点什么？"},{"id":8,"text":"早上好，开始聊天吧"},{"id":9,"text":"

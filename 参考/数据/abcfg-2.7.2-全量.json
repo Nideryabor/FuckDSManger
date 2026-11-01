@@ -1,0 +1,242 @@
+{
+ "hide_assistant_avatar": {
+  "val": false,
+  "id": null
+ },
+ "pow_header_paths": {
+  "val": "[\"/api/v0/users/register\",\"/api/v0/users/register_by_mobile\",\"/api/v0/users/login_by_mobile_sms\",\"/api/v0/users/oauth/google/login\",\"/api/v0/users/create_sms_verification_code\",\"/api/v0/users/create_email_verification_code\"]",
+  "id": 1576211625
+ },
+ "sse_auto_scroll_one_screen": {
+  "val": true,
+  "id": 1562813852
+ },
+ "sse_smooth_follow": {
+  "val": true,
+  "id": 386453158
+ },
+ "voice_input_enabled": {
+  "val": true,
+  "id": 636106670
+ },
+ "input_default_voice": {
+  "val": false,
+  "id": 1293904351
+ },
+ "languages": {
+  "val": "[]",
+  "id": 1160438421
+ },
+ "max_duration_ms": {
+  "val": 120000,
+  "id": 220539021
+ },
+ "opus_bitrate": {
+  "val": 200000,
+  "id": 1757217986
+ },
+ "input_view_voice_gesture_duration_ms": {
+  "val": 250,
+  "id": 1694007690
+ },
+ "record_empty_detect_time_ms": {
+  "val": 5000,
+  "id": 73402759
+ },
+ "providers_v1": {
+  "val": "[{\"provider_id\":\"dhb\",\"brand_icon\":\"https://cdn.deepseek.com/search-providers/dhb.svg\",\"brand_name\":\"电话邦\",\"inline_display\":\"icon_text\",\"priority\":0,\"citation_dedupe_scope\":\"message\"},{\"provider_id\":\"zhihu\",\"brand_icon\":\"https://cdn.deepseek.com/search-providers/zhihu.png\",\"brand_name\":\"知乎\",\"inline_display\":\"icon_text\",\"priority\":1,\"citation_dedupe_scope\":\"message\"},{\"provider_id\":\"ths\",\"brand_icon\":\"https://cdn.deepseek.com/search-providers/tonghuashun.png\",\"brand_name\":\"同花顺\",\"inline_display\":\"icon_text\",\"summary_display\":\"icon_text\",\"priority\":2,\"citation_dedupe_scope\":\"message\",\"brand_target\":{\"url\":\"https://www.10jqka.com.cn/\",\"title\":\"同花顺财经__让投资变得更简单\",\"snippet\":\"核新同花顺网络信息股份有限公司（同花顺）成立于1995年，是一家专业的互联网金融数据服务商，为您全方位提供财经资讯及全球金融市场行情，覆盖股票、基金、期货、外汇、债券、银行、黄金等多种面向个人和企业的服务。\"}},{\"provider_id\":\"edb\",\"brand_icon\":\"https://cdn.deepseek.com/search-providers/tonghuashun.png\",\"brand_name\":\"同花顺\",\"inline_display\":\"icon_text\",\"summary_display\":\"icon_text\",\"priority\":2,\"citation_dedupe_scope\":\"message\",\"brand_target\":{\"url\":\"https://www.51ifind.com/\",\"title\":\"同花顺iFinD\",\"snippet\":\"同花顺iFinD金融数据终端，是同花顺公司倾力打造的实时金融数据服务平台。iFinD金融终端始终专注于整合资本市场信息资源，为券商、基金、银行等中介机构以及政府、企业、个人投资者等用户提供全面、深入的金融数据服务。同花顺iFinD也结合用户多样化的使用场景，推出了插件、数据库以及API数据接口，帮助用户轻松实现金融数据的提取与分析，是专业投资者必不可少的投研工具。\"}}]",
+  "id": 655820012
+ },
+ "normal_history_and_file_token_limit": {
+  "val": 890880,
+  "id": 2037161179
+ },
+ "r1_history_and_file_token_limit": {
+  "val": 890880,
+  "id": 1720155256
+ },
+ "max_upload_file_size": {
+  "val": 104857600,
+  "id": 279109398
+ },
+ "camera_compress_ratio": {
+  "val": 0.8,
+  "id": 327221844
+ },
+ "picture_compress_format": {
+  "val": "webp",
+  "id": 1704976799
+ },
+ "photo_picker_compress_ratio": {
+  "val": 0.8,
+  "id": 870509613
+ },
+ "sm_pass_code_type": {
+  "val": "spatial_select",
+  "id": 2087144064
+ },
+ "query_files_time_interval": {
+  "val": 1000,
+  "id": 607730926
+ },
+ "support_chat_file_exts": {
+  "val": "[\"wxml\",\"wxss\",\"wxs\",\"axml\",\"acss\",\"sjs\",\"swan\",\"ttml\",\"ttss\",\"qml\",\"qss\",\"pdf\",\"png\",\"jpg\",\"jpeg\",\"svg\",\"svgz\",\"bmp\",\"gif\",\"webp\",\"ico\",\"xbm\",\"dib\",\"pjp\",\"tif\",\"pjpeg\",\"avif\",\"apng\",\"tiff\",\"jfif\",\"txt\",\"md\",\"csv\",\"tsv\",\"html\",\"json\",\"log\",\"dot\",\"go\",\"h\",\"c\",\"cpp\",\"cxx\",\"cc\",\"cs\",\"java\",\"js\",\"css\",\"jsp\",\"php\",\"py\",\"py3\",\"asp\",\"yaml\",\"yml\",\"ini\",\"conf\",\"ts\",\"tsx\",\"doc\",\"docx\",\"ppt\",\"pptx\",\"xls\",\"xlsx\",\"abap\",\"asc\",\"ash\",\"ampl\",\"mod\",\"g4\",\"apib\",\"apl\",\"dyalog\",\"asax\",\"ascx\",\"ashx\",\"asmx\",\"aspx\",\"axd\",\"dats\",\"hats\",\"sats\",\"as\",\"adb\",\"ada\",\"ads\",\"agda\",\"als\",\"apacheconf\",\"vhost\",\"cls\",\"applescript\",\"scpt\",\"arc\",\"ino\",\"asciidoc\",\"adoc\",\"aj\",\"asm\",\"a51\",\"inc\",\"nasm\",\"aug\",\"ahk\",\"ahkl\",\"au3\",\"awk\",\"auk\",\"gawk\",\"mawk\",\"nawk\",\"bat\",\"cmd\",\"befunge\",\"bison\",\"bb\",\"decls\",\"bmx\",\"bsv\",\"boo\",\"b\",\"bf\",\"brs\",\"bro\",\"cats\",\"idc\",\"w\",\"cake\",\"cshtml\",\"csx\",\"c++\",\"cp\",\"h++\",\"hh\",\"hpp\",\"hxx\",\"inl\",\"ipp\",\"tcc\",\"tpp\",\"c-objdump\",\"chs\",\"clp\",\"cmake\",\"in\",\"cob\",\"cbl\",\"ccp\",\"cobol\",\"cpy\",\"capnp\",\"mss\",\"ceylon\",\"chpl\",\"ch\",\"ck\",\"cirru\",\"clw\",\"icl\",\"dcl\",\"click\",\"clj\",\"boot\",\"cl2\",\"cljc\",\"cljs\",\"hl\",\"cljscm\",\"cljx\",\"hic\",\"coffee\",\"_coffee\",\"cjsx\",\"cjs\",\"cts\",\"mjs\",\"mts\",\"cson\",\"iced\",\"cfm\",\"cfml\",\"cfc\",\"lisp\",\"asd\",\"cl\",\"l\",\"lsp\",\"ny\",\"podsl\",\"sexp\",\"cps\",\"coq\",\"v\",\"cppobjdump\",\"c++-objdump\",\"c++objdump\",\"cpp-objdump\",\"cxx-objdump\",\"creole\",\"cr\",\"feature\",\"cu\",\"cuh\",\"cy\",\"pyx\",\"pxd\",\"pxi\",\"d\",\"di\",\"d-objdump\",\"com\",\"dm\",\"zone\",\"arpa\",\"darcspatch\",\"dpatch\",\"dart\",\"diff\",\"patch\",\"dockerfile\",\"djs\",\"dylan\",\"dyl\",\"intr\",\"lid\",\"E\",\"ecl\",\"eclxml\",\"sch\",\"brd\",\"epj\",\"e\",\"ex\",\"exs\",\"elm\",\"el\",\"emacs\",\"desktop\",\"em\",\"emberscript\",\"erl\",\"es\",\"escript\",\"hrl\",\"xrl\",\"yrl\",\"fs\",\"fsi\",\"fsx\",\"fx\",\"flux\",\"f90\",\"f\",\"f03\",\"f08\",\"f77\",\"f95\",\"for\",\"fpp\",\"factor\",\"fy\",\"fancypack\",\"fan\",\"fth\",\"4th\",\"forth\",\"fr\",\"frt\",\"ftl\",\"g\",\"gco\",\"gcode\",\"gms\",\"gap\",\"gd\",\"gi\",\"tst\",\"s\",\"ms\",\"glsl\",\"fp\",\"frag\",\"frg\",\"fsh\",\"fshader\",\"geo\",\"geom\",\"glslv\",\"gshader\",\"shader\",\"vert\",\"vrx\",\"vsh\",\"vshader\",\"gml\",\"kid\",\"ebuild\",\"eclass\",\"po\",\"pot\",\"glf\",\"gp\",\"gnu\",\"gnuplot\",\"plot\",\"plt\",\"golo\",\"gs\",\"gst\",\"gsx\",\"vark\",\"grace\",\"gradle\",\"gf\",\"graphql\",\"gv\",\"man\",\"1in\",\"1m\",\"1x\",\"3in\",\"3m\",\"3qt\",\"3x\",\"me\",\"n\",\"rno\",\"roff\",\"groovy\",\"grt\",\"gtpl\",\"gvy\",\"gsp\",\"hcl\",\"tf\",\"hlsl\",\"fxh\",\"hlsli\",\"htm\",\"st\",\"xht\",\"xhtml\",\"mustache\",\"jinja\",\"eex\",\"erb\",\"deface\",\"phtml\",\"http\",\"haml\",\"handlebars\",\"hbs\",\"hb\",\"hs\",\"hsc\",\"hx\",\"hxsl\",\"hy\",\"pro\",\"dlm\",\"ipf\",\"cfg\",\"prefs\",\"properties\",\"irclog\",\"weechatlog\",\"idr\",\"lidr\",\"ni\",\"i7x\",\"iss\",\"io\",\"ik\",\"thy\",\"ijs\",\"flex\",\"jflex\",\"geojson\",\"lock\",\"topojson\",\"json5\",\"jsonld\",\"jq\",\"jsx\",\"jade\",\"j\",\"_js\",\"bones\",\"es6\",\"jake\",\"jsb\",\"jscad\",\"jsfl\",\"jsm\",\"jss\",\"njs\",\"pac\",\"sjs\",\"ssjs\",\"sublime-build\",\"sublime-commands\",\"sublime-completions\",\"sublime-keymap\",\"sublime-macro\",\"sublime-menu\",\"sublime-mousemap\",\"sublime-project\",\"sublime-settings\",\"sublime-theme\",\"sublime-workspace\",\"sublime_metrics\",\"sublime_session\",\"xsjs\",\"xsjslib\",\"jl\",\"ipynb\",\"krl\",\"kicad_pcb\",\"kit\",\"kt\",\"ktm\",\"kts\",\"lfe\",\"ll\",\"lol\",\"lsl\",\"lslp\",\"lvproj\",\"lasso\",\"las\",\"lasso8\",\"lasso9\",\"ldml\",\"latte\",\"lean\",\"hlean\",\"less\",\"lex\",\"ly\",\"ily\",\"m\",\"ld\",\"lds\",\"liquid\",\"lagda\",\"litcoffee\",\"lhs\",\"ls\",\"_ls\",\"xm\",\"x\",\"xi\",\"lgt\",\"logtalk\",\"lookml\",\"lua\",\"fcgi\",\"nse\",\"pd_lua\",\"rbxs\",\"wlua\",\"mumps\",\"m4\",\"mcfunction\",\"mcr\",\"mtml\",\"muf\",\"mak\",\"mk\",\"mkfile\",\"mako\",\"mao\",\"markdown\",\"mkd\",\"mkdn\",\"mkdown\",\"ron\",\"mask\",\"mathematica\",\"cdf\",\"ma\",\"map\",\"mt\",\"nb\",\"nbp\",\"wl\",\"wlt\",\"matlab\",\"maxpat\",\"maxhelp\",\"maxproj\",\"mxt\",\"pat\",\"mediawiki\",\"wiki\",\"moo\",\"metal\",\"minid\",\"druby\",\"duby\",\"mir\",\"mirah\",\"mo\",\"mms\",\"mmk\",\"monkey\",\"moon\",\"myt\",\"ncl\",\"nl\",\"nsi\",\"nsh\",\"axs\",\"axi\",\"nlogo\",\"nginxconf\",\"nim\",\"nimrod\",\"ninja\",\"nit\",\"nix\",\"nu\",\"numpy\",\"numpyw\",\"numsc\",\"ml\",\"eliom\",\"eliomi\",\"ml4\",\"mli\",\"mll\",\"mly\",\"objdump\",\"mm\",\"sj\",\"omgrofl\",\"opa\",\"opal\",\"opencl\",\"p\",\"scad\",\"org\",\"ox\",\"oxh\",\"oxo\",\"oxygene\",\"oz\",\"pwn\",\"aw\",\"ctp\",\"php3\",\"php4\",\"php5\",\"php6\",\"php7\",\"php8\",\"phps\",\"phpt\",\"pls\",\"pck\",\"pkb\",\"pks\",\"plb\",\"plsql\",\"sql\",\"pov\",\"pan\",\"psc\",\"parrot\",\"pasm\",\"pir\",\"pas\",\"dfm\",\"dpr\",\"lpr\",\"pp\",\"pl\",\"al\",\"cgi\",\"perl\",\"ph\",\"plx\",\"pm\",\"pod\",\"psgi\",\"t\",\"6pl\",\"6pm\",\"nqp\",\"p6\",\"p6l\",\"p6m\",\"pl6\",\"pm6\",\"pkl\",\"pig\",\"pike\",\"pmod\",\"pogo\",\"pony\",\"ps\",\"eps\",\"ps1\",\"psd1\",\"psm1\",\"pde\",\"prolog\",\"yap\",\"spin\",\"proto\",\"pub\",\"pd\",\"pb\",\"pbi\",\"purs\",\"bzl\",\"gyp\",\"lmi\",\"pyde\",\"pyi\",\"pyp\",\"pyt\",\"pyw\",\"rpy\",\"tac\",\"wsgi\",\"xpy\",\"pytb\",\"qml\",\"qbs\",\"pri\",\"r\",\"rd\",\"rsx\",\"raml\",\"rdoc\",\"rbbas\",\"rbfrm\",\"rbmnu\",\"rbres\",\"rbtbar\",\"rbuistate\",\"rhtml\",\"rmd\",\"rkt\",\"rktd\",\"rktl\",\"scrbl\",\"rl\",\"raw\",\"reb\",\"r2\",\"r3\",\"rebol\",\"red\",\"reds\",\"cw\",\"rs\",\"rsh\",\"robot\",\"rg\",\"rb\",\"builder\",\"gemspec\",\"god\",\"irbrc\",\"jbuilder\",\"mspec\",\"pluginspec\",\"podspec\",\"rabl\",\"rake\",\"rbuild\",\"rbw\",\"rbx\",\"ru\",\"ruby\",\"thor\",\"watchr\",\"sas\",\"scss\",\"smt2\",\"smt\",\"sparql\",\"rq\",\"sqf\",\"hqf\",\"cql\",\"ddl\",\"prc\",\"tab\",\"udf\",\"viw\",\"db2\",\"ston\",\"sage\",\"sagews\",\"sls\",\"sass\",\"scala\",\"sbt\",\"sc\",\"scaml\",\"scm\",\"sld\",\"sps\",\"ss\",\"sci\",\"sce\",\"self\",\"sh\",\"bash\",\"bats\",\"command\",\"ksh\",\"tmux\",\"tool\",\"zsh\",\"sh-session\",\"shen\",\"sl\",\"slim\",\"smali\",\"tpl\",\"sp\",\"sma\",\"nut\",\"stan\",\"ML\",\"fun\",\"sig\",\"sml\",\"do\",\"ado\",\"doh\",\"ihlp\",\"mata\",\"matah\",\"sthlp\",\"styl\",\"scd\",\"swift\",\"sv\",\"svh\",\"vh\",\"toml\",\"txl\",\"tcl\",\"adp\",\"tm\",\"tcsh\",\"csh\",\"tex\",\"aux\",\"bbx\",\"bib\",\"cbx\",\"dtx\",\"ins\",\"lbx\",\"ltx\",\"mkii\",\"mkiv\",\"mkvi\",\"sty\",\"toc\",\"tea\",\"no\",\"textile\",\"thrift\",\"tu\",\"ttl\",\"twig\",\"upc\",\"anim\",\"asset\",\"meta\",\"prefab\",\"unity\",\"uno\",\"uc\",\"ur\",\"urs\",\"vcl\",\"vhdl\",\"vhd\",\"vhf\",\"vhi\",\"vho\",\"vhs\",\"vht\",\"vhw\",\"vala\",\"vapi\",\"veo\",\"vim\",\"vb\",\"bas\",\"frm\",\"frx\",\"vba\",\"vbhtml\",\"vbs\",\"volt\",\"vue\",\"owl\",\"webidl\",\"x10\",\"xc\",\"xml\",\"ant\",\"axml\",\"ccxml\",\"clixml\",\"cproject\",\"csl\",\"csproj\",\"ct\",\"dita\",\"ditamap\",\"ditaval\",\"config\",\"dotsettings\",\"filters\",\"fsproj\",\"fxml\",\"glade\",\"grxml\",\"iml\",\"ivy\",\"jelly\",\"jsproj\",\"kml\",\"launch\",\"mdpolicy\",\"mxml\",\"nproj\",\"nuspec\",\"odd\",\"osm\",\"plist\",\"props\",\"ps1xml\",\"psc1\",\"pt\",\"rdf\",\"rss\",\"scxml\",\"srdf\",\"storyboard\",\"stTheme\",\"sublime-snippet\",\"targets\",\"tmCommand\",\"tml\",\"tmLanguage\",\"tmPreferences\",\"tmSnippet\",\"tmTheme\",\"ui\",\"urdf\",\"ux\",\"vbproj\",\"vcxproj\",\"vssettings\",\"vxml\",\"wsdl\",\"wsf\",\"wxi\",\"wxl\",\"wxs\",\"x3d\",\"xacro\",\"xaml\",\"xib\",\"xlf\",\"xliff\",\"xmi\",\"dist\",\"xproj\",\"xsd\",\"xul\",\"zcml\",\"xsp-config\",\"metadata\",\"xpl\",\"xproc\",\"xquery\",\"xq\",\"xql\",\"xqm\",\"xqy\",\"xs\",\"xslt\",\"xsl\",\"xojo_code\",\"xojo_menu\",\"xojo_report\",\"xojo_script\",\"xojo_toolbar\",\"xojo_window\",\"xtend\",\"reek\",\"rviz\",\"sublime-syntax\",\"syntax\",\"yang\",\"y\",\"yacc\",\"yy\",\"zep\",\"zimpl\",\"zmpl\",\"zpl\",\"ec\",\"eh\",\"edn\",\"fish\",\"mu\",\"nc\",\"ooc\",\"rst\",\"rest\",\"wisp\",\"prg\",\"prw\",\"gitignore\",\"gitkeep\",\"gitmodules\",\"example\",\"avifs\",\"blp\",\"bufr\",\"bw\",\"cur\",\"dcx\",\"dds\",\"emf\",\"fit\",\"fits\",\"flc\",\"fli\",\"ftc\",\"ftu\",\"gbr\",\"grib\",\"h5\",\"hdf\",\"hif\",\"icb\",\"icns\",\"iim\",\"im\",\"j2c\",\"j2k\",\"jp2\",\"jpc\",\"jpe\",\"jpf\",\"jpx\",\"mpeg\",\"mpg\",\"msp\",\"pbm\",\"pcd\",\"pcx\",\"pfm\",\"pgm\",\"pnm\",\"ppm\",\"psd\",\"pxr\",\"qoi\",\"ras\",\"rgb\",\"rgba\",\"sgi\",\"tga\",\"vda\",\"vst\",\"wmf\",\"xpm\",\"epub\",\"mobi\"]",
+  "id": 1066981998
+ },
+ "android_apk_link": {
+  "val": "https://download.deepseek.com/app?utm_source=android_app",
+  "id": 73458866
+ },
+ "should_use_sm_device_id": {
+  "val": true,
+  "id": 1152282431
+ },
+ "authed_pow_functions": {
+  "val": "[\"search\",\"deep_think\",\"completion\",\"file\"]",
+  "id": 1034971337
+ },
+ "enable_google_sign_in_captcha": {
+  "val": true,
+  "id": 1870705286
+ },
+ "deep_think_button_suffix": {
+  "val": false,
+  "id": 227691405
+ },
+ "launch_clean_session_interval_seconds": {
+  "val": 21600,
+  "id": 985220088
+ },
+ "completion_request_timeout_ms": {
+  "val": 60000,
+  "id": 1429241854
+ },
+ "regenerate_request_timeout_ms": {
+  "val": 60000,
+  "id": 962533274
+ },
+ "edit_request_timeout_ms": {
+  "val": 60000,
+  "id": 912299024
+ },
+ "continue_request_timeout_ms": {
+  "val": 60000,
+  "id": 2001562968
+ },
+ "resume_request_timeout_ms": {
+  "val": 60000,
+  "id": 410318079
+ },
+ "auto_resume_request_timeout_ms": {
+  "val": 3000,
+  "id": 1804498312
+ },
+ "auto_resume_max_time_ms": {
+  "val": 5000,
+  "id": 92179736
+ },
+ "auto_resume_interval_ms": {
+  "val": 1000,
+  "id": 1081627291
+ },
+ "pow_prefetch": {
+  "val": true,
+  "id": 1467781796
+ },
+ "pow_prefetch_count": {
+  "val": true,
+  "id": 677462759
+ },
+ "session_prefetch": {
+  "val": true,
+  "id": 401669711
+ },
+ "hcaptcha_enabled": {
+  "val": true,
+  "id": 951609837
+ },
+ "one_tap_login_enabled": {
+  "val": true,
+  "id": 2132348239
+ },
+ "dead_link_detection": {
+  "val": true,
+  "id": 1353546749
+ },
+ "show_new_chat_button_above_input": {
+  "val": false,
+  "id": 125804228
+ },
+ "ds_settings_enabled": {
+  "val": true,
+  "id": 438009947
+ },
+ "search_state_on_launch": {
+  "val": "on",
+  "id": 19572873
+ },
+ "search_state_on_manually_created_chat": {
+  "val": "keep",
+  "id": 1724703034
+ },
+ "search_state_on_automatically_created_chat": {
+  "val": "on",
+  "id": 1081694394
+ },
+ "volcengine_enabled": {
+  "val": "true",
+  "id": 591966471
+ },
+ "search_state_on_login": {
+  "val": "on",
+  "id": 741308588
+ },
+ "allow_file_with_search": {
+  "val": true,
+  "id": 1291879659
+ },
+ "hif_max_retry_interval_secs": {
+  "val": 600,
+  "id": 1806424694
+ },
+ "search_state_trigger": {
+  "val": "{\"trigger\":\"on\",\"trigger_version\":1}",
+  "id": 948828287
+ },
+ "files_host": {
+  "val": "files.deepseeksvc.com",
+  "id": 1450201665
+ },
+ "optimize_markdown": {
+  "val": true,
+  "id": 1480667748
+ },
+ "sm_sdk_host": {
+  "val": "https://fp-it.fengkongcloud.com",
+  "id": 1763363875
+ },
+ "enable_wechat_upload": {
+  "val": true,
+  "id": 1345736671
+ },
+ "image_cache_invalidate_before": {
+  "val": 1777444200000,
+  "id": 1806834993
+ },
+ "welcome_msg": {
+  "val": "{\"messages\":[{\"id\":0,\"text\":\"你好，我能帮什么忙吗？\"},{\"id\":1,\"text\":\"你好，有什么我能帮你的吗？\"},{\"id\":2,\"text\":\"你好，让我们开始聊天吧\"},{\"id\":3,\"text\":\"嗨！今天想聊些什么？\"},{\"id\":4,\"text\":\"欢迎回来，随时开始吧\"},{\"id\":5,\"text\":\"欢迎回来，想从哪里开始？\"},{\"id\":6,\"text\":\"早上好，今天有什么计划？\"},{\"id\":7,\"text\":\"早上好，今天想做点什么？\"},{\"id\":8,\"text\":\"早上好，开始聊天吧\"},{\"id\":9,\"text\":\"早上好，今天想聊些什么？\"},{\"id\":10,\"text\":\"下午好，我能帮什么忙吗？\"},{\"id\":11,\"text\":\"晚上好，有什么我能帮你的吗？\"}],\"time_config\":[{\"start\":360,\"end\":660,\"use\":[0,1,2,3,4,5,6,7,8,9]},{\"start\":780,\"end\":1050,\"use\":[0,1,2,3,4,5,10]},{\"start\":1050,\"end\":1320,\"use\":[0,1,2,3,4,5,11]}],\"fallback_message\":[0,1,2,3,4,5]}",
+  "id": 1336349584
+ },
+ "alert": {
+  "val": "null",
+  "id": 1079143224
+ },
+ "banner": {
+  "val": "null",
+  "id": null
+ },
+ "model_configs_v1": {
+  "val": "[{\"model_type\":\"default\",\"name\":\"快速模式\",\"description\":\"\",\"welcome_msg\":\"使用快速模式开始对话\",\"is_default\":true,\"enabled\":true,\"switchable\":true,\"show_model_name_in_session\":false,\"edit_quota\":5,\"regenerate_quota\":5,\"input_character_limit\":2621440,\"think_feature\":{},\"search_feature\":{},\"regenerate_options\":null,\"file_feature\":{\"token_limit\":890880,\"token_limit_with_thinking\":890880,\"max_input_file_count\":50,\"max_upload_file_size\":104857600,\"support_file_exts\":[\"wxml\",\"wxss\",\"wxs\",\"axml\",\"acss\",\"sjs\",\"swan\",\"ttml\",\"ttss\",\"qml\",\"qss\",\"pdf\",\"png\",\"jpg\",\"jpeg\",\"svg\",\"svgz\",\"bmp\",\"gif\",\"webp\",\"ico\",\"xbm\",\"dib\",\"pjp\",\"tif\",\"pjpeg\",\"avif\",\"apng\",\"tiff\",\"jfif\",\"txt\",\"md\",\"csv\",\"tsv\",\"html\",\"json\",\"log\",\"dot\",\"go\",\"h\",\"c\",\"cpp\",\"cxx\",\"cc\",\"cs\",\"java\",\"js\",\"css\",\"jsp\",\"php\",\"py\",\"py3\",\"asp\",\"yaml\",\"yml\",\"ini\",\"conf\",\"ts\",\"tsx\",\"doc\",\"docx\",\"ppt\",\"pptx\",\"xls\",\"xlsx\",\"abap\",\"asc\",\"ash\",\"ampl\",\"mod\",\"g4\",\"apib\",\"apl\",\"dyalog\",\"asax\",\"ascx\",\"ashx\",\"asmx\",\"aspx\",\"axd\",\"dats\",\"hats\",\"sats\",\"as\",\"adb\",\"ada\",\"ads\",\"agda\",\"als\",\"apacheconf\",\"vhost\",\"cls\",\"applescript\",\"scpt\",\"arc\",\"ino\",\"asciidoc\",\"adoc\",\"aj\",\"asm\",\"a51\",\"inc\",\"nasm\",\"aug\",\"ahk\",\"ahkl\",\"au3\",\"awk\",\"auk\",\"gawk\",\"mawk\",\"nawk\",\"bat\",\"cmd\",\"befunge\",\"bison\",\"bb\",\"decls\",\"bmx\",\"bsv\",\"boo\",\"b\",\"bf\",\"brs\",\"bro\",\"cats\",\"idc\",\"w\",\"cake\",\"cshtml\",\"csx\",\"c++\",\"cp\",\"h++\",\"hh\",\"hpp\",\"hxx\",\"inl\",\"ipp\",\"tcc\",\"tpp\",\"c-objdump\",\"chs\",\"clp\",\"cmake\",\"in\",\"cob\",\"cbl\",\"ccp\",\"cobol\",\"cpy\",\"capnp\",\"mss\",\"ceylon\",\"chpl\",\"ch\",\"ck\",\"cirru\",\"clw\",\"icl\",\"dcl\",\"click\",\"clj\",\"boot\",\"cl2\",\"cljc\",\"cljs\",\"hl\",\"cljscm\",\"cljx\",\"hic\",\"coffee\",\"_coffee\",\"cjsx\",\"cjs\",\"cts\",\"mjs\",\"mts\",\"cson\",\"iced\",\"cfm\",\"cfml\",\"cfc\",\"lisp\",\"asd\",\"cl\",\"l\",\"lsp\",\"ny\",\"podsl\",\"sexp\",\"cps\",\"coq\",\"v\",\"cppobjdump\",\"c++-objdump\",\"c++objdump\",\"cpp-objdump\",\"cxx-objdump\",\"creole\",\"cr\",\"feature\",\"cu\",\"cuh\",\"cy\",\"pyx\",\"pxd\",\"pxi\",\"d\",\"di\",\"d-objdump\",\"com\",\"dm\",\"zone\",\"arpa\",\"darcspatch\",\"dpatch\",\"dart\",\"diff\",\"patch\",\"dockerfile\",\"djs\",\"dylan\",\"dyl\",\"intr\",\"lid\",\"E\",\"ecl\",\"eclxml\",\"sch\",\"brd\",\"epj\",\"e\",\"ex\",\"exs\",\"elm\",\"el\",\"emacs\",\"desktop\",\"em\",\"emberscript\",\"erl\",\"es\",\"escript\",\"hrl\",\"xrl\",\"yrl\",\"fs\",\"fsi\",\"fsx\",\"fx\",\"flux\",\"f90\",\"f\",\"f03\",\"f08\",\"f77\",\"f95\",\"for\",\"fpp\",\"factor\",\"fy\",\"fancypack\",\"fan\",\"fth\",\"4th\",\"forth\",\"fr\",\"frt\",\"ftl\",\"g\",\"gco\",\"gcode\",\"gms\",\"gap\",\"gd\",\"gi\",\"tst\",\"s\",\"ms\",\"glsl\",\"fp\",\"frag\",\"frg\",\"fsh\",\"fshader\",\"geo\",\"geom\",\"glslv\",\"gshader\",\"shader\",\"vert\",\"vrx\",\"vsh\",\"vshader\",\"gml\",\"kid\",\"ebuild\",\"eclass\",\"po\",\"pot\",\"glf\",\"gp\",\"gnu\",\"gnuplot\",\"plot\",\"plt\",\"golo\",\"gs\",\"gst\",\"gsx\",\"vark\",\"grace\",\"gradle\",\"gf\",\"graphql\",\"gv\",\"man\",\"1in\",\"1m\",\"1x\",\"3in\",\"3m\",\"3qt\",\"3x\",\"me\",\"n\",\"rno\",\"roff\",\"groovy\",\"grt\",\"gtpl\",\"gvy\",\"gsp\",\"hcl\",\"tf\",\"hlsl\",\"fxh\",\"hlsli\",\"htm\",\"st\",\"xht\",\"xhtml\",\"mustache\",\"jinja\",\"eex\",\"erb\",\"deface\",\"phtml\",\"http\",\"haml\",\"handlebars\",\"hbs\",\"hb\",\"hs\",\"hsc\",\"hx\",\"hxsl\",\"hy\",\"pro\",\"dlm\",\"ipf\",\"cfg\",\"prefs\",\"properties\",\"irclog\",\"weechatlog\",\"idr\",\"lidr\",\"ni\",\"i7x\",\"iss\",\"io\",\"ik\",\"thy\",\"ijs\",\"flex\",\"jflex\",\"geojson\",\"lock\",\"topojson\",\"json5\",\"jsonld\",\"jq\",\"jsx\",\"jade\",\"j\",\"_js\",\"bones\",\"es6\",\"jake\",\"jsb\",\"jscad\",\"jsfl\",\"jsm\",\"jss\",\"njs\",\"pac\",\"sjs\",\"ssjs\",\"sublime-build\",\"sublime-commands\",\"sublime-completions\",\"sublime-keymap\",\"sublime-macro\",\"sublime-menu\",\"sublime-mousemap\",\"sublime-project\",\"sublime-settings\",\"sublime-theme\",\"sublime-workspace\",\"sublime_metrics\",\"sublime_session\",\"xsjs\",\"xsjslib\",\"jl\",\"ipynb\",\"krl\",\"kicad_pcb\",\"kit\",\"kt\",\"ktm\",\"kts\",\"lfe\",\"ll\",\"lol\",\"lsl\",\"lslp\",\"lvproj\",\"lasso\",\"las\",\"lasso8\",\"lasso9\",\"ldml\",\"latte\",\"lean\",\"hlean\",\"less\",\"lex\",\"ly\",\"ily\",\"m\",\"ld\",\"lds\",\"liquid\",\"lagda\",\"litcoffee\",\"lhs\",\"ls\",\"_ls\",\"xm\",\"x\",\"xi\",\"lgt\",\"logtalk\",\"lookml\",\"lua\",\"fcgi\",\"nse\",\"pd_lua\",\"rbxs\",\"wlua\",\"mumps\",\"m4\",\"mcfunction\",\"mcr\",\"mtml\",\"muf\",\"mak\",\"mk\",\"mkfile\",\"mako\",\"mao\",\"markdown\",\"mkd\",\"mkdn\",\"mkdown\",\"ron\",\"mask\",\"mathematica\",\"cdf\",\"ma\",\"map\",\"mt\",\"nb\",\"nbp\",\"wl\",\"wlt\",\"matlab\",\"maxpat\",\"maxhelp\",\"maxproj\",\"mxt\",\"pat\",\"mediawiki\",\"wiki\",\"moo\",\"metal\",\"minid\",\"druby\",\"duby\",\"mir\",\"mirah\",\"mo\",\"mms\",\"mmk\",\"monkey\",\"moon\",\"myt\",\"ncl\",\"nl\",\"nsi\",\"nsh\",\"axs\",\"axi\",\"nlogo\",\"nginxconf\",\"nim\",\"nimrod\",\"ninja\",\"nit\",\"nix\",\"nu\",\"numpy\",\"numpyw\",\"numsc\",\"ml\",\"eliom\",\"eliomi\",\"ml4\",\"mli\",\"mll\",\"mly\",\"objdump\",\"mm\",\"sj\",\"omgrofl\",\"opa\",\"opal\",\"opencl\",\"p\",\"scad\",\"org\",\"ox\",\"oxh\",\"oxo\",\"oxygene\",\"oz\",\"pwn\",\"aw\",\"ctp\",\"php3\",\"php4\",\"php5\",\"php6\",\"php7\",\"php8\",\"phps\",\"phpt\",\"pls\",\"pck\",\"pkb\",\"pks\",\"plb\",\"plsql\",\"sql\",\"pov\",\"pan\",\"psc\",\"parrot\",\"pasm\",\"pir\",\"pas\",\"dfm\",\"dpr\",\"lpr\",\"pp\",\"pl\",\"al\",\"cgi\",\"perl\",\"ph\",\"plx\",\"pm\",\"pod\",\"psgi\",\"t\",\"6pl\",\"6pm\",\"nqp\",\"p6\",\"p6l\",\"p6m\",\"pl6\",\"pm6\",\"pkl\",\"pig\",\"pike\",\"pmod\",\"pogo\",\"pony\",\"ps\",\"eps\",\"ps1\",\"psd1\",\"psm1\",\"pde\",\"prolog\",\"yap\",\"spin\",\"proto\",\"pub\",\"pd\",\"pb\",\"pbi\",\"purs\",\"bzl\",\"gyp\",\"lmi\",\"pyde\",\"pyi\",\"pyp\",\"pyt\",\"pyw\",\"rpy\",\"tac\",\"wsgi\",\"xpy\",\"pytb\",\"qml\",\"qbs\",\"pri\",\"r\",\"rd\",\"rsx\",\"raml\",\"rdoc\",\"rbbas\",\"rbfrm\",\"rbmnu\",\"rbres\",\"rbtbar\",\"rbuistate\",\"rhtml\",\"rmd\",\"rkt\",\"rktd\",\"rktl\",\"scrbl\",\"rl\",\"raw\",\"reb\",\"r2\",\"r3\",\"rebol\",\"red\",\"reds\",\"cw\",\"rs\",\"rsh\",\"robot\",\"rg\",\"rb\",\"builder\",\"gemspec\",\"god\",\"irbrc\",\"jbuilder\",\"mspec\",\"pluginspec\",\"podspec\",\"rabl\",\"rake\",\"rbuild\",\"rbw\",\"rbx\",\"ru\",\"ruby\",\"thor\",\"watchr\",\"sas\",\"scss\",\"smt2\",\"smt\",\"sparql\",\"rq\",\"sqf\",\"hqf\",\"cql\",\"ddl\",\"prc\",\"tab\",\"udf\",\"viw\",\"db2\",\"ston\",\"sage\",\"sagews\",\"sls\",\"sass\",\"scala\",\"sbt\",\"sc\",\"scaml\",\"scm\",\"sld\",\"sps\",\"ss\",\"sci\",\"sce\",\"self\",\"sh\",\"bash\",\"bats\",\"command\",\"ksh\",\"tmux\",\"tool\",\"zsh\",\"sh-session\",\"shen\",\"sl\",\"slim\",\"smali\",\"tpl\",\"sp\",\"sma\",\"nut\",\"stan\",\"ML\",\"fun\",\"sig\",\"sml\",\"do\",\"ado\",\"doh\",\"ihlp\",\"mata\",\"matah\",\"sthlp\",\"styl\",\"scd\",\"swift\",\"sv\",\"svh\",\"vh\",\"toml\",\"txl\",\"tcl\",\"adp\",\"tm\",\"tcsh\",\"csh\",\"tex\",\"aux\",\"bbx\",\"bib\",\"cbx\",\"dtx\",\"ins\",\"lbx\",\"ltx\",\"mkii\",\"mkiv\",\"mkvi\",\"sty\",\"toc\",\"tea\",\"no\",\"textile\",\"thrift\",\"tu\",\"ttl\",\"twig\",\"upc\",\"anim\",\"asset\",\"meta\",\"prefab\",\"unity\",\"uno\",\"uc\",\"ur\",\"urs\",\"vcl\",\"vhdl\",\"vhd\",\"vhf\",\"vhi\",\"vho\",\"vhs\",\"vht\",\"vhw\",\"vala\",\"vapi\",\"veo\",\"vim\",\"vb\",\"bas\",\"frm\",\"frx\",\"vba\",\"vbhtml\",\"vbs\",\"volt\",\"vue\",\"owl\",\"webidl\",\"x10\",\"xc\",\"xml\",\"ant\",\"axml\",\"ccxml\",\"clixml\",\"cproject\",\"csl\",\"csproj\",\"ct\",\"dita\",\"ditamap\",\"ditaval\",\"config\",\"dotsettings\",\"filters\",\"fsproj\",\"fxml\",\"glade\",\"grxml\",\"iml\",\"ivy\",\"jelly\",\"jsproj\",\"kml\",\"launch\",\"mdpolicy\",\"mxml\",\"nproj\",\"nuspec\",\"odd\",\"osm\",\"plist\",\"props\",\"ps1xml\",\"psc1\",\"pt\",\"rdf\",\"rss\",\"scxml\",\"srdf\",\"storyboard\",\"stTheme\",\"sublime-snippet\",\"targets\",\"tmCommand\",\"tml\",\"tmLanguage\",\"tmPreferences\",\"tmSnippet\",\"tmTheme\",\"ui\",\"urdf\",\"ux\",\"vbproj\",\"vcxproj\",\"vssettings\",\"vxml\",\"wsdl\",\"wsf\",\"wxi\",\"wxl\",\"wxs\",\"x3d\",\"xacro\",\"xaml\",\"xib\",\"xlf\",\"xliff\",\"xmi\",\"dist\",\"xproj\",\"xsd\",\"xul\",\"zcml\",\"xsp-config\",\"metadata\",\"xpl\",\"xproc\",\"xquery\",\"xq\",\"xql\",\"xqm\",\"xqy\",\"xs\",\"xslt\",\"xsl\",\"xojo_code\",\"xojo_menu\",\"xojo_report\",\"xojo_script\",\"xojo_toolbar\",\"xojo_window\",\"xtend\",\"reek\",\"rviz\",\"sublime-syntax\",\"syntax\",\"yang\",\"y\",\"yacc\",\"yy\",\"zep\",\"zimpl\",\"zmpl\",\"zpl\",\"ec\",\"eh\",\"edn\",\"fish\",\"mu\",\"nc\",\"ooc\",\"rst\",\"rest\",\"wisp\",\"prg\",\"prw\",\"gitignore\",\"gitkeep\",\"gitmodules\",\"example\",\"avifs\",\"blp\",\"bufr\",\"bw\",\"cur\",\"dcx\",\"dds\",\"emf\",\"fit\",\"fits\",\"flc\",\"fli\",\"ftc\",\"ftu\",\"gbr\",\"grib\",\"h5\",\"hdf\",\"hif\",\"icb\",\"icns\",\"iim\",\"im\",\"j2c\",\"j2k\",\"jp2\",\"jpc\",\"jpe\",\"jpf\",\"jpx\",\"mpeg\",\"mpg\",\"msp\",\"pbm\",\"pcd\",\"pcx\",\"pfm\",\"pgm\",\"pnm\",\"ppm\",\"psd\",\"pxr\",\"qoi\",\"ras\",\"rgb\",\"rgba\",\"sgi\",\"tga\",\"vda\",\"vst\",\"wmf\",\"xpm\",\"epub\",\"mobi\"],\"conflict_with_search\":false,\"vision\":true,\"enable_thumbnail\":true},\"prompt_feature\":[{\"id\":9,\"scene\":\"image\",\"content\":\"这是什么\"},{\"id\":10,\"scene\":\"image\",\"content\":\"分析一下\"},{\"id\":11,\"scene\":\"image\",\"content\":\"怎么办\"},{\"id\":12,\"scene\":\"image\",\"content\":\"解释一下\"},{\"id\":13,\"scene\":\"file\",\"content\":\"分析一下\"},{\"id\":14,\"scene\":\"file\",\"content\":\"答案是什么\"},{\"id\":15,\"scene\":\"file\",\"content\":\"总结\"},{\"id\":16,\"scene\":\"file\",\"content\":\"解释一下\"}],\"tips\":{},\"camera_mode\":\"photo_edit\",\"tts_feature\":{}},{\"model_type\":\"expert\",\"name\":\"专家模式\",\"description\":\"\",\"welcome_msg\":\"使用专家模式开始对话\",\"is_default\":false,\"enabled\":false,\"switchable\":false,\"show_model_name_in_session\":false,\"edit_quota\":5,\"regenerate_quota\":5,\"input_character_limit\":2621440,\"think_feature\":{},\"search_feature\":{},\"regenerate_options\":null,\"file_feature\":{\"token_limit\":890880,\"token_limit_with_thinking\":890880,\"max_input_file_count\":50,\"max_upload_file_size\":104857600,\"support_file_exts\":[\"wxml\",\"wxss\",\"wxs\",\"axml\",\"acss\",\"sjs\",\"swan\",\"ttml\",\"ttss\",\"qml\",\"qss\",\"pdf\",\"png\",\"jpg\",\"jpeg\",\"svg\",\"svgz\",\"bmp\",\"gif\",\"webp\",\"ico\",\"xbm\",\"dib\",\"pjp\",\"tif\",\"pjpeg\",\"avif\",\"apng\",\"tiff\",\"jfif\",\"txt\",\"md\",\"csv\",\"tsv\",\"html\",\"json\",\"log\",\"dot\",\"go\",\"h\",\"c\",\"cpp\",\"cxx\",\"cc\",\"cs\",\"java\",\"js\",\"css\",\"jsp\",\"php\",\"py\",\"py3\",\"asp\",\"yaml\",\"yml\",\"ini\",\"conf\",\"ts\",\"tsx\",\"doc\",\"docx\",\"ppt\",\"pptx\",\"xls\",\"xlsx\",\"abap\",\"asc\",\"ash\",\"ampl\",\"mod\",\"g4\",\"apib\",\"apl\",\"dyalog\",\"asax\",\"ascx\",\"ashx\",\"asmx\",\"aspx\",\"axd\",\"dats\",\"hats\",\"sats\",\"as\",\"adb\",\"ada\",\"ads\",\"agda\",\"als\",\"apacheconf\",\"vhost\",\"cls\",\"applescript\",\"scpt\",\"arc\",\"ino\",\"asciidoc\",\"adoc\",\"aj\",\"asm\",\"a51\",\"inc\",\"nasm\",\"aug\",\"ahk\",\"ahkl\",\"au3\",\"awk\",\"auk\",\"gawk\",\"mawk\",\"nawk\",\"bat\",\"cmd\",\"befunge\",\"bison\",\"bb\",\"decls\",\"bmx\",\"bsv\",\"boo\",\"b\",\"bf\",\"brs\",\"bro\",\"cats\",\"idc\",\"w\",\"cake\",\"cshtml\",\"csx\",\"c++\",\"cp\",\"h++\",\"hh\",\"hpp\",\"hxx\",\"inl\",\"ipp\",\"tcc\",\"tpp\",\"c-objdump\",\"chs\",\"clp\",\"cmake\",\"in\",\"cob\",\"cbl\",\"ccp\",\"cobol\",\"cpy\",\"capnp\",\"mss\",\"ceylon\",\"chpl\",\"ch\",\"ck\",\"cirru\",\"clw\",\"icl\",\"dcl\",\"click\",\"clj\",\"boot\",\"cl2\",\"cljc\",\"cljs\",\"hl\",\"cljscm\",\"cljx\",\"hic\",\"coffee\",\"_coffee\",\"cjsx\",\"cjs\",\"cts\",\"mjs\",\"mts\",\"cson\",\"iced\",\"cfm\",\"cfml\",\"cfc\",\"lisp\",\"asd\",\"cl\",\"l\",\"lsp\",\"ny\",\"podsl\",\"sexp\",\"cps\",\"coq\",\"v\",\"cppobjdump\",\"c++-objdump\",\"c++objdump\",\"cpp-objdump\",\"cxx-objdump\",\"creole\",\"cr\",\"feature\",\"cu\",\"cuh\",\"cy\",\"pyx\",\"pxd\",\"pxi\",\"d\",\"di\",\"d-objdump\",\"com\",\"dm\",\"zone\",\"arpa\",\"darcspatch\",\"dpatch\",\"dart\",\"diff\",\"patch\",\"dockerfile\",\"djs\",\"dylan\",\"dyl\",\"intr\",\"lid\",\"E\",\"ecl\",\"eclxml\",\"sch\",\"brd\",\"epj\",\"e\",\"ex\",\"exs\",\"elm\",\"el\",\"emacs\",\"desktop\",\"em\",\"emberscript\",\"erl\",\"es\",\"escript\",\"hrl\",\"xrl\",\"yrl\",\"fs\",\"fsi\",\"fsx\",\"fx\",\"flux\",\"f90\",\"f\",\"f03\",\"f08\",\"f77\",\"f95\",\"for\",\"fpp\",\"factor\",\"fy\",\"fancypack\",\"fan\",\"fth\",\"4th\",\"forth\",\"fr\",\"frt\",\"ftl\",\"g\",\"gco\",\"gcode\",\"gms\",\"gap\",\"gd\",\"gi\",\"tst\",\"s\",\"ms\",\"glsl\",\"fp\",\"frag\",\"frg\",\"fsh\",\"fshader\",\"geo\",\"geom\",\"glslv\",\"gshader\",\"shader\",\"vert\",\"vrx\",\"vsh\",\"vshader\",\"gml\",\"kid\",\"ebuild\",\"eclass\",\"po\",\"pot\",\"glf\",\"gp\",\"gnu\",\"gnuplot\",\"plot\",\"plt\",\"golo\",\"gs\",\"gst\",\"gsx\",\"vark\",\"grace\",\"gradle\",\"gf\",\"graphql\",\"gv\",\"man\",\"1in\",\"1m\",\"1x\",\"3in\",\"3m\",\"3qt\",\"3x\",\"me\",\"n\",\"rno\",\"roff\",\"groovy\",\"grt\",\"gtpl\",\"gvy\",\"gsp\",\"hcl\",\"tf\",\"hlsl\",\"fxh\",\"hlsli\",\"htm\",\"st\",\"xht\",\"xhtml\",\"mustache\",\"jinja\",\"eex\",\"erb\",\"deface\",\"phtml\",\"http\",\"haml\",\"handlebars\",\"hbs\",\"hb\",\"hs\",\"hsc\",\"hx\",\"hxsl\",\"hy\",\"pro\",\"dlm\",\"ipf\",\"cfg\",\"prefs\",\"properties\",\"irclog\",\"weechatlog\",\"idr\",\"lidr\",\"ni\",\"i7x\",\"iss\",\"io\",\"ik\",\"thy\",\"ijs\",\"flex\",\"jflex\",\"geojson\",\"lock\",\"topojson\",\"json5\",\"jsonld\",\"jq\",\"jsx\",\"jade\",\"j\",\"_js\",\"bones\",\"es6\",\"jake\",\"jsb\",\"jscad\",\"jsfl\",\"jsm\",\"jss\",\"njs\",\"pac\",\"sjs\",\"ssjs\",\"sublime-build\",\"sublime-commands\",\"sublime-completions\",\"sublime-keymap\",\"sublime-macro\",\"sublime-menu\",\"sublime-mousemap\",\"sublime-project\",\"sublime-settings\",\"sublime-theme\",\"sublime-workspace\",\"sublime_metrics\",\"sublime_session\",\"xsjs\",\"xsjslib\",\"jl\",\"ipynb\",\"krl\",\"kicad_pcb\",\"kit\",\"kt\",\"ktm\",\"kts\",\"lfe\",\"ll\",\"lol\",\"lsl\",\"lslp\",\"lvproj\",\"lasso\",\"las\",\"lasso8\",\"lasso9\",\"ldml\",\"latte\",\"lean\",\"hlean\",\"less\",\"lex\",\"ly\",\"ily\",\"m\",\"ld\",\"lds\",\"liquid\",\"lagda\",\"litcoffee\",\"lhs\",\"ls\",\"_ls\",\"xm\",\"x\",\"xi\",\"lgt\",\"logtalk\",\"lookml\",\"lua\",\"fcgi\",\"nse\",\"pd_lua\",\"rbxs\",\"wlua\",\"mumps\",\"m4\",\"mcfunction\",\"mcr\",\"mtml\",\"muf\",\"mak\",\"mk\",\"mkfile\",\"mako\",\"mao\",\"markdown\",\"mkd\",\"mkdn\",\"mkdown\",\"ron\",\"mask\",\"mathematica\",\"cdf\",\"ma\",\"map\",\"mt\",\"nb\",\"nbp\",\"wl\",\"wlt\",\"matlab\",\"maxpat\",\"maxhelp\",\"maxproj\",\"mxt\",\"pat\",\"mediawiki\",\"wiki\",\"moo\",\"metal\",\"minid\",\"druby\",\"duby\",\"mir\",\"mirah\",\"mo\",\"mms\",\"mmk\",\"monkey\",\"moon\",\"myt\",\"ncl\",\"nl\",\"nsi\",\"nsh\",\"axs\",\"axi\",\"nlogo\",\"nginxconf\",\"nim\",\"nimrod\",\"ninja\",\"nit\",\"nix\",\"nu\",\"numpy\",\"numpyw\",\"numsc\",\"ml\",\"eliom\",\"eliomi\",\"ml4\",\"mli\",\"mll\",\"mly\",\"objdump\",\"mm\",\"sj\",\"omgrofl\",\"opa\",\"opal\",\"opencl\",\"p\",\"scad\",\"org\",\"ox\",\"oxh\",\"oxo\",\"oxygene\",\"oz\",\"pwn\",\"aw\",\"ctp\",\"php3\",\"php4\",\"php5\",\"php6\",\"php7\",\"php8\",\"phps\",\"phpt\",\"pls\",\"pck\",\"pkb\",\"pks\",\"plb\",\"plsql\",\"sql\",\"pov\",\"pan\",\"psc\",\"parrot\",\"pasm\",\"pir\",\"pas\",\"dfm\",\"dpr\",\"lpr\",\"pp\",\"pl\",\"al\",\"cgi\",\"perl\",\"ph\",\"plx\",\"pm\",\"pod\",\"psgi\",\"t\",\"6pl\",\"6pm\",\"nqp\",\"p6\",\"p6l\",\"p6m\",\"pl6\",\"pm6\",\"pkl\",\"pig\",\"pike\",\"pmod\",\"pogo\",\"pony\",\"ps\",\"eps\",\"ps1\",\"psd1\",\"psm1\",\"pde\",\"prolog\",\"yap\",\"spin\",\"proto\",\"pub\",\"pd\",\"pb\",\"pbi\",\"purs\",\"bzl\",\"gyp\",\"lmi\",\"pyde\",\"pyi\",\"pyp\",\"pyt\",\"pyw\",\"rpy\",\"tac\",\"wsgi\",\"xpy\",\"pytb\",\"qml\",\"qbs\",\"pri\",\"r\",\"rd\",\"rsx\",\"raml\",\"rdoc\",\"rbbas\",\"rbfrm\",\"rbmnu\",\"rbres\",\"rbtbar\",\"rbuistate\",\"rhtml\",\"rmd\",\"rkt\",\"rktd\",\"rktl\",\"scrbl\",\"rl\",\"raw\",\"reb\",\"r2\",\"r3\",\"rebol\",\"red\",\"reds\",\"cw\",\"rs\",\"rsh\",\"robot\",\"rg\",\"rb\",\"builder\",\"gemspec\",\"god\",\"irbrc\",\"jbuilder\",\"mspec\",\"pluginspec\",\"podspec\",\"rabl\",\"rake\",\"rbuild\",\"rbw\",\"rbx\",\"ru\",\"ruby\",\"thor\",\"watchr\",\"sas\",\"scss\",\"smt2\",\"smt\",\"sparql\",\"rq\",\"sqf\",\"hqf\",\"cql\",\"ddl\",\"prc\",\"tab\",\"udf\",\"viw\",\"db2\",\"ston\",\"sage\",\"sagews\",\"sls\",\"sass\",\"scala\",\"sbt\",\"sc\",\"scaml\",\"scm\",\"sld\",\"sps\",\"ss\",\"sci\",\"sce\",\"self\",\"sh\",\"bash\",\"bats\",\"command\",\"ksh\",\"tmux\",\"tool\",\"zsh\",\"sh-session\",\"shen\",\"sl\",\"slim\",\"smali\",\"tpl\",\"sp\",\"sma\",\"nut\",\"stan\",\"ML\",\"fun\",\"sig\",\"sml\",\"do\",\"ado\",\"doh\",\"ihlp\",\"mata\",\"matah\",\"sthlp\",\"styl\",\"scd\",\"swift\",\"sv\",\"svh\",\"vh\",\"toml\",\"txl\",\"tcl\",\"adp\",\"tm\",\"tcsh\",\"csh\",\"tex\",\"aux\",\"bbx\",\"bib\",\"cbx\",\"dtx\",\"ins\",\"lbx\",\"ltx\",\"mkii\",\"mkiv\",\"mkvi\",\"sty\",\"toc\",\"tea\",\"no\",\"textile\",\"thrift\",\"tu\",\"ttl\",\"twig\",\"upc\",\"anim\",\"asset\",\"meta\",\"prefab\",\"unity\",\"uno\",\"uc\",\"ur\",\"urs\",\"vcl\",\"vhdl\",\"vhd\",\"vhf\",\"vhi\",\"vho\",\"vhs\",\"vht\",\"vhw\",\"vala\",\"vapi\",\"veo\",\"vim\",\"vb\",\"bas\",\"frm\",\"frx\",\"vba\",\"vbhtml\",\"vbs\",\"volt\",\"vue\",\"owl\",\"webidl\",\"x10\",\"xc\",\"xml\",\"ant\",\"axml\",\"ccxml\",\"clixml\",\"cproject\",\"csl\",\"csproj\",\"ct\",\"dita\",\"ditamap\",\"ditaval\",\"config\",\"dotsettings\",\"filters\",\"fsproj\",\"fxml\",\"glade\",\"grxml\",\"iml\",\"ivy\",\"jelly\",\"jsproj\",\"kml\",\"launch\",\"mdpolicy\",\"mxml\",\"nproj\",\"nuspec\",\"odd\",\"osm\",\"plist\",\"props\",\"ps1xml\",\"psc1\",\"pt\",\"rdf\",\"rss\",\"scxml\",\"srdf\",\"storyboard\",\"stTheme\",\"sublime-snippet\",\"targets\",\"tmCommand\",\"tml\",\"tmLanguage\",\"tmPreferences\",\"tmSnippet\",\"tmTheme\",\"ui\",\"urdf\",\"ux\",\"vbproj\",\"vcxproj\",\"vssettings\",\"vxml\",\"wsdl\",\"wsf\",\"wxi\",\"wxl\",\"wxs\",\"x3d\",\"xacro\",\"xaml\",\"xib\",\"xlf\",\"xliff\",\"xmi\",\"dist\",\"xproj\",\"xsd\",\"xul\",\"zcml\",\"xsp-config\",\"metadata\",\"xpl\",\"xproc\",\"xquery\",\"xq\",\"xql\",\"xqm\",\"xqy\",\"xs\",\"xslt\",\"xsl\",\"xojo_code\",\"xojo_menu\",\"xojo_report\",\"xojo_script\",\"xojo_toolbar\",\"xojo_window\",\"xtend\",\"reek\",\"rviz\",\"sublime-syntax\",\"syntax\",\"yang\",\"y\",\"yacc\",\"yy\",\"zep\",\"zimpl\",\"zmpl\",\"zpl\",\"ec\",\"eh\",\"edn\",\"fish\",\"mu\",\"nc\",\"ooc\",\"rst\",\"rest\",\"wisp\",\"prg\",\"prw\",\"gitignore\",\"gitkeep\",\"gitmodules\",\"example\",\"avifs\",\"blp\",\"bufr\",\"bw\",\"cur\",\"dcx\",\"dds\",\"emf\",\"fit\",\"fits\",\"flc\",\"fli\",\"ftc\",\"ftu\",\"gbr\",\"grib\",\"h5\",\"hdf\",\"hif\",\"icb\",\"icns\",\"iim\",\"im\",\"j2c\",\"j2k\",\"jp2\",\"jpc\",\"jpe\",\"jpf\",\"jpx\",\"mpeg\",\"mpg\",\"msp\",\"pbm\",\"pcd\",\"pcx\",\"pfm\",\"pgm\",\"pnm\",\"ppm\",\"psd\",\"pxr\",\"qoi\",\"ras\",\"rgb\",\"rgba\",\"sgi\",\"tga\",\"vda\",\"vst\",\"wmf\",\"xpm\",\"epub\",\"mobi\"],\"conflict_with_search\":false,\"vision\":true,\"enable_thumbnail\":true},\"prompt_feature\":[{\"id\":9,\"scene\":\"image\",\"content\":\"这是什么\"},{\"id\":10,\"scene\":\"image\",\"content\":\"分析一下\"},{\"id\":11,\"scene\":\"image\",\"content\":\"怎么办\"},{\"id\":12,\"scene\":\"image\",\"content\":\"解释一下\"},{\"id\":13,\"scene\":\"file\",\"content\":\"分析一下\"},{\"id\":14,\"scene\":\"file\",\"content\":\"答案是什么\"},{\"id\":15,\"scene\":\"file\",\"content\":\"总结\"},{\"id\":16,\"scene\":\"file\",\"content\":\"解释一下\"}],\"tips\":{},\"camera_mode\":\"photo_edit\",\"tts_feature\":{}},{\"model_type\":\"vision\",\"name\":\"识图模式\",\"description\":\"\",\"welcome_msg\":\"使用识图模式开始对话\",\"is_default\":false,\"enabled\":false,\"switchable\":false,\"show_model_name_in_session\":false,\"edit_quota\":5,\"regenerate_quota\":5,\"input_character_limit\":2621440,\"think_feature\":{},\"search_feature\":{},\"regenerate_options\":null,\"file_feature\":{\"token_limit\":890880,\"token_limit_with_thinking\":890880,\"max_input_file_count\":50,\"max_upload_file_size\":104857600,\"support_file_exts\":[\"wxml\",\"wxss\",\"wxs\",\"axml\",\"acss\",\"sjs\",\"swan\",\"ttml\",\"ttss\",\"qml\",\"qss\",\"pdf\",\"png\",\"jpg\",\"jpeg\",\"svg\",\"svgz\",\"bmp\",\"gif\",\"webp\",\"ico\",\"xbm\",\"dib\",\"pjp\",\"tif\",\"pjpeg\",\"avif\",\"apng\",\"tiff\",\"jfif\",\"txt\",\"md\",\"csv\",\"tsv\",\"html\",\"json\",\"log\",\"dot\",\"go\",\"h\",\"c\",\"cpp\",\"cxx\",\"cc\",\"cs\",\"java\",\"js\",\"css\",\"jsp\",\"php\",\"py\",\"py3\",\"asp\",\"yaml\",\"yml\",\"ini\",\"conf\",\"ts\",\"tsx\",\"doc\",\"docx\",\"ppt\",\"pptx\",\"xls\",\"xlsx\",\"abap\",\"asc\",\"ash\",\"ampl\",\"mod\",\"g4\",\"apib\",\"apl\",\"dyalog\",\"asax\",\"ascx\",\"ashx\",\"asmx\",\"aspx\",\"axd\",\"dats\",\"hats\",\"sats\",\"as\",\"adb\",\"ada\",\"ads\",\"agda\",\"als\",\"apacheconf\",\"vhost\",\"cls\",\"applescript\",\"scpt\",\"arc\",\"ino\",\"asciidoc\",\"adoc\",\"aj\",\"asm\",\"a51\",\"inc\",\"nasm\",\"aug\",\"ahk\",\"ahkl\",\"au3\",\"awk\",\"auk\",\"gawk\",\"mawk\",\"nawk\",\"bat\",\"cmd\",\"befunge\",\"bison\",\"bb\",\"decls\",\"bmx\",\"bsv\",\"boo\",\"b\",\"bf\",\"brs\",\"bro\",\"cats\",\"idc\",\"w\",\"cake\",\"cshtml\",\"csx\",\"c++\",\"cp\",\"h++\",\"hh\",\"hpp\",\"hxx\",\"inl\",\"ipp\",\"tcc\",\"tpp\",\"c-objdump\",\"chs\",\"clp\",\"cmake\",\"in\",\"cob\",\"cbl\",\"ccp\",\"cobol\",\"cpy\",\"capnp\",\"mss\",\"ceylon\",\"chpl\",\"ch\",\"ck\",\"cirru\",\"clw\",\"icl\",\"dcl\",\"click\",\"clj\",\"boot\",\"cl2\",\"cljc\",\"cljs\",\"hl\",\"cljscm\",\"cljx\",\"hic\",\"coffee\",\"_coffee\",\"cjsx\",\"cjs\",\"cts\",\"mjs\",\"mts\",\"cson\",\"iced\",\"cfm\",\"cfml\",\"cfc\",\"lisp\",\"asd\",\"cl\",\"l\",\"lsp\",\"ny\",\"podsl\",\"sexp\",\"cps\",\"coq\",\"v\",\"cppobjdump\",\"c++-objdump\",\"c++objdump\",\"cpp-objdump\",\"cxx-objdump\",\"creole\",\"cr\",\"feature\",\"cu\",\"cuh\",\"cy\",\"pyx\",\"pxd\",\"pxi\",\"d\",\"di\",\"d-objdump\",\"com\",\"dm\",\"zone\",\"arpa\",\"darcspatch\",\"dpatch\",\"dart\",\"diff\",\"patch\",\"dockerfile\",\"djs\",\"dylan\",\"dyl\",\"intr\",\"lid\",\"E\",\"ecl\",\"eclxml\",\"sch\",\"brd\",\"epj\",\"e\",\"ex\",\"exs\",\"elm\",\"el\",\"emacs\",\"desktop\",\"em\",\"emberscript\",\"erl\",\"es\",\"escript\",\"hrl\",\"xrl\",\"yrl\",\"fs\",\"fsi\",\"fsx\",\"fx\",\"flux\",\"f90\",\"f\",\"f03\",\"f08\",\"f77\",\"f95\",\"for\",\"fpp\",\"factor\",\"fy\",\"fancypack\",\"fan\",\"fth\",\"4th\",\"forth\",\"fr\",\"frt\",\"ftl\",\"g\",\"gco\",\"gcode\",\"gms\",\"gap\",\"gd\",\"gi\",\"tst\",\"s\",\"ms\",\"glsl\",\"fp\",\"frag\",\"frg\",\"fsh\",\"fshader\",\"geo\",\"geom\",\"glslv\",\"gshader\",\"shader\",\"vert\",\"vrx\",\"vsh\",\"vshader\",\"gml\",\"kid\",\"ebuild\",\"eclass\",\"po\",\"pot\",\"glf\",\"gp\",\"gnu\",\"gnuplot\",\"plot\",\"plt\",\"golo\",\"gs\",\"gst\",\"gsx\",\"vark\",\"grace\",\"gradle\",\"gf\",\"graphql\",\"gv\",\"man\",\"1in\",\"1m\",\"1x\",\"3in\",\"3m\",\"3qt\",\"3x\",\"me\",\"n\",\"rno\",\"roff\",\"groovy\",\"grt\",\"gtpl\",\"gvy\",\"gsp\",\"hcl\",\"tf\",\"hlsl\",\"fxh\",\"hlsli\",\"htm\",\"st\",\"xht\",\"xhtml\",\"mustache\",\"jinja\",\"eex\",\"erb\",\"deface\",\"phtml\",\"http\",\"haml\",\"handlebars\",\"hbs\",\"hb\",\"hs\",\"hsc\",\"hx\",\"hxsl\",\"hy\",\"pro\",\"dlm\",\"ipf\",\"cfg\",\"prefs\",\"properties\",\"irclog\",\"weechatlog\",\"idr\",\"lidr\",\"ni\",\"i7x\",\"iss\",\"io\",\"ik\",\"thy\",\"ijs\",\"flex\",\"jflex\",\"geojson\",\"lock\",\"topojson\",\"json5\",\"jsonld\",\"jq\",\"jsx\",\"jade\",\"j\",\"_js\",\"bones\",\"es6\",\"jake\",\"jsb\",\"jscad\",\"jsfl\",\"jsm\",\"jss\",\"njs\",\"pac\",\"sjs\",\"ssjs\",\"sublime-build\",\"sublime-commands\",\"sublime-completions\",\"sublime-keymap\",\"sublime-macro\",\"sublime-menu\",\"sublime-mousemap\",\"sublime-project\",\"sublime-settings\",\"sublime-theme\",\"sublime-workspace\",\"sublime_metrics\",\"sublime_session\",\"xsjs\",\"xsjslib\",\"jl\",\"ipynb\",\"krl\",\"kicad_pcb\",\"kit\",\"kt\",\"ktm\",\"kts\",\"lfe\",\"ll\",\"lol\",\"lsl\",\"lslp\",\"lvproj\",\"lasso\",\"las\",\"lasso8\",\"lasso9\",\"ldml\",\"latte\",\"lean\",\"hlean\",\"less\",\"lex\",\"ly\",\"ily\",\"m\",\"ld\",\"lds\",\"liquid\",\"lagda\",\"litcoffee\",\"lhs\",\"ls\",\"_ls\",\"xm\",\"x\",\"xi\",\"lgt\",\"logtalk\",\"lookml\",\"lua\",\"fcgi\",\"nse\",\"pd_lua\",\"rbxs\",\"wlua\",\"mumps\",\"m4\",\"mcfunction\",\"mcr\",\"mtml\",\"muf\",\"mak\",\"mk\",\"mkfile\",\"mako\",\"mao\",\"markdown\",\"mkd\",\"mkdn\",\"mkdown\",\"ron\",\"mask\",\"mathematica\",\"cdf\",\"ma\",\"map\",\"mt\",\"nb\",\"nbp\",\"wl\",\"wlt\",\"matlab\",\"maxpat\",\"maxhelp\",\"maxproj\",\"mxt\",\"pat\",\"mediawiki\",\"wiki\",\"moo\",\"metal\",\"minid\",\"druby\",\"duby\",\"mir\",\"mirah\",\"mo\",\"mms\",\"mmk\",\"monkey\",\"moon\",\"myt\",\"ncl\",\"nl\",\"nsi\",\"nsh\",\"axs\",\"axi\",\"nlogo\",\"nginxconf\",\"nim\",\"nimrod\",\"ninja\",\"nit\",\"nix\",\"nu\",\"numpy\",\"numpyw\",\"numsc\",\"ml\",\"eliom\",\"eliomi\",\"ml4\",\"mli\",\"mll\",\"mly\",\"objdump\",\"mm\",\"sj\",\"omgrofl\",\"opa\",\"opal\",\"opencl\",\"p\",\"scad\",\"org\",\"ox\",\"oxh\",\"oxo\",\"oxygene\",\"oz\",\"pwn\",\"aw\",\"ctp\",\"php3\",\"php4\",\"php5\",\"php6\",\"php7\",\"php8\",\"phps\",\"phpt\",\"pls\",\"pck\",\"pkb\",\"pks\",\"plb\",\"plsql\",\"sql\",\"pov\",\"pan\",\"psc\",\"parrot\",\"pasm\",\"pir\",\"pas\",\"dfm\",\"dpr\",\"lpr\",\"pp\",\"pl\",\"al\",\"cgi\",\"perl\",\"ph\",\"plx\",\"pm\",\"pod\",\"psgi\",\"t\",\"6pl\",\"6pm\",\"nqp\",\"p6\",\"p6l\",\"p6m\",\"pl6\",\"pm6\",\"pkl\",\"pig\",\"pike\",\"pmod\",\"pogo\",\"pony\",\"ps\",\"eps\",\"ps1\",\"psd1\",\"psm1\",\"pde\",\"prolog\",\"yap\",\"spin\",\"proto\",\"pub\",\"pd\",\"pb\",\"pbi\",\"purs\",\"bzl\",\"gyp\",\"lmi\",\"pyde\",\"pyi\",\"pyp\",\"pyt\",\"pyw\",\"rpy\",\"tac\",\"wsgi\",\"xpy\",\"pytb\",\"qml\",\"qbs\",\"pri\",\"r\",\"rd\",\"rsx\",\"raml\",\"rdoc\",\"rbbas\",\"rbfrm\",\"rbmnu\",\"rbres\",\"rbtbar\",\"rbuistate\",\"rhtml\",\"rmd\",\"rkt\",\"rktd\",\"rktl\",\"scrbl\",\"rl\",\"raw\",\"reb\",\"r2\",\"r3\",\"rebol\",\"red\",\"reds\",\"cw\",\"rs\",\"rsh\",\"robot\",\"rg\",\"rb\",\"builder\",\"gemspec\",\"god\",\"irbrc\",\"jbuilder\",\"mspec\",\"pluginspec\",\"podspec\",\"rabl\",\"rake\",\"rbuild\",\"rbw\",\"rbx\",\"ru\",\"ruby\",\"thor\",\"watchr\",\"sas\",\"scss\",\"smt2\",\"smt\",\"sparql\",\"rq\",\"sqf\",\"hqf\",\"cql\",\"ddl\",\"prc\",\"tab\",\"udf\",\"viw\",\"db2\",\"ston\",\"sage\",\"sagews\",\"sls\",\"sass\",\"scala\",\"sbt\",\"sc\",\"scaml\",\"scm\",\"sld\",\"sps\",\"ss\",\"sci\",\"sce\",\"self\",\"sh\",\"bash\",\"bats\",\"command\",\"ksh\",\"tmux\",\"tool\",\"zsh\",\"sh-session\",\"shen\",\"sl\",\"slim\",\"smali\",\"tpl\",\"sp\",\"sma\",\"nut\",\"stan\",\"ML\",\"fun\",\"sig\",\"sml\",\"do\",\"ado\",\"doh\",\"ihlp\",\"mata\",\"matah\",\"sthlp\",\"styl\",\"scd\",\"swift\",\"sv\",\"svh\",\"vh\",\"toml\",\"txl\",\"tcl\",\"adp\",\"tm\",\"tcsh\",\"csh\",\"tex\",\"aux\",\"bbx\",\"bib\",\"cbx\",\"dtx\",\"ins\",\"lbx\",\"ltx\",\"mkii\",\"mkiv\",\"mkvi\",\"sty\",\"toc\",\"tea\",\"no\",\"textile\",\"thrift\",\"tu\",\"ttl\",\"twig\",\"upc\",\"anim\",\"asset\",\"meta\",\"prefab\",\"unity\",\"uno\",\"uc\",\"ur\",\"urs\",\"vcl\",\"vhdl\",\"vhd\",\"vhf\",\"vhi\",\"vho\",\"vhs\",\"vht\",\"vhw\",\"vala\",\"vapi\",\"veo\",\"vim\",\"vb\",\"bas\",\"frm\",\"frx\",\"vba\",\"vbhtml\",\"vbs\",\"volt\",\"vue\",\"owl\",\"webidl\",\"x10\",\"xc\",\"xml\",\"ant\",\"axml\",\"ccxml\",\"clixml\",\"cproject\",\"csl\",\"csproj\",\"ct\",\"dita\",\"ditamap\",\"ditaval\",\"config\",\"dotsettings\",\"filters\",\"fsproj\",\"fxml\",\"glade\",\"grxml\",\"iml\",\"ivy\",\"jelly\",\"jsproj\",\"kml\",\"launch\",\"mdpolicy\",\"mxml\",\"nproj\",\"nuspec\",\"odd\",\"osm\",\"plist\",\"props\",\"ps1xml\",\"psc1\",\"pt\",\"rdf\",\"rss\",\"scxml\",\"srdf\",\"storyboard\",\"stTheme\",\"sublime-snippet\",\"targets\",\"tmCommand\",\"tml\",\"tmLanguage\",\"tmPreferences\",\"tmSnippet\",\"tmTheme\",\"ui\",\"urdf\",\"ux\",\"vbproj\",\"vcxproj\",\"vssettings\",\"vxml\",\"wsdl\",\"wsf\",\"wxi\",\"wxl\",\"wxs\",\"x3d\",\"xacro\",\"xaml\",\"xib\",\"xlf\",\"xliff\",\"xmi\",\"dist\",\"xproj\",\"xsd\",\"xul\",\"zcml\",\"xsp-config\",\"metadata\",\"xpl\",\"xproc\",\"xquery\",\"xq\",\"xql\",\"xqm\",\"xqy\",\"xs\",\"xslt\",\"xsl\",\"xojo_code\",\"xojo_menu\",\"xojo_report\",\"xojo_script\",\"xojo_toolbar\",\"xojo_window\",\"xtend\",\"reek\",\"rviz\",\"sublime-syntax\",\"syntax\",\"yang\",\"y\",\"yacc\",\"yy\",\"zep\",\"zimpl\",\"zmpl\",\"zpl\",\"ec\",\"eh\",\"edn\",\"fish\",\"mu\",\"nc\",\"ooc\",\"rst\",\"rest\",\"wisp\",\"prg\",\"prw\",\"gitignore\",\"gitkeep\",\"gitmodules\",\"example\",\"avifs\",\"blp\",\"bufr\",\"bw\",\"cur\",\"dcx\",\"dds\",\"emf\",\"fit\",\"fits\",\"flc\",\"fli\",\"ftc\",\"ftu\",\"gbr\",\"grib\",\"h5\",\"hdf\",\"hif\",\"icb\",\"icns\",\"iim\",\"im\",\"j2c\",\"j2k\",\"jp2\",\"jpc\",\"jpe\",\"jpf\",\"jpx\",\"mpeg\",\"mpg\",\"msp\",\"pbm\",\"pcd\",\"pcx\",\"pfm\",\"pgm\",\"pnm\",\"ppm\",\"psd\",\"pxr\",\"qoi\",\"ras\",\"rgb\",\"rgba\",\"sgi\",\"tga\",\"vda\",\"vst\",\"wmf\",\"xpm\",\"epub\",\"mobi\"],\"conflict_with_search\":false,\"vision\":true,\"enable_thumbnail\":true},\"prompt_feature\":[{\"id\":9,\"scene\":\"image\",\"content\":\"这是什么\"},{\"id\":10,\"scene\":\"image\",\"content\":\"分析一下\"},{\"id\":11,\"scene\":\"image\",\"content\":\"怎么办\"},{\"id\":12,\"scene\":\"image\",\"content\":\"解释一下\"},{\"id\":13,\"scene\":\"file\",\"content\":\"分析一下\"},{\"id\":14,\"scene\":\"file\",\"content\":\"答案是什么\"},{\"id\":15,\"scene\":\"file\",\"content\":\"总结\"},{\"id\":16,\"scene\":\"file\",\"content\":\"解释一下\"}],\"tips\":{},\"camera_mode\":\"photo_edit\",\"tts_feature\":{}}]",
+  "id": 1918634372
+ }
+}

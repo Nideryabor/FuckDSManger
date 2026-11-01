@@ -56,12 +56,27 @@ public final class GmSender {
 
     // ─────────────────────── 候选混淆名（2.6.2 实测）───────────────────────
 
-    /** 会话组件（= 2.5.2 的 ao1）—— 经 GmRemap 解析 */
-    private static final String[] CAND_GH2 = {"ao1"};
-    /** 消息主存储（= 2.5.2 的 wr）—— 字段 a=会话id、f=LinkedHashMap 消息表 */
-    private static final String[] CAND_NS  = {"ns"};
-    /** 发送目标标识 —— <init>(long, String)（2.6.1=m1a → 2.6.2=f4a → **2.7.1=u7a**） */
-    private static final String[] CAND_M1A = {"u7a", "f4a"};
+    /**
+     * 会话组件的<b>候选入口名</b> —— 只是「去哪儿找」的线索，<b>不是判据</b>。
+     *
+     * <p>★ 2026-11-01 大改（2.7.2）：原来三个类各自拿名字硬撞，只要有一个名字被 R8
+     * 挪给别的类就整条链废掉。2.7.2 正是这样：`u7a` 这个短名<b>还在</b>，但它已经不是
+     * 发送目标类了 ⇒ 自检报「m1a(long,String) 构造器没找到」⇒ 建议<b>点了发不出去</b>。
+     *
+     * <p>现在改成<b>结构派生</b>：唯一要"猜"的只有这个类的名字，剩下全靠签名推 ——
+     * <pre>
+     * 11 参静态发送方法  j0(Lgh2;String;List;List;String;Lm1a;Lns;ZZZZ)V
+     *   ├ ps[0] = gh2 本身
+     *   ├ ps[5] = 发送目标（必须能 (long,String) 构造）     ← 2.7.2 = ada
+     *   └ ps[6] = 消息存储（必须 a:String + f:Map）         ← 2.7.2 = ys
+     * </pre>
+     * 名字变了只改这一行候选表；<b>结构不对就换下一个候选</b>，全不对才 bail。
+     */
+    private static final String[] CAND_GH2 = {"ik2", "oj2", "kh2", "ao1"};
+    /** 消息主存储（派生出来，这里只留旧值当交叉校验用）。 */
+    private static final String[] CAND_NS  = {"ys", "ps", "ns"};
+    /** 发送目标标识 —— <init>(long, String)（2.7.1=u7a → **2.7.2=ada**）。 */
+    private static final String[] CAND_M1A = {"ada", "u7a", "f4a"};
 
     /** 发送方法名（静态）。2.6.2=`h0` → **2.7.1=`j0`**
      *  <p>证据：`kh2.h0(Lkh2;String;List;List;String;Lf4a;Lns;ZZZZ)V`
@@ -127,27 +142,88 @@ public final class GmSender {
             if (sTried) return sReady;
             sTried = true;
             try {
-                cGh2 = load(cl, CAND_GH2);
-                cNs  = load(cl, CAND_NS);
-                cM1a = load(cl, CAND_M1A);
-                if (cGh2 == null) return bail("会话组件(gh2) 没找到");
-                if (cNs == null)  return bail("消息存储(ns) 没找到");
-                if (cM1a == null) return bail("m1a 没找到");
+                cGh2 = null;
+                cNs = null;
+                cM1a = null;
+                mSend = null;
+                mNs = null;
+                fSid = null;
+                fMsgs = null;
+                ctM1a = null;
 
-                // gh2.W() : ns
-                mNs = cGh2.getDeclaredMethod(M_NS);
+                StringBuilder why = new StringBuilder();
+
+                // ★ 结构派生：唯一"猜"的是类名，判据全在签名上。
+                for (String n : CAND_GH2) {
+                    Class<?> c = load(cl, n);
+                    if (c == null) {
+                        why.append(n).append("=类不存在 · ");
+                        continue;
+                    }
+                    // ① 11 参静态发送方法（指纹最硬）—— 从它的参数里把另外两个类推出来
+                    Method send = null;
+                    Class<?> pTarget = null, pStore = null;
+                    for (Method m : c.getDeclaredMethods()) {
+                        if (!Modifier.isStatic(m.getModifiers())) continue;
+                        if (m.getReturnType() != void.class) continue;
+                        Class<?>[] ps = m.getParameterTypes();
+                        if (ps.length != 11) continue;
+                        if (ps[0] != c) continue;                    // gh2 自己是第一个参数
+                        if (ps[1] != String.class) continue;         // 文本
+                        if (ps[2] != List.class || ps[3] != List.class) continue;
+                        if (ps[4] != String.class) continue;
+                        if (ps[7] != boolean.class || ps[8] != boolean.class
+                                || ps[9] != boolean.class || ps[10] != boolean.class) continue;
+                        // ② ps[5] 必须是「能 (long,String) 构造」的发送目标
+                        if (!hasCtorLongStr(ps[5])) continue;
+                        // ③ ps[6] 必须是「a:String + f:Map」的消息存储
+                        if (!isStore(ps[6])) continue;
+                        send = m;
+                        pTarget = ps[5];
+                        pStore = ps[6];
+                        break;
+                    }
+                    if (send == null) {
+                        why.append(n).append("=没有 11 参发送签名 · ");
+                        continue;
+                    }
+                    // ④ gh2 还要有「0 参、返回存储类」的方法（取当前会话的消息表）
+                    Method nsGetter = null;
+                    for (Method m : c.getDeclaredMethods()) {
+                        if (Modifier.isStatic(m.getModifiers())) continue;
+                        if (m.getParameterCount() != 0) continue;
+                        if (m.getReturnType() != pStore) continue;
+                        nsGetter = m;
+                        break;
+                    }
+                    if (nsGetter == null) {
+                        why.append(n).append("=没有取消息存储的方法 · ");
+                        continue;
+                    }
+                    cGh2 = c;
+                    cNs = pStore;
+                    cM1a = pTarget;
+                    mSend = send;
+                    mNs = nsGetter;
+                    break;
+                }
+                if (cGh2 == null) {
+                    return bail("会话组件没找到（候选 " + join(CAND_GH2) + "）：" + why);
+                }
+
+                mSend.setAccessible(true);
                 mNs.setAccessible(true);
-                if (mNs.getReturnType() != cNs) return bail("gh2.W() 返回的不是 ns");
+                if (mNs.getReturnType() != cNs) return bail("取存储的方法返回的不是那个类");
 
                 // ns.a : String（会话 id） · ns.f : Map（消息表）
                 fSid = cNs.getDeclaredField("a");
                 fSid.setAccessible(true);
-                if (fSid.getType() != String.class) return bail("ns.a 不是 String");
+                if (fSid.getType() != String.class) return bail("存储.a 不是 String");
                 fMsgs = cNs.getDeclaredField("f");
                 fMsgs.setAccessible(true);
-                if (!Map.class.isAssignableFrom(fMsgs.getType())) return bail("ns.f 不是 Map");
+                if (!Map.class.isAssignableFrom(fMsgs.getType())) return bail("存储.f 不是 Map");
 
-                // m1a(long, String)
+                // 发送目标 (long, String)
                 for (Constructor<?> ct : cM1a.getDeclaredConstructors()) {
                     Class<?>[] ps = ct.getParameterTypes();
                     if (ps.length == 2 && ps[0] == long.class && ps[1] == String.class) {
@@ -155,20 +231,12 @@ public final class GmSender {
                         break;
                     }
                 }
-                if (ctM1a == null) return bail("m1a(long,String) 构造器没找到");
+                if (ctM1a == null) return bail("发送目标没有 (long,String) 构造器");
                 ctM1a.setAccessible(true);
 
-                // ★ 发送方法：static h0(gh2, String, List, List, String, m1a, ns, Z, Z, Z, Z)
-                Class<?>[] ps = {
-                        cGh2, String.class, List.class, List.class, String.class,
-                        cM1a, cNs,
-                        boolean.class, boolean.class, boolean.class, boolean.class
-                };
-                mSend = cGh2.getDeclaredMethod(M_SEND, ps);
-                mSend.setAccessible(true);
-                if (!Modifier.isStatic(mSend.getModifiers())) return bail("h0 不是静态方法（签名变了？）");
-
-                sWhy = "自检全过（gh2.W()/ns.a/ns.f/m1a/h0）";
+                sWhy = "自检全过（" + cGh2.getSimpleName() + "." + mSend.getName()
+                        + " · 存储=" + cNs.getSimpleName() + "." + mNs.getName()
+                        + " · 目标=" + cM1a.getSimpleName() + "）";
                 sReady = true;
                 GmUtil.log("gmSender 自检 OK：" + sWhy);
                 return true;
@@ -185,9 +253,55 @@ public final class GmSender {
         }
     }
 
+    // ═══════════════════════════ 结构判定（2.7.2 起用）═══════════════════════════
+
+    /** 有 {@code (long, String)} 构造器 ⇒ 像"发送目标"。 */
+    private static boolean hasCtorLongStr(Class<?> c) {
+        if (c == null || c.isPrimitive() || c.isArray()) return false;
+        try {
+            for (Constructor<?> ct : c.getDeclaredConstructors()) {
+                Class<?>[] ps = ct.getParameterTypes();
+                if (ps.length == 2 && ps[0] == long.class && ps[1] == String.class) return true;
+            }
+        } catch (Throwable ignore) {
+        }
+        return false;
+    }
+
+    /** 有 {@code a:String} + {@code f:Map} 两个字段 ⇒ 像"消息存储"。 */
+    private static boolean isStore(Class<?> c) {
+        if (c == null || c.isPrimitive() || c.isArray()) return false;
+        try {
+            Field a = c.getDeclaredField("a");
+            if (a.getType() != String.class) return false;
+            Field f = c.getDeclaredField("f");
+            return Map.class.isAssignableFrom(f.getType());
+        } catch (Throwable ignore) {
+            return false;
+        }
+    }
+
+    private static String join(String[] a) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : a) {
+            if (sb.length() > 0) sb.append('/');
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
     private static boolean bail(String why) {
         sWhy = why;
         return false;
+    }
+
+    /** 单个候选名（走 GmRemap，兼容宿主升级时的重映射表）。 */
+    private static Class<?> load(ClassLoader cl, String n) {
+        try {
+            return Class.forName(GmRemap.cls(n), false, cl);
+        } catch (Throwable ignore) {
+            return null;
+        }
     }
 
     private static Class<?> load(ClassLoader cl, String[] cands) {

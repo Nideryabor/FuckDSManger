@@ -773,6 +773,24 @@
     <string name="tree_196">图片</string>
     <string name="tree_197">渐变</string>
     <string name="tree_198">摄像头</string>
+    <!-- 气泡背景（3.74.7）—— 两类气泡各自「纯色 / 图片」 -->
+    <string name="bbl_001">开启 AI 气泡背景</string>
+    <string name="bbl_002">给 AI 回复加底色或图片</string>
+    <string name="bbl_003">背景类型</string>
+    <string name="bbl_004">纯色</string>
+    <string name="bbl_005">自定义图片</string>
+    <string name="bbl_006">开启用户气泡背景</string>
+    <string name="bbl_007">给自己发的消息加底色或图片</string>
+    <string name="bbl_008">纯色用下面的颜色；图片用下面选的图</string>
+    <string name="bbl_009">选一张图（选完自动切到「自定义图片」）</string>
+    <string name="bbl_010">生效方式</string>
+    <string name="bbl_011">气泡是在消息绘制时现画的：改开关或颜色请退出会话再进（或重启宿主）；换图是实时的。</string>
+    <string name="bbl_012">图片铺法</string>
+    <string name="bbl_013">只在「纯色 / 图片」选图片时有用</string>
+    <string name="bbl_014">等比裁切</string>
+    <string name="bbl_015">拉伸（会变形）</string>
+    <string name="bbl_016">等比适应（留边）</string>
+    <string name="bbl_017">平铺</string>
     <string name="tree_199">摄像头方向</string>
     <string name="tree_200">后置</string>
     <string name="tree_201">前置</string>

@@ -40,7 +40,8 @@ fi
 BASE=""
 # ★ 2.22.121：去掉「依赖宿主包名」三处 · 2.22.122：pin 表 · 2.22.123：B1' 修落点（contains + j）
 #   见 `专题/铁律-不依赖宿主包名.md`
-for c in "$ROOT/mod-src/out/FuckDSManger_NL_2.22.133_for_ds2.6.1.apk" \
+for c in "$ROOT/mod-src/out/FuckDSManger_NL_2.22.134_for_ds2.6.1.apk" \
+         "$ROOT/mod-src/out/FuckDSManger_NL_2.22.133_for_ds2.6.1.apk" \
          "$ROOT/mod-src/out/FuckDSManger_NL_2.22.132_for_ds2.5.2-signed.apk" \
          "$ROOT/FuckDSManger_NL_2.22.132_for_ds2.5.2-signed.apk" \
          "$ROOT/mod-src/out/FuckDSManger_NL_2.22.131_for_ds2.5.2-signed.apk" \

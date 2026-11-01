@@ -1578,16 +1578,28 @@ public final class FdmBridge {
                                 back = cls + ".file() 拿不到目标文件 ⇒ 未写入";
                             }
                         } else {
-                            String name = "ububble".equals(kind) ? "fuckds_ububble.png" : "fuckds_bubble.png";
+                            boolean ub = "ububble".equals(kind);
+                            String name = ub ? "fuckds_ububble.png" : "fuckds_bubble.png";
                             java.io.File dst = new java.io.File(ctx.getFilesDir(), name);
                             copyFile(src, dst);
                             clearBubbleCache();
+                            // ★ 3.74.7：气泡图改由 GmBubbleBg 自己画（旧 GmBubble 那条线不再接管）。
+                            //   选完图**顺手把开关打开 + 切到「自定义图片」** —— 主人选图就是要看到效果，
+                            //   不该再让他回去手动拨两下。
                             try {
-                                callGm(GM + "GmBubble", "ububble".equals(kind) ? "setUImgOn" : "setImgOn",
-                                        new Class<?>[]{Context.class, boolean.class}, new Object[]{ctx, true});
-                            } catch (Throwable ignore) {
+                                com.nidyaber.fuckdsmanger.gm.GmBubbleBg.clearImg(
+                                        ub ? com.nidyaber.fuckdsmanger.gm.GmBubbleBg.KIND_USER
+                                                : com.nidyaber.fuckdsmanger.gm.GmBubbleBg.KIND_ASSIST);
+                                GmStore.write(ctx, ub ? "fuckds_ububble_bg_on" : "fuckds_abubble_bg_on",
+                                        "true", "b");
+                                GmStore.write(ctx, ub ? "fuckds_ububble_bg_mode" : "fuckds_abubble_bg_mode",
+                                        "1", "i");
+                                back = "气泡图已就地写入 " + dst.getAbsolutePath() + "（" + dst.length()
+                                        + " 字节）· 已开背景 + 切「自定义图片」";
+                            } catch (Throwable t) {
+                                back = "气泡图已写入 " + dst.getAbsolutePath() + "（" + dst.length()
+                                        + " 字节），但切模式失败：" + t;
                             }
-                            back = "气泡图已就地写入 " + dst.getAbsolutePath() + "（" + dst.length() + " 字节）";
                         }
                     } catch (Throwable t) {
                         back = "图片直拷失败：" + t;

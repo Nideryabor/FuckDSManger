@@ -290,24 +290,46 @@ object Tree {
                 choices = listOf(ctx.getString(R.string.tree_168), ctx.getString(R.string.tree_169), ctx.getString(R.string.tree_170), ctx.getString(R.string.tree_171), ctx.getString(R.string.tree_172), ctx.getString(R.string.tree_173), ctx.getString(R.string.tree_174), ctx.getString(R.string.tree_175), ctx.getString(R.string.tree_176))),
         )),
 
+        /* ───────── 气泡背景（3.74.7 起接 GmBubbleBg）─────────
+         *
+         * ⚠️ 键名换了！原来这两页的键（fuckds_bubble_on / fuckds_ububble_on …）是
+         *   3.73.x 那套旧实现的，而且 `FdmBridge.dispatch()` 会把它们转给旧类的
+         *   `GmBubble.setOn/setUOn` ⇒ 值**不会落到 MMKV** ⇒ 新代码读不到。
+         *   新键（*_bg_*）不在 dispatch 表里 ⇒ 走 cfg_put 的裸写分支，直接进宿主 MMKV ✅
+         */
         Pg("bubble_ai", ctx.getString(R.string.tree_177), listOf(
-            It(ctx.getString(R.string.tree_178), ctx.getString(R.string.tree_179),
-                K.SW, key = "fuckds_bubble_on", def = true, sk = "bubble_on"),
-            It(ctx.getString(R.string.tree_180), null, K.CO, key = "fuckds_bubble_color", def = 0),
-            It(ctx.getString(R.string.tree_181), ctx.getString(R.string.tree_182), K.SL, key = "fuckds_bubble_radius", def = 0, min = 0, max = 48),
-            It(ctx.getString(R.string.tree_183), "0–255", K.SL, key = "fuckds_bubble_alpha", def = 255, min = 0, max = 255),
-            It(ctx.getString(R.string.tree_184), ctx.getString(R.string.tree_185),
-                K.SL, key = "fuckds_bubble_maxz", def = 100, min = 50, max = 200),
-            It(ctx.getString(R.string.tree_186), ctx.getString(R.string.tree_187), K.SW, key = "fuckds_bubble_img", def = false),
-            It(ctx.getString(R.string.tree_188), null, K.PICK, cmd = "bubble"),
+            It(ctx.getString(R.string.bbl_001), ctx.getString(R.string.bbl_002),
+                K.SW, key = "fuckds_abubble_bg_on", def = false),
+            It(ctx.getString(R.string.bbl_003), ctx.getString(R.string.bbl_008), K.CH,
+                key = "fuckds_abubble_bg_mode", def = 0,
+                choices = listOf(ctx.getString(R.string.bbl_004), ctx.getString(R.string.bbl_005))),
+            It(ctx.getString(R.string.bbl_012), ctx.getString(R.string.bbl_013), K.CH,
+                key = "fuckds_abubble_img_fit", def = 0,
+                choices = listOf(ctx.getString(R.string.bbl_014), ctx.getString(R.string.bbl_015),
+                    ctx.getString(R.string.bbl_016), ctx.getString(R.string.bbl_017))),
+            It(ctx.getString(R.string.tree_180), null, K.CO,
+                key = "fuckds_abubble_bg_color", def = -10777105),
+            It(ctx.getString(R.string.tree_183), "0–100", K.SL,
+                key = "fuckds_abubble_bg_alpha", def = 100, min = 0, max = 100),
+            It(ctx.getString(R.string.tree_188), ctx.getString(R.string.bbl_009), K.PICK, cmd = "bubble"),
+            It(ctx.getString(R.string.bbl_010), ctx.getString(R.string.bbl_011), K.INFO),
         )),
         Pg("bubble_u", ctx.getString(R.string.tree_189), listOf(
-            It(ctx.getString(R.string.tree_190), ctx.getString(R.string.tree_191),
-                K.SW, key = "fuckds_ububble_on", def = true, sk = "ububble_on"),
-            It(ctx.getString(R.string.tree_180), null, K.CO, key = "fuckds_ububble_color", def = 0),
-            It(ctx.getString(R.string.tree_181), ctx.getString(R.string.tree_182), K.SL, key = "fuckds_ububble_radius", def = 0, min = 0, max = 48),
-            It(ctx.getString(R.string.tree_186), null, K.SW, key = "fuckds_ububble_img", def = false),
-            It(ctx.getString(R.string.tree_188), null, K.PICK, cmd = "ububble"),
+            It(ctx.getString(R.string.bbl_006), ctx.getString(R.string.bbl_007),
+                K.SW, key = "fuckds_ububble_bg_on", def = false),
+            It(ctx.getString(R.string.bbl_003), ctx.getString(R.string.bbl_008), K.CH,
+                key = "fuckds_ububble_bg_mode", def = 0,
+                choices = listOf(ctx.getString(R.string.bbl_004), ctx.getString(R.string.bbl_005))),
+            It(ctx.getString(R.string.bbl_012), ctx.getString(R.string.bbl_013), K.CH,
+                key = "fuckds_ububble_img_fit", def = 0,
+                choices = listOf(ctx.getString(R.string.bbl_014), ctx.getString(R.string.bbl_015),
+                    ctx.getString(R.string.bbl_016), ctx.getString(R.string.bbl_017))),
+            It(ctx.getString(R.string.tree_180), null, K.CO,
+                key = "fuckds_ububble_bg_color", def = -10777105),
+            It(ctx.getString(R.string.tree_183), "0–100", K.SL,
+                key = "fuckds_ububble_bg_alpha", def = 100, min = 0, max = 100),
+            It(ctx.getString(R.string.tree_188), ctx.getString(R.string.bbl_009), K.PICK, cmd = "ububble"),
+            It(ctx.getString(R.string.bbl_010), ctx.getString(R.string.bbl_011), K.INFO),
         )),
 
         /* ───────── 修改背景（GmBgDialog）───────── */
