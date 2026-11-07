@@ -126,6 +126,14 @@ public final class FdmEntry implements IXposedHookLoadPackage {
         //   这一步**必须**在宿主进程里跑（它要拿 ClassLoader 找宿主类），
         //   且只在能找到 pg7 时才挂 —— 找不到就静默跳过，不影响别的东西。
         if (isHost(lp.classLoader)) {
+            // ③.6 ★★ 2026-11-07：拦「检查更新」的**弹窗**（Toast + AlertDialog）
+            //   在协程里动手脚踩了三次坑（死循环 / 吞 resume / 重放无效），
+            //   最后定案：直接拦"效果"——跟协程一点关系都没有。
+            try {
+                FdmUpdatePopupHook.install(lp.classLoader);
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] FdmUpdatePopupHook.install 抛了：" + t);
+            }
             try {
                 FdmUpdateRowHook.install(lp.classLoader);
             } catch (Throwable t) {

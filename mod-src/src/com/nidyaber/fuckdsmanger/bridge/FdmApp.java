@@ -3,6 +3,7 @@
 package com.nidyaber.fuckdsmanger.bridge;
 
 import android.app.Application;
+import android.app.Application.ActivityLifecycleCallbacks;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -55,9 +56,46 @@ public final class FdmApp extends Application {
 
         try {
             regReceivers(this);
+            regUiOpened(this);
             FdmPush.push(this);
         } catch (Throwable t) {
             Log.e(TAG, "桥初始化失败", t);
+        }
+    }
+
+    /**
+     * 我们的 MainActivity 一 resume 就发 {@link FdmPush#ACTION_UI_OPENED}。
+     *
+     * <p>这是「UI 到底起没起来」**唯一可靠**的判据。
+     * {@code startActivity} / {@code sendBroadcast} / {@code PendingIntent.send}
+     * 全部不抛异常时，界面也可能根本不在屏幕上（BAL / 包可见性 / ROM 都会静默拦截）。
+     * 宿主侧收不到这条 ⇒ 弹保底（{@code FdmFallbackDialog}）。
+     */
+    private void regUiOpened(Context ctx) {
+        try {
+            registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
+                @Override public void onActivityCreated(android.app.Activity a, android.os.Bundle b) {}
+                @Override public void onActivityStarted(android.app.Activity a) {}
+                @Override public void onActivityResumed(android.app.Activity a) {
+                    try {
+                        // 只认我们自己的 UI（设置页 / 其它 Activity 不算"管理器起来了"）
+                        String n = a.getClass().getName();
+                        if (!"com.nidyaber.fuckdsmanger.MainActivity".equals(n)) return;
+                        Intent i = new Intent(FdmPush.ACTION_UI_OPENED);
+                        i.putExtra("pkg", a.getPackageName());
+                        a.sendBroadcast(i);
+                        Log.e(TAG, "📣 已回报 UI_OPENED（" + n + "）");
+                    } catch (Throwable ignore) {
+                    }
+                }
+                @Override public void onActivityPaused(android.app.Activity a) {}
+                @Override public void onActivityStopped(android.app.Activity a) {}
+                @Override public void onActivitySaveInstanceState(android.app.Activity a, android.os.Bundle b) {}
+                @Override public void onActivityDestroyed(android.app.Activity a) {}
+            });
+            Log.e(TAG, "UI_OPENED 回报器已注册");
+        } catch (Throwable t) {
+            Log.e(TAG, "UI_OPENED 回报器注册失败", t);
         }
     }
 

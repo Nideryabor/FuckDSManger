@@ -28,6 +28,7 @@ import org.json.JSONObject;
 
 import java.util.Iterator;
 
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
@@ -1501,6 +1502,140 @@ public final class FdmBridge {
     }
 
     /**
+     * 【Compose 探针】宿主进程里到底能不能用 Compose 弹窗。
+     *
+     * <p>要回答三件事（每一件都是硬前提，缺一不可）：
+     * <ol>
+     *   <li>宿主自己的 {@code androidx.compose.ui.platform.ComposeView} 能不能拿到
+     *       —— 它在 2.7.5 里是**真实类定义**（R8 没混淆 AndroidX，因为编译器插件
+     *       依赖固定签名），所以我们能拿到；</li>
+     *   <li><b>我们 UI dex（classes3/4）里的类能不能在宿主进程加载</b>
+     *       —— 这决定了我们能不能用自己的 @Composable 函数。
+     *       只有 LSPosed 把整个模块 APK 都塞进宿主 classpath 才行；</li>
+     *   <li>{@code setContent} 的形参到底是什么类（Compose 的 content 是
+     *       {@code Function2<Composer, Int, Unit>}，宿主里它叫 {@code zy4}）。</li>
+     * </ol>
+     *
+     * <p>为什么非要问第 2 条：Compose 的 content lambda **必须**由 Compose
+     * 编译器插件生成（里面有 startRestartGroup / changed flags 那一套协议），
+     * 手写 Java 几乎不可能对。所以要么用我们 UI dex 里编好的函数，要么这条路死。
+     */
+    private static String composeProbe(Context ctx) {
+        StringBuilder sb = new StringBuilder();
+        ClassLoader cl = FdmBridge.class.getClassLoader();
+        try {
+            Class<?> cv = Class.forName("androidx.compose.ui.platform.ComposeView", false, cl);
+            sb.append("① ComposeView = ").append(cv.getName())
+              .append(" （loader=").append(cv.getClassLoader()).append("）\n");
+            for (java.lang.reflect.Method m : cv.getMethods()) {
+                if ("setContent".equals(m.getName())) {
+                    sb.append("   setContent").append(java.util.Arrays.toString(m.getParameterTypes()))
+                      .append('\n');
+                }
+            }
+        } catch (Throwable t) {
+            sb.append("① ComposeView ✗ ").append(t).append('\n');
+        }
+        // ② 我们 UI dex 的类（纯 Kotlin object，不依赖 Compose，最干净）
+        for (String n : new String[]{
+                "com.nidyaber.fuckdsmanger.Conf",
+                "com.nidyaber.fuckdsmanger.MainActivity"}) {
+            try {
+                Class<?> c = Class.forName(n, false, cl);
+                sb.append("② 我们 UI dex 的 ").append(n).append(" ✓ （loader=")
+                  .append(c.getClassLoader()).append("）\n");
+            } catch (Throwable t) {
+                sb.append("② 我们 UI dex 的 ").append(n).append(" ✗ ")
+                  .append(t.getClass().getSimpleName()).append('\n');
+            }
+        }
+        // ③ Composer / Function2
+        for (String n : new String[]{
+                "androidx.compose.runtime.Composer",
+                "androidx.compose.ui.platform.ComposeView",
+                "androidx.lifecycle.LifecycleOwner"}) {
+            try {
+                Class.forName(n, false, cl);
+                sb.append("③ ").append(n).append(" ✓\n");
+            } catch (Throwable t) {
+                sb.append("③ ").append(n).append(" ✗\n");
+            }
+        }
+        // ④ ComposeView 的构造器（放 Dialog 里必须要对）
+        try {
+            Class<?> cvv = Class.forName("androidx.compose.ui.platform.ComposeView", false, cl);
+            for (java.lang.reflect.Constructor<?> c : cvv.getConstructors()) {
+                sb.append("④ ctor").append(java.util.Arrays.toString(c.getParameterTypes())).append('\n');
+            }
+            Class<?> acv = Class.forName("androidx.compose.ui.platform.AbstractComposeView", false, cl);
+            sb.append("④ AbstractComposeView 方法：");
+            for (java.lang.reflect.Method m : acv.getMethods()) {
+                String n = m.getName();
+                if (n.startsWith("set") || n.startsWith("get")) sb.append(n).append(' ');
+            }
+            sb.append('\n');
+        } catch (Throwable t) {
+            sb.append("④ ComposeView 构造器 ✗ ").append(t).append('\n');
+        }
+
+        // ⑤ ViewTreeLifecycleOwner 在哪个 loader 里（两个各查一次）—— 这是 Dialog 方案的生死线
+        for (String ln : new String[]{"宿主 loader", "模块 loader"}) {
+            ClassLoader probeCl = "宿主 loader".equals(ln) ? ctx.getClassLoader() : cl;
+            for (String n : new String[]{
+                    "androidx.lifecycle.ViewTreeLifecycleOwner",
+                    "androidx.lifecycle.LifecycleOwner",
+                    "androidx.savedstate.SavedStateRegistryOwner"}) {
+                try {
+                    Class<?> k = Class.forName(n, false, probeCl);
+                    sb.append("⑤ ").append(ln).append(' ').append(n)
+                      .append(" ✓ (").append(k.getClassLoader()).append(")\n");
+                } catch (Throwable t) {
+                    sb.append("⑤ ").append(ln).append(' ').append(n).append(" ✗\n");
+                }
+            }
+        }
+
+        // ⑥ 宿主的 Activity 是不是 LifecycleOwner（ComposeView 靠它驱动重组）
+        try {
+            Class<?> act = Class.forName("android.app.Activity", false, probeCl(ctx));
+            Class<?> lo = Class.forName("androidx.lifecycle.LifecycleOwner", false, cl);
+            sb.append("⑥ Activity 是 LifecycleOwner? ").append(lo.isAssignableFrom(act)).append('\n');
+            Object cur = XposedHelpers.callStaticMethod(
+                    Class.forName("android.app.ActivityThread"), "currentActivityThread");
+            Object acts = XposedHelpers.getObjectField(cur, "mActivities");
+            if (acts instanceof java.util.Map) {
+                for (Object v : ((java.util.Map<?, ?>) acts).values()) {
+                    Object a = XposedHelpers.getObjectField(v, "activity");
+                    if (a != null) {
+                        sb.append("   当前 Activity = ").append(a.getClass().getName())
+                          .append(" · isContextWrapper=").append(a instanceof android.content.ContextWrapper)
+                          .append('\n');
+                        break;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            sb.append("⑥ Activity 探测 ✗ ").append(t).append('\n');
+        }
+
+        GmUtil.log("【ComposeProbe】\n" + sb);
+        try {
+            XposedBridge.log("[FDM] 【ComposeProbe】\n" + sb);
+        } catch (Throwable ignore) {
+        }
+        return "probe 完成，看日志";
+    }
+
+    private static ClassLoader probeCl(Context ctx) {
+        ClassLoader l = null;
+        try {
+            if (ctx != null) l = ctx.getClassLoader();
+        } catch (Throwable ignore) {
+        }
+        return l != null ? l : FdmBridge.class.getClassLoader();
+    }
+
+    /**
      * 宿主侧：执行 UI 请求的动作。
      *
      * ★★ 必须只在宿主进程执行：
@@ -1526,6 +1661,18 @@ public final class FdmBridge {
                 com.nidyaber.fuckdsmanger.gm.GmBubble.saveImage(
                         ctx, android.net.Uri.parse(String.valueOf(arg)));
                 back = "气泡图已保存";
+            } else if ("compose_probe".equals(cmd)) {
+                // ★ 2026-11-07：探「宿主进程里能不能用 Compose 弹窗」
+                //    三个问题一次问清：
+                //      ① 宿主自己的 ComposeView 能不能拿到
+                //      ② 我们**UI dex**（classes3/4）里的类能不能在宿主进程加载
+                //      ③ setContent 的参数类型到底是什么
+                back = composeProbe(ctx);
+            } else if ("fallback_demo".equals(cmd)) {
+                // ★ 2026-11-07：保底弹窗的**演示/自测**入口（尼尼自己用，不用真等失败）
+                //     adb shell am broadcast -a com.little_femaleboy.fdm.CMD --es cmd fallback_demo
+                FdmFallbackDialog.show(ctx, "演示：人为触发的保底", null, null);
+                back = "已请求弹保底（看屏幕）";
             } else if ("open_ui_pi".equals(cmd)) {
                 // ★★ 2026-11-06：由**前台的宿主**代发模块建好的 PendingIntent。
                 //   两级（解析层 / 启动层）一次过，见 FdmOpenUi 的类注释。

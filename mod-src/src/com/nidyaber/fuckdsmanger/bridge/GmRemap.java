@@ -237,6 +237,7 @@ public final class GmRemap {
         //      代价是宿主升级要重新定位，手段就是上面这条 frida 栈
         //      （记在 `专题/写死字面量坑` 的账上）。
         {"settings.row.update.z", "settings.row.update.z", "settings.row.update.z", null, null, "pg7", "z"},   // 设置「检查更新」点击 ★ e=22/23
+        {"cont.impl.h.h", "cont.impl.h.h", "cont.impl.h.h", null, null, "sj0", "h"},   // 协程 resumeWith ★ 吞掉它=宿主逻辑一行不跑
     };
 
     /**
@@ -261,6 +262,36 @@ public final class GmRemap {
             }
         }
         return new String[] { old };   // 不是宿主锚点 —— 原样放行
+    }
+
+    /**
+     * 【自检】这组 (类, 方法) 到底有没有**命中** MTH 表？
+     *
+     * <p>★ 2026-11-07 —— 因为这个坑犯过两次，实在受不了了：
+     * <ul>
+     *   <li>3.75.28：表里写 {@code settings.row.update}（少了 {@code .z}）</li>
+     *   <li>3.75.38：表里写 {@code cont.impl.h}（少了 {@code .h}）</li>
+     * </ul>
+     * 症状一模一样：{@code ClassNotFoundException: xxx$yyy}，
+     * 而且**看起来像类名写错**，特别费时间。
+     *
+     * <p>根因是表里的键必须是 {@code 旧类名 + "." + 旧方法名} **拼出来的完整串**，
+     * 而 {@code clsAll()} 在没命中时会**原样返回旧的类名**。
+     * ⇒ 调用方光看返回值分不清"命中了"还是"没命中"，于是就拿着
+     *   一个不存在的类名去 findClass。
+     *
+     * <p>用法：所有 {@link #clsFor}/{@link #method} 的调用点都应先问一句
+     * <pre>
+     *   if (!GmRemap.hit(KEY, MTH)) { log("键写错了：应为 " + KEY + "." + MTH); return; }
+     * </pre>
+     */
+    public static boolean hit(String oldCls, String oldMth) {
+        if (oldCls == null || oldMth == null) return false;
+        String k = oldCls + "." + oldMth;
+        for (String[] p : MTH) {
+            if (isKey(p, k)) return true;
+        }
+        return false;
     }
 
     /**

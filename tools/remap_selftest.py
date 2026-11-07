@@ -34,6 +34,39 @@ def parse_rows(src, name):
         rows.append(vals)
     return rows
 
+
+
+
+def check_key_resolves(mth_rows):
+    """★ 2026-11-07：键必须真的命中表，不能"没命中却看起来正常"。
+
+    这个坑我犯过**两次**：
+      · 3.75.28  `settings.row.update`（少了 .z）
+      · 3.75.38  `cont.impl.h`（少了 .h）
+
+    ★ 判据（关键）：`clsAll` 在**没命中**时会 `return new String[]{old}`，
+      也就是把**键自己**原样返回。而键是 "类.方法" ⇒ **一定带点**；
+      真命中的 R8 短名（pg7 / sj0 / da8 …）**一定不带点**。
+      ⇒ 所以「解析出来的 owner 里有点」= 没命中 = 键写错了。
+      （不能只判 key.endswith('.'+mth)：`"cont.impl.h".endswith(".h")` 是 True，
+        也 不能用 rfind('.') 拆完再查 —— 拆出来的两半拼回去必然等于原键，自洽。）
+    """
+    bad = []
+    for row in mth_rows:
+        if len(row) < 3:
+            continue
+        exp_cls, exp_mth = row[-2], row[-1]
+        if exp_cls is None or exp_mth is None:
+            continue        # 故意标"未定位"的行，走 GONE 是预期行为
+        for k in row[:len(row) - 2]:
+            if k is None or '.' not in k:
+                continue
+            i = k.rfind('.')
+            got = sim_owner(mth_rows, k[:i], k[i + 1:])
+            if got is not None and '.' in got:
+                bad.append((k, exp_cls, exp_mth, got))
+    return bad
+
 GONE_PREFIX = 'com.gm.gone.'
 
 def sim_cls_all(rows, old):
@@ -119,6 +152,16 @@ def main():
         ('e3c', 'a0', 'wx6', 'P'),       # Modifier.paint
         # x5.w 故意不查（a6 未定位 ⇒ 走 GONE 安全失败），单独验
     ]
+    # ④ 键反查（★ 2026-11-07 新增 —— 这个坑犯过两次）
+    _bad_keys = check_key_resolves(mth_rows)
+    if _bad_keys:
+        print('\n键反查:')
+        for k, ec, em, gc, gm in _bad_keys:
+            print('  ✗ 键 %-30s 应解析成 %s.%s，实际 %s.%s' % (k, ec, em, gc, gm))
+            bad += 1
+    else:
+        print('\n键反查: ✓ 所有键都能解析回自己那一行')
+
     print('\n语义抽查:')
     for oldc, oldm, expc, expm in check:
         own = sim_owner(mth_rows, oldc, oldm)

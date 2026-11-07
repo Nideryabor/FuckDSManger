@@ -40,6 +40,20 @@ public final class FdmPush {
     public static final String ACTION_CMD = "com.little_femaleboy.fdm.CMD";
     /** 宿主 → UI：动作结果文本。 */
     public static final String ACTION_RESULT = "com.little_femaleboy.fdm.CMD_RESULT";
+
+    /**
+     * UI 进程 → 宿主：**我们的 MainActivity 真的起来了**（onActivityResumed 时发）。
+     *
+     * <p>为什么需要这条（2026-11-07）：{@code startActivity} / {@code sendBroadcast} /
+     * {@code PendingIntent.send} **全都不抛异常**的时候，UI 也可能压根没显示
+     * （BAL 拦截、包可见性过滤、ROM 拦截都是"静默失败"）。
+     * 靠"没抛异常"判断成功 = 给用户一个"点了没反应"的死局。
+     *
+     * <p>唯一可靠的判据是**让 UI 自己说话**：{@code FdmApp} 注册了
+     * {@code ActivityLifecycleCallbacks}，我们的 MainActivity 一 resume 就发这条广播。
+     * 宿主侧收不到 ⇒ 弹保底（见 {@code FdmFallbackDialog}）。
+     */
+    public static final String ACTION_UI_OPENED = "com.little_femaleboy.fdm.UI_OPENED";
     private static final String SP = "fdm_ui";
 
     /** 让宿主执行一个动作。arg 可为 null / Boolean / Integer / String。 */

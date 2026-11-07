@@ -97,10 +97,117 @@ public final class FdmUiHook {
             sInstalled = true;
             GmUtil.log("【FdmUiHook】已接管「检查更新」→ Compose UI ✓");
             XposedBridge.log("[FDM] 已接管「检查更新」→ Compose UI ✓");
+            installUiOpenedReceiver(cl);
         } catch (Throwable t) {
             GmUtil.logFail("【FdmUiHook】挂载失败（保留旧 View UI）", t);
             XposedBridge.log("[FDM] FdmUiHook 挂载失败（保留旧 View UI）：" + t);
         }
+    }
+
+    // ------------------------------------------------------------------ UI 开了没
+
+    /** 我们的 MainActivity 已经 resume 过（本进程内看到的）。 */
+    private static volatile boolean sUiOpened = false;
+    /** 上次"发起拉起"的时刻（挡重复触发）。 */
+    private static volatile long sLastLaunchAt = 0L;
+    private static volatile boolean sRecvInstalled = false;
+
+    /**
+     * 装「UI 真的起来了」的回报接收器（**宿主进程**侧）。
+     *
+     * <p>判据来源：模块进程的 {@code FdmApp} 注册了 ActivityLifecycleCallbacks，
+     * 我们的 MainActivity 一 resume 就发 {@link FdmPush#ACTION_UI_OPENED}。
+     *
+     * <p>为什么不能用"没抛异常"当判据：{@code startActivity} /
+     * {@code sendBroadcast} / {@code PendingIntent.send} **全都不抛异常**，
+     * 而界面可能根本不在屏幕上（BAL / 包可见性 / ROM 静默拦截）。
+     * 那种"静默失败"对主人来说就是「点了没反应」—— 最没法自查的一种。
+     */
+    private static void installUiOpenedReceiver(ClassLoader cl) {
+        if (sRecvInstalled) return;
+        try {
+            Context ctx = hostContext(cl);
+            if (ctx == null) return;
+            android.content.BroadcastReceiver r = new android.content.BroadcastReceiver() {
+                @Override
+                public void onReceive(Context c, Intent it) {
+                    sUiOpened = true;
+                    GmUtil.log("【FdmUiHook】收到 UI_OPENED ⇒ 界面确实起来了 ✓");
+                }
+            };
+            android.content.IntentFilter f = new android.content.IntentFilter(FdmPush.ACTION_UI_OPENED);
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+                ctx.registerReceiver(r, f, Context.RECEIVER_EXPORTED);
+            } else {
+                ctx.registerReceiver(r, f);
+            }
+            sRecvInstalled = true;
+            XposedBridge.log("[FDM] UI_OPENED 接收器已挂（宿主侧）");
+        } catch (Throwable t) {
+            XposedBridge.log("[FDM] UI_OPENED 接收器挂载失败：" + t);
+        }
+    }
+
+    /**
+     * 【统一入口】拉起 Compose UI；**没起来就弹保底**。
+     *
+     * @param ctx         宿主 Context
+     * @param reason      失败原因（写进保底弹窗，便于自查）
+     * @param onHostUpdate 保底弹窗里点「检查宿主更新」时要执行的动作（宿主原逻辑）
+     * @return true ＝ 已发起拉起（**不代表成功**，成败由回调判定）
+     */
+    public static boolean launchWithFallback(final Context ctx, final String reason,
+                                             final Runnable onHostUpdate) {
+        // ★ 一次点击只跑一次。血证：主人「现在会弹两个保底弹窗」——
+        //   一次点击会走两条路（我新挂的 pg7.z + 底座原有的 GmHomeUi.open）。
+        final long now = System.currentTimeMillis();
+        if (now - sLastLaunchAt < 1500L) {
+            GmUtil.log("【FdmUiHook】1.5s 内已发起过拉起 ⇒ 本次跳过");
+            return true;
+        }
+        sLastLaunchAt = now;
+        sUiOpened = false;
+        boolean asked = false;
+        try {
+            asked = openComposeImpl(ctx);
+        } catch (Throwable t) {
+            GmUtil.log("【FdmUiHook】拉起抛异常：" + t);
+        }
+        if (!asked) {
+            // 连"发起"都失败了（比如广播都发不出去）⇒ 不用等，立刻弹
+            GmUtil.log("【FdmUiHook】发起阶段就失败 ⇒ 立刻弹保底");
+            FdmFallbackDialog.show(ctx, reason, retryRunnable(ctx), onHostUpdate);
+            return false;
+        }
+        // 发起了 ⇒ 给 UI 1.5 秒自证；收不到 UI_OPENED 就弹保底
+        try {
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            if (sUiOpened) {
+                                GmUtil.log("【FdmUiHook】保底看门狗：UI_OPENED ✓ 不弹");
+                                return;
+                            }
+                            GmUtil.log("【FdmUiHook】保底看门狗：1.5s 内没收到 UI_OPENED ⇒ 弹保底");
+                            FdmFallbackDialog.show(ctx, reason, retryRunnable(ctx), onHostUpdate);
+                        }
+                    }, 1500L);
+        } catch (Throwable t) {
+            GmUtil.log("【FdmUiHook】保底看门狗没装上：" + t);
+        }
+        return true;
+    }
+
+    /** 保底弹窗里「拉起模块 UI」的重试动作。 */
+    private static Runnable retryRunnable(final Context ctx) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                sUiOpened = false;
+                openComposeImpl(ctx);
+            }
+        };
     }
 
     // ------------------------------------------------------------------ 内部
@@ -225,11 +332,23 @@ public final class FdmUiHook {
     }
 
     /**
-     * 1.2 秒后复查：模块进程没起来就补弹旧 UI，绝不留「点了没反应」。
+     * （已停用）1.2 秒后补弹旧 View UI。
      *
-     * <p>为什么不用「同步等回执」：回执广播由接收器投递，而接收器要跑在
-     * **主线程 Looper** 上；这里本身就阻塞住主线程，等回执必然死等到超时。
-     * ⇒ 只能异步看门狗。
+     * <h3>⛔ 2026-11-07 停用 —— 主人实测的现象链</h3>
+     * 点一下「检查更新」，屏幕上依次出现**三个**东西：
+     * <pre>
+     *   0.0s  宿主原 Toast「当前已是最新版本」
+     *   1.2s  这段看门狗补弹的 GmMenuDialog  ← 主人原话："非常旧的屎山模块设置 viewUI"
+     *   1.5s  FdmFallbackDialog 保底弹窗      ← 真正该出现的那个
+     * </pre>
+     * 三个弹窗叠着弹，比"点了没反应"更难受。
+     *
+     * <p>旧逻辑的用意是「拉不起 Compose UI 时至少弹个能用的东西」，
+     * 但现在这件事已经由 {@link FdmFallbackDialog} 接手（而且它信息更多、
+     * 还能重试 / 走宿主原逻辑）。**两个兜底不能并存** —— 这正是教训 264
+     * 「源头接管与末端接管不能并存」的同族：**同一件事只能有一个兜底**。
+     *
+     * <p>所以这里改成**什么都不做**，只留一行日志（便于事后确认"当时的判断是模块进程没起"）。
      */
     private static void watchdogFallback(final Context ctx) {
         try {
@@ -238,17 +357,14 @@ public final class FdmUiHook {
                 public void run() {
                     try {
                         if (moduleAlive(ctx)) {
-                            GmUtil.log("【FdmUiHook】看门狗：模块进程在 ✓ 不补弹旧 UI");
-                            return;
+                            GmUtil.log("【FdmUiHook】看门狗：模块进程在 ✓");
+                        } else {
+                            // ⛔ 不再补弹 GmMenuDialog（会和保底弹窗叠着弹）
+                            GmUtil.log("【FdmUiHook】看门狗：模块进程没起 ⇒ 交给保底弹窗，"
+                                    + "不补弹旧 View UI");
                         }
-                        GmUtil.log("【FdmUiHook】看门狗：模块进程没起 ⇒ 补弹旧 View UI");
-                        XposedHelpers.callStaticMethod(
-                                XposedHelpers.findClass(
-                                        "com.nidyaber.fuckdsmanger.gm.GmMenuDialog",
-                                        FdmUiHook.class.getClassLoader()),
-                                "open");
                     } catch (Throwable t) {
-                        GmUtil.log("【FdmUiHook】看门狗补弹失败：" + t);
+                        GmUtil.log("【FdmUiHook】看门狗异常：" + t);
                     }
                 }
             }, 1200L);
