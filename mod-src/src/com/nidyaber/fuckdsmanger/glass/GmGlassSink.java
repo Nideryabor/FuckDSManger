@@ -12,6 +12,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 
+import com.nidyaber.fuckdsmanger.bridge.GmRemap;
 import com.nidyaber.fuckdsmanger.gm.GmUtil;
 
 import java.lang.reflect.Field;
@@ -81,8 +82,12 @@ public final class GmGlassSink {
      *  `x98`(画底原语) + `qu7`(ChatFloatingToolViewV2) + `z2c`/`g83`/`j37`/`zi9`。
      *  4 参 Brush 版（`us6.y` → `p68.B`）现在在 `x98.s`（调用点 13=13），只用于读签名、不挂钩子。
      */
-    private static final String BG_CLS = "x98";
-    private static final String BG_METHOD = "t";
+    // ★ 2026-11-06（3.75.0 · 宿主 2.7.5）：不再写死 "x98"/"t"，改走 GmRemap 表。
+    //   血证：2.7.5 里 `x98` 这个短名**还在**，但已被复用成一个「只有 1 个方法的接口」
+    //   （`c(Lzt3;Object)Object`）⇒ findClass 成功、hookAllMethods 找 0 个 ⇒ **静默失效**
+    //   （= 指南 M2「同名幸存 ≠ 同一个类」）。2.7.5 的真身是 `da8.q`（3 参颜色版）。
+    private static String bgCls() { return GmRemap.cls("x98"); }
+    private static String bgMethod() { return GmRemap.method("x98", "t"); }
 
     private static final Set<Class<?>> sHooked = new HashSet<Class<?>>();
     private static final List<Class<?>> sElements = new ArrayList<Class<?>>();
@@ -173,10 +178,10 @@ public final class GmGlassSink {
 
     public static void install(ClassLoader cl) {
         try {
-            Class<?> bg = XposedHelpers.findClass(BG_CLS, cl);
+            Class<?> bg = XposedHelpers.findClass(bgCls(), cl);
             int n = 0;
             for (Method m : bg.getDeclaredMethods()) {
-                if (!BG_METHOD.equals(m.getName())) continue;
+                if (!bgMethod().equals(m.getName())) continue;
                 Class<?>[] p = m.getParameterTypes();
                 if (p.length != 3) continue;
                 if (p[1] != long.class) continue;         // 颜色
@@ -202,10 +207,10 @@ public final class GmGlassSink {
                 }
             }
             if (n == 0) {
-                GmUtil.logFail("【GmGlass】没找到画底原语 " + BG_CLS + "->" + BG_METHOD, null);
+                GmUtil.logFail("【GmGlass】没找到画底原语 " + bgCls() + "->" + bgMethod(), null);
                 return;
             }
-            GmUtil.log("【GmGlass】画底原语已挂（" + BG_CLS + "->" + BG_METHOD + " × " + n + "）");
+            GmUtil.log("【GmGlass】画底原语已挂（" + bgCls() + "->" + bgMethod() + " × " + n + "）");
         } catch (Throwable t) {
             GmUtil.logFail("【GmGlass】画底原语挂载失败", t);
         }
@@ -268,19 +273,19 @@ public final class GmGlassSink {
         }
 
         try {
-            Class<?> bg = XposedHelpers.findClass(BG_CLS, cl);
+            Class<?> bg = XposedHelpers.findClass(bgCls(), cl);
             for (Method m : bg.getDeclaredMethods()) {
-                if (!BG_METHOD.equals(m.getName())) continue;
+                if (!bgMethod().equals(m.getName())) continue;
                 Class<?>[] p = m.getParameterTypes();
                 if (p.length != 3) continue;
                 if (p[1] != long.class) continue;
                 if (!p[0].isInterface()) continue;
                 sBubbleHook = new BubblePrimitiveHook(p[0]);
                 XposedBridge.hookMethod(m, sBubbleHook);
-                GmUtil.log("【气泡底】② 独立 hook 已挂 " + BG_CLS + "->" + BG_METHOD);
+                GmUtil.log("【气泡底】② 独立 hook 已挂 " + bgCls() + "->" + bgMethod());
                 return;
             }
-            GmUtil.log("【气泡底】② 没找到 " + BG_CLS + "->" + BG_METHOD);
+            GmUtil.log("【气泡底】② 没找到 " + bgCls() + "->" + bgMethod());
         } catch (Throwable t) {
             GmUtil.logFail("【气泡底】② 挂载失败", t);
         }

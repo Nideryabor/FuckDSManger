@@ -116,6 +116,23 @@ public final class FdmEntry implements IXposedHookLoadPackage {
             XposedBridge.log("[FDM] FdmUiHook.install 抛了（不影响其它钩子）：" + t);
         }
 
+        // ③.5 ★★ 2026-11-07：「检查更新」那一行的**点击** —— 真正该接管的入口
+        //
+        //   之前一直卡在「改了文案但点了还是检查版本」，因为改文案（GmResTextHook）
+        //   与接管点击是两条完全不同的路：GmEntryHook 挂的路由桶里根本没有它。
+        //   真身由 frida 实测定位：`pg7.z`，`this.e ∈ {22,23}`
+        //   （调用栈：Context.getString(0x7f0f0267) ← ol2.j ← pg7.z ← sj0.h ← 协程）。
+        //
+        //   这一步**必须**在宿主进程里跑（它要拿 ClassLoader 找宿主类），
+        //   且只在能找到 pg7 时才挂 —— 找不到就静默跳过，不影响别的东西。
+        if (isHost(lp.classLoader)) {
+            try {
+                FdmUpdateRowHook.install(lp.classLoader);
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] FdmUpdateRowHook.install 抛了：" + t);
+            }
+        }
+
         // ④.5 运行时自证探针（临时，找 2.6.1 的设置行锚点用）
         if (isHost(lp.classLoader)) {
             try {

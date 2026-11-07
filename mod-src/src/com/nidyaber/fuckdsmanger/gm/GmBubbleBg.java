@@ -3,6 +3,8 @@
 package com.nidyaber.fuckdsmanger.gm;
 
 import android.content.Context;
+
+import com.nidyaber.fuckdsmanger.bridge.GmRemap;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -72,28 +74,42 @@ public final class GmBubbleBg {
     public static final int KIND_ASSIST = 2;
 
     // ── 2.7.2 宿主里的落点（全部套 try，找不到就安全退出，绝不牵连宿主）──
+    // ★★ 2026-11-06（3.75.18 · 宿主 2.7.5）—— 这一整块原来**写死 2.7.2 的短名**，
+    //   一次 GmRemap 都没走 ⇒ 宿主一升级，气泡全集静默失效（日志：
+    //     `① 拿 Shape 失败: NoSuchFieldError: t82#t`
+    //     `⑥ Modifier 不是接口 ⇒ 不注入助手背景`）
+    //   ⇒ 全部改成**每次现查 GmRemap**（表是唯一的真相源，加一代就自动跟着走）。
+    //
+    //   2.7.2 → 2.7.5 的实测映射（都在 GmRemap 的 CLS6 里登记）：
+    //     yi0 → zi0   背景 Element
+    //     zi0 → ?     绘制节点（见 CLS_NODE() 注释）
+    //     t82 → y82   气泡 Shape 容器 ★ 35 个字段全同（t:Lib9;→Lpb9;、n:Lk78;→Lq78;）
+    //     vcc → ?     clip 所在类
+    //     yj7 → fk7   Modifier 接口
+    //     x98 → da8   background 扩展
+
     /** 背景元素（Modifier.Element）。字段 a=J 颜色 / b=Brush / c=F alpha / d=Shape。 */
-    private static final String CLS_ELEM = "yi0";
+    private static String CLS_ELEM() { return GmRemap.cls("yi0"); }
     /** 绘制节点（Modifier.Node）。字段 o=J 颜色 / p=Brush / q=F alpha / r=Shape。 */
-    private static final String CLS_NODE = "zi0";
+    private static String CLS_NODE() { return GmRemap.cls("nod"); }
     /** 绘制节点的基类（Modifier.Node）。用来精确挑 b()/d()，避免误挂 hashCode()。 */
-    private static final String CLS_NODEBASE = "xj7";
+    private static String CLS_NODEBASE() { return GmRemap.cls("nodbase"); }
     /** 气泡专用裁剪 Shape 的常量所在类（用户气泡的身份指纹：全宿主仅 2 处引用）。 */
-    private static final String CLS_SHAPEHOLDER = "t82";
+    private static String CLS_SHAPEHOLDER() { return GmRemap.cls("shapeholder"); }
     /** 上面那个 Shape 的字段名。 */
     private static final String FLD_BUBBLE_SHAPE = "t";
     /** clip(Modifier, Shape) 所在类 / 方法。 */
-    private static final String CLS_MOD = "vcc";
-    private static final String MTH_CLIP = "B";
+    private static String CLS_MOD() { return GmRemap.cls("clipmod"); }
+    private static String MTH_CLIP() { return GmRemap.method("clipmod", "clip"); }
     /** 圆角 Shape 的常量（{@code vcc.n}，{@code Lkc5;}）—— 只在拿不到气泡 Shape 时兜底。 */
     private static final String FLD_ROUND_SHAPE = "n";
 
     // ── 助手气泡注入用（全部要过结构校验）──
     /** Compose 的 Modifier 接口（唯一方法 F = then）。 */
-    private static final String CLS_MODIFIER = "yj7";
+    private static String CLS_MODIFIER() { return GmRemap.cls("yj7"); }
     /** background 扩展所在类；{@code t(Modifier, long color, Shape) : Modifier}。 */
-    private static final String CLS_BG_KT = "x98";
-    private static final String MTH_BG_COLOR = "t";
+    private static String CLS_BG_KT() { return GmRemap.clsFor("clipmod", "bg"); }
+    private static String MTH_BG_COLOR() { return GmRemap.method("clipmod", "bg"); }
     /** 助手<b>单条消息</b>的 composable 容器；参数里恰好有一个 Modifier。
      *  <p>2.7.2：{@code e40.a} = AssistantChatMessageCell (AssistantChatMessageCell.kt:130)
      *  <p>★ 实测尺寸 1440x1526 = <b>整屏宽 + 这条消息的完整高度</b>（主人要的就是这个范围）。
@@ -101,10 +117,10 @@ public final class GmBubbleBg {
      *  比留言区窄一截（主人 2026-11-01：「太窄了，真正的范围应该是……带黑色区域」）。
      *  <p>⚠️ 形状要用 {@code vcc.n}：它自带内缩，正好把背景从头像右边开始画；
      *  用气泡裁剪形状 {@code t82.t} 反而更窄（同上实测）。 */
-    private static final String CLS_ASSIST = "e40";
+    private static String CLS_ASSIST() { return GmRemap.cls("assistcell"); }
     private static final String MTH_ASSIST = "a";
     /** 备用候选（Cell 找不到才退回内容层 —— 窄一点，但总比没有强）。 */
-    private static final String CLS_ASSIST2 = "ru7";
+    private static String CLS_ASSIST2() { return GmRemap.cls("assistbody"); }
     private static final String MTH_ASSIST2 = "c";
 
     // ── 配置键（影子键风格：模块自己存一份，不覆盖宿主原键）──
@@ -201,7 +217,7 @@ public final class GmBubbleBg {
 
         // ① 先拿到气泡专用 Shape 的实例（用户气泡靠 identity 认人）
         try {
-            Class<?> sh = XposedHelpers.findClass(CLS_SHAPEHOLDER, cl);
+            Class<?> sh = XposedHelpers.findClass(CLS_SHAPEHOLDER(), cl);
             sClipShape = XposedHelpers.getStaticObjectField(sh, FLD_BUBBLE_SHAPE);
             log("① 气泡裁剪 Shape = " + (sClipShape == null ? "null" : sClipShape.getClass().getName()));
         } catch (Throwable t) {
@@ -214,13 +230,47 @@ public final class GmBubbleBg {
         //       宽度符合主人预期（「真正的范围应该是……带黑色区域」）。
         //     · `t82.t`（气泡裁剪 Shape）⇒ 更窄 ⇒ 主人：「太窄了」。
         //   ⇒ 所以这里**优先 vcc.n**，拿不到才退用 t82.t。
+        //   ★★ 2026-11-06（3.75.21）修正：**不要再去读 `vcc.n` 这个字段**
+        //     血证：3.75.20 日志 `✗ 助手注入异常: method da8.q argument 3 has type yy9,
+        //            got java.lang.Object`
+        //     原因：2.7.5 的 `dec.n` 是 **`new Object()` 空壳**（R8 把真实形状内联掉了），
+        //           拿去当 Shape 传参会被 ART 的类型检查直接拒。
+        //     2.7.2 的 `vcc.n` 实际是 `new kc5(2)`；2.7.5 对应 **`oc5`**
+        //       （行号 10/12/16/20/63/104/695 全同、`<init>(I)V` synthetic、
+        //         `toString()` 都返回 "RectangleShape"）。
+        //   ⇒ 直接 `new oc5(2)`，和宿主自己造的一模一样。
         try {
-            Class<?> mod = XposedHelpers.findClass(CLS_MOD, cl);
-            sRoundShape = XposedHelpers.getStaticObjectField(mod, FLD_ROUND_SHAPE);
-            log("①b 助手气泡形状 = vcc.n(" + FLD_ROUND_SHAPE + ") → "
-                    + (sRoundShape == null ? "null" : sRoundShape.getClass().getName()));
+            Class<?> cRound = XposedHelpers.findClass(GmRemap.cls("clipmod.round"), cl);
+            sRoundShape = XposedHelpers.newInstance(cRound, 2);
+            log("①b 助手气泡形状 = new " + cRound.getName() + "(2) → "
+                    + sRoundShape.getClass().getName());
         } catch (Throwable t) {
-            log("①b 圆角 Shape 没拿到: " + t);
+            log("①b new 圆角 Shape 失败: " + t);
+        }
+        // 兜底：真拿不到就退回「气泡裁剪 Shape」（窄一点，但至少是合法 Shape）
+        // ⚠️ 形状接口的类型**从 da8.q 的签名里现查**，不写死 "yy9"
+        //    （写死就又是同一类坑：宿主一改版就静默失效）
+        if (sRoundShape != null) {
+            try {
+                Class<?> cBg = XposedHelpers.findClass(CLS_BG_KT(), cl);
+                Class<?> shapeIface = null;
+                for (Method m : cBg.getDeclaredMethods()) {
+                    if (!MTH_BG_COLOR().equals(m.getName())) continue;
+                    Class<?>[] p = m.getParameterTypes();
+                    if (p.length == 3 && p[0] == XposedHelpers.findClass(CLS_MODIFIER(), cl)
+                            && p[1] == long.class) {
+                        shapeIface = p[2];      // ★ 第 3 参就是 Shape 接口
+                        break;
+                    }
+                }
+                if (shapeIface != null && !shapeIface.isInstance(sRoundShape)) {
+                    log("①b ⚠️ 形状不是 " + shapeIface.getName() + " 实例 ⇒ 丢弃");
+                    sRoundShape = null;
+                } else if (shapeIface != null) {
+                    log("①b 形状类型校验通过（" + shapeIface.getName() + "）");
+                }
+            } catch (Throwable ignore) {
+            }
         }
         if (sRoundShape == null && sClipShape != null) {
             sRoundShape = sClipShape;      // 兜底
@@ -233,9 +283,9 @@ public final class GmBubbleBg {
         // ② clip(Modifier, Shape)：见到气泡形状就立「下一个 yi0 是用户气泡」的旗
         if (sClipShape != null) {
             try {
-                Class<?> mod = XposedHelpers.findClass(CLS_MOD, cl);
+                Class<?> mod = XposedHelpers.findClass(CLS_MOD(), cl);
                 for (Method m : mod.getDeclaredMethods()) {
-                    if (!MTH_CLIP.equals(m.getName())) continue;
+                    if (!MTH_CLIP().equals(m.getName())) continue;
                     Class<?>[] p = m.getParameterTypes();
                     if (p.length != 2) continue;
                     if (!p[0].isInterface()) continue;
@@ -262,7 +312,7 @@ public final class GmBubbleBg {
 
         // ③ yi0 构造：紧跟在 clip（或助手注入）之后 → 这个元素就是气泡底色
         try {
-            Class<?> elem = XposedHelpers.findClass(CLS_ELEM, cl);
+            Class<?> elem = XposedHelpers.findClass(CLS_ELEM(), cl);
             sHookCtor = new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
@@ -296,7 +346,7 @@ public final class GmBubbleBg {
                 }
             };
             XposedBridge.hookAllConstructors(elem, sHookCtor);
-            log("③ 挂上 " + CLS_ELEM + " 构造");
+            log("③ 挂上 " + CLS_ELEM() + " 构造");
         } catch (Throwable t) {
             log("③ 挂 yi0 构造失败: " + t);
         }
@@ -308,7 +358,7 @@ public final class GmBubbleBg {
         //     ⇒ 改法：在 **节点生成 / 更新** 这两处直接把颜色**写死在节点上**，不再恢复。
         //       这样图层第一次被画出来时就已经是我们的颜色，跟懒加载无关。
         try {
-            Class<?> elem = XposedHelpers.findClass(CLS_ELEM, cl);
+            Class<?> elem = XposedHelpers.findClass(CLS_ELEM(), cl);
             sHookB = new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
@@ -327,7 +377,7 @@ public final class GmBubbleBg {
             // 只挂「0 参、返回 Modifier.Node 基类」的那个（= b()）。不许误挂 hashCode()。
             for (Method m : elem.getDeclaredMethods()) {
                 if (m.getParameterTypes().length != 0) continue;
-                if (!CLS_NODEBASE.equals(m.getReturnType().getName())) continue;
+                if (!CLS_NODEBASE().equals(m.getReturnType().getName())) continue;
                 XposedBridge.hookMethod(m, sHookB);
             }
             sHookD = new XC_MethodHook() {
@@ -349,7 +399,7 @@ public final class GmBubbleBg {
             // 只挂「1 参、void、参数是 Modifier.Node 基类」的那个（= d(xj7)）。
             for (Method m : elem.getDeclaredMethods()) {
                 if (m.getParameterTypes().length != 1 || m.getReturnType() != void.class) continue;
-                if (!CLS_NODEBASE.equals(m.getParameterTypes()[0].getName())) continue;
+                if (!CLS_NODEBASE().equals(m.getParameterTypes()[0].getName())) continue;
                 XposedBridge.hookMethod(m, sHookD);
             }
             log("④ 挂上 yi0 的 取节点/推配置");
@@ -359,7 +409,7 @@ public final class GmBubbleBg {
 
         // ⑤ zi0 的绘制方法：1 参 + void + 参数像 DrawScope
         try {
-            Class<?> node = XposedHelpers.findClass(CLS_NODE, cl);
+            Class<?> node = XposedHelpers.findClass(CLS_NODE(), cl);
             int n = 0;
             for (Method m : node.getDeclaredMethods()) {
                 if (m.getReturnType() != void.class) continue;
@@ -397,15 +447,15 @@ public final class GmBubbleBg {
      */
     private static void installAssist(ClassLoader cl) {
         try {
-            final Class<?> cMod = XposedHelpers.findClass(CLS_MODIFIER, cl);
+            final Class<?> cMod = XposedHelpers.findClass(CLS_MODIFIER(), cl);
             if (!cMod.isInterface()) {
                 log("⑥ Modifier 不是接口 ⇒ 不注入助手背景");
                 return;
             }
-            Class<?> cBg = XposedHelpers.findClass(CLS_BG_KT, cl);
+            Class<?> cBg = XposedHelpers.findClass(CLS_BG_KT(), cl);
             Method mBg = null;
             for (Method m : cBg.getDeclaredMethods()) {
-                if (!MTH_BG_COLOR.equals(m.getName())) continue;
+                if (!MTH_BG_COLOR().equals(m.getName())) continue;
                 Class<?>[] p = m.getParameterTypes();
                 if (p.length != 3) continue;
                 if (p[0] != cMod) continue;
@@ -426,9 +476,9 @@ public final class GmBubbleBg {
             final Method fBg = mBg;
 
             // ★ 先试「单条消息内容层」，结构不过才退回「整个 Cell」。
-            sAssistReady = hookAssistCell(cl, cMod, fBg, CLS_ASSIST, MTH_ASSIST);
+            sAssistReady = hookAssistCell(cl, cMod, fBg, CLS_ASSIST(), MTH_ASSIST);
             if (!sAssistReady) {
-                sAssistReady = hookAssistCell(cl, cMod, fBg, CLS_ASSIST2, MTH_ASSIST2);
+                sAssistReady = hookAssistCell(cl, cMod, fBg, CLS_ASSIST2(), MTH_ASSIST2);
             }
         } catch (Throwable t) {
             log("⑥ 助手背景注入安装失败: " + t);

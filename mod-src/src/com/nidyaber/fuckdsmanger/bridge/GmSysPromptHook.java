@@ -39,20 +39,63 @@ import de.robv.android.xposed.XposedBridge;
  */
 public final class GmSysPromptHook extends XC_MethodHook {
 
-    /** 构造器参数签名（去掉首个 `seen` 掩码后，就是 10 个业务字段） */
-    private static final Class<?>[] CTOR_SIG = new Class<?>[]{
-            String.class,        // 0 chat_session_id
-            Integer.class,       // 1 parent_message_id   ← null ⇒ 会话首条
-            String.class,        // 2 prompt             ← ★ 注入点
-            ArrayList.class,     // 3 ref_file_ids
-            boolean.class,       // 4 thinking_enabled
-            boolean.class,       // 5 search_enabled
-            String.class,        // 6 audio_id
-            boolean.class,       // 7 preempt
-            String.class,        // 8 model_type
-            String.class,        // 9 action
-            int.class            // 10 默认参数掩码
+    /**
+     * 构造器参数签名 —— **多版并存**（2.7.5 起宿主在 ref_file_ids 后面又插了一个 String）。
+     *
+     * <p>按「最新版在前」排，逐个试；都失败再走 {@link #findCtorStructural} 结构兜底。
+     */
+    private static final Class<?>[][] CTOR_SIGS = new Class<?>[][]{
+            {   // ★ 2.7.5 / qy1 —— 12 参（比 2.7.2 多插一个 String，在 index 9 处）
+                String.class,        // 0 chat_session_id
+                Integer.class,       // 1 parent_message_id   ← null ⇒ 会话首条
+                String.class,        // 2 prompt             ← ★ 注入点
+                ArrayList.class,     // 3 ref_file_ids
+                boolean.class,       // 4 thinking_enabled
+                boolean.class,       // 5 search_enabled
+                String.class,        // 6 audio_id
+                boolean.class,       // 7 preempt
+                String.class,        // 8 model_type
+                String.class,        // 9 ★ 2.7.5 新增
+                String.class,        // 10 action
+                int.class            // 11 默认参数掩码
+            },
+            {   // 2.6.1 ~ 2.7.2（qv1 / tv1 / ly1）—— 11 参
+                String.class,        // 0
+                Integer.class,       // 1
+                String.class,        // 2 ★ 注入点
+                ArrayList.class,     // 3
+                boolean.class,       // 4
+                boolean.class,       // 5
+                String.class,        // 6
+                boolean.class,       // 7
+                String.class,        // 8
+                String.class,        // 9
+                int.class            // 10
+            }
     };
+
+    /**
+     * 结构兜底：不认签名，只认「业务形状」——
+     * {@code (String, Integer, String, List, …)} 且参数 ≥ 10、末位是 int（默认参掩码）。
+     *
+     * <p>为什么能这么认：<b>args[2] 必须是 prompt</b> 是本类的全部依赖，
+     * 而「会话 id / 父消息 id / 正文 / 引用文件」这个前四元组是业务契约，跨版本稳定。
+     * 后面宿主想再加字段，随便加，这里都不用改。
+     */
+    private static Constructor<?> findCtorStructural(Class<?> c) {
+        Constructor<?> best = null;
+        for (Constructor<?> k : c.getDeclaredConstructors()) {
+            Class<?>[] p = k.getParameterTypes();
+            if (p.length < 10) continue;
+            if (p[0] != String.class) continue;
+            if (p[1] != Integer.class) continue;
+            if (p[2] != String.class) continue;
+            if (!java.util.List.class.isAssignableFrom(p[3])) continue;
+            if (p[p.length - 1] != int.class) continue;
+            if (best == null || p.length > best.getParameterTypes().length) best = k;
+        }
+        return best;
+    }
 
     /** 命中计数（诊断用，见 {@link #hits()}） */
     private static volatile int sHits = 0;
@@ -107,7 +150,12 @@ public final class GmSysPromptHook extends XC_MethodHook {
      * <p>当前实测：**2.7.2 (vc289) = `ly1`**（2.7.1 为 `sx1`、2.6.2 为 `tv1`）。
      */
     private static final String[] CANDIDATE_NAMES = {
-            "ly1",                                   // deepseek 2.7.2 (vc289) 实测 ★ 新值优先
+            "qy1",                                   // ★ 2026-11-06 deepseek 2.7.5 (vc295) 实测                                                     //   铁证：`Lqy1;->Companion:Lpy1;`、12 实例字段
+                                                     //   (a:String b:Integer c:String d:List e:Z f:Z g:String h:Z i:String j:String k:String l:String)
+                                                     //   ctor `(String,Integer,String,ArrayList,ZZ String,Z,String,String,String,I)V` 12 参
+                                                     //   序列化器 `oy1`（descriptor 里带 ChatFullCompletionRequest），
+                                                     //   `qy1.<clinit>`/`qy1.equals` 都引用 `Loy1;->a` ⇒ 绑定关系确凿
+            "ly1",                                   // deepseek 2.7.2 (vc289) 实测
                                                      //   证据：字段 12/12 逐位同序（Companion/l:[Lqh6;/a:St/b:Int/c:St/d:List/e:Z/f:Z/g:St/h:Z/i:St/j:St/k:St）
                                                      //        + ctor 逐位 `(String,Integer,String,ArrayList,ZZString,Z,String,String,I)V`
                                                      //        + 反射：2.7.2 全树唯一命中该构造器前缀
@@ -129,18 +177,34 @@ public final class GmSysPromptHook extends XC_MethodHook {
                 Class<?> c = Class.forName(name, false, cl);
                 if (c == null) continue;
 
-                Constructor<?> ctor = c.getDeclaredConstructor(CTOR_SIG);
+                Constructor<?> ctor = null;
+                for (Class<?>[] sig : CTOR_SIGS) {
+                    try {
+                        ctor = c.getDeclaredConstructor(sig);
+                        break;
+                    } catch (NoSuchMethodException ignore) { /* 试下一个版本 */ }
+                }
+                if (ctor == null) ctor = findCtorStructural(c);
+                if (ctor == null) {
+                    // 类在、但没有任何一个像样的构造器 ⇒ 名字被复用了（2.6.1 / 2.7.5 都踩过）
+                    GmUtil.log("hookM FAIL sysprompt " + name
+                            + " → 类在但无匹配构造器（名字被复用？该重新反查了）");
+                    continue;
+                }
                 ctor.setAccessible(true);
                 XposedBridge.hookMethod(ctor, new GmSysPromptHook());
 
+                StringBuilder ps = new StringBuilder();
+                for (Class<?> t : ctor.getParameterTypes()) {
+                    if (ps.length() > 0) ps.append(',');
+                    ps.append(t.getSimpleName());
+                }
                 GmUtil.log("hookM sysprompt count=1 cls=" + name
-                        + " (" + c.getName() + ")");
+                        + " (" + c.getName() + ") ctor=" + ctor.getParameterTypes().length + "参(" + ps + ")");
                 return 1;
-            } catch (NoSuchMethodException e) {
-                // 类在、但签名不对 ⇒ 名字被复用了（2.6.1 轮换时踩过这个坑）
-                GmUtil.log("hookM FAIL sysprompt " + name
-                        + " → 类在但无匹配构造器（名字被复用？该重新反查了）");
             } catch (Throwable t) {
+                // 「类在但构造器对不上」的情况已经在上面 continue 掉了；
+                // 走到这里说明是这个候选类本身有问题（名字被复用的另一种形态）
                 GmUtil.logFail("syspromptHook.install/" + name, t);
             }
         }

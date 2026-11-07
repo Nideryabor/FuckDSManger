@@ -29,9 +29,18 @@ public final class FdmApp extends Application {
 
     private static final String TAG = "FDM-DIAG";
 
+    /** 本进程的 Application（模块 UI 进程才有；宿主进程里是 null）。 */
+    private static volatile FdmApp sSelf;
+
+    /** 给 {@link FdmOpenUi#log} 之类拿 Context 用（拿不到就算了，别 NPE）。 */
+    public static Context get() {
+        return sSelf;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
+        sSelf = this;
 
         StringBuilder sb = new StringBuilder();
         try {

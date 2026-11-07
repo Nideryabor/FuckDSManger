@@ -47,6 +47,9 @@ ICON_MAIN = 0x7F040004       # drawable/ic_build
 ICON_SETTINGS = 0x7F040001   # drawable/ic_admin_panel_settings
 SETTINGS_AFFINITY = PKG + ".bridge"   # 设置页自己一个任务，不跟 UI 抢
 PROVIDER = "com.nidyaber.fuckdsmanger.bridge.ConfigProvider"
+# ★ 2026-11-06：广播换乘（绕 Android 11+ 包可见性）
+OPEN_UI_RCVR = "com.nidyaber.fuckdsmanger.bridge.FdmOpenUiReceiver"
+OPEN_UI_ACTION = "com.little_femaleboy.fdm.OPEN_UI"
 PROVIDER_AUTH = PKG + ".config"
 
 # ★ 2026-10-06 · 音乐：前台播放服务（跑在**我们自己的进程**里 ⇒ 宿主被杀也在放）
@@ -130,7 +133,9 @@ def patch_manifest(src, version_code, version_name, app_class=None):
             for perm in ("android.permission.INTERNET",
                          "android.permission.WAKE_LOCK",
                          "android.permission.FOREGROUND_SERVICE",
-                         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"):
+                         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+                         # ★ 2026-11-06：兜底通知要用（后台拉不起 UI 时至少给个可点的条）
+                         "android.permission.POST_NOTIFICATIONS"):
                 out += new_elem("uses-permission", [s_attr("name", perm)])
             attrs = list(e[4])
             if app_class:
@@ -149,6 +154,27 @@ def patch_manifest(src, version_code, version_name, app_class=None):
                 (A, "exported", None, axml.TYPE_INT_BOOLEAN, 0xFFFFFFFF),
                 (A, "grantUriPermissions", None, axml.TYPE_INT_BOOLEAN, 0),
             ])
+
+            # ⛔ 2026-11-06 一版：撤回广播换乘接收器（误判为「ROM 不登记」）
+            # ✅ 2026-11-06 二版：**重新声明** —— 误判复盘：那次 dumpsys 查不到，
+            #    真因是这段插入被注释掉了（清单里没声明当然查不到），
+            #    而广播本身**不受包可见性过滤**（铁证：UI 进程看不见宿主，
+            #    它发的 CMD 广播宿主收到 52 次）⇒ 宿主 → 模块的广播应当也通。
+            # ⚠️ 2026-11-06 三版修正：**不能用 new_elem() 写带子节点的元素**！
+            #    new_elem 会连 `</receiver>` 一起吐出来 ⇒ intent-filter 变成它的
+            #    **兄弟**、还留一个游离的 `</receiver>` ⇒ PMS 把它当"没有 filter 的
+            #    接收器"丢掉（`cmd package query-receivers` 查不到）。
+            #    这就是 3.75.22「dumpsys 查不到接收器」的真因，跟 ROM / 可见性无关。
+            #    ⇒ 带子节点的元素必须像下面这样：只 start，末尾自己补 end。
+            out += [("start", 99, "", "receiver", [
+                s_attr("name", OPEN_UI_RCVR),
+                (A, "exported", None, axml.TYPE_INT_BOOLEAN, 0xFFFFFFFF),
+            ])]
+            out += [("start", 99, "", "intent-filter", [])]
+            out += [("start", 99, "", "action", [s_attr("name", OPEN_UI_ACTION)]),
+                    ("end", 99, "", "action")]
+            out += [("end", 99, "", "intent-filter")]
+            out += [("end", 99, "", "receiver")]
 
             # ★ 2026-10-06 · 音乐：**播放器已搬进宿主进程**（bridge/GmMusicPlayer.java）⇒
             #   本模块的清单里**不再需要 Service 声明**。
@@ -183,6 +209,38 @@ def patch_manifest(src, version_code, version_name, app_class=None):
     if not inserted:
         raise SystemExit("✗ 清单里找不到 <application> 的结束标签，补丁没打上")
     return axml.rebuild(pool, out, attr_ids)
+
+
+def check_manifest_tree(manifest_bytes):
+    """重编码后的清单必须**标签严格配对**。
+
+    ★ 2026-11-06 血的教训：`new_elem()` 会同时吐出 start **和 end**
+      ⇒ 用它写"带子节点的元素"（receiver + intent-filter）会得到
+      `<receiver/><intent-filter/></receiver>` 这种怪结构：
+      子节点变成兄弟、末尾还多一个游离的 `</receiver>`。
+      PMS 既不报错也不注册 ⇒ 表现成「dumpsys 查不到组件」，
+      我上一次把锅甩给了 ROM / 包可见性（错了整整一轮）。
+
+      所以：出包前机械校验一次，**这类错永远不许再悄悄出包**。
+    """
+    pool, ev = axml.decode(manifest_bytes)
+    stack = []
+    for i, e in enumerate(ev):
+        if e[0] == "start":
+            stack.append((e[3], i))
+        elif e[0] == "end":
+            name = e[3] if len(e) > 3 else ""
+            if not stack:
+                raise SystemExit("✗ 清单结构坏：第 %d 个事件 </%s> 没有对应开标签" % (i, name))
+            top, at = stack.pop()
+            if top != name:
+                raise SystemExit("✗ 清单结构坏：<%s>(第 %d 个) 被 </%s>(第 %d 个) 关掉"
+                                 "—— 多半是 new_elem() 用在了带子节点的元素上"
+                                 % (top, at, name, i))
+    if stack:
+        raise SystemExit("✗ 清单结构坏：%d 个标签没关（最内层 <%s>）"
+                         % (len(stack), stack[-1][0]))
+    print("清单结构         : 标签严格配对 ✓")
 
 
 # ------------------------------------------------------------------ 主流程
@@ -587,6 +645,7 @@ def main():
     # ---------- ③ 清单补丁 ----------
     new_manifest = patch_manifest(manifest_src, a.version_code, a.version_name, a.app_class)
     print("清单             : %d → %d 字节（包名→%s）" % (len(manifest_src), len(new_manifest), PKG))
+    check_manifest_tree(new_manifest)
 
     # ---------- ③.5 组件类必须真在 dex 里 ----------
     class_sets = [dexinfo.defined_classes(base_dex), dexinfo.defined_classes(our_dex)] \

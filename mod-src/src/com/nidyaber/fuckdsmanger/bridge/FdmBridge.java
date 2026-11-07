@@ -1526,6 +1526,25 @@ public final class FdmBridge {
                 com.nidyaber.fuckdsmanger.gm.GmBubble.saveImage(
                         ctx, android.net.Uri.parse(String.valueOf(arg)));
                 back = "气泡图已保存";
+            } else if ("open_ui_pi".equals(cmd)) {
+                // ★★ 2026-11-06：由**前台的宿主**代发模块建好的 PendingIntent。
+                //   两级（解析层 / 启动层）一次过，见 FdmOpenUi 的类注释。
+                Object pio = (it.getExtras() == null) ? null : it.getExtras().get(FdmOpenUi.EX_PI);
+                String from = it.getStringExtra(FdmOpenUi.EX_FROM);
+                GmUtil.log("【FdmUiHook】宿主代发起：收到 PI=" + pio + " from=" + from);
+                if (pio instanceof android.app.PendingIntent) {
+                    FdmOpenUi.sendFromHost(ctx, (android.app.PendingIntent) pio);
+                    back = "已代发 PendingIntent";
+                } else {
+                    back = "没拿到 PendingIntent（" + pio + "）";
+                }
+            } else if ("open_ui".equals(cmd)) {
+                // ★ 2026-11-06：给尼尼自己用的诊断入口 ——
+                //   用 adb 一条广播就能让**宿主进程**走一遍完整换乘链，
+                //   不用求主人去点「检查更新」。
+                //     adb shell am broadcast -a com.little_femaleboy.fdm.CMD --es cmd open_ui
+                FdmUiHook.probeFromCmd(ctx);
+                back = "已请求：看 logcat FDM-OpenUi / lspd 的 FdmUiHook 行";
             } else if ("ui_step".equals(cmd)) {
                 // ★ 界面把关键步骤发过来，由宿主写日志 ——
                 //   因为 ColorOS 会把应用进程的 log，我看不到界面侧 ✗

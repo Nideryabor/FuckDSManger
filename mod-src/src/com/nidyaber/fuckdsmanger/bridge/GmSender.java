@@ -72,11 +72,14 @@ public final class GmSender {
      * </pre>
      * 名字变了只改这一行候选表；<b>结构不对就换下一个候选</b>，全不对才 bail。
      */
-    private static final String[] CAND_GH2 = {"ik2", "oj2", "kh2", "ao1"};
+    private static final String[] CAND_GH2 = {"nk2", "ik2", "oj2", "kh2", "ao1"};
+    // ★ 2.7.5 = **nk2**（`j0(Lnk2;String;List;List;String;Ljda;Lzs;ZZZZ)V` 与 2.7.1 的 oj2.j0 逐位同序）
     /** 消息主存储（派生出来，这里只留旧值当交叉校验用）。 */
-    private static final String[] CAND_NS  = {"ys", "ps", "ns"};
+    private static final String[] CAND_NS  = {"zs", "ys", "ps", "ns"};
+    // ★ 2.7.5 = **zs**（`nk2.Y()Lzs;`，方法名 Y 未变）
     /** 发送目标标识 —— <init>(long, String)（2.7.1=u7a → **2.7.2=ada**）。 */
-    private static final String[] CAND_M1A = {"ada", "u7a", "f4a"};
+    private static final String[] CAND_M1A = {"jda", "f4a", "u7a", "ada"};
+    // ★ 2.7.5 = **jda**（j0 的第 6 参；2.7.2 f4a → 2.7.5 jda）
 
     /** 发送方法名（静态）。2.6.2=`h0` → **2.7.1=`j0`**
      *  <p>证据：`kh2.h0(Lkh2;String;List;List;String;Lf4a;Lns;ZZZZ)V`

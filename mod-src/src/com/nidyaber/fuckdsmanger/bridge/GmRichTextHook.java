@@ -86,7 +86,8 @@ public final class GmRichTextHook extends XC_MethodHook {
      *  （`ln→mn` `gc7→eg7` `koa→jsa` `k→k`(未改名) `by4→n05`），方法名 `y→k`
      *  <p>⚠️ 2.7.1 的 `bz0` 是**别的类**（同名换主人）⇒ 已从候选里移除，
      *  否则 findClass 成功但方法对不上，只会浪费一次尝试。 */
-    private static final String[] CAND_MT = {"k27", "q13", "bz0"};
+    private static final String[] CAND_MT = {"s27", "k27", "q13", "bz0"};
+    // ★ 2.7.5 = **s27**（k27→s27 已由「全树唯一串 painterResource」钉死；其余候选全部作废）
     // ★ 2.7.2 = **k27**：`.method public static final b(Lsn;Lyj7;Lbya;Lk;Lr15;II)V`
     //   全树唯一命中（`sn`=AnnotatedString 已确认；`yj7`=Modifier、`bya`=Colors、`r15`=Composer 均与表一致）
     //   方法名 `k`(2.7.1) → **`b`**(2.7.2)

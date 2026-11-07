@@ -55,11 +55,21 @@ public final class GmCallPin {
      * ⚠️ 这两个都是**混淆名** —— 宿主升级时必须跟着 `GmRemap` 一起重新定位。
      */
     private static final String[] CAND_VM = {
-            "it1",        // ★ 2026-11-01 真机定位（2.7.2）：ChatCallHost.kt:32 那句闸门就是它
+            "kt1",        // ★ 2026-11-06 定位（2.7.5）：hc3.smali:8590 = `:cond_38 / invoke-virtual {p0}, Lkt1;->a()Z`
+                          //   （= ChatCallHost.kt:32，与 2.7.2 的 g83:15658 完全同形）
+            "it1",        // 2.7.2（2.7.5 已不存在）
             "ps1",        // 2.7.1（已不存在）
-            "sq1",        // 2.6.2（2.7.2 已被复用成别的类，结构校验会挡掉）
+            "sq1",        // 2.6.2（已被复用成别的类，结构校验会挡掉）
     };
     private static final String M_SHOW = "a";
+
+    /**
+     * 「闸门读的那个 Compose State」的**混淆短名白名单**（每代宿主追加一个）。
+     * <p>2.7.5 实测：`kt1` 的字段是 `c:Liea; d:Liea;`（`iea` = MutableState）。
+     * <p>⚠️ 别用 `getType().getName().equals("Lzda;")` 那种判法 —— 混淆类在默认包里，
+     *    返回的是 `zda` 而不是 `Lzda;`，永远不成立。
+     */
+    private static final String[] STATE_SIMPLE_NAMES = {"iea", "zda", "lea", "vda"};
 
     /**
      * ★★ 2026-10-02 修（主人实测："杀后台再打开也是通话页"）：
@@ -177,14 +187,14 @@ public final class GmCallPin {
             boolean hasState = false;
             try {
                 for (java.lang.reflect.Field f : c.getDeclaredFields()) {
-                    if ("Lzda;".equals(f.getType().getName().replace('.', '/'))) {
-                        hasState = true;
-                        break;
+                    String sn = f.getType().getSimpleName();
+                    for (String ok : STATE_SIMPLE_NAMES) {
+                        if (ok.equals(sn)) {
+                            hasState = true;
+                            break;
+                        }
                     }
-                    if ("zda".equals(f.getType().getSimpleName())) {
-                        hasState = true;
-                        break;
-                    }
+                    if (hasState) break;
                 }
             } catch (Throwable ignore) {
             }
