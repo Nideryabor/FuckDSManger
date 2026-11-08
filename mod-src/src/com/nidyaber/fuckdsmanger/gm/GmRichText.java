@@ -181,6 +181,36 @@ public final class GmRichText {
     };
 
     /**
+     * ★★ 2026-11-07（3.76.4）· **本地点歌**开：{@code ⟦LOCAL:} —— 与在线 {@code ⟦DJ:} 明确分开。
+     *
+     * <p>为什么要分族，而不是让 {@code ⟦DJ:} 自己"先查本地、查不到再联网"：
+     * 主人 2026-11-07 原话「不对，应该是**本地和在线明确分开**」。
+     * 混在一起有三个坏处：① 用户说"本地版"时，模型没法表达这个意图
+     * ② 本地删了歌，会**静默**变成在线播放（这正是当时观察到的现象）
+     * ③ 出了问题分不清是哪条路坏了。
+     *
+     * <p>形态：{@code ⟦LOCAL:3⟧} / {@code ⟦LOCAL:歌名-歌手⟧}，可选 {@code |hidden}。
+     * 括号宽容同 {@link #DJ_OPENS}（模型实测会写 ASCII 方括号）。
+     */
+    public static final String[] LOCAL_OPENS = {
+            "\u27E6LOCAL:", "[LOCAL:", "\uFF3DLOCAL:", "\u3010LOCAL:"
+    };
+
+    /** 与 {@link #LOCAL_OPENS} 一一对应的闭括号 */
+    public static final String[] LOCAL_CLOSES = {
+            "\u27E7", "]", "\uFF3D", "\u3011"
+    };
+
+    /** 文本里有没有本地点歌标记 —— {@code GmRichTextHook} 的快速闸要用。 */
+    public static boolean hasLocal(String s) {
+        if (s == null) return false;
+        for (String op : LOCAL_OPENS) {
+            if (s.indexOf(op) >= 0) return true;
+        }
+        return false;
+    }
+
+    /**
      * 建议按钮开：{@code <Suggestion>} —— ★ 2026-10-05 加。
      *
      * <p>用途：AI 在回复末尾写一行 {@code <Suggestion>▸ 帮我再展开讲讲</Suggestion>}，
@@ -439,6 +469,11 @@ public final class GmRichText {
         /** 点歌段里的原文（{@code 歌名-歌手} 或 {@code 歌名-歌手|hidden}） */
         public String djBody;
 
+        /** ★ 2026-11-07 · **本地点歌**段 {@code ⟦LOCAL:序号|}歌名-歌手⟧} */
+        public boolean local;
+        /** 本地点歌段里的原文（{@code 3} / {@code 歌名-歌手} / 带 {@code |hidden}） */
+        public String localBody;
+
         public String raw(String text) {
             return text.substring(start, end);
         }
@@ -474,16 +509,45 @@ public final class GmRichText {
                     a5k = i;
                 }
             }
-            if (a1 < 0 && a2 < 0 && a3 < 0 && a4 < 0 && a5 < 0) break;
+            // ★ 2026-11-07 · 本地点歌（同一套「最靠左」逻辑，族与在线分开）
+            int a6 = -1;
+            int a6k = -1;
+            for (int i = 0; i < LOCAL_OPENS.length; i++) {
+                int q = s.indexOf(LOCAL_OPENS[i], from);
+                if (q >= 0 && (a6 < 0 || q < a6)) {
+                    a6 = q;
+                    a6k = i;
+                }
+            }
+            if (a1 < 0 && a2 < 0 && a3 < 0 && a4 < 0 && a5 < 0 && a6 < 0) break;
 
-            // ★ 五选一：谁最靠前就先处理谁（2026-10-11 加 ⟦DJ: 点歌）
+            // ★ 六选一：谁最靠前就先处理谁
             int a = -1;
-            int kind = 0;                             // 0=模板 1=匿名 2=建议 3=建议(⟦SUG⟧) 4=点歌
+            int kind = 0;                             // 0=模板 1=匿名 2=建议 3=建议(⟦SUG⟧) 4=点歌 5=本地点歌
             if (a1 >= 0) { a = a1; kind = 0; }
             if (a2 >= 0 && (a < 0 || a2 < a)) { a = a2; kind = 1; }
             if (a3 >= 0 && (a < 0 || a3 < a)) { a = a3; kind = 2; }
             if (a4 >= 0 && (a < 0 || a4 < a)) { a = a4; kind = 3; }
             if (a5 >= 0 && (a < 0 || a5 < a)) { a = a5; kind = 4; }
+            if (a6 >= 0 && (a < 0 || a6 < a)) { a = a6; kind = 5; }
+
+            if (kind == 5) {
+                // ★ 本地点歌：不闭合（流式中途被截断）就原地不动
+                String lop = LOCAL_OPENS[a6k];
+                String lcl = LOCAL_CLOSES[a6k];
+                int b = s.indexOf(lcl, a + lop.length());
+                if (b < 0) break;
+                Seg seg = new Seg();
+                seg.start = a;
+                seg.end = b + lcl.length();
+                seg.local = true;
+                seg.localBody = s.substring(a + lop.length(), b).trim();
+                seg.name = "";
+                seg.args = EMPTY_ARGS;
+                out.add(seg);
+                from = seg.end;
+                continue;
+            }
 
             if (kind == 4) {
                 // ★ 点歌：不闭合（流式中途被截断）就原地不动 —— 宁可这一帧不渲染，

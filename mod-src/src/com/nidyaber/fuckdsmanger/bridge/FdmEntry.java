@@ -134,10 +134,106 @@ public final class FdmEntry implements IXposedHookLoadPackage {
             } catch (Throwable t) {
                 XposedBridge.log("[FDM] FdmUpdatePopupHook.install 抛了：" + t);
             }
+            // ⛔⛔ 2026-11-07 · **已停用点击接管**（主人拍板）
+            //
+            //  停用原因（一天内四次误伤，frida + smali 双向取证）：
+            //    「检查更新 / 复制 / 删除对话 / 重新生成」**四个功能共用 pg7 的 e=22/23**。
+            //    `e` 只是 R8 合并后的 switch 索引，**不承载任何语义**：
+            //      e=22 -> :pswitch_1d9   check-cast v12, Lqda
+            //      e=23 -> :pswitch_18d   check-cast v12, Lay
+            //    而 Xposed 的 t.intercept/m.proceed 会把中间调用栈挡掉
+            //    （实测栈顶只剩 JairlkMouthRoolt.h <- hc3.L，看不到 k23.d0），
+            //    ⇒ **没有任何可靠的运行时判据**能区分这四件事。
+            //    硬拦的后果：复制/删除对话/重新生成 全部被劫持去拉模块 UI。
+            //
+            //  ⇒ 决定：**不拦任何点击**，只保留「改文案」（GmResTextHook）。
+            //     宿主原生功能 100% 恢复；模块改从自己的入口进（悬浮钮 / 桌面图标 / 通知）。
+            //
+            //  ⚠️ 留给未来的话：如果哪天要做，唯一可行的方向是
+            //     「在宿主自己的 onClick lambda 里注入」，而不是拦协程 resume。
+            XposedBridge.log("[FDM] 已停用「检查更新」点击接管（会误伤复制/删除对话/重新生成）");
+
+            // ③.6.5 ★★ 2026-11-07 · **更新弹窗里「立即更新」按钮 → 我们的模块**
+            //
+            //  和上面那条停用的完全不同：上面挂的是「设置页那一行」的路由桶
+            //  （`pg7.z` 的 switch 下标，复制/删除/重生成四家共用 ⇒ 判据不可能可靠）。
+            //
+            //  这一钩挂的是**宿主唯一那个「打开更新链接」的类**（2.7.5 = `zi`）：
+            //      · 只有 1 个 Context 字段 + 1 个 (String)V 方法
+            //      · 全 dex 该方法的 xref **只有 1 处**（UpdateDialog 的「立即更新」按钮）
+            //  ⇒ 语义唯一，不可能误伤任何别的功能。
+            //
+            //  顺带修掉「点了没反应」：宿主拿不到直链时 url 是**空串**，
+            //  它自己 Uri.parse("") → ANFE 被 catch 吞掉 ⇒ 弹窗消失、什么都没发生。
+            //  我们不依赖 url 非空。
+            //
+            //  详见 专题/宿主更新按钮-静态链路-2.7.5.md
             try {
-                FdmUpdateRowHook.install(lp.classLoader);
+                FdmUpdateJumpHook.install(lp.classLoader);
             } catch (Throwable t) {
-                XposedBridge.log("[FDM] FdmUpdateRowHook.install 抛了：" + t);
+                XposedBridge.log("[FDM] FdmUpdateJumpHook.install 抛了（不影响其它钩子）：" + t);
+            }
+
+            // ③.6.6 ★★ 2026-11-07 · **设置页「检查更新」那一行 → 我们的模块**
+            //
+            //  旧实现（FdmUpdateRowHook 挂 pg7.z / sj0.h）已废弃：那是 R8 合并出来的
+            //  **路由桶下标**（复制/删除对话/重新生成 四家共用 e=22/23），
+            //  而且 sj0.h 是**所有协程 resume 的公共入口** ⇒ 必然误伤。
+            //
+            //  新落点 = `fy2.a(Lec3)Object`：UpdateViewModel 里**写死** "check_update"
+            //  的那个 suspend 函数，xref 全 dex 只有 2 处且都是它自己的状态机
+            //  ⇒ 语义唯一，拦它只可能影响「手动检查更新」。
+            //
+            //  ★ 不 setResult（suspend 函数伪造返回值会死循环，有血证），
+            //    只旁路把我们的 UI 拉起来；宿主那次检查照跑，
+            //    它的 Toast/Dialog 由 FdmUpdatePopupHook 拦。
+            try {
+                FdmUpdateRowJumpHook.install(lp.classLoader);
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] FdmUpdateRowJumpHook.install 抛了（不影响其它钩子）：" + t);
+            }
+
+            // ③.6.7 ★★ 2026-11-07 · 装「宿主被顶到后台」监视器
+            //
+            //  这是**保底弹窗弹不弹**的主判据（主人定的）：
+            //    拉起 1 秒后 宿主还在前台 ⇒ 拉起失败 ⇒ 弹
+            //    拉起 1 秒后 宿主已后台 ⇒ 拉起成功 ⇒ 不弹
+            //
+            //  为什么比"查模块进程在不在"可靠：
+            //    模块进程只要被广播唤醒就是"在"，而保底恰恰是在
+            //    "进程刚被唤醒、UI 还没画"时触发的 ⇒ 旧判据恒真 ⇒ 保底被永久吞掉。
+            //    而"宿主被顶到后台"只可能由「真的有 Activity 启动」导致 ⇒ 是成功的充分佐证。
+            //
+            //  必须**尽早**装（在任何一次点击之前），否则第一次点击收不到 onPause。
+            try {
+                FdmUiHook.installHostLifecycleWatch(lp.classLoader);
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] installHostLifecycleWatch 抛了：" + t);
+            }
+
+            // ③.7 ★★ 2026-11-07 · 本地音乐：选文件夹的回调
+            //   曲库改成「用户用系统选择器挑文件夹」⇒ 必须接住 onActivityResult
+            //   才能 takePersistableUriPermission（不然重启就丢授权）。
+            try {
+                FdmPickResultHook.install(lp.classLoader);
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] FdmPickResultHook.install 抛了：" + t);
+            }
+
+            // ③.8 ★★ 2026-11-07 · 「宿主の终极美化策略」：替换宿主**所有**资源文字 / 图片
+            //
+            //   挂的是**框架类** android.content.res.Resources —— 名字永不变，
+            //   不引入新的宿主混淆名依赖（铁律：不依赖宿主包名/类名）。
+            //   真机探针实测：getString 是 Compose 文字唯一漏斗（60 秒 1406 次），
+            //   getDrawable 是 painterResource 唯一漏斗。
+            //
+            //   ⚠️ 装在 FdmHostReadyHook（Application.onCreate）之前也没关系：
+            //      钩子表为空时每个 hook 第一行就 return，零开销。
+            try {
+                GmResHook.install(lp.classLoader);
+                XposedBridge.log("[FDM] GmResHook 已安装（Resources 文字/图片替换）");
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] GmResHook.install 抛了：" + t);
             }
         }
 

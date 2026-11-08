@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.nidyaber.fuckdsmanger.bridge.FdmPush
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -270,8 +271,16 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
         MusicLoginPage(onBack)
         return
     }
+    if (id == "localmusic") {                 // ★ 「本地音乐」（2026-11-07 · 3.76.0）
+        LocalMusicPage(onBack)
+        return
+    }
     if (id == "sysprompt_v2") {               // 「系统提示词 v2」= 重构页（2026-10-10）
         SysPromptV2Page(onBack, onNav)
+        return
+    }
+    if (id == "resbeauty") {                  // ★ 「宿主の终极美化策略」（2026-11-07 · 3.101.0）
+        ResBeautyPage(onBack)
         return
     }
     val ctx = LocalContext.current
@@ -646,6 +655,33 @@ fun TreeHome(onNav: (String) -> Unit, onAbout: () -> Unit) {
     val ctx = LocalContext.current
     var tick by remember { mutableIntStateOf(0) }
     val t = tick
+
+    // ★★ 2026-11-07（主人要求）：把「文件夹授权」提到首页 —— 它是**好几条功能的共同前提**：
+    //   · 本地音乐曲库
+    //   · 「宿主の终极美化策略」的图片预览（宿主读不到宿主自己的图，只能落到这个目录我们再读）
+    //   · 以后的一键导出 / 导入（配置 + 图片打包也写这里）
+    //   藏在内层页里，用户根本不知道重要性 ⇒ 放首页、带状态、没授权时高亮提示。
+    var treeText by remember { mutableStateOf("") }
+    LaunchedEffect(t) {
+        FdmPush.sendCmd(ctx, "local_tree", null)
+        delay(400)
+        treeText = FdmPush.sp(ctx).getString("cmd.local_tree", "") ?: ""
+    }
+
+    // ★ 2026-11-07：UI 自己也要一份 SAF 授权（预览 / 导出 / 导入 都要我们这边读文件）
+    var safGranted by remember { mutableStateOf(SafDir.granted(ctx)) }
+    var safName by remember { mutableStateOf(SafDir.display(ctx)) }
+    val safPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            SafDir.save(ctx, uri)
+            safGranted = SafDir.granted(ctx)
+            safName = SafDir.display(ctx)
+            tick++
+        }
+    }
+
     Scaffold(
         topBar = { FdmTopBar("FuckDSManger") },
         bottomBar = { FdmNavBar(selected = 0, onSelect = { if (it == 1) onAbout() }) },
@@ -665,6 +701,67 @@ fun TreeHome(onNav: (String) -> Unit, onAbout: () -> Unit) {
                 onClick = { onNav("gray") },
             )
             FdmDivider()
+
+            // ───────── 宿主文件夹授权（公共前提，提到首页）─────────
+            Spacer(Modifier.height(10.dp))
+            SectionLabel(stringResource(R.string.hp_001))
+            CardBox {
+                Text(
+                    stringResource(R.string.hp_002),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    stringResource(R.string.hp_003),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                // ① 宿主那边（它写文件用）
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    if (treeText.isNotBlank()) stringResource(R.string.hp_004, treeText)
+                    else stringResource(R.string.hp_005),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (treeText.isNotBlank()) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.error,
+                )
+                Spacer(Modifier.height(6.dp))
+                OutlinedButton(onClick = {
+                    // ★ 必须由**宿主**拉起：SAF 授权记在它的 uid 上，我们拉起只会在我们名下
+                    FdmPush.sendCmd(ctx, "local_pick_tree", null)
+                    tick++
+                }) {
+                    Text(stringResource(if (treeText.isNotBlank()) R.string.hp_008 else R.string.hp_007))
+                }
+
+                // ② 我们（模块）这边 —— ★ 2026-11-07 主人定：UI 也要授权
+                //    SAF 的持久授权记在 **uid** 上，宿主拿到 ≠ 我们拿到。
+                //    而「图片预览 / 导出 / 导入」都要我们这边读文件 ⇒ 必须自己授权一次。
+                Spacer(Modifier.height(12.dp))
+                HorizontalDivider(thickness = 0.5.dp)
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    if (safGranted) stringResource(R.string.hp_010, safName)
+                    else stringResource(R.string.hp_011),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (safGranted) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.error,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    stringResource(R.string.hp_009),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(6.dp))
+                OutlinedButton(onClick = { safPicker.launch(null) }) {
+                    Text(stringResource(if (safGranted) R.string.hp_012 else R.string.hp_013))
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+
             SectionLabel(stringResource(R.string.scr_004))
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 val extra = listOf(

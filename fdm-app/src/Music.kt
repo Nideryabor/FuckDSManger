@@ -217,6 +217,35 @@ fun MusicPage(onNav: (String) -> Unit, onBack: () -> Unit) {
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                // ★ 2026-11-07（3.76.0）：**本地音乐** —— 就放在「悬浮条设置」下面
+                //   （主人截图指的位置）。它是音乐功能的亲儿子，所以入口在音乐页里，
+                //   不在「美化 / 调试」那些杂项里。
+                FdmDivider()
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onNav("localmusic") }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.lm_030),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            stringResource(R.string.lm_031),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(
+                        Icons.Rounded.ChevronRight, stringResource(R.string.mus_009),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
 
             // ───────── 当前状态 ─────────

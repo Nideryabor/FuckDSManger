@@ -60,37 +60,37 @@ public final class GmRichTextHook extends XC_MethodHook {
 
     // ─────────────────────── 候选混淆名（升级后重新反查，别猜）───────────────────────
 
-    /** AnnotatedString —— implements CharSequence，字段 b=text（2.6.2=ln → **2.7.1=mn**） */
-    private static final String[] CAND_KN = {"sn", "mn", "ln"};
-    // ★ 2.7.2 = **sn**：implements CharSequence + a:List/b:String/c:ArrayList/d:ArrayList
-    //   + ctor (String,List)&(List,String) 与 2.7.1 的 mn 逐位同（只多一个 static e:Lng9;）
-    //   ⚠️ 2.7.2 的 mn 已换主人（1 字段）⇒ 必须放第一位
-    /** AnnotatedString.Builder —— 字段 a=StringBuilder、b=ArrayList；k()=toAnnotatedString（jn → **kn**） */
-    private static final String[] CAND_IN = {"qn", "kn", "jn"};
-    // ★ 2.7.2 = **qn**：a:StringBuilder + b:ArrayList（= Builder 的指纹）
-    /** SpanStyle —— toString "SpanStyle(color="，15 参构造器（y2a → **m6a**） */
-    private static final String[] CAND_SPAN = {"tba", "m6a", "y2a"};
-    // ★ 2.7.2 = **tba**（15 字段 / 15 参构造器 / 含 "SpanStyle(" 串）
-    //   证据：ctor `(JJ,fs4,ds4,es4,vq4,String,J,il0,jwa,kr6,J,cua,ny9)`
-    //   对照 2.7.1 m6a `(JJ,wq4,uq4,vq4,mp4,String,J,pk0,zqa,mp6,J,yoa,nt9)` 逐位同序
-    //   ⚠️ 2.7.2 的 m6a/y2a 已换主人（1~2 字段）⇒ 必须把 tba 放第一位
-    /** FontWeight —— 字段 a:I（oo4 → **wq4**） */
-    private static final String[] CAND_WEIGHT = {"fs4", "wq4", "oo4"};   // 2.7.2 = fs4（b~/f:自引用 + a:I，与 wq4 全同）
-    /** FontStyle —— 字段 a:I（0=Normal 1=Italic）（mo4 → **uq4**） */
-    private static final String[] CAND_STYLE = {"ds4", "uq4", "mo4"};    // 2.7.2 = ds4（a:I）
-    /** TextDecoration —— 字段 a:I（0=None 1=Underline 2=LineThrough）（xka → **yoa**） */
-    private static final String[] CAND_DECO = {"cua", "yoa", "xka"};     // 2.7.2 = cua（b~/d:自引用 + a:I，与 yoa 全同）
-    /** MarkdownTextKt（R8 合并类）—— 里面那个 `k(AnnotatedString,Modifier,Colors,Config,Composer,II)`
+    /**
+     * AnnotatedString —— implements CharSequence，字段 b=text
+     * <p>2.6.2=ln → 2.7.1=mn → 2.7.2=sn → **2.7.5=tn**
+     */
+    private static final String[] CAND_KN = {"tn", "sn", "mn", "ln"};
+    // ★ 2026-11-07（3.76.0）· 2.7.5 全树反查（tmp/h275）：
+    //   tn = CharSequence + a:List / b:String / c:ArrayList / d:ArrayList + ctor (String,List)
+    //   ⚠️ 2.7.5 的 sn 已换主人（a:Object b:I c:I d:String，不是 AnnotatedString）
+    /** AnnotatedString.Builder —— 字段 a=StringBuilder、b=ArrayList；k()=toAnnotatedString */
+    private static final String[] CAND_IN = {"rn", "qn", "kn", "jn"};
+    // ★ 2.7.5 = **rn**：c(tn,II)=append / e(String) / j(cca)I=pushStyle / f()=pop / k()Ltn;
+    /** SpanStyle —— toString "SpanStyle(color="，15 参构造器 */
+    private static final String[] CAND_SPAN = {"cca", "tba", "m6a", "y2a"};
+    // ★ 2.7.5 = **cca**（15 字段 / 15 参构造器）
+    //   ctor `(JJ,Ljs4;,Lhs4;,Lis4;,Lzq4;,String,J,Ljl0;,Lpwa;,Lqr6;,J,Lkua;,Lty9;,I)V`
+    //   与 2.7.2 tba `(JJ,fs4;,ds4;,es4;,vq4;,String,J,il0;,jwa;,kr6;,J,cua;,ny9;,I)V` 逐位同形
+    //   ⚠️ 2.7.5 的 tba 只剩 2 字段（换主人了）⇒ 3.75.x 之前一直卡在自检这一步（见下）
+    /** FontWeight —— 字段 a:I */
+    private static final String[] CAND_WEIGHT = {"js4", "fs4", "wq4", "oo4"};   // 2.7.5 = js4（a:I + b~f:自引用）
+    /** FontStyle —— 字段 a:I（0=Normal 1=Italic） */
+    private static final String[] CAND_STYLE = {"hs4", "ds4", "uq4", "mo4"};    // 2.7.5 = hs4
+    /** TextDecoration —— 字段 a:I（0=None 1=Underline 2=LineThrough） */
+    private static final String[] CAND_DECO = {"kua", "cua", "yoa", "xka"};     // 2.7.5 = kua
+    /** MarkdownTextKt（R8 合并类）—— 里面那个 `b(AnnotatedString,Modifier,Colors,Config,Composer,II)`
      *  <p>2.6.2=`bz0.y(Lln;Lgc7;Lkoa;Lk;Lby4;II)V`
      *  <p>**2.7.1=`q13.k(Lmn;Leg7;Ljsa;Lk;Ln05;II)V`** ★ 七参逐位全对
      *  （`ln→mn` `gc7→eg7` `koa→jsa` `k→k`(未改名) `by4→n05`），方法名 `y→k`
      *  <p>⚠️ 2.7.1 的 `bz0` 是**别的类**（同名换主人）⇒ 已从候选里移除，
      *  否则 findClass 成功但方法对不上，只会浪费一次尝试。 */
     private static final String[] CAND_MT = {"s27", "k27", "q13", "bz0"};
-    // ★ 2.7.5 = **s27**（k27→s27 已由「全树唯一串 painterResource」钉死；其余候选全部作废）
-    // ★ 2.7.2 = **k27**：`.method public static final b(Lsn;Lyj7;Lbya;Lk;Lr15;II)V`
-    //   全树唯一命中（`sn`=AnnotatedString 已确认；`yj7`=Modifier、`bya`=Colors、`r15`=Composer 均与表一致）
-    //   方法名 `k`(2.7.1) → **`b`**(2.7.2)
+    // ★ 2.7.5 = **s27.b(Ltn;Lfk7;Liya;Lk;Lv15;II)V**（全树唯一：首参 tn=AnnotatedString）
 
     // ─────────────────────── 宿主类句柄 ───────────────────────
 
@@ -165,6 +165,14 @@ public final class GmRichTextHook extends XC_MethodHook {
                                     + text.substring(Math.max(0, k - 10),
                                     Math.min(text.length(), k + 40)).replace("\n", "\\n"));
                 }
+                // ★ 2026-11-07 同理：含 LOCAL 但被闸拦下 ⇒ 也是这套"网关漏了"的症状
+                if (text.indexOf("LOCAL:") >= 0) {
+                    int k = text.indexOf("LOCAL:");
+                    GmUtil.logOnce("richHook.localgate",
+                            "快速闸拦下了含 LOCAL 的文本（hasLocal 没覆盖这种形态？）："
+                                    + text.substring(Math.max(0, k - 10),
+                                    Math.min(text.length(), k + 40)).replace("\n", "\\n"));
+                }
                 return;
             }
             sRenders++;
@@ -207,6 +215,9 @@ public final class GmRichTextHook extends XC_MethodHook {
         //   原来漏了这一族 ⇒ 只写点歌标记的回复在这道闸就被拦掉、scan() 根本不跑 ✗
         //   ★ 加一族标记必须同时改三处：GmRichText 的常量 / scan() / **这里**。
         if (GmRichText.hasDj(s)) return true;
+        // ★★ 2026-11-07（3.76.4）· 本地点歌 ⟦LOCAL:…⟧ —— **第三处**，别漏
+        //   （教训：加一族标记要改三处 = GmRichText 常量 + scan() + 这里）
+        if (GmRichText.hasLocal(s)) return true;
         return bareCached() && GmRichText.hasBareTag(s);
     }
 
@@ -263,6 +274,41 @@ public final class GmRichTextHook extends XC_MethodHook {
         // 一次解析模板池（同一条消息里可能有多个标记，别每个都去读一次存储）
         java.util.LinkedHashMap<String, String> pool = GmRichText.tplMap();
 
+        // ★★★ 2026-11-07 · **同一条消息里 LOCAL 压过 DJ**
+        //
+        //  真机血证（17:22:52 → 17:22:56）：
+        //    AI 同时输出了 ⟦LOCAL:红色高跟鞋⟧ 和 ⟦DJ:海阔天空-黄家驹⟧
+        //    ⇒ 本地先放（isPlaying=true），随后 DJ 又去在线搜索并播放国语版
+        //    ⇒ 把本地那首顶掉，卡片停在搜索页
+        //
+        //  主人的判断是对的：**不存在"优先级"，是两条路都执行了**。
+        //  用户说「本地的」时，模型不该再补一条在线标记；但它补了，
+        //  我们就必须在**渲染这一层**保证：同一条消息里只要出现 LOCAL，
+        //  所有 DJ 标记一律丢弃（不是排在后面，是整条不执行）。
+        //
+        //  ⚠️ 为什么不在 GmMusicDj.handle 里判断：那里拿不到"同一条消息里还有没有 LOCAL"。
+        //     消息级信息只有 rebuild() 有。
+        boolean hasLocalSeg = false;
+        for (GmRichText.Seg s0 : segs) {
+            if (s0.local) {
+                hasLocalSeg = true;
+                break;
+            }
+        }
+        if (hasLocalSeg) {
+            boolean hadDj = false;
+            for (GmRichText.Seg s0 : segs) {
+                if (s0.dj) {
+                    hadDj = true;
+                    break;
+                }
+            }
+            if (hadDj) {
+                GmUtil.log("【Music】同一条消息里既有 LOCAL 又有 DJ ⇒ 丢弃所有 DJ"
+                        + "（用户要的是本地那首，不允许被在线覆盖）");
+            }
+        }
+
         Object nb = ctInNew.newInstance();
         boolean changed = false;
         int cur = 0;
@@ -270,9 +316,32 @@ public final class GmRichTextHook extends XC_MethodHook {
             if (s.start > cur) {
                 if (emitPlain(nb, orig, text, cur, s.start, bare)) changed = true;
             }
-            if (s.dj) {
+            if (s.local) {
+                // ★★ 2026-11-07（3.76.4）· **本地点歌**：与在线那条完全分开的一条路。
+                //   标记吃掉，必要时（没写 |hidden）补一行「♪ 正在给你放（本地）：…」。
+                //   ⚠️ 走的是 GmMusicDj.handleLocal ⇒ **不联网、不搜索**；
+                //      曲库里没有就明说没有，绝不偷偷改成在线播放。
+                try {
+                    String show = GmMusicDj.handleLocal(s.localBody);
+                    if (show != null) mAppendStr.invoke(nb, show);
+                } catch (Throwable t) {
+                    GmUtil.logFail("richHook.local", t);
+                }
+                changed = true;
+            } else if (s.dj) {
                 // ★ 3.69.0 点歌：把标记**吃掉**；必要时（没写 |hidden）补一行「♪ 正在给你放：…」
                 //   真正的搜索/起播在 GmMusicDj 里异步做 —— 这里只负责"这一帧显示什么"
+                //
+                // ★★ 2026-11-07：同一条消息里有 LOCAL 时，DJ **整条不执行**（标记照样吃掉，
+                //   但不搜索、不播放）—— 否则会把刚放好的本地歌顶掉。
+                if (hasLocalSeg) {
+                    GmUtil.logOnce("richHook.djSkip."
+                                    + Math.abs(s.djBody == null ? 0 : s.djBody.hashCode()),
+                            "DJ 被 LOCAL 压制、不执行：" + s.djBody);
+                    changed = true;      // 标记吃掉（别漏到界面上）
+                    cur = s.end;
+                    continue;
+                }
                 try {
                     String show = GmMusicDj.handle(s.djBody);
                     if (show != null) mAppendStr.invoke(nb, show);
@@ -863,7 +932,7 @@ public final class GmRichTextHook extends XC_MethodHook {
                 // ① SpanStyle
                 cSpan = load(cl, CAND_SPAN);
                 if (cSpan == null) return bail("SpanStyle 没找到");
-                if (cSpan.getDeclaredFields().length < 14) return bail("SpanStyle 候选字段数不足（2.7.2 应为 tba/15 字段），不像 SpanStyle");
+                if (cSpan.getDeclaredFields().length < 14) return bail("SpanStyle 候选字段数不足（2.7.5 应为 cca/15 字段），不像 SpanStyle");
                 for (Constructor<?> ct : cSpan.getDeclaredConstructors()) {
                     Class<?>[] ps = ct.getParameterTypes();
                     if (ps.length == 15 && ps[0] == long.class && ps[1] == long.class

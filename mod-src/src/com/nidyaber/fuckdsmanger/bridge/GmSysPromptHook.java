@@ -126,7 +126,19 @@ public final class GmSysPromptHook extends XC_MethodHook {
             Object raw = p.args[2];
             if (!(raw instanceof String)) return;
 
-            String injected = GmSysPrompt.inject((String) raw, first);
+            // ★★ 2026-11-07（3.76.0）· 「仅首条」裁静态段的前提判据：
+            //   **本会话的历史里真的出现过完整锚点**（⟦FDM⟧ 明文 / Unicode Tag 隐形）。
+            //   只认「这一条是不是本会话第一条」是不够的 ——
+            //   在**这个功能上线之前**就存在的老会话里，第 2 条消息满足 `first=false`，
+            //   但历史里从来没有过那几段静态约定 ⇒ 一裁就永久丢掉富文本/追问建议的规则，
+            //   模型于是把 <b>…</b>、<Suggestion>…</Suggestion> 原样吐出来（主人 11-07 亲眼见到）。
+            //   ⚠️ 这就是「裁」必须配一条**可验证的痕迹**、而不是靠推断的原因。
+            boolean historyHasFull = false;
+            if (!first && p.args.length > 3 && p.args[3] instanceof java.util.List) {
+                historyHasFull = GmSysPrompt.hasAnchor((java.util.List<?>) p.args[3]);
+            }
+
+            String injected = GmSysPrompt.inject((String) raw, first, historyHasFull);
             if (injected != null && injected != raw) {
                 p.args[2] = injected;
                 sHits++;

@@ -89,6 +89,19 @@ public final class GmPromptVars {
     /** 灌进系统提示词那段的特征串 —— 幂等判据（同 GmRichText.SPEC_TAG 的套路） */
     public static final String SPEC_TAG = "【音乐变量】";
 
+    // ─────────────── ★ 2026-11-07（3.76.0）· 本地音乐 ───────────────
+    //
+    //  链路：**UI 进程**扫 /storage/emulated/0/DCIM/fdm（只有它有文件权限）⇒
+    //        把「歌名 - 歌手」按序号排好的文本随 config 推送写进宿主存储 ⇒
+    //        这里读出来给 {local_music} 用 / 「自动追加」用。
+    //
+    //  ⚠️ 为什么不在宿主进程扫：宿主清单只有 READ_MEDIA_IMAGES，没有 READ_MEDIA_AUDIO
+    //     ⇒ Android 13+ 读不到 /sdcard/Music 里的音频（实测清单，别猜）。
+    /** UI 推来的歌单文本（已带序号，直接可进提示词） */
+    public static final String K_LOCAL = "fuckds_localmusic_text";
+    /** 「自动追加」的**反面**开关：没写过 ⇒ false ⇒ **默认开**（同 GmMusicDj 那套踩坑结论） */
+    public static final String K_LOCAL_AUTO_OFF = "fuckds_localmusic_auto_off";
+
     /**
      * 变量名表。每个都是 {@code {name}} 精确匹配 ⇒ 用户提示词里别的花括号不会被误伤。
      */
@@ -97,6 +110,7 @@ public final class GmPromptVars {
             "song", "artist", "album",
             "music_pos", "music_dur", "music_left", "music_state",
             "lyric", "lyric_prev", "lyric_next",
+            "local_music",
     };
 
     /** 歌词预热的节流（同一首 60 秒内只试一次，别把接口刷爆） */
@@ -186,6 +200,9 @@ public final class GmPromptVars {
 
     /** 单个变量的值（空值 = ""） */
     private static String value(String n, Snap s) {
+        // ★ 2026-11-07·本地音乐：**独立于播放状态、也不看 {music} 的总开关**
+        //   （歌单是常驻信息；就算没在放歌、总开关关着，歌单也该给模型看）
+        if ("local_music".equals(n)) return localText();
         if ("music_or_none".equals(n)) {
             // ★ 3.57.1：**只有它**会在「开关开着但真没在听」时说话。
             //   总开关关着 ⇒ snap() 返回 null ⇒ 落到最后那个 return "" ⇒ 仍然空（功能不存在 ⇒ 不留痕迹）。
@@ -206,6 +223,62 @@ public final class GmPromptVars {
         if ("lyric_prev".equals(n)) return lyr(s, 1);
         if ("lyric_next".equals(n)) return lyr(s, 2);
         return "";
+    }
+
+    // ─────────────────────────── ★ 本地音乐（2026-11-07）───────────────────────────
+
+    /**
+     * UI 推来的本地歌单文本（已按序号排好，形如 {@code 1. 晴天 - 周杰伦}）。
+     * 没有 / 读不到 ⇒ 空串。
+     */
+    public static String localText() {
+        Context ctx = GmUtil.app();
+        if (ctx == null) return "";
+        // ★ 2026-11-07（3.77.5）· 改成**当场问曲库**，不再读 UI 推来的那份
+        //
+        //  为什么：SAF 的持久授权记在**宿主 uid** 上，只有宿主能扫那个目录；
+        //  我们自己的 UI 进程连文件都读不到（它没有那个授权）。
+        //  ⇒ 曲库的唯一真源在宿主这边，UI 只负责显示和勾选。
+        try {
+            String s = com.nidyaber.fuckdsmanger.bridge.GmLocalMusic.promptText(ctx);
+            if (s != null && s.length() > 0) return s;
+        } catch (Throwable ignore) {
+        }
+        // 兜底：万一扫描抛了（比如授权被撤销），用上次生成的那份
+        try {
+            String s = GmStore.read2(ctx, K_LOCAL, "s");
+            return s == null ? "" : s.trim();
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    /**
+     * 「自动追加」开着没？
+     *
+     * <p>⚠️ 存的是**反面**（{@link #K_LOCAL_AUTO_OFF}）：{@code GmStore} 对没写过的键
+     * 兜底 false ⇒ 用反面键才能让默认 = 开（这条坑见 {@code GmMusicDj} 的同款注释）。
+     */
+    public static boolean localAuto() {
+        Context ctx = GmUtil.app();
+        if (ctx == null) return false;
+        try {
+            return !GmSysPrompt.boolOf(ctx, K_LOCAL_AUTO_OFF, false);
+        } catch (Throwable t) {
+            return true;
+        }
+    }
+
+    /**
+     * 自动追加的那一段（带前导空行，直接拼在提示词后面）。
+     *
+     * <p>开关关着 / 没有歌单 ⇒ 空串（不占一个字符）。
+     */
+    public static String localSection() {
+        if (!localAuto()) return "";
+        String t = localText();
+        if (t.isEmpty()) return "";
+        return "\n\n" + t;
     }
 
     private static String lyr(Snap s, int which) {

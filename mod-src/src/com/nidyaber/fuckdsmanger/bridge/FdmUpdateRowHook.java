@@ -70,6 +70,43 @@ public final class FdmUpdateRowHook extends XC_MethodHook {
     private static final String LAMBDA_CLS = "pg7";
 
     private static volatile boolean sInstalled = false;
+    /** 见过的 e 值（非 22/23 的各记一次，避免刷屏）。 */
+    private static final java.util.Set<Integer> sSeenE =
+            java.util.Collections.synchronizedSet(new java.util.HashSet<Integer>());
+
+    /** 诊断开关（CMD `update_row_diag` 切换；只打日志、不改变行为）。 */
+    private static volatile boolean sDiag = true;
+
+    public static void setDiag(boolean on) {
+        sDiag = on;
+        log("诊断模式 → " + (on ? "开" : "关"));
+    }
+
+    public static boolean diag() {
+        return sDiag;
+    }
+
+    /** 当前调用栈的简写（只取前 6 层类名.方法名，用于给 case 号定位来源）。 */
+    private static String briefStack() {
+        try {
+            StackTraceElement[] st = new Throwable().getStackTrace();
+            StringBuilder b = new StringBuilder();
+            int n = 0;
+            for (StackTraceElement el : st) {
+                String cn = el.getClassName();
+                if (cn.startsWith("de.robv") || cn.startsWith("java.lang.Thread")
+                        || cn.startsWith("android.os.")) {
+                    continue;
+                }
+                if (b.length() > 0) b.append(" <- ");
+                b.append(cn).append('.').append(el.getMethodName());
+                if (++n >= 6) break;
+            }
+            return b.toString();
+        } catch (Throwable t) {
+            return "?";
+        }
+    }
     private static volatile int sHits = 0;
     private static volatile long sLastOpen = 0L;
 
@@ -95,21 +132,47 @@ public final class FdmUpdateRowHook extends XC_MethodHook {
     private static final java.util.Set<String> NO_FIELD =
             java.util.Collections.synchronizedSet(new java.util.HashSet<String>());
 
+    /**
+     * ★★★ 2026-11-07 第三版 · **改挂 {@code pg7.z}，不再挂 {@code sj0.h}**
+     *
+     * <h3>为什么要换落点（frida 6 次实测 + 一次日志铁证）</h3>
+     * <b>frida 抓到的两条真实调用链</b>（`e` 值完全一样，所以 `e` 不能当判据）：
+     * <pre>
+     *   长按菜单：pg7.x e=23 f=0 &lt;- k23.d0 &lt;- s0.x0 &lt;- yu7.E/F &lt;- jv.a:262
+     *   检查更新：pg7.z e=22 f=0 &lt;- sj0.h &lt;- wy3.run &lt;- Handler
+     * </pre>
+     * 我之前挂 {@code sj0.h}（**所有协程 resume 的公共入口**）⇒ 菜单点击也会进来，
+     * 靠「栈里有没有 k23.d0」区分 —— <b>实测无效</b>：
+     * <pre>
+     *   栈=...beforeHookedMethod &lt;- t.intercept &lt;- m.proceed
+     *          &lt;- android.provider.JairlkMouthRoolt.h &lt;- hc3.L
+     * </pre>
+     * Xposed 的 {@code t.intercept / m.proceed} 把中间层挡掉了，**根本看不到 k23.d0**。
+     *
+     * <h3>⇒ 落点换到 {@code pg7.z}</h3>
+     * frida 已证明：**检查更新只走 {@code z}，长按菜单只走 {@code x}**。
+     * 挂在 {@code z} 上，菜单点击**在方法层面就进不来**，不需要任何栈判断。
+     *
+     * <p>⚠️ 代价（必须记住）：挂 `z` 之后**不能 setResult 伪造返回值**
+     * —— 它的返回值是协程协议的一部分，塞 `Unit` 会让 {@code sj0.h} 死循环
+     * （3.75.x 血证，见文件头）。所以这里只在**启动时**（`f == 0`）
+     * 临时 {@code setResult(null)} 吞掉这一次，**不碰 {@code f != 0} 的恢复**。
+     */
     public static void install(ClassLoader cl) {
         if (sInstalled) return;
-        final String KEY = "cont.impl.h";
-        final String MTH = "h";
+        // ⚠️ 键格式 = KEY + "." + MTH（GmRemap 里就是这么拼的）。
+        //    表里登记的是 "settings.row.update.z" ⇒ 这里必须拆成
+        //      KEY="settings.row.update"  +  MTH="z"
+        //    ⛔ 2026-11-07 血证：我写成 KEY="settings.row.update.z" + MTH="z"
+        //       ⇒ 拼成 "settings.row.update.z.z" ⇒ 表里没有 ⇒ hit()=false
+        //       ⇒ **hook 根本没挂** ⇒ 一切退回宿主原生行为（主人："全都变回宿主原本的功能了"）
+        final String KEY = "settings.row.update";
+        final String MTH = "z";
         String clsName = GmRemap.clsFor(KEY, MTH);
         String mthName = GmRemap.method(KEY, MTH);
-        log("install：解析 " + KEY + "." + MTH + " ⇒ 类=" + clsName + " 方法=" + mthName);
-        // ★★ 先问一句"表里到底有没有这个键"。
-        //   血证（两次，都是键少写了一截）：
-        //     3.75.28 `settings.row.update`（少 .z）
-        //     3.75.38 `cont.impl.h`（少 .h）
-        //   症状：ClassNotFoundException: xxx$yyy —— 看着像类名错，其实是键没命中。
-        //   `clsAll` 没命中时会**原样返回旧类名**，调用方根本分不清，所以必须显式问。
+        log("install：解析 " + KEY + " ⇒ 类=" + clsName + " 方法=" + mthName);
         if (!GmRemap.hit(KEY, MTH)) {
-            log("✗ MTH 表里没有键 \"" + KEY + "." + MTH + "\" ⇒ 不挂（键必须是 旧类名.旧方法名 拼成的完整串）");
+            log("✗ MTH 表里没有键 \"" + KEY + "\" ⇒ 不挂");
             return;
         }
         if (clsName == null || mthName == null) {
@@ -120,8 +183,8 @@ public final class FdmUpdateRowHook extends XC_MethodHook {
             Class<?> c = XposedHelpers.findClass(clsName, cl);
             XposedHelpers.findAndHookMethod(c, mthName, Object.class, new FdmUpdateRowHook());
             sInstalled = true;
-            log("✅ 已挂「检查更新」点击 → " + clsName + "." + mthName
-                    + "（吞 resume；e=22/23 且 f=0 才动）");
+            log("✅ 已挂「检查更新」→ " + clsName + "." + mthName
+                    + "（e=22/23 且 f=0 才动；菜单走 x，碰不到这里）");
         } catch (Throwable t) {
             log("✗ 挂载失败 " + clsName + "." + mthName + "：" + t);
         }
@@ -146,12 +209,58 @@ public final class FdmUpdateRowHook extends XC_MethodHook {
             Integer eBox = intField(self, "e");
             if (eBox == null) return;
             final int e = eBox;
+
+            // ★★ 2026-11-07 · **诊断（只打日志、不吞）**
+            //
+            //  主人报：「长按消息 → 复制」也会跳转到模块 UI。
+            //  说明 `pg7.e == 22/23` 这个判据**不够唯一** —— pg7 是 R8 合并出来的
+            //  多分支 lambda 类，别处的 case 号也会撞上。
+            //
+            //  这一段只在 sDiag 开着时输出（CMD `update_row_diag` 打开），
+            //  把每次命中的 e/f 都记下来 ⇒ 主人点一次「复制」，
+            //  日志里就能看到它到底是哪个 case 号，不用猜。
+            if (sDiag) {
+                // ★ 只对「我们真会动手」的 e 详细打；其它 e 各记一次就够（否则刷屏）
+                boolean suspect = (e == CASE_UPDATE_A || e == CASE_UPDATE_B);
+                String key = "e" + e + (suspect ? "#suspect" : "#other");
+                if (suspect || sSeenE.add(Integer.valueOf(e))) {
+                    log("〔诊断〕pg7 命中 e=" + e + " f=" + intField(self, "f")
+                            + " 线程=" + Thread.currentThread().getName()
+                            + "\n    栈=" + briefStack());
+                }
+            }
+
             if (e != CASE_UPDATE_A && e != CASE_UPDATE_B) return;
 
             // ③ 只吞「启动」（f == 0）。
             //    f != 0 说明协程被 resume（异步回来了）⇒ 放行，绝不能吞。
             Integer fBox = intField(self, "f");
             if (fBox == null || fBox != 0) return;
+
+            // ═══════════════════════════════════════════════════════════════
+            //  ★★★ 2026-11-07 · **必须排除「长按菜单」**（frida 实测定案）
+            //
+            //  主人报：「长按消息 → 复制」也会跳转到模块 UI。
+            //
+            //  frida 抓到的两条真实调用链（e 值**完全相同**，所以 e 不能当判据）：
+            //    pg7.x e=23 f=0 <- k23.d0:7 <- s0.x0:115 <- yu7.E/F <- jv.a:262   ← 菜单项
+            //    pg7.x e=22 f=0 <- k23.d0:7 <- s0.x0:115 <- yu7.E/F <- jv.a:283   ← 菜单项
+            //    pg7.z e=22 f=0 <- sj0.h:5  <- wy3.run:112 <- Handler            ← 检查更新
+            //
+            //  ⇒ 两者的**唯一稳定区别**：
+            //      菜单：栈里有 `k23.d0`（Compose 菜单项点击分发）
+            //      检查更新：栈里只有 `sj0.h <- wy3.run <- Handler`
+            //
+            //  所以：栈里出现 k23.d0 ⇒ 这是菜单点击，**一律放行**（不吞、不拉 UI）。
+            //  ⚠️ 判据只用「有没有 k23.d0」这一条，别的什么都不看 ——
+            //     这样即使宿主以后把 jv.a 之类的中间层改名，只要菜单分发器还是 k23.d0 就仍然正确。
+            //     （k23.d0 若改名，最坏退化成"菜单也能拉起 UI"，不会崩、不会吞错东西。）
+            // ═══════════════════════════════════════════════════════════════
+            // ★ 2026-11-07 第三版：已改挂 pg7.z（菜单在 pg7.x，// 方法层面就进不来）
+            //   ⇒ 不再需要任何栈判断。这行诊断留着，便于确认它确实只在 z 上触发。
+            if (sDiag) {
+                log("〔诊断〕pg7.z 命中 e=" + e + " f=0 ⇒ 当作检查更新启动");
+            }
 
             sHits++;
             long now = System.currentTimeMillis();
@@ -272,6 +381,53 @@ public final class FdmUpdateRowHook extends XC_MethodHook {
             sb.append(a == null ? "null" : a.getClass().getSimpleName());
         }
         return sb.append(']').toString();
+    }
+
+    /**
+     * 这次调用是不是来自**长按菜单**？
+     *
+     * <p>frida 7 次实测的铁证：菜单项点击的栈里必然有 {@code k23.d0}，
+     * 而「检查更新」（协程启动/恢复）的栈里没有。
+     *
+     * <p>⚠️ 这是一个**便宜的栈扫描**，只在 `e∈{22,23} && f==0` 之后才跑
+     * （即每次点击最多几次），不影响热路径。
+     */
+    /** 菜单链上的类名（frida 实测：k23.d0 ← s0.x0 ← yu7.E/F ← jv.a ← n2a.m ← m2a.z） */
+    private static final String[] MENU_CLASSES = {
+            "k23", "s0", "yu7", "jv", "n2a", "m2a"
+    };
+
+    private static boolean fromMenu() {
+        try {
+            StackTraceElement[] st = new Throwable().getStackTrace();
+            for (StackTraceElement el : st) {
+                String cn = el.getClassName();
+                for (String m : MENU_CLASSES) {
+                    if (m.equals(cn)) return true;
+                }
+            }
+        } catch (Throwable ignore) {
+        }
+        return false;
+    }
+
+    /** 完整栈（诊断用，最多 18 层）。 */
+    private static String fullStack() {
+        try {
+            StackTraceElement[] st = new Throwable().getStackTrace();
+            StringBuilder b = new StringBuilder();
+            int n = 0;
+            for (StackTraceElement el : st) {
+                String cn = el.getClassName();
+                if (cn.startsWith("de.robv")) continue;      // Xposed 自己的层跳过
+                b.append("\n      ").append(cn).append('.').append(el.getMethodName())
+                        .append(':').append(el.getLineNumber());
+                if (++n >= 18) break;
+            }
+            return b.toString();
+        } catch (Throwable t) {
+            return "?";
+        }
     }
 
     /** 读 int 字段（带 Field 缓存）；字段不存在返回 null（= 不是我们要的类）。 */

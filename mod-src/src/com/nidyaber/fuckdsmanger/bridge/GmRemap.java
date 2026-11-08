@@ -115,6 +115,24 @@ public final class GmRemap {
         {"assistbody", "assistbody", "assistbody", "assistbody", "ru7", "yu7"},
         {"l23", "l23", "l23", "appsurface", "l23", "q23"},   // AppSurface ★ 2.7.2 = l23.a(Lyj7;Lsy9;JJLr33;Lr15;I)V
         {"g56", "g87", "ja7", "he7", "gi7", "ni7"},         // 建议/快捷项 item 类 ★ fp_match 100% 7/7
+        // ═══ 2026-11-07（2.7.5 从零静态定位）· 更新弹窗「立即更新」的落点 ═══
+        //   宿主那一整条「打开更新链接」的类：**只有一个 Context 字段 + 一个 (String)V 方法**，
+        //   方法体 = Uri.parse → Intent(ACTION_VIEW) → Context.startActivity（无 setPackage / 无 chooser）。
+        //   全 dex 该方法的 xref **只有 1 处** ⇒ 这就是弹窗里「立即更新」按钮的唯一落点，
+        //   天然无歧义（对比设置行那条 `pg7.z` 被复制/删除/重生成四家共用，判据不可能可靠）。
+        //   判据：类里同时含 "android.intent.action.VIEW" + "Can't open " 两个串、单 Context 字段。
+        //   2.7.5 = `zi`（见 专题/宿主更新按钮-静态链路-2.7.5.md）
+        {"openlink", "openlink", "openlink", "openlink", "openlink", "zi"},
+        // ═══ 2026-11-07 · 设置页「检查更新」那一行的**唯一语义落点** ═══
+        //   2.7.5 的 `fy2` = UpdateViewModel；它有两个入口：
+        //     · `a(Lec3)`                 ← 方法体里**写死** "check_update" ⇒ 手动检查（就它）
+        //     · `b(String,J,Lec3)`        ← scenario 由参数传入（"conversation" 等）自动检查
+        //   ⇒ `a()` 是"手动检查更新"唯一入口，且它的 xref 只有 2 处
+        //     （都是它自己的协程状态机：`cy2.z` 是 lambda invokeSuspend、`dx9.z` 是调用点）。
+        //   ★ 为什么不用旧的 `pg7.z`/`sj0.h`：那是 R8 合并出来的**路由桶下标**
+        //     （复制/删除对话/重新生成 四家共用 e=22/23）⇒ 必然误伤，已四次血证。
+        {"updatevm", "updatevm", "updatevm", "updatevm", "updatevm", "fy2"},
+
         {"yp1", "yp1", "yp1", null, null, null},          // 语音门控（GmAsrHook / GmSeeHook）
                                                //   ⚠️ 2.7.1 **同名已换主人**：变成 implements Ld15 的
                                                //   合成 lambda（a()Ltm9; / c()[Lt86; / d(Lbn3;)Object）
@@ -238,6 +256,13 @@ public final class GmRemap {
         //      （记在 `专题/写死字面量坑` 的账上）。
         {"settings.row.update.z", "settings.row.update.z", "settings.row.update.z", null, null, "pg7", "z"},   // 设置「检查更新」点击 ★ e=22/23
         {"cont.impl.h.h", "cont.impl.h.h", "cont.impl.h.h", null, null, "sj0", "h"},   // 协程 resumeWith ★ 吞掉它=宿主逻辑一行不跑
+        // ═══ 2026-11-07 · 「手动检查更新」的**唯一语义入口** ═══
+        //   `fy2.a(Lec3)Object` = UpdateViewModel 里写死 scenario="check_update" 的那个 suspend 函数。
+        //   xref 只有 2 处：`cy2.z`（它自己的协程 invokeSuspend）+ `dx9.z`（设置页那一行的调用点）。
+        //   ⇒ 语义唯一，可安全旁路（**不 setResult**，只顺手把我们的 UI 拉起来，
+        //     宿主那次检查更新照跑，但它的 Toast/Dialog 已被 FdmUpdatePopupHook 拦掉）。
+        {"updatevm.check", "updatevm.check", "updatevm.check", "updatevm.check",
+                "updatevm.check", "fy2", "a"},
     };
 
     /**

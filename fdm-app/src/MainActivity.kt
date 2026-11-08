@@ -2,6 +2,11 @@
 // Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -82,12 +87,45 @@ class MainActivity : ComponentActivity() {
                 LocalContext provides uiCtx,          // ← 说话方式（文案从这里出去）
                 *activityLocals.toTypedArray(),       // ← Activity 的能力（选图 / 返回键）
             ) {
-                FdmTheme {
+                // ★★ 2026-11-08 · 夜间模式（带颜色渐变动效）
+                //
+                //  ① 初始值从 SP 读（记住上次的选择）
+                //  ② `isSystemInDarkTheme()` 只在"跟随系统"那档起作用
+                //  ③ 关键：**不让 MaterialTheme 直接吃目标配色** ——
+                //     先过 `animatedColorScheme()` 把每个颜色角色用
+                //     animateColorAsState 插值，看起来才是一起渐变。
+                //     （直接换 CompositionLocal 是瞬间的，会"啪"一下闪。）
+                val sysDark = androidx.compose.foundation.isSystemInDarkTheme()
+                var nightMode by remember {
+                    mutableIntStateOf(NightMode.mode(base))
+                }
+                // 冷启动不要动画（一进来就渐变会很怪）
+                var justLaunched by remember { mutableStateOf(true) }
+                LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(80)
+                    justLaunched = false
+                }
+                val wantDark = NightMode.resolve(nightMode, sysDark)
+                val baseScheme = if (wantDark) FdmSchemeDark else FdmScheme
+                val scheme = animatedColorScheme(baseScheme, animate = !justLaunched)
+
+                FdmTheme(scheme) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.surface,
                     ) {
-                        FdmApp(intent?.getStringExtra("page"))      // ★ 深链接：宿主迷你卡的 ♪
+                        // ★ 夜间模式通过 CompositionLocal 往下传 ——
+                        //   FdmTopBar 有 5 个调用点，逐层传参要改一堆签名，
+                        //   而这件事只跟主题有关，CompositionLocal 才是它的位置。
+                        CompositionLocalProvider(
+                            LocalNight provides NightState(wantDark) {
+                                nightMode = if (wantDark) NightMode.LIGHT else NightMode.DARK
+                                NightMode.setMode(base, nightMode)
+                            },
+                        ) {
+                            // ★ 深链接：宿主迷你卡的 ♪
+                            FdmApp(initialPage = intent?.getStringExtra("page"))
+                        }
                     }
                 }
             }

@@ -486,6 +486,17 @@ public final class GmSysPrompt {
      * @return 注入后的 prompt；不该注入时<b>原样返回</b>
      */
     public static String inject(String prompt, boolean first) {
+        return inject(prompt, first, true);
+    }
+
+    /**
+     * 注入入口（带「历史里有没有完整锚点」判据）。
+     *
+     * @param historyHasFull 本会话历史里**已经出现过**完整锚点（⟦FDM⟧ / Tag 隐形字符）。
+     *        「仅首条」模式第 2 轮起要不要裁掉静态段，全靠它 ——
+     *        老会话（功能上线前建的）历史里没有锚点 ⇒ 这里必须是 false ⇒ 整段重发一次自愈。
+     */
+    public static String inject(String prompt, boolean first, boolean historyHasFull) {
         try {
             if (!on()) return prompt;
             String sp = text();
@@ -501,10 +512,27 @@ public final class GmSysPrompt {
             //   若按「仅首条」冻在会话第一条，模型会永远以为你在听开场那首歌
             //   （实测场景：会话开了两小时，歌换了三十首，模型还在聊第一首）。
             //   ⇒ 有变量 ⇒ 无视「注入模式」，强制每轮。UI 上有对应警告。
-            boolean hasVar = GmPromptVars.hasAny(sp);
-            if (m == MODE_FIRST && !first && !hasVar) return prompt;
+            boolean hasVar = GmPromptVars.hasAny(sp) || GmPromptVars.localAuto();
+            // ★★ 2026-11-07（3.76.0）· 主人指出的老毛病：
+            //   「仅首条」时只要正文里有时变变量，就把**整套提示词**每轮重发 ——
+            //   静态那几百字白白重复烧 token，而且和「仅首条」这个选项的语义自相矛盾。
+            //   ⇒ 第 2 轮起**只取时变的段落**（含变量的段落 + 本地歌单），静态部分只发一次。
+            String src = sp;
+            if (m == MODE_FIRST && !first) {
+                if (!hasVar) return prompt;
+                // ★ 裁的前提：历史里已经有完整锚点（否则整段重发自愈，见方法注释）
+                if (!historyHasFull) {
+                    GmUtil.logOnce("sysprompt.selfheal",
+                            "历史里还没有完整锚点 ⇒ 这一轮整段重发（老会话自愈）");
+                } else {
+                    src = varyingPart(sp);
+                }
+            }
 
-            String body = GmPromptVars.resolve(sp);         // ★ 发消息这一刻替换成真值
+            String body = GmPromptVars.resolve(src);         // ★ 发消息这一刻替换成真值
+            // ★ 本地歌单「自动追加」（开关开 + 有歌单才给）；正文里已经写了
+            //   {local_music} 就不再重复一遍（避免同一份歌单出现两次）
+            if (src.indexOf("{local_music}") < 0) body = body + GmPromptVars.localSection();
             if (body.isEmpty()) return prompt;
             body = djSection(body);                         // ★ 3.69.0 点歌约定（开关开才补）
 
@@ -519,6 +547,48 @@ public final class GmSysPrompt {
             GmUtil.logFail("sysprompt.inject", t);
             return prompt;                                   // 任何异常都原样放行
         }
+    }
+
+    /**
+     * 历史消息里有没有我们注入过的**锚点**？
+     *
+     * <p>两种承载方式都要认：明文模式的 ⟦FDM⟧，和 Tag 隐形模式的 U+E0000 区字符。
+     * 只在 {@code List<String>} / 元素 {@code toString()} 里找，找不到就 false（宁可不裁）。
+     */
+    public static boolean hasAnchor(java.util.List<?> history) {
+        if (history == null) return false;
+        try {
+            for (Object o : history) {
+                if (o == null) continue;
+                String s = (o instanceof String) ? (String) o : String.valueOf(o);
+                if (s.indexOf(PLAIN_OPEN) >= 0 || hasTag(s)) return true;
+            }
+        } catch (Throwable ignore) {
+            // 结构不是我们想的那么回事 ⇒ 当"没有"，走整段重发（安全侧）
+        }
+        return false;
+    }
+
+    /**
+     * 「仅首条」模式第 2 轮起：只取**时变**的段落。
+     *
+     * <p>段落 = 空行分隔。含音乐变量的段落（{@code {music}} 一族 / {@code {local_music}}）
+     * 才是时变的 —— 它们每轮都要带上**此刻**的值；其余静态文字第 1 轮已经发过，
+     * 不再重复（省 token，也让「仅首条」名副其实）。
+     *
+     * @return 拼好的时变部分；没有 ⇒ 空串（调用方据此决定「这轮不注入」）
+     */
+    private static String varyingPart(String sp) {
+        if (sp == null || sp.isEmpty()) return "";
+        StringBuilder out = new StringBuilder();
+        String[] blocks = sp.split("\\n\\s*\\n");
+        for (String b : blocks) {
+            if (b == null || b.isEmpty()) continue;
+            if (!GmPromptVars.hasAny(b)) continue;
+            if (out.length() > 0) out.append("\n\n");
+            out.append(b.trim());
+        }
+        return out.toString();
     }
 
     /**

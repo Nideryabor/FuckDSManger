@@ -74,7 +74,31 @@ public final class FdmFallbackDialog {
     private static final int C_BODY = 0xFFB0B0B8;
     private static final int C_PRIMARY = 0xFF3D7EFF;
     private static final int C_SECONDARY = 0xFF33333A;
+    /** 橙：root 用户（隐藏应用列表那条）。 */
     private static final int C_WARN = 0xFFFF8A65;
+    /** 绿：npatch 用户（暂时找不到原因）。 */
+    private static final int C_GREEN = 0xFF6BCB77;
+    /** 青：行动指引。 */
+    private static final int C_CYAN = 0xFF4DD0E1;
+
+    // ══════════════════════════════════════════════════════════════════
+    //  文案（2026-11-07 主人定稿：**两个弹窗合并成一个**）
+    //
+    //  旧形态是「先显示一句含糊的失败说明 → 点了按钮才换成排查指引」，
+    //  问题是：主人第一次看到时**什么有用信息都没有**，必须点一下才知道该查什么；
+    //  而点一下又正好会重试拉起（把状态搅得更乱）。
+    //  ⇒ 现在**一次全摊开**，点按钮就只是重试。
+    // ══════════════════════════════════════════════════════════════════
+    /** 标题行。 */
+    private static final String T_TITLE = "貌似拉起模块出错了……";
+    /** 橙：root 用户的排查方向（隐藏应用列表策略）。 */
+    private static final String T_ROOT =
+            "root用户请单独看看是不是隐藏应用列表把模块排除了，"
+            + "尽量选择对宿主隐藏模块，这样数美启动最多探测到有隐藏应用列表，不会上报包名";
+    /** 绿：npatch 用户的现状。 */
+    private static final String T_NPATCH = "修补(npatch)用户暂时找不到可能的原因";
+    /** 青：行动指引。 */
+    private static final String T_ACT = "点击下面的按钮重试";
 
     private FdmFallbackDialog() {
     }
@@ -136,8 +160,8 @@ public final class FdmFallbackDialog {
             final Activity act = asActivity(ctx);
             if (act == null) {
                 // 没有 Activity 就没法弹 Dialog（Android 硬约束）
-                toast(ctx, "模块已注入，但界面拉不起来（" + reason + "）"
-                        + "\n请检查隐藏应用列表是否排除了模块主包");
+                // ⇒ 退化成 Toast：**只留最短的一句**（toast 装不下三段说明）
+                toast(ctx, T_TITLE + "\n" + T_ACT);
                 return;
             }
             act.runOnUiThread(new Runnable() {
@@ -147,7 +171,7 @@ public final class FdmFallbackDialog {
                         build(act, reason, onTryLaunch, onHostUpdate).show();
                     } catch (Throwable t) {
                         log("弹窗构造失败：" + t);
-                        toast(ctx, "模块已注入，但界面拉不起来（" + reason + "）");
+                        toast(ctx, T_TITLE + "\n" + T_ACT);
                     }
                 }
             });
@@ -170,14 +194,29 @@ public final class FdmFallbackDialog {
         card.setPadding(p, dp(act, 20), p, dp(act, 16));
         card.setBackground(round(C_CARD, dp(act, 20)));
 
-        TextView title = text(act, "FuckDSManger", 17, C_TITLE, true);
+        TextView title = text(act, T_TITLE, 17, C_TITLE, true);
         card.addView(title);
 
-        final TextView body = text(act, bodyOf(reason), 13, C_BODY, false);
-        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(
+        // ── 三段说明（一次全摊开，不再"点一下才显示"）──
+        //   间距都挂在**每个段落自己的 topMargin** 上，避免用 Spacer 这类
+        //   需要额外 View 的写法（保底弹窗必须零依赖、能少一个 View 就少一个）。
+        final TextView tRoot = text(act, T_ROOT, 13, C_WARN, false);
+        LinearLayout.LayoutParams pRoot = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        blp.topMargin = dp(act, 10);
-        card.addView(body, blp);
+        pRoot.topMargin = dp(act, 12);
+        card.addView(tRoot, pRoot);
+
+        final TextView tNpatch = text(act, T_NPATCH, 13, C_GREEN, false);
+        LinearLayout.LayoutParams pNpatch = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        pNpatch.topMargin = dp(act, 10);
+        card.addView(tNpatch, pNpatch);
+
+        final TextView tAct = text(act, T_ACT, 13, C_CYAN, false);
+        LinearLayout.LayoutParams pAct = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        pAct.topMargin = dp(act, 10);
+        card.addView(tAct, pAct);
 
         // ---- 按钮行 ----
         LinearLayout row = new LinearLayout(act);
@@ -197,13 +236,9 @@ public final class FdmFallbackDialog {
         btnLaunch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 先把「为什么失败 + 怎么自查」摊开给主人看，再去重试。
-                //   顺序很重要：先给信息，再动作 —— 万一重试又把进程搞没了，
-                //   至少这句话已经显示出来了。
-                body.setText(HINT);
-                body.setTextColor(C_WARN);
-                body.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-                GmUtil.log("【FdmFallback】点「拉起模块 UI」⇒ 先展示自查指引，再重试");
+                // 2026-11-07 改：指引**一开始就全摊开**了，按钮不再切换文字，
+                //   只做一件事 —— 重试拉起。
+                GmUtil.log("【FdmFallback】点「拉起模块 UI」⇒ 重试");
                 if (onTryLaunch != null) {
                     try {
                         onTryLaunch.run();
@@ -227,19 +262,33 @@ public final class FdmFallbackDialog {
         return d;
     }
 
-    /** 那句排查指引 —— 主人原话，一字不改。 */
-    private static final String HINT =
-            "你能看到这里说明模块成功注入但是拉不起来，"
-            + "请检查隐藏应用列表是否排除了模块主包";
-
-    private static String bodyOf(String reason) {
-        return "模块已注入，但界面没能拉起来。"
-                + (reason == null || reason.length() == 0 ? "" : "\n（" + reason + "）");
-    }
-
     /** 供 Compose 版登记「当前有一个弹窗在显示」—— 保证全局唯一。 */
     static void markShowing(Dialog d) {
         sShowing = d;
+    }
+
+    /**
+     * 外部主动关掉保底弹窗（**带检测的自动收回**用）。
+     *
+     * <p>场景：弹窗已经显示，但几秒后模块自己起来了（网络慢 / 冷启动慢）
+     * ⇒ 这张「拉起失败了」的卡片就不该再留在屏幕上。
+     *
+     * <p>⚠️ 必须在主线程调用（Dialog.dismiss 的要求），调用方用 Handler 投过来。
+     */
+    public static void dismissIfShowing() {
+        try {
+            Dialog d = sShowing;
+            if (d == null) return;
+            if (!d.isShowing()) {
+                sShowing = null;
+                return;
+            }
+            d.dismiss();
+            sShowing = null;
+            log("已自动关闭保底弹窗（模块其实起来了）");
+        } catch (Throwable t) {
+            log("dismissIfShowing 失败：" + t);
+        }
     }
 
     private static void dismiss() {

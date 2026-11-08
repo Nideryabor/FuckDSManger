@@ -10,9 +10,12 @@ import androidx.compose.runtime.Composable
  * 「全限定名 + @Suppress」这个标准手法访问 —— 见 Kotlin 的 INVISIBLE_MEMBER。 */
 @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 @Composable
-fun FdmTheme(content: @Composable () -> Unit) {
+fun FdmTheme(
+    colorScheme: androidx.compose.material3.ColorScheme = FdmScheme,
+    content: @Composable () -> Unit,
+) {
     androidx.compose.material3.MaterialExpressiveTheme(
-        colorScheme = FdmScheme,
+        colorScheme = colorScheme,
         motionScheme = androidx.compose.material3.MotionScheme.standard(),
         content = content,
     )

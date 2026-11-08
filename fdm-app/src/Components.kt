@@ -2,6 +2,10 @@
 // Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +17,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -97,7 +103,17 @@ fun FdmTopBar(
     onSave: (() -> Unit)? = null,
     /** 传非空 ⇒ 右上角出现一个「更多」图标钮（最右一个，48dp）。不传就还是原来那副样子。 */
     onMore: (() -> Unit)? = null,
+    /**
+     * 传非空 ⇒ 右上角出现「夜间模式」切换钮（2026-11-08）。
+     * 传进来的是**当前是否深色**，点了会回调。
+     */
+    nightDark: Boolean? = null,
+    onToggleNight: (() -> Unit)? = null,
 ) {
+    // ★ 没显式传就用 CompositionLocal 里的（这样 5 个调用点都不用改）
+    val ln = LocalNight.current
+    val nd = nightDark ?: ln?.dark
+    val ont = onToggleNight ?: ln?.onToggle
     TopAppBar(
         title = { Text(title, style = MaterialTheme.typography.titleLarge) },
         navigationIcon = {
@@ -112,6 +128,36 @@ fun FdmTopBar(
             if (onSave != null) {
                 IconButton(onClick = onSave, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.Rounded.Save, stringResource(R.string.c_save))
+                }
+            }
+            // ★ 2026-11-08：夜间模式切换
+            //   图标本身也做**旋转 + 淡入淡出**（换成另一个图标时不是硬切）：
+            //   太阳 ⇄ 月亮 转 180°，配合主题的颜色渐变，看起来像"翻了个面"。
+            if (nd != null && ont != null) {
+                val rot by animateFloatAsState(
+                    targetValue = if (nd) 180f else 0f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow,
+                    ),
+                    label = "nightIconRot",
+                )
+                IconButton(onClick = ont, modifier = Modifier.size(48.dp)) {
+                    Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+                        // 亮色时显示月亮（点它变暗），暗色时显示太阳（点它变亮）
+                        Icon(
+                            if (nd) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
+                            contentDescription = stringResource(
+                                if (nd) R.string.c_night_off else R.string.c_night_on
+                            ),
+                            modifier = Modifier.graphicsLayer {
+                                rotationZ = rot
+                                // 90° 附近最"薄"，顺手压一下 scaleY 做翻面感
+                                val r = Math.abs(((rot % 360f) - 180f) / 180f)
+                                scaleY = 0.6f + 0.4f * Math.abs(1f - 2f * r)
+                            },
+                        )
+                    }
                 }
             }
             if (onMore != null) {

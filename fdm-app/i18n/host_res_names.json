@@ -1,0 +1,3810 @@
+{
+ "drawable": {
+  "0x7f07000b": {
+   "c": "",
+   "n": "abc_ab_share_pack_mtrl_alpha"
+  },
+  "0x7f07000d": {
+   "c": "",
+   "n": "abc_btn_borderless_material"
+  },
+  "0x7f07000e": {
+   "c": "",
+   "n": "abc_btn_check_material"
+  },
+  "0x7f07000f": {
+   "c": "",
+   "n": "abc_btn_check_material_anim"
+  },
+  "0x7f070012": {
+   "c": "",
+   "n": "abc_btn_colored_material"
+  },
+  "0x7f070013": {
+   "c": "",
+   "n": "abc_btn_default_mtrl_shape"
+  },
+  "0x7f070014": {
+   "c": "",
+   "n": "abc_btn_radio_material"
+  },
+  "0x7f070015": {
+   "c": "",
+   "n": "abc_btn_radio_material_anim"
+  },
+  "0x7f07001a": {
+   "c": "",
+   "n": "abc_cab_background_internal_bg"
+  },
+  "0x7f07001b": {
+   "c": "",
+   "n": "abc_cab_background_top_material"
+  },
+  "0x7f07001c": {
+   "c": "",
+   "n": "abc_cab_background_top_mtrl_alpha"
+  },
+  "0x7f07001e": {
+   "c": "",
+   "n": "abc_dialog_material_background"
+  },
+  "0x7f07001f": {
+   "c": "",
+   "n": "abc_edit_text_material"
+  },
+  "0x7f070023": {
+   "c": "",
+   "n": "abc_ic_commit_search_api_mtrl_alpha"
+  },
+  "0x7f070025": {
+   "c": "",
+   "n": "abc_ic_menu_copy_mtrl_am_alpha"
+  },
+  "0x7f070026": {
+   "c": "",
+   "n": "abc_ic_menu_cut_mtrl_alpha"
+  },
+  "0x7f070028": {
+   "c": "",
+   "n": "abc_ic_menu_paste_mtrl_am_alpha"
+  },
+  "0x7f070029": {
+   "c": "",
+   "n": "abc_ic_menu_selectall_mtrl_alpha"
+  },
+  "0x7f07002a": {
+   "c": "",
+   "n": "abc_ic_menu_share_mtrl_alpha"
+  },
+  "0x7f070030": {
+   "c": "",
+   "n": "abc_list_divider_mtrl_alpha"
+  },
+  "0x7f07003b": {
+   "c": "",
+   "n": "abc_menu_hardkey_panel_mtrl_mult"
+  },
+  "0x7f07003c": {
+   "c": "",
+   "n": "abc_popup_background_mtrl_mult"
+  },
+  "0x7f07003d": {
+   "c": "",
+   "n": "abc_ratingbar_indicator_material"
+  },
+  "0x7f07003e": {
+   "c": "",
+   "n": "abc_ratingbar_material"
+  },
+  "0x7f07003f": {
+   "c": "",
+   "n": "abc_ratingbar_small_material"
+  },
+  "0x7f070045": {
+   "c": "",
+   "n": "abc_seekbar_thumb_material"
+  },
+  "0x7f070046": {
+   "c": "",
+   "n": "abc_seekbar_tick_mark_material"
+  },
+  "0x7f070047": {
+   "c": "",
+   "n": "abc_seekbar_track_material"
+  },
+  "0x7f070048": {
+   "c": "",
+   "n": "abc_spinner_mtrl_am_alpha"
+  },
+  "0x7f070049": {
+   "c": "",
+   "n": "abc_spinner_textfield_background_material"
+  },
+  "0x7f07004a": {
+   "c": "",
+   "n": "abc_star_black_48dp"
+  },
+  "0x7f07004b": {
+   "c": "",
+   "n": "abc_star_half_black_48dp"
+  },
+  "0x7f07004c": {
+   "c": "",
+   "n": "abc_switch_thumb_material"
+  },
+  "0x7f07004d": {
+   "c": "",
+   "n": "abc_switch_track_mtrl_alpha"
+  },
+  "0x7f07004e": {
+   "c": "",
+   "n": "abc_tab_indicator_material"
+  },
+  "0x7f070050": {
+   "c": "",
+   "n": "abc_text_cursor_material"
+  },
+  "0x7f070051": {
+   "c": "",
+   "n": "abc_text_select_handle_left_mtrl"
+  },
+  "0x7f070052": {
+   "c": "",
+   "n": "abc_text_select_handle_middle_mtrl"
+  },
+  "0x7f070053": {
+   "c": "",
+   "n": "abc_text_select_handle_right_mtrl"
+  },
+  "0x7f070054": {
+   "c": "",
+   "n": "abc_textfield_activated_mtrl_alpha"
+  },
+  "0x7f070055": {
+   "c": "",
+   "n": "abc_textfield_default_mtrl_alpha"
+  },
+  "0x7f070056": {
+   "c": "",
+   "n": "abc_textfield_search_activated_mtrl_alpha"
+  },
+  "0x7f070057": {
+   "c": "",
+   "n": "abc_textfield_search_default_mtrl_alpha"
+  },
+  "0x7f070058": {
+   "c": "",
+   "n": "abc_textfield_search_material"
+  },
+  "0x7f070059": {
+   "c": "",
+   "n": "abc_vector_test"
+  },
+  "0x7f07005a": {
+   "c": "",
+   "n": "assistant_message_avatar"
+  },
+  "0x7f070065": {
+   "c": "",
+   "n": "chat_welcome_logo"
+  },
+  "0x7f070066": {
+   "c": "",
+   "n": "check_regular"
+  },
+  "0x7f070067": {
+   "c": "",
+   "n": "common_full_open_on_phone"
+  },
+  "0x7f07007a": {
+   "c": "",
+   "n": "crop"
+  },
+  "0x7f07007b": {
+   "c": "",
+   "n": "deepseek_logo_title"
+  },
+  "0x7f07007e": {
+   "c": "",
+   "n": "ic_add_close_regular"
+  },
+  "0x7f07007f": {
+   "c": "",
+   "n": "ic_add_outline_26"
+  },
+  "0x7f070081": {
+   "c": "",
+   "n": "ic_apple"
+  },
+  "0x7f070084": {
+   "c": "",
+   "n": "ic_arrow_right_outline_20"
+  },
+  "0x7f070089": {
+   "c": "",
+   "n": "ic_auth_phone"
+  },
+  "0x7f07008c": {
+   "c": "",
+   "n": "ic_branch_outline_20"
+  },
+  "0x7f07008d": {
+   "c": "",
+   "n": "ic_browse_outline_16"
+  },
+  "0x7f07008e": {
+   "c": "",
+   "n": "ic_browse_warning_outline_16"
+  },
+  "0x7f070093": {
+   "c": "",
+   "n": "ic_call_collapse_vector"
+  },
+  "0x7f070096": {
+   "c": "",
+   "n": "ic_call_hang_up"
+  },
+  "0x7f070097": {
+   "c": "",
+   "n": "ic_call_live_update_hang_up"
+  },
+  "0x7f070098": {
+   "c": "",
+   "n": "ic_call_live_update_mic"
+  },
+  "0x7f070099": {
+   "c": "",
+   "n": "ic_call_live_update_mute"
+  },
+  "0x7f07009a": {
+   "c": "",
+   "n": "ic_call_network_poor"
+  },
+  "0x7f07009b": {
+   "c": "",
+   "n": "ic_call_redial"
+  },
+  "0x7f07009c": {
+   "c": "",
+   "n": "ic_camera_outline_20"
+  },
+  "0x7f07009e": {
+   "c": "",
+   "n": "ic_cancel_search_outline_20"
+  },
+  "0x7f07009f": {
+   "c": "",
+   "n": "ic_cc_outline_20"
+  },
+  "0x7f0700a1": {
+   "c": "",
+   "n": "ic_check_outline_20"
+  },
+  "0x7f0700a3": {
+   "c": "",
+   "n": "ic_checked_filled_16"
+  },
+  "0x7f0700a4": {
+   "c": "",
+   "n": "ic_checklist_outline_10"
+  },
+  "0x7f0700a5": {
+   "c": "",
+   "n": "ic_checklist_outline_16"
+  },
+  "0x7f0700a6": {
+   "c": "",
+   "n": "ic_checklist_outline_24"
+  },
+  "0x7f0700a7": {
+   "c": "",
+   "n": "ic_chevron_down_outline_20"
+  },
+  "0x7f0700a8": {
+   "c": "",
+   "n": "ic_chevron_expand_vertical_outline_20"
+  },
+  "0x7f0700aa": {
+   "c": "",
+   "n": "ic_chevron_left_outline_20"
+  },
+  "0x7f0700ab": {
+   "c": "",
+   "n": "ic_chevron_left_outline_20_small"
+  },
+  "0x7f0700ad": {
+   "c": "",
+   "n": "ic_chevron_left_small_outline_16"
+  },
+  "0x7f0700ae": {
+   "c": "",
+   "n": "ic_chevron_right_fill"
+  },
+  "0x7f0700af": {
+   "c": "",
+   "n": "ic_chevron_right_outline_20"
+  },
+  "0x7f0700b0": {
+   "c": "",
+   "n": "ic_chevron_right_outline_20_small"
+  },
+  "0x7f0700b1": {
+   "c": "",
+   "n": "ic_chevron_up_fill"
+  },
+  "0x7f0700b3": {
+   "c": "",
+   "n": "ic_close_mid_outline_20"
+  },
+  "0x7f0700b4": {
+   "c": "",
+   "n": "ic_close_outline_16"
+  },
+  "0x7f0700b5": {
+   "c": "",
+   "n": "ic_close_outline_20"
+  },
+  "0x7f0700b6": {
+   "c": "",
+   "n": "ic_close_outline_24"
+  },
+  "0x7f0700b7": {
+   "c": "",
+   "n": "ic_close_regular"
+  },
+  "0x7f0700b9": {
+   "c": "",
+   "n": "ic_color_google"
+  },
+  "0x7f0700ba": {
+   "c": "",
+   "n": "ic_color_wechat"
+  },
+  "0x7f0700bb": {
+   "c": "",
+   "n": "ic_copy_outline"
+  },
+  "0x7f0700bd": {
+   "c": "",
+   "n": "ic_crop_outline_24"
+  },
+  "0x7f0700be": {
+   "c": "",
+   "n": "ic_data_regular"
+  },
+  "0x7f0700bf": {
+   "c": "",
+   "n": "ic_dislike_fill"
+  },
+  "0x7f0700c1": {
+   "c": "",
+   "n": "ic_dislike_outline"
+  },
+  "0x7f0700c4": {
+   "c": "",
+   "n": "ic_download_outline"
+  },
+  "0x7f0700c5": {
+   "c": "",
+   "n": "ic_download_outline_20"
+  },
+  "0x7f0700c7": {
+   "c": "",
+   "n": "ic_ds_new_chat_outline_20"
+  },
+  "0x7f0700c8": {
+   "c": "",
+   "n": "ic_ds_search_outline_16"
+  },
+  "0x7f0700c9": {
+   "c": "",
+   "n": "ic_ds_user_outline_14"
+  },
+  "0x7f0700ca": {
+   "c": "",
+   "n": "ic_edit_outline_20"
+  },
+  "0x7f0700cb": {
+   "c": "",
+   "n": "ic_ellipsis"
+  },
+  "0x7f0700cc": {
+   "c": "",
+   "n": "ic_ellipsis_outline"
+  },
+  "0x7f0700cd": {
+   "c": "",
+   "n": "ic_empty_icon_container"
+  },
+  "0x7f0700ce": {
+   "c": "",
+   "n": "ic_enhance_outline_20"
+  },
+  "0x7f0700cf": {
+   "c": "",
+   "n": "ic_excerpt_quote"
+  },
+  "0x7f0700d0": {
+   "c": "",
+   "n": "ic_exit_out_regular"
+  },
+  "0x7f0700d1": {
+   "c": "",
+   "n": "ic_expert_filled_16"
+  },
+  "0x7f0700d2": {
+   "c": "",
+   "n": "ic_expert_outline_16"
+  },
+  "0x7f0700d3": {
+   "c": "",
+   "n": "ic_eye_close_regular"
+  },
+  "0x7f0700d4": {
+   "c": "",
+   "n": "ic_eye_regular"
+  },
+  "0x7f0700d6": {
+   "c": "",
+   "n": "ic_flash_auto_fill_24"
+  },
+  "0x7f0700d7": {
+   "c": "",
+   "n": "ic_flash_filled_16"
+  },
+  "0x7f0700d8": {
+   "c": "",
+   "n": "ic_flash_off_fill_24"
+  },
+  "0x7f0700d9": {
+   "c": "",
+   "n": "ic_flash_on_fill_24"
+  },
+  "0x7f0700da": {
+   "c": "",
+   "n": "ic_flash_outline_16"
+  },
+  "0x7f0700db": {
+   "c": "",
+   "n": "ic_folder_outline_20"
+  },
+  "0x7f0700dc": {
+   "c": "",
+   "n": "ic_font_size_large"
+  },
+  "0x7f0700dd": {
+   "c": "",
+   "n": "ic_font_size_small"
+  },
+  "0x7f0700de": {
+   "c": "",
+   "n": "ic_fullscreen_outline"
+  },
+  "0x7f0700df": {
+   "c": "",
+   "n": "ic_globe_language_outline_16"
+  },
+  "0x7f0700e0": {
+   "c": "",
+   "n": "ic_globe_language_outline_20"
+  },
+  "0x7f0700e1": {
+   "c": "",
+   "n": "ic_globe_language_regular"
+  },
+  "0x7f0700e3": {
+   "c": "",
+   "n": "ic_help_outline"
+  },
+  "0x7f0700e5": {
+   "c": "",
+   "n": "ic_info_outline"
+  },
+  "0x7f0700e6": {
+   "c": "",
+   "n": "ic_info_outline_16"
+  },
+  "0x7f0700ed": {
+   "c": "",
+   "n": "ic_keyboard_outline_26"
+  },
+  "0x7f0700ee": {
+   "c": "",
+   "n": "ic_keyboard_voice_24"
+  },
+  "0x7f0700ef": {
+   "c": "",
+   "n": "ic_lasso_select_outline_24"
+  },
+  "0x7f0700f1": {
+   "c": "",
+   "n": "ic_letter_regular"
+  },
+  "0x7f0700f3": {
+   "c": "",
+   "n": "ic_like_fill"
+  },
+  "0x7f0700f5": {
+   "c": "",
+   "n": "ic_like_outline"
+  },
+  "0x7f0700f7": {
+   "c": "",
+   "n": "ic_link_empty_outline_24"
+  },
+  "0x7f0700f8": {
+   "c": "",
+   "n": "ic_link_outline_20"
+  },
+  "0x7f0700fa": {
+   "c": "",
+   "n": "ic_list_pen_regular"
+  },
+  "0x7f0700fb": {
+   "c": "",
+   "n": "ic_loading"
+  },
+  "0x7f0700fd": {
+   "c": "",
+   "n": "ic_lock_fill"
+  },
+  "0x7f0700ff": {
+   "c": "",
+   "n": "ic_logo_deepseek_vertical"
+  },
+  "0x7f070101": {
+   "c": "",
+   "n": "ic_menu_outline_24"
+  },
+  "0x7f070104": {
+   "c": "",
+   "n": "ic_mic_filled_20"
+  },
+  "0x7f070105": {
+   "c": "",
+   "n": "ic_moon_regular"
+  },
+  "0x7f070106": {
+   "c": "",
+   "n": "ic_mute_audio_outline_24"
+  },
+  "0x7f070107": {
+   "c": "",
+   "n": "ic_mute_filled_20"
+  },
+  "0x7f070108": {
+   "c": "",
+   "n": "ic_new_chat_outline_24"
+  },
+  "0x7f07010b": {
+   "c": "",
+   "n": "ic_notification"
+  },
+  "0x7f07010d": {
+   "c": "",
+   "n": "ic_paperclip_outline_20"
+  },
+  "0x7f070112": {
+   "c": "",
+   "n": "ic_phone_fill"
+  },
+  "0x7f070114": {
+   "c": "",
+   "n": "ic_phone_outline_24"
+  },
+  "0x7f070115": {
+   "c": "",
+   "n": "ic_phone_regular"
+  },
+  "0x7f070116": {
+   "c": "",
+   "n": "ic_phone_rotate_vertical_outline"
+  },
+  "0x7f070117": {
+   "c": "",
+   "n": "ic_photo_empty_outline"
+  },
+  "0x7f070118": {
+   "c": "",
+   "n": "ic_photo_error_filled"
+  },
+  "0x7f070119": {
+   "c": "",
+   "n": "ic_photo_error_filled_2"
+  },
+  "0x7f07011b": {
+   "c": "",
+   "n": "ic_photo_filled_16"
+  },
+  "0x7f07011c": {
+   "c": "",
+   "n": "ic_photo_filled_20"
+  },
+  "0x7f07011d": {
+   "c": "",
+   "n": "ic_photo_outline_16"
+  },
+  "0x7f07011e": {
+   "c": "",
+   "n": "ic_photo_outline_20"
+  },
+  "0x7f070122": {
+   "c": "",
+   "n": "ic_pin_outline_20"
+  },
+  "0x7f070123": {
+   "c": "",
+   "n": "ic_play_media_outline_20"
+  },
+  "0x7f070124": {
+   "c": "",
+   "n": "ic_play_media_outline_24"
+  },
+  "0x7f070125": {
+   "c": "",
+   "n": "ic_playing_fill_24"
+  },
+  "0x7f070126": {
+   "c": "",
+   "n": "ic_plus_outline_20"
+  },
+  "0x7f070127": {
+   "c": "",
+   "n": "ic_profile"
+  },
+  "0x7f070129": {
+   "c": "",
+   "n": "ic_redirect_regular"
+  },
+  "0x7f07012a": {
+   "c": "",
+   "n": "ic_redo_outline_24"
+  },
+  "0x7f07012b": {
+   "c": "",
+   "n": "ic_refresh_circle_fill"
+  },
+  "0x7f07012c": {
+   "c": "",
+   "n": "ic_refresh_outline"
+  },
+  "0x7f07012d": {
+   "c": "",
+   "n": "ic_refresh_outline_14"
+  },
+  "0x7f07012e": {
+   "c": "",
+   "n": "ic_refresh_outline_20"
+  },
+  "0x7f07012f": {
+   "c": "",
+   "n": "ic_regegerate_outline_24"
+  },
+  "0x7f070131": {
+   "c": "",
+   "n": "ic_report_outline"
+  },
+  "0x7f070133": {
+   "c": "",
+   "n": "ic_rotate_left_outline_thin_20"
+  },
+  "0x7f070135": {
+   "c": "",
+   "n": "ic_scan_picture_filled_20"
+  },
+  "0x7f070136": {
+   "c": "",
+   "n": "ic_scan_text_filled_20"
+  },
+  "0x7f070137": {
+   "c": "",
+   "n": "ic_search_outline_16"
+  },
+  "0x7f070139": {
+   "c": "",
+   "n": "ic_search_warning_outline_16"
+  },
+  "0x7f07013a": {
+   "c": "",
+   "n": "ic_search_web"
+  },
+  "0x7f07013b": {
+   "c": "",
+   "n": "ic_select_all_outline_20"
+  },
+  "0x7f07013c": {
+   "c": "",
+   "n": "ic_select_outline"
+  },
+  "0x7f07013e": {
+   "c": "",
+   "n": "ic_send_fill_20"
+  },
+  "0x7f070140": {
+   "c": "",
+   "n": "ic_share_outline_20"
+  },
+  "0x7f070144": {
+   "c": "",
+   "n": "ic_simplify_outline_20"
+  },
+  "0x7f070145": {
+   "c": "",
+   "n": "ic_site_icon_placeholder"
+  },
+  "0x7f070146": {
+   "c": "",
+   "n": "ic_size_regular"
+  },
+  "0x7f070147": {
+   "c": "",
+   "n": "ic_stop_fill_20"
+  },
+  "0x7f070148": {
+   "c": "",
+   "n": "ic_stop_speech_outline_20"
+  },
+  "0x7f070149": {
+   "c": "",
+   "n": "ic_sun_regular"
+  },
+  "0x7f07014a": {
+   "c": "",
+   "n": "ic_text_mode_outline_20"
+  },
+  "0x7f07014b": {
+   "c": "",
+   "n": "ic_think_outline_16"
+  },
+  "0x7f070150": {
+   "c": "",
+   "n": "ic_trash_outline_20"
+  },
+  "0x7f070151": {
+   "c": "",
+   "n": "ic_type_pdf"
+  },
+  "0x7f070152": {
+   "c": "",
+   "n": "ic_type_pic"
+  },
+  "0x7f070153": {
+   "c": "",
+   "n": "ic_type_text"
+  },
+  "0x7f070154": {
+   "c": "",
+   "n": "ic_type_xls"
+  },
+  "0x7f070155": {
+   "c": "",
+   "n": "ic_undo_outline_24"
+  },
+  "0x7f070156": {
+   "c": "",
+   "n": "ic_unpin_outline_20"
+  },
+  "0x7f070157": {
+   "c": "",
+   "n": "ic_user_regular"
+  },
+  "0x7f070158": {
+   "c": "",
+   "n": "ic_voice_outline_26"
+  },
+  "0x7f070159": {
+   "c": "",
+   "n": "ic_wand"
+  },
+  "0x7f07015a": {
+   "c": "",
+   "n": "ic_warning_outline_16"
+  },
+  "0x7f07015b": {
+   "c": "",
+   "n": "ic_warning_outline_20"
+  },
+  "0x7f07015c": {
+   "c": "",
+   "n": "ic_wechat_logo"
+  },
+  "0x7f07015d": {
+   "c": "",
+   "n": "ic_wechat_outline_20"
+  },
+  "0x7f07015f": {
+   "c": "",
+   "n": "ic_wechat_share"
+  }
+ },
+ "string": {
+  "0x7f0f0001": {
+   "c": "Navigate up",
+   "n": "abc_action_bar_up_description"
+  },
+  "0x7f0f0008": {
+   "c": "Alt+",
+   "n": "abc_menu_alt_shortcut_label"
+  },
+  "0x7f0f0009": {
+   "c": "Ctrl+",
+   "n": "abc_menu_ctrl_shortcut_label"
+  },
+  "0x7f0f000a": {
+   "c": "delete",
+   "n": "abc_menu_delete_shortcut_label"
+  },
+  "0x7f0f000b": {
+   "c": "enter",
+   "n": "abc_menu_enter_shortcut_label"
+  },
+  "0x7f0f000c": {
+   "c": "Function+",
+   "n": "abc_menu_function_shortcut_label"
+  },
+  "0x7f0f000d": {
+   "c": "Meta+",
+   "n": "abc_menu_meta_shortcut_label"
+  },
+  "0x7f0f000e": {
+   "c": "Shift+",
+   "n": "abc_menu_shift_shortcut_label"
+  },
+  "0x7f0f000f": {
+   "c": "space",
+   "n": "abc_menu_space_shortcut_label"
+  },
+  "0x7f0f0010": {
+   "c": "Sym+",
+   "n": "abc_menu_sym_shortcut_label"
+  },
+  "0x7f0f0011": {
+   "c": "Menu+",
+   "n": "abc_prepend_shortcut_label"
+  },
+  "0x7f0f001b": {
+   "c": "放弃",
+   "n": "abort"
+  },
+  "0x7f0f001c": {
+   "c": "主要语言",
+   "n": "account_audio_input_language"
+  },
+  "0x7f0f001d": {
+   "c": "请选择你语音输入时使用的主要语言，以获得更好的识别效果",
+   "n": "account_audio_input_language_footer"
+  },
+  "0x7f0f001e": {
+   "c": "语音",
+   "n": "account_audio_input_language_header"
+  },
+  "0x7f0f001f": {
+   "c": "跟随应用",
+   "n": "account_audio_input_language_use_app_lang"
+  },
+  "0x7f0f0020": {
+   "c": "注销我的账号",
+   "n": "account_delete_button"
+  },
+  "0x7f0f0021": {
+   "c": "注销我的账号（%1$s 秒）",
+   "n": "account_delete_button_countdown"
+  },
+  "0x7f0f0022": {
+   "c": "注销",
+   "n": "account_delete_confirm"
+  },
+  "0x7f0f0023": {
+   "c": "注销后，账号将无法找回",
+   "n": "account_delete_modal"
+  },
+  "0x7f0f0025": {
+   "c": "账号管理",
+   "n": "account_management"
+  },
+  "0x7f0f0026": {
+   "c": "由于违反用户使用规范，你的账号已被禁言，请在禁言结束后再通话",
+   "n": "account_muted_description"
+  },
+  "0x7f0f0028": {
+   "c": "修改你的出生年月，验证是否进入未成年人模式",
+   "n": "adjust_age_picker_title_for_settings"
+  },
+  "0x7f0f0029": {
+   "c": "确认",
+   "n": "age_picker_confirm_button"
+  },
+  "0x7f0f002a": {
+   "c": "仅用于确认你的年龄，以提供更好的服务，你的信息不会公开。",
+   "n": "age_picker_description"
+  },
+  "0x7f0f002b": {
+   "c": "请选择你的出生年月",
+   "n": "age_picker_title_for_chat"
+  },
+  "0x7f0f002c": {
+   "c": "已完成年龄验证",
+   "n": "age_verified_toast"
+  },
+  "0x7f0f002d": {
+   "c": "消息加载失败",
+   "n": "agent_interrupted_text"
+  },
+  "0x7f0f002e": {
+   "c": "同意",
+   "n": "agree_and_continue"
+  },
+  "0x7f0f002f": {
+   "c": "删除所有对话",
+   "n": "all_sessions_delete_confirm"
+  },
+  "0x7f0f0030": {
+   "c": "由对话生成的分享链接也将失效",
+   "n": "all_sessions_delete_description"
+  },
+  "0x7f0f0031": {
+   "c": "删除后，所有对话将都被清空且无法找回",
+   "n": "all_sessions_delete_modal"
+  },
+  "0x7f0f0032": {
+   "c": "允许",
+   "n": "allow"
+  },
+  "0x7f0f0035": {
+   "c": "Autofill",
+   "n": "androidx_compose_foundation_autofill"
+  },
+  "0x7f0f0037": {
+   "c": "androidx.startup",
+   "n": "androidx_startup"
+  },
+  "0x7f0f0038": {
+   "c": "外观",
+   "n": "app_color_scheme"
+  },
+  "0x7f0f0039": {
+   "c": "深色",
+   "n": "app_color_scheme_dark"
+  },
+  "0x7f0f003a": {
+   "c": "浅色",
+   "n": "app_color_scheme_light"
+  },
+  "0x7f0f003b": {
+   "c": "系统",
+   "n": "app_color_scheme_system"
+  },
+  "0x7f0f003c": {
+   "c": "语言",
+   "n": "app_language"
+  },
+  "0x7f0f003d": {
+   "c": "系统",
+   "n": "app_language_system"
+  },
+  "0x7f0f003e": {
+   "c": "DeepSeek",
+   "n": "app_name"
+  },
+  "0x7f0f003f": {
+   "c": "应用",
+   "n": "app_section_title"
+  },
+  "0x7f0f0044": {
+   "c": "网络异常，请稍后再试",
+   "n": "asr_connection_failed_toast"
+  },
+  "0x7f0f0045": {
+   "c": "语音识别失败，请重试",
+   "n": "asr_failed_toast"
+  },
+  "0x7f0f0046": {
+   "c": "语音输入中断，请重试",
+   "n": "asr_interrupted_toast"
+  },
+  "0x7f0f004a": {
+   "c": "上传文件",
+   "n": "attach_files"
+  },
+  "0x7f0f004b": {
+   "c": "邮箱地址未注册，请重试",
+   "n": "auth_email_not_exist_toast"
+  },
+  "0x7f0f004c": {
+   "c": "验证码错误，请重新输入",
+   "n": "auth_pass_code_error_toast"
+  },
+  "0x7f0f004d": {
+   "c": "验证码已过期，请重新获取验证码",
+   "n": "auth_pass_code_expired_toast"
+  },
+  "0x7f0f004e": {
+   "c": "1 分钟内仅能发送一次验证码",
+   "n": "auth_pass_code_frequent_toast"
+  },
+  "0x7f0f004f": {
+   "c": "请填写邮箱地址/+86手机号",
+   "n": "auth_warn_account_empty"
+  },
+  "0x7f0f0051": {
+   "c": "请填写邮箱地址",
+   "n": "auth_warn_email_empty"
+  },
+  "0x7f0f0052": {
+   "c": "邮箱格式不正确",
+   "n": "auth_warn_email_invalid"
+  },
+  "0x7f0f0053": {
+   "c": "请填写手机号码",
+   "n": "auth_warn_mobile_empty"
+  },
+  "0x7f0f0054": {
+   "c": "手机号码格式不正确",
+   "n": "auth_warn_mobile_invalid"
+  },
+  "0x7f0f0055": {
+   "c": "请填写验证码",
+   "n": "auth_warn_pass_code_empty"
+  },
+  "0x7f0f0056": {
+   "c": "验证码格式不正确",
+   "n": "auth_warn_pass_code_invalid"
+  },
+  "0x7f0f0057": {
+   "c": "请填写密码",
+   "n": "auth_warn_password_empty"
+  },
+  "0x7f0f0058": {
+   "c": "密码长度在 8 到 50 位之间",
+   "n": "auth_warn_password_invalid"
+  },
+  "0x7f0f0059": {
+   "c": "自动朗读",
+   "n": "auto_read_aloud"
+  },
+  "0x7f0f005a": {
+   "c": "返回",
+   "n": "back"
+  },
+  "0x7f0f005c": {
+   "c": "绑定",
+   "n": "bind_phone_number_button"
+  },
+  "0x7f0f005d": {
+   "c": "为保障账号安全，首次登录请绑定手机号",
+   "n": "bind_phone_number_hint"
+  },
+  "0x7f0f005e": {
+   "c": "绑定手机号",
+   "n": "bind_phone_number_title"
+  },
+  "0x7f0f005f": {
+   "c": "去绑定",
+   "n": "bind_wechat"
+  },
+  "0x7f0f0060": {
+   "c": "绑定失败，请稍后再试",
+   "n": "bind_wechat_failed"
+  },
+  "0x7f0f0061": {
+   "c": "绑定失败，该账号已绑定微信",
+   "n": "bind_wechat_failed_already_bound"
+  },
+  "0x7f0f0062": {
+   "c": "绑定失败，该微信号已被其他账号绑定",
+   "n": "bind_wechat_failed_bound_by_others"
+  },
+  "0x7f0f0063": {
+   "c": "绑定失败，请稍后再试 (B%1$d)",
+   "n": "bind_wechat_fallback_toast"
+  },
+  "0x7f0f0064": {
+   "c": "绑定成功",
+   "n": "bind_wechat_succeed"
+  },
+  "0x7f0f0066": {
+   "c": "你不符合使用本产品的最低年龄要求",
+   "n": "birthday_choose_reject"
+  },
+  "0x7f0f0067": {
+   "c": "我知道了",
+   "n": "birthday_choose_reject_confirm"
+  },
+  "0x7f0f006b": {
+   "c": "请开启蓝牙权限，通过蓝牙查找和附近的设备",
+   "n": "bluetooth_permission_description"
+  },
+  "0x7f0f006c": {
+   "c": "蓝牙权限说明",
+   "n": "bluetooth_permission_title"
+  },
+  "0x7f0f006d": {
+   "c": "第 %1$d 条消息（共 %2$d 条）",
+   "n": "branch_switcher_description"
+  },
+  "0x7f0f006e": {
+   "c": "其他设备正在通话中，请挂断后再操作",
+   "n": "call_active_on_other_device_toast"
+  },
+  "0x7f0f006f": {
+   "c": "正在通话中，请挂断后再操作",
+   "n": "call_already_in_progress_toast"
+  },
+  "0x7f0f0070": {
+   "c": "你已在其他设备上接通电话",
+   "n": "call_answered_on_another_device"
+  },
+  "0x7f0f0071": {
+   "c": "接通中",
+   "n": "call_connecting"
+  },
+  "0x7f0f0072": {
+   "c": "打电话",
+   "n": "call_deep_seek"
+  },
+  "0x7f0f0073": {
+   "c": "通话已结束",
+   "n": "call_ended_title"
+  },
+  "0x7f0f0074": {
+   "c": "通话体验不好",
+   "n": "call_experience_bad"
+  },
+  "0x7f0f0075": {
+   "c": "通话体验好",
+   "n": "call_experience_good"
+  },
+  "0x7f0f0076": {
+   "c": "听不清我说话",
+   "n": "call_feedback_could_not_hear_me"
+  },
+  "0x7f0f0077": {
+   "c": "异常挂断或不回复",
+   "n": "call_feedback_ended_unexpectedly"
+  },
+  "0x7f0f0078": {
+   "c": "频繁打断我",
+   "n": "call_feedback_interrupted_too_often"
+  },
+  "0x7f0f0079": {
+   "c": "虚假信息",
+   "n": "call_feedback_misinformation"
+  },
+  "0x7f0f007a": {
+   "c": "没理解我的意思",
+   "n": "call_feedback_misunderstood_me"
+  },
+  "0x7f0f007b": {
+   "c": "其他",
+   "n": "call_feedback_other"
+  },
+  "0x7f0f007c": {
+   "c": "通话中 %1$s",
+   "n": "call_in_progress"
+  },
+  "0x7f0f007d": {
+   "c": "说话或轻触打断",
+   "n": "call_interrupt_hint"
+  },
+  "0x7f0f007e": {
+   "c": "已被其他应用打断",
+   "n": "call_interrupted_by_another_app_toast"
+  },
+  "0x7f0f007f": {
+   "c": "正在聆听",
+   "n": "call_listening_hint"
+  },
+  "0x7f0f0080": {
+   "c": "网络异常，请挂断后重新拨打",
+   "n": "call_network_error_toast"
+  },
+  "0x7f0f0081": {
+   "c": "如需继续对话，请重新拨打",
+   "n": "call_no_audio_description"
+  },
+  "0x7f0f0082": {
+   "c": "长时间未听到声音，请重新拨打",
+   "n": "call_no_audio_title"
+  },
+  "0x7f0f008a": {
+   "c": "对刚才的通话给出评价",
+   "n": "call_rating_description"
+  },
+  "0x7f0f008b": {
+   "c": "评价本次通话体验",
+   "n": "call_rating_title"
+  },
+  "0x7f0f008c": {
+   "c": "服务暂时异常，本次通话已结束，请稍后重新拨打",
+   "n": "call_service_error_description"
+  },
+  "0x7f0f008d": {
+   "c": "服务异常，通话中断",
+   "n": "call_service_error_title"
+  },
+  "0x7f0f008e": {
+   "c": "通话服务异常，请稍后重试",
+   "n": "call_service_unavailable_toast"
+  },
+  "0x7f0f008f": {
+   "c": "通话设置",
+   "n": "call_settings"
+  },
+  "0x7f0f0090": {
+   "c": "正在思考",
+   "n": "call_thinking"
+  },
+  "0x7f0f0091": {
+   "c": "自动闪光灯",
+   "n": "camera_auto_flashlight"
+  },
+  "0x7f0f0092": {
+   "c": "闪光灯已关闭",
+   "n": "camera_flashlight_disabled"
+  },
+  "0x7f0f0093": {
+   "c": "闪光灯已开启",
+   "n": "camera_flashlight_enabled"
+  },
+  "0x7f0f0094": {
+   "c": "闪光灯暂不可用",
+   "n": "camera_flashlight_unavailable"
+  },
+  "0x7f0f0095": {
+   "c": "切换镜头",
+   "n": "camera_flip"
+  },
+  "0x7f0f0096": {
+   "c": "允许访问相机",
+   "n": "camera_permission_app_dialog_title"
+  },
+  "0x7f0f0097": {
+   "c": "请授权该权限以拍照发送图片消息",
+   "n": "camera_permission_description"
+  },
+  "0x7f0f0098": {
+   "c": "相机权限说明",
+   "n": "camera_permission_title"
+  },
+  "0x7f0f0099": {
+   "c": "拍照",
+   "n": "camera_shutter"
+  },
+  "0x7f0f009b": {
+   "c": "取消",
+   "n": "cancel"
+  },
+  "0x7f0f009c": {
+   "c": "无法继续生成此消息",
+   "n": "cannot_be_continued_toast"
+  },
+  "0x7f0f009d": {
+   "c": "发消息",
+   "n": "chat_input_placeholder_chat"
+  },
+  "0x7f0f009e": {
+   "c": "发消息或按住说话",
+   "n": "chat_input_placeholder_voice"
+  },
+  "0x7f0f009f": {
+   "c": "体验 DeepSeek 最新模型，跨设备同步历史记录。",
+   "n": "chat_welcome_info1_content"
+  },
+  "0x7f0f00a0": {
+   "c": "官方免费应用",
+   "n": "chat_welcome_info1_title"
+  },
+  "0x7f0f00a1": {
+   "c": "输出内容由 AI 生成，医疗、法律、金融等专业领域的内容不构成任何诊疗、法律或投资建议，请注意甄别。",
+   "n": "chat_welcome_info2_content"
+  },
+  "0x7f0f00a2": {
+   "c": "DeepSeek 可能不准确",
+   "n": "chat_welcome_info2_title"
+  },
+  "0x7f0f00a3": {
+   "c": "Welcome to DeepSeek",
+   "n": "chat_welcome_title"
+  },
+  "0x7f0f00a4": {
+   "c": "和 DeepSeek 的对话",
+   "n": "chat_with_deep_seek"
+  },
+  "0x7f0f00a5": {
+   "c": "验证失败，请稍后再试 (B%1$d)",
+   "n": "check_code_fallback_toast"
+  },
+  "0x7f0f00a6": {
+   "c": "我已阅读并同意 %1$s、%2$s 与 %3$s",
+   "n": "checkbox_text_with_one_click_login"
+  },
+  "0x7f0f00a7": {
+   "c": "我已阅读并同意 %1$s 与 %2$s",
+   "n": "checkbox_text_without_one_click_login"
+  },
+  "0x7f0f00a9": {
+   "c": "引用 %1$d",
+   "n": "citation_index"
+  },
+  "0x7f0f00aa": {
+   "c": "关闭",
+   "n": "close"
+  },
+  "0x7f0f00ad": {
+   "c": "关闭侧边栏",
+   "n": "close_sidebar"
+  },
+  "0x7f0f00b0": {
+   "c": "收起",
+   "n": "collapse"
+  },
+  "0x7f0f00b2": {
+   "c": "Enable",
+   "n": "common_google_play_services_enable_button"
+  },
+  "0x7f0f00b3": {
+   "c": "%1$s won't work unless you enable Google Play services.",
+   "n": "common_google_play_services_enable_text"
+  },
+  "0x7f0f00b4": {
+   "c": "Enable Google Play services",
+   "n": "common_google_play_services_enable_title"
+  },
+  "0x7f0f00b5": {
+   "c": "Install",
+   "n": "common_google_play_services_install_button"
+  },
+  "0x7f0f00b6": {
+   "c": "%1$s won't run without Google Play services, which are missing from your device.",
+   "n": "common_google_play_services_install_text"
+  },
+  "0x7f0f00b7": {
+   "c": "Get Google Play services",
+   "n": "common_google_play_services_install_title"
+  },
+  "0x7f0f00b8": {
+   "c": "Google Play services availability",
+   "n": "common_google_play_services_notification_channel_name"
+  },
+  "0x7f0f00b9": {
+   "c": "Google Play services error",
+   "n": "common_google_play_services_notification_ticker"
+  },
+  "0x7f0f00ba": {
+   "c": "%1$s is having trouble with Google Play services. Please try again.",
+   "n": "common_google_play_services_unknown_issue"
+  },
+  "0x7f0f00bb": {
+   "c": "%1$s won't run without Google Play services, which are not supported by your device.",
+   "n": "common_google_play_services_unsupported_text"
+  },
+  "0x7f0f00bc": {
+   "c": "Update",
+   "n": "common_google_play_services_update_button"
+  },
+  "0x7f0f00bd": {
+   "c": "%1$s won't run unless you update Google Play services.",
+   "n": "common_google_play_services_update_text"
+  },
+  "0x7f0f00be": {
+   "c": "Update Google Play services",
+   "n": "common_google_play_services_update_title"
+  },
+  "0x7f0f00bf": {
+   "c": "%1$s won't run without Google Play services, which are currently updating.",
+   "n": "common_google_play_services_updating_text"
+  },
+  "0x7f0f00c0": {
+   "c": "New version of Google Play services needed. It will update itself shortly.",
+   "n": "common_google_play_services_wear_update_text"
+  },
+  "0x7f0f00c1": {
+   "c": "网络异常，请检查你的网络状况",
+   "n": "common_network_error_toast"
+  },
+  "0x7f0f00c2": {
+   "c": "Open on phone",
+   "n": "common_open_on_phone"
+  },
+  "0x7f0f00c5": {
+   "c": "异常请求（1）",
+   "n": "completion_invalid_params_toast"
+  },
+  "0x7f0f00c6": {
+   "c": "有消息正在生成，请稍后再试",
+   "n": "completion_last_message_is_w_i_p"
+  },
+  "0x7f0f00c7": {
+   "c": "当前对话已达到消息数量上限，请开启新对话",
+   "n": "completion_max_message_count_toast"
+  },
+  "0x7f0f00c8": {
+   "c": "发送的信息为空",
+   "n": "completion_prompt_empty_toast"
+  },
+  "0x7f0f00c9": {
+   "c": "图片或文件可能违反使用规范",
+   "n": "completion_ref_file_audit_unsatisfied"
+  },
+  "0x7f0f00ca": {
+   "c": "无法重新生成此消息",
+   "n": "completion_regenerate_on_bad_message_toast"
+  },
+  "0x7f0f00cb": {
+   "c": "当前服务异常，请稍后再试",
+   "n": "completion_server_error_toast"
+  },
+  "0x7f0f00cc": {
+   "c": "确认",
+   "n": "confirm"
+  },
+  "0x7f0f00cd": {
+   "c": "是否挂断当前通话？",
+   "n": "confirm_end_call"
+  },
+  "0x7f0f00ce": {
+   "c": "确认新密码",
+   "n": "confirm_new_password_placeholder"
+  },
+  "0x7f0f00d6": {
+   "c": "如需继续对话，请开启新对话",
+   "n": "conversation_length_limit_description"
+  },
+  "0x7f0f00d7": {
+   "c": "当前对话超出长度限制，已挂断",
+   "n": "conversation_length_limit_title"
+  },
+  "0x7f0f00d8": {
+   "c": "复制",
+   "n": "copy"
+  },
+  "0x7f0f00d9": {
+   "c": "已复制",
+   "n": "copy_ok"
+  },
+  "0x7f0f00db": {
+   "c": "发送失败，请稍后再试 (B%1$d)",
+   "n": "create_code_fallback_toast"
+  },
+  "0x7f0f00dc": {
+   "c": "短信服务出现异常，请稍后再试",
+   "n": "create_pass_code_cloud_error_toast"
+  },
+  "0x7f0f00dd": {
+   "c": "验证码发送失败，暂不支持该邮箱域名注册，建议使用Gmail、Outlook、Hotmail、Yahoo 等国际通用邮箱进行注册。",
+   "n": "create_pass_code_email_domain_not_supported_toast"
+  },
+  "0x7f0f00de": {
+   "c": "邮箱格式不正确",
+   "n": "create_pass_code_email_invalid_toast"
+  },
+  "0x7f0f00df": {
+   "c": "请填写手机号码",
+   "n": "create_pass_code_mobile_empty_toast"
+  },
+  "0x7f0f00e0": {
+   "c": "当前设备运行环境异常，请尝试更换环境",
+   "n": "create_pass_code_risk_device_toast"
+  },
+  "0x7f0f00e1": {
+   "c": "裁剪",
+   "n": "crop_photo"
+  },
+  "0x7f0f00e2": {
+   "c": "裁剪失败，请稍后重试",
+   "n": "crop_photo_entirely_failed"
+  },
+  "0x7f0f00e3": {
+   "c": "裁剪失败，已上传原图",
+   "n": "crop_photo_failed"
+  },
+  "0x7f0f00e4": {
+   "c": "裁剪内容",
+   "n": "crop_photo_guide"
+  },
+  "0x7f0f00e5": {
+   "c": "还原",
+   "n": "crop_photo_reset"
+  },
+  "0x7f0f00e6": {
+   "c": "如需继续对话，请明天再拨打",
+   "n": "daily_call_limit_description"
+  },
+  "0x7f0f00e9": {
+   "c": "通话时长已达今日上限",
+   "n": "daily_call_limit_title"
+  },
+  "0x7f0f00ea": {
+   "c": "数据管理",
+   "n": "data_controls"
+  },
+  "0x7f0f00ec": {
+   "c": "标准",
+   "n": "default_font_size"
+  },
+  "0x7f0f00ed": {
+   "c": "适合日常对话，即时响应",
+   "n": "default_model_description"
+  },
+  "0x7f0f00ee": {
+   "c": "快速模式",
+   "n": "default_model_name"
+  },
+  "0x7f0f00ef": {
+   "c": "Pop-Up Window",
+   "n": "default_popup_window_title"
+  },
+  "0x7f0f00f0": {
+   "c": "快速模式下，仅识别文字",
+   "n": "default_upload_panel_o_c_r_tip_with_vision"
+  },
+  "0x7f0f00f1": {
+   "c": "删除",
+   "n": "delete"
+  },
+  "0x7f0f00f2": {
+   "c": "注销失败",
+   "n": "delete_account_failed_toast"
+  },
+  "0x7f0f00f3": {
+   "c": "删除",
+   "n": "delete_session_action"
+  },
+  "0x7f0f00f4": {
+   "c": "未成年人模式已关闭",
+   "n": "disable_minor_mode_toast"
+  },
+  "0x7f0f00f5": {
+   "c": "本人承诺对当前登录的 DeepSeek 账号（%1$s）拥有完整处置权限，我将正确填写该账号原绑定的手机号。我已了解恶意提供虚假信息可能导致账号被封禁，并承担相应法律责任。",
+   "n": "disabled_phone_rebind_subtitle"
+  },
+  "0x7f0f00f6": {
+   "c": "关闭通话评价提示",
+   "n": "dismiss_call_rating_prompt"
+  },
+  "0x7f0f00fa": {
+   "c": "修改输入次数超过限制",
+   "n": "edit_quota_exceed_toast"
+  },
+  "0x7f0f00fb": {
+   "c": "邮箱 / +86手机号",
+   "n": "email_phone_placeholder"
+  },
+  "0x7f0f00fc": {
+   "c": "邮箱",
+   "n": "email_placeholder"
+  },
+  "0x7f0f00fd": {
+   "c": "未成年人模式已开启",
+   "n": "enable_minor_mode_toast"
+  },
+  "0x7f0f00fe": {
+   "c": "结束通话",
+   "n": "end_call"
+  },
+  "0x7f0f0101": {
+   "c": "修改年龄次数超出限制",
+   "n": "exceed_age_change_limit_toast"
+  },
+  "0x7f0f0102": {
+   "c": "摘录于",
+   "n": "excerpted_on"
+  },
+  "0x7f0f0103": {
+   "c": "当前设备运行环境异常，请尝试更换环境",
+   "n": "exection_environment_execption_toast"
+  },
+  "0x7f0f0104": {
+   "c": "当前操作遇到一些问题，请稍后再试",
+   "n": "existing_biz_code_default_toast"
+  },
+  "0x7f0f0105": {
+   "c": "展开",
+   "n": "expand"
+  },
+  "0x7f0f0106": {
+   "c": "擅长复杂问题，高峰需等待",
+   "n": "expert_model_description"
+  },
+  "0x7f0f0107": {
+   "c": "专家模式",
+   "n": "expert_model_name"
+  },
+  "0x7f0f0108": {
+   "c": "专家模式下，仅识别文字",
+   "n": "expert_upload_panel_o_c_r_tip_with_vision"
+  },
+  "0x7f0f010d": {
+   "c": "联网搜索不支持上传文件",
+   "n": "file_cannot_with_search_toast"
+  },
+  "0x7f0f010e": {
+   "c": "无法打开文件选择器",
+   "n": "file_chooser_open_error_toast"
+  },
+  "0x7f0f010f": {
+   "c": "文件内容不能为空",
+   "n": "file_content_cannot_be_empty"
+  },
+  "0x7f0f0110": {
+   "c": "文件内容过长",
+   "n": "file_content_too_long"
+  },
+  "0x7f0f0111": {
+   "c": "上传文件数达到上限，每个对话可上传 %1$d 个文件",
+   "n": "file_count_limit_exceeded_toast"
+  },
+  "0x7f0f0114": {
+   "c": "上传的文件包含暂未支持的文件格式",
+   "n": "file_ext_not_supported_toast"
+  },
+  "0x7f0f0119": {
+   "c": "文件名不能为空",
+   "n": "file_name_cannot_be_empty"
+  },
+  "0x7f0f011a": {
+   "c": "单个文件大小超过限制（%1$s），请调整后重试",
+   "n": "file_over_size_toast"
+  },
+  "0x7f0f011e": {
+   "c": "服务器繁忙",
+   "n": "file_server_busy_toast"
+  },
+  "0x7f0f011f": {
+   "c": "DeepSeek 只能阅读全部文件的 %1$d%%，请删减后发送",
+   "n": "file_token_exceeds"
+  },
+  "0x7f0f0120": {
+   "c": "超出字数限制，请删减后发送",
+   "n": "file_tokens_over_size"
+  },
+  "0x7f0f0121": {
+   "c": "上传失败",
+   "n": "file_upload_common_error"
+  },
+  "0x7f0f0122": {
+   "c": "请在上传完成后发送",
+   "n": "file_uploading"
+  },
+  "0x7f0f0123": {
+   "c": "文件名过长",
+   "n": "filename_too_long"
+  },
+  "0x7f0f0124": {
+   "c": "折叠",
+   "n": "fold"
+  },
+  "0x7f0f0125": {
+   "c": "跟随系统",
+   "n": "follow_system"
+  },
+  "0x7f0f0126": {
+   "c": "字体大小",
+   "n": "font_size"
+  },
+  "0x7f0f0127": {
+   "c": "立即升级",
+   "n": "force_update_dialog_confirm"
+  },
+  "0x7f0f0128": {
+   "c": "为保证你正常使用所有功能，请更新到最新版本",
+   "n": "force_update_dialog_content"
+  },
+  "0x7f0f0129": {
+   "c": "版本更新",
+   "n": "force_update_dialog_title"
+  },
+  "0x7f0f012b": {
+   "c": "下一步",
+   "n": "forgot_password_button"
+  },
+  "0x7f0f012c": {
+   "c": "忘记密码",
+   "n": "forgot_password_entry"
+  },
+  "0x7f0f012f": {
+   "c": "密码重置失败，邮箱地址未注册，请返回后注册",
+   "n": "forgot_password_failed_email_not_exist_toast2"
+  },
+  "0x7f0f0130": {
+   "c": "密码重置失败，手机号未注册，请返回后注册",
+   "n": "forgot_password_failed_mobile_not_exist_toast2"
+  },
+  "0x7f0f0132": {
+   "c": "密码不合法，请重新输入",
+   "n": "forgot_password_invalid_password_toast"
+  },
+  "0x7f0f0133": {
+   "c": "密码已重置",
+   "n": "forgot_password_ok_toast"
+  },
+  "0x7f0f0134": {
+   "c": "重置统一登录密码",
+   "n": "forgot_password_title"
+  },
+  "0x7f0f0135": {
+   "c": "前置摄像头暂不可用",
+   "n": "front_camera_unavailable_toast"
+  },
+  "0x7f0f0136": {
+   "c": "生成中",
+   "n": "generating"
+  },
+  "0x7f0f0137": {
+   "c": "未能从微信获取文件",
+   "n": "get_file_from_we_chat_failed_toast"
+  },
+  "0x7f0f0138": {
+   "c": "转至底部",
+   "n": "go_to_bottom"
+  },
+  "0x7f0f0139": {
+   "c": "Google 登录失败，请稍后再试 (B%1$d)",
+   "n": "google_fallback_toast"
+  },
+  "0x7f0f013a": {
+   "c": "Google 登录",
+   "n": "google_login_button"
+  },
+  "0x7f0f013b": {
+   "c": "登录失败，Google Play 服务版本过低或未安装",
+   "n": "google_sign_in_device_not_support_toast"
+  },
+  "0x7f0f013c": {
+   "c": "Google 登录失败，请更换账号或使用其他登录方式 (B%1$d)",
+   "n": "google_sign_in_fail56"
+  },
+  "0x7f0f013d": {
+   "c": "中国大陆用户请使用其他方式注册/登录",
+   "n": "google_sign_in_mainland_toast"
+  },
+  "0x7f0f013f": {
+   "c": "登录失败，登录信息已失效",
+   "n": "google_sign_in_token_verified_failed_toast"
+  },
+  "0x7f0f0140": {
+   "c": "登录失败，未知异常 %1$d",
+   "n": "google_sign_in_unexpected_code_toast"
+  },
+  "0x7f0f0142": {
+   "c": "为完成未成年人模式设置，请填写监护人的手机号。",
+   "n": "guardian_phone_description"
+  },
+  "0x7f0f0143": {
+   "c": "请输入正确的中国大陆手机号",
+   "n": "guardian_phone_invalid_toast"
+  },
+  "0x7f0f0144": {
+   "c": "请输入手机号",
+   "n": "guardian_phone_required_toast"
+  },
+  "0x7f0f0145": {
+   "c": "请填写监护人手机号",
+   "n": "guardian_phone_title"
+  },
+  "0x7f0f0146": {
+   "c": "挂断",
+   "n": "hang_up_call"
+  },
+  "0x7f0f0148": {
+   "c": "无法配置验证码，请稍后重试",
+   "n": "hcaptcha_failed_setup_toast"
+  },
+  "0x7f0f014a": {
+   "c": "验证中",
+   "n": "hcaptcha_initializing"
+  },
+  "0x7f0f014b": {
+   "c": "网络异常，请检查网络状况",
+   "n": "hcaptcha_network_error_toast"
+  },
+  "0x7f0f014c": {
+   "c": "验证过于频繁，请稍后重试",
+   "n": "hcaptcha_rate_limit_toast"
+  },
+  "0x7f0f014d": {
+   "c": "验证码过期，刷新中",
+   "n": "hcaptcha_refreshing"
+  },
+  "0x7f0f014f": {
+   "c": "验证码出现异常（%1$s），请稍后重试",
+   "n": "hcaptcha_unexpected_toast"
+  },
+  "0x7f0f0151": {
+   "c": "收起通话字幕",
+   "n": "hide_call_captions"
+  },
+  "0x7f0f0152": {
+   "c": "隐藏密码",
+   "n": "hide_password"
+  },
+  "0x7f0f0153": {
+   "c": "我知道了",
+   "n": "hint_click_context_exceed_dialog_confirm"
+  },
+  "0x7f0f0154": {
+   "c": "为保证回复质量，对话有长度限制。当前对话已达上限，无法继续回复，请开启新对话。",
+   "n": "hint_click_context_exceed_dialog_description"
+  },
+  "0x7f0f0155": {
+   "c": "对话长度已达上限",
+   "n": "hint_click_context_exceed_dialog_title"
+  },
+  "0x7f0f0156": {
+   "c": "消息未能发送，请稍后重试",
+   "n": "hint_fallback"
+  },
+  "0x7f0f0157": {
+   "c": "上传文件数达到上限，每个对话可上传 %1$d 个文件",
+   "n": "hint_file_count_limit_exceeded"
+  },
+  "0x7f0f0158": {
+   "c": "无效的文件引用，请检查你上传的文件并重试",
+   "n": "hint_invalid_file_ref"
+  },
+  "0x7f0f0159": {
+   "c": "消息未能发送，异常请求",
+   "n": "hint_invalid_params"
+  },
+  "0x7f0f015a": {
+   "c": "请在其他消息生成结束后重试",
+   "n": "hint_last_message_is_w_i_p"
+  },
+  "0x7f0f015b": {
+   "c": "消息数量达到上限，请开启新对话",
+   "n": "hint_max_message_count"
+  },
+  "0x7f0f015c": {
+   "c": "搜索开启时无法发送文件，请关闭后重试",
+   "n": "hint_message_search_with_file_error"
+  },
+  "0x7f0f015d": {
+   "c": "请检查网络后重试",
+   "n": "hint_network_error"
+  },
+  "0x7f0f015e": {
+   "c": "发送的信息为空",
+   "n": "hint_prompt_empty"
+  },
+  "0x7f0f015f": {
+   "c": "消息发送过于频繁，请稍后重试",
+   "n": "hint_rate_limit_reached"
+  },
+  "0x7f0f0160": {
+   "c": "当前服务异常，请稍后重试",
+   "n": "hint_server_error"
+  },
+  "0x7f0f0161": {
+   "c": "未能同步，轻触重试",
+   "n": "history_load_failed"
+  },
+  "0x7f0f0162": {
+   "c": "消息同步中",
+   "n": "history_loading"
+  },
+  "0x7f0f0163": {
+   "c": "图片",
+   "n": "image"
+  },
+  "0x7f0f0164": {
+   "c": "高清图片加载失败，无法裁剪",
+   "n": "image_crop_load_failed"
+  },
+  "0x7f0f0165": {
+   "c": "去提问",
+   "n": "image_edit_send_button"
+  },
+  "0x7f0f0166": {
+   "c": "图片加载失败",
+   "n": "image_preview_load_failed"
+  },
+  "0x7f0f0167": {
+   "c": "重新加载",
+   "n": "image_preview_reload"
+  },
+  "0x7f0f0168": {
+   "c": "保存失败",
+   "n": "image_preview_save_error_toast"
+  },
+  "0x7f0f0169": {
+   "c": "保存",
+   "n": "image_preview_save_photo"
+  },
+  "0x7f0f016a": {
+   "c": "已保存到相册",
+   "n": "image_preview_save_successfully"
+  },
+  "0x7f0f016b": {
+   "c": "通话中",
+   "n": "in_call"
+  },
+  "0x7f0f016c": {
+   "c": "In progress",
+   "n": "in_progress"
+  },
+  "0x7f0f016d": {
+   "c": "Partially checked",
+   "n": "indeterminate"
+  },
+  "0x7f0f016e": {
+   "c": "回答由 AI 生成，仅供参考",
+   "n": "input_a_i_alert"
+  },
+  "0x7f0f0171": {
+   "c": "帮助",
+   "n": "intercom_entry"
+  },
+  "0x7f0f0172": {
+   "c": "上传的文件已失效，请重新上传",
+   "n": "invalid_file_ref_toast"
+  },
+  "0x7f0f0173": {
+   "c": "异常请求（4）",
+   "n": "invalid_message_id_toast"
+  },
+  "0x7f0f0174": {
+   "c": "登录信息已失效，请重新登录",
+   "n": "invalid_token_toast"
+  },
+  "0x7f0f0175": {
+   "c": "保留",
+   "n": "keep_button"
+  },
+  "0x7f0f0177": {
+   "c": "欢迎使用 DeepSeek",
+   "n": "launch_welcome"
+  },
+  "0x7f0f0178": {
+   "c": "加载中",
+   "n": "loading"
+  },
+  "0x7f0f017a": {
+   "c": "zh_CN",
+   "n": "locale"
+  },
+  "0x7f0f017b": {
+   "c": "登录",
+   "n": "login_button"
+  },
+  "0x7f0f017c": {
+   "c": "当前设备登录未满 12 小时，暂时无法退出其他设备的登录",
+   "n": "login_device_protected"
+  },
+  "0x7f0f017d": {
+   "c": "当前设备",
+   "n": "login_devices_current_device"
+  },
+  "0x7f0f017e": {
+   "c": "以下为本账号已登录的设备，点击“%1$s”后，该设备上将退出登录。",
+   "n": "login_devices_description"
+  },
+  "0x7f0f017f": {
+   "c": "未知设备",
+   "n": "login_devices_fallback_name"
+  },
+  "0x7f0f0180": {
+   "c": "获取登录设备失败，重试加载",
+   "n": "login_devices_load_failed"
+  },
+  "0x7f0f0181": {
+   "c": "登录时间：%1$s",
+   "n": "login_devices_login_time"
+  },
+  "0x7f0f0182": {
+   "c": "是否在该设备上退出登录",
+   "n": "login_devices_logout_confirm_title"
+  },
+  "0x7f0f0183": {
+   "c": "登录设备管理",
+   "n": "login_devices_management"
+  },
+  "0x7f0f0185": {
+   "c": "未知",
+   "n": "login_devices_unknown_login_time"
+  },
+  "0x7f0f0186": {
+   "c": "登录失败，请稍后再试 (B%1$d)",
+   "n": "login_fallback_toast"
+  },
+  "0x7f0f0188": {
+   "c": "退出登录不会丢失任何数据，你仍可以登录此账号。",
+   "n": "logout_alert_description"
+  },
+  "0x7f0f0189": {
+   "c": "确认退出登录？",
+   "n": "logout_alert_title"
+  },
+  "0x7f0f018a": {
+   "c": "确认登出",
+   "n": "logout_all_sessions_confirm"
+  },
+  "0x7f0f018b": {
+   "c": "点击“%1$s”后，当前账号将在所有已登录设备或浏览器中退出登录（包括当前设备）。确认登出吗？",
+   "n": "logout_all_sessions_description"
+  },
+  "0x7f0f018c": {
+   "c": "退出登录失败，请稍后重试",
+   "n": "logout_all_sessions_failed_toast"
+  },
+  "0x7f0f018d": {
+   "c": "登出所有设备",
+   "n": "logout_all_sessions_title"
+  },
+  "0x7f0f01d1": {
+   "c": "代码",
+   "n": "markdown_code_copy_label"
+  },
+  "0x7f0f01d5": {
+   "c": "查看全文",
+   "n": "markdown_overflow_show_all_button"
+  },
+  "0x7f0f01d6": {
+   "c": "表格导出失败",
+   "n": "markdown_table_export_failed"
+  },
+  "0x7f0f01d7": {
+   "c": "表格",
+   "n": "markdown_table_title"
+  },
+  "0x7f0f01d9": {
+   "c": "查找关键词",
+   "n": "merge_tool_find"
+  },
+  "0x7f0f01da": {
+   "c": "未查找到相关内容",
+   "n": "merge_tool_find_no_result"
+  },
+  "0x7f0f01dc": {
+   "c": "浏览页面",
+   "n": "merge_tool_open"
+  },
+  "0x7f0f01dd": {
+   "c": "浏览页面失败",
+   "n": "merge_tool_open_fail"
+  },
+  "0x7f0f01de": {
+   "c": "已浏览 1 个页面",
+   "n": "merge_tool_open_result"
+  },
+  "0x7f0f01df": {
+   "c": "已浏览 %1$d 个页面",
+   "n": "merge_tool_open_results"
+  },
+  "0x7f0f01e0": {
+   "c": "已浏览搜索结果",
+   "n": "merge_tool_open_search_list"
+  },
+  "0x7f0f01e1": {
+   "c": "已搜索到 1 个网页",
+   "n": "merge_tool_search_result"
+  },
+  "0x7f0f01e2": {
+   "c": "已搜索到 %1$d 个网页",
+   "n": "merge_tool_search_results"
+  },
+  "0x7f0f01e3": {
+   "c": "全屏",
+   "n": "mermaid_button_full_screen"
+  },
+  "0x7f0f01e4": {
+   "c": "图表为空",
+   "n": "mermaid_inline_empty"
+  },
+  "0x7f0f01e5": {
+   "c": "渲染失败",
+   "n": "mermaid_inline_fail"
+  },
+  "0x7f0f01e6": {
+   "c": "图表生成中...",
+   "n": "mermaid_inline_loading"
+  },
+  "0x7f0f01e7": {
+   "c": "无法预览",
+   "n": "mermaid_preview_failed"
+  },
+  "0x7f0f01e8": {
+   "c": "保存",
+   "n": "mermaid_save"
+  },
+  "0x7f0f01e9": {
+   "c": "保存失败",
+   "n": "mermaid_save_failed"
+  },
+  "0x7f0f01ea": {
+   "c": "已保存到相册",
+   "n": "mermaid_save_successfully"
+  },
+  "0x7f0f01eb": {
+   "c": "代码",
+   "n": "mermaid_switch_code"
+  },
+  "0x7f0f01ec": {
+   "c": "图表",
+   "n": "mermaid_switch_preview"
+  },
+  "0x7f0f01ed": {
+   "c": "继续生成",
+   "n": "message_continue"
+  },
+  "0x7f0f01ee": {
+   "c": "消息",
+   "n": "message_copy_label"
+  },
+  "0x7f0f01f1": {
+   "c": "修改输入",
+   "n": "message_editting"
+  },
+  "0x7f0f01f2": {
+   "c": "反馈",
+   "n": "message_feedback"
+  },
+  "0x7f0f01f3": {
+   "c": "我们想知道你对此回答不满意的原因，你认为更好的回答是什么？",
+   "n": "message_feedback_bad_placeholder"
+  },
+  "0x7f0f01f4": {
+   "c": "提交",
+   "n": "message_feedback_commit"
+  },
+  "0x7f0f01f5": {
+   "c": "反馈成功",
+   "n": "message_feedback_successfully_toast"
+  },
+  "0x7f0f01f6": {
+   "c": "虚假信息",
+   "n": "message_feedback_tag_fake"
+  },
+  "0x7f0f01f7": {
+   "c": "有害/不安全",
+   "n": "message_feedback_tag_harmful"
+  },
+  "0x7f0f01f8": {
+   "c": "其他",
+   "n": "message_feedback_tag_others"
+  },
+  "0x7f0f01f9": {
+   "c": "没有帮助",
+   "n": "message_feedback_tag_useless"
+  },
+  "0x7f0f01fb": {
+   "c": "复制",
+   "n": "message_press_copy"
+  },
+  "0x7f0f01fc": {
+   "c": "不喜欢",
+   "n": "message_press_dislike"
+  },
+  "0x7f0f01fd": {
+   "c": "修改",
+   "n": "message_press_edit"
+  },
+  "0x7f0f01fe": {
+   "c": "修改并创建分支",
+   "n": "message_press_edit_to_branch"
+  },
+  "0x7f0f01ff": {
+   "c": "喜欢",
+   "n": "message_press_like"
+  },
+  "0x7f0f0200": {
+   "c": "重新生成",
+   "n": "message_press_regenerate"
+  },
+  "0x7f0f0201": {
+   "c": "举报",
+   "n": "message_press_report"
+  },
+  "0x7f0f0202": {
+   "c": "深度思考",
+   "n": "message_r1_button"
+  },
+  "0x7f0f0204": {
+   "c": "正在分析图片",
+   "n": "message_reading_image"
+  },
+  "0x7f0f0205": {
+   "c": "正在阅读",
+   "n": "message_reading_link"
+  },
+  "0x7f0f0206": {
+   "c": "智能搜索",
+   "n": "message_search_button"
+  },
+  "0x7f0f0207": {
+   "c": "未搜索到合适的内容",
+   "n": "message_search_failed"
+  },
+  "0x7f0f0208": {
+   "c": "搜索结果",
+   "n": "message_search_page_ttitle"
+  },
+  "0x7f0f0209": {
+   "c": "已阅读 %1$d 个网页",
+   "n": "message_search_result"
+  },
+  "0x7f0f020a": {
+   "c": "%1$d 个网页",
+   "n": "message_search_summary"
+  },
+  "0x7f0f020b": {
+   "c": "请先删除文件再开启联网搜索",
+   "n": "message_search_with_file_error"
+  },
+  "0x7f0f020c": {
+   "c": "正在搜索",
+   "n": "message_searching"
+  },
+  "0x7f0f020d": {
+   "c": "搜索中...",
+   "n": "message_searching2nd"
+  },
+  "0x7f0f020e": {
+   "c": "搜索已停止",
+   "n": "message_searching_stopped"
+  },
+  "0x7f0f020f": {
+   "c": "搜索 %1$s",
+   "n": "message_searching_with_query"
+  },
+  "0x7f0f0210": {
+   "c": "选择文本",
+   "n": "message_select_text"
+  },
+  "0x7f0f0211": {
+   "c": "已思考（用时 %1$d 秒）",
+   "n": "message_think_duration"
+  },
+  "0x7f0f0212": {
+   "c": "已停止",
+   "n": "message_think_stopped"
+  },
+  "0x7f0f0213": {
+   "c": "正在思考",
+   "n": "message_thinking"
+  },
+  "0x7f0f0214": {
+   "c": "正在查找",
+   "n": "message_tool_find_wip"
+  },
+  "0x7f0f0215": {
+   "c": "正在浏览网页",
+   "n": "message_tool_open_wip"
+  },
+  "0x7f0f0216": {
+   "c": "你已静音",
+   "n": "microphone_muted_toast"
+  },
+  "0x7f0f0217": {
+   "c": "允许访问麦克风",
+   "n": "microphone_permission_app_dialog_title"
+  },
+  "0x7f0f0218": {
+   "c": "请授权该权限以使用语音输入",
+   "n": "microphone_permission_description"
+  },
+  "0x7f0f0219": {
+   "c": "需要麦克风权限才能通话，请在设置中开启",
+   "n": "microphone_permission_required_toast"
+  },
+  "0x7f0f021a": {
+   "c": "麦克风权限说明",
+   "n": "microphone_permission_title"
+  },
+  "0x7f0f021c": {
+   "c": "已关闭",
+   "n": "minor_mode_disabled_status"
+  },
+  "0x7f0f021d": {
+   "c": "已开启",
+   "n": "minor_mode_enabled_status"
+  },
+  "0x7f0f021e": {
+   "c": "未成年人模式",
+   "n": "minor_mode_label"
+  },
+  "0x7f0f021f": {
+   "c": "请求未携带验证信息",
+   "n": "missing_pow_header_toast"
+  },
+  "0x7f0f0222": {
+   "c": "验证失败，账户已经存在，你可以直接登录",
+   "n": "mobile_verification_account_exist_toast"
+  },
+  "0x7f0f0223": {
+   "c": "验证失败，手机号不合法",
+   "n": "mobile_verification_invalid_phone_number_toast"
+  },
+  "0x7f0f0224": {
+   "c": "验证失败，该手机号已被封禁",
+   "n": "mobile_verification_mobile_banned_toast"
+  },
+  "0x7f0f0225": {
+   "c": "验证失败，本次第三方登录已过期",
+   "n": "mobile_verification_registration_expired_toast"
+  },
+  "0x7f0f0229": {
+   "c": "模型已切换，请重新从微信选择文件",
+   "n": "model_switched_reselect_file_from_we_chat_toast"
+  },
+  "0x7f0f022a": {
+   "c": "该模式不支持上传文件",
+   "n": "model_unsupport_files_toast"
+  },
+  "0x7f0f022b": {
+   "c": "使用%1$s开始对话",
+   "n": "model_welcome_message"
+  },
+  "0x7f0f022c": {
+   "c": "点此联系我们",
+   "n": "mute_bottom_bar_action"
+  },
+  "0x7f0f022d": {
+   "c": "因违反用户使用规范，你的账号已被禁言至 %1$s。禁言结束后，重启 App 即可恢复使用。如有疑问，请%2$s",
+   "n": "mute_bottom_bar_text"
+  },
+  "0x7f0f022e": {
+   "c": "yyyy 年 M 月 d 日 HH:mm",
+   "n": "mute_bottom_bar_text_date_formatter"
+  },
+  "0x7f0f022f": {
+   "c": "由于违反用户使用规范，你的账号已被禁言，如有疑问请%1$s",
+   "n": "mute_bottom_bar_text_no_until"
+  },
+  "0x7f0f0230": {
+   "c": "暂时无法注销账号，请在禁言解除后重试",
+   "n": "muted_user_cannot_unregister"
+  },
+  "0x7f0f0232": {
+   "c": "网络暂时无法连接",
+   "n": "network_unavailable_toast"
+  },
+  "0x7f0f0234": {
+   "c": "新密码",
+   "n": "new_password_placeholder"
+  },
+  "0x7f0f0236": {
+   "c": "下一条消息",
+   "n": "next_message"
+  },
+  "0x7f0f0237": {
+   "c": "不能发送空白消息",
+   "n": "no_empty_message_toast"
+  },
+  "0x7f0f0238": {
+   "c": "未选中",
+   "n": "not_selected"
+  },
+  "0x7f0f0239": {
+   "c": "请开启通知权限，以便及时接收消息和提醒",
+   "n": "notification_permission_description"
+  },
+  "0x7f0f023a": {
+   "c": "通知权限说明",
+   "n": "notification_permission_title"
+  },
+  "0x7f0f023c": {
+   "c": "关",
+   "n": "off"
+  },
+  "0x7f0f023d": {
+   "c": "开",
+   "n": "on"
+  },
+  "0x7f0f023e": {
+   "c": "手机号一键登录",
+   "n": "one_click_login_button"
+  },
+  "0x7f0f023f": {
+   "c": "更换",
+   "n": "one_click_login_change_phone_number_button"
+  },
+  "0x7f0f0240": {
+   "c": "一键登录失败",
+   "n": "one_click_login_error_toast"
+  },
+  "0x7f0f0241": {
+   "c": "%1$s提供认证服务",
+   "n": "one_click_login_hint_text"
+  },
+  "0x7f0f0242": {
+   "c": "在浏览器中打开",
+   "n": "open_in_browser"
+  },
+  "0x7f0f0243": {
+   "c": "打开侧边栏",
+   "n": "open_sidebar"
+  },
+  "0x7f0f0244": {
+   "c": "未能打开微信",
+   "n": "open_we_chat_failed_toast"
+  },
+  "0x7f0f0245": {
+   "c": "操作失败，请稍后重试",
+   "n": "operation_failed"
+  },
+  "0x7f0f0247": {
+   "c": "部分对话为空，仅置顶 %1$d 个对话",
+   "n": "partial_chats_pinned"
+  },
+  "0x7f0f0248": {
+   "c": "部分对话为空，仅置顶 %1$d 个对话",
+   "n": "partial_chats_pinned_plural"
+  },
+  "0x7f0f0249": {
+   "c": "密码登录",
+   "n": "password_login_button"
+  },
+  "0x7f0f024a": {
+   "c": "密码登录",
+   "n": "password_login_title"
+  },
+  "0x7f0f024b": {
+   "c": "密码",
+   "n": "password_placeholder"
+  },
+  "0x7f0f024c": {
+   "c": "去设置",
+   "n": "permission_app_dialog_confirm"
+  },
+  "0x7f0f024d": {
+   "c": "个性化",
+   "n": "personalization"
+  },
+  "0x7f0f024e": {
+   "c": "现手机号无法接收验证码？",
+   "n": "phone_number_cannot_receive_code"
+  },
+  "0x7f0f0250": {
+   "c": "未能拍摄，请稍后再试",
+   "n": "photo_capture_failed_toast"
+  },
+  "0x7f0f0251": {
+   "c": "请授权该权限以上传相册中的图片",
+   "n": "photo_library_permission_description"
+  },
+  "0x7f0f0252": {
+   "c": "允许访问相册",
+   "n": "photo_library_permission_title"
+  },
+  "0x7f0f0253": {
+   "c": "网络状态不佳",
+   "n": "poor_network_connection"
+  },
+  "0x7f0f0254": {
+   "c": "后付费用户不支持此操作，请联系我们",
+   "n": "postpaid_user_cannot_unregister"
+  },
+  "0x7f0f0255": {
+   "c": "请求未能通过验证",
+   "n": "pow_error_toast"
+  },
+  "0x7f0f0256": {
+   "c": "预览文字大小",
+   "n": "preview_font_size_msg1"
+  },
+  "0x7f0f0257": {
+   "c": "你可以拖动滑块来调整字体大小。",
+   "n": "preview_font_size_msg2"
+  },
+  "0x7f0f0258": {
+   "c": "如果在使用过程中存在问题或建议，可反馈给 DeepSeek 团队。",
+   "n": "preview_font_size_msg3"
+  },
+  "0x7f0f0259": {
+   "c": "上一条消息",
+   "n": "previous_message"
+  },
+  "0x7f0f025a": {
+   "c": "同意",
+   "n": "privacy_agree"
+  },
+  "0x7f0f025b": {
+   "c": "不同意",
+   "n": "privacy_disagree"
+  },
+  "0x7f0f025c": {
+   "c": "隐私政策",
+   "n": "privacy_policy"
+  },
+  "0x7f0f025d": {
+   "c": "当前流程已过期，请重试",
+   "n": "process_expired_toast"
+  },
+  "0x7f0f025f": {
+   "c": "已绑定",
+   "n": "profile3rd_party_bound"
+  },
+  "0x7f0f0260": {
+   "c": "第三方信息共享清单",
+   "n": "profile3rd_party_list"
+  },
+  "0x7f0f0261": {
+   "c": "关于",
+   "n": "profile_about_section_header"
+  },
+  "0x7f0f0262": {
+   "c": "账号已注销",
+   "n": "profile_account_deleted_toast"
+  },
+  "0x7f0f0263": {
+   "c": "安全",
+   "n": "profile_account_security_section_header"
+  },
+  "0x7f0f0264": {
+   "c": "内容由 AI 生成，请仔细甄别，并合法使用",
+   "n": "profile_ai_compliance_footer"
+  },
+  "0x7f0f0265": {
+   "c": "Apple",
+   "n": "profile_apple_account_title"
+  },
+  "0x7f0f0266": {
+   "c": "检查更新",
+   "n": "profile_check_for_updates"
+  },
+  "0x7f0f0267": {
+   "c": "当前已是最新版本",
+   "n": "profile_check_for_updates_newest"
+  },
+  "0x7f0f026a": {
+   "c": "如您的开放平台账户中尚有未消费的充值余额，注销即视为放弃金额。",
+   "n": "profile_confirm_delete_message_balance_forfeiture"
+  },
+  "0x7f0f026b": {
+   "c": "当前账号在 APP 和网页端的所有历史对话将会被永久删除，无法找回。",
+   "n": "profile_confirm_delete_message_data_loss"
+  },
+  "0x7f0f026c": {
+   "c": "频繁重复注销可能会被系统判定为异常行为，导致账号受限或永久封禁。",
+   "n": "profile_confirm_delete_message_dont_repeat"
+  },
+  "0x7f0f026d": {
+   "c": "账号一经注销，你将无法访问 DeepSeek 的所有服务，包括对话服务和开放平台。",
+   "n": "profile_confirm_delete_message_service_termination"
+  },
+  "0x7f0f026e": {
+   "c": "充值余额无法恢复",
+   "n": "profile_confirm_delete_subtitle_balance_forfeiture"
+  },
+  "0x7f0f026f": {
+   "c": "历史对话将被删除",
+   "n": "profile_confirm_delete_subtitle_data_loss"
+  },
+  "0x7f0f0270": {
+   "c": "请勿频繁重复注销",
+   "n": "profile_confirm_delete_subtitle_dont_repeat"
+  },
+  "0x7f0f0271": {
+   "c": "服务将无法访问",
+   "n": "profile_confirm_delete_subtitle_service_termination"
+  },
+  "0x7f0f0272": {
+   "c": "确认注销我的账号？",
+   "n": "profile_confirm_delete_title"
+  },
+  "0x7f0f0273": {
+   "c": "联系我们",
+   "n": "profile_contact"
+  },
+  "0x7f0f0274": {
+   "c": "注销账号",
+   "n": "profile_delete"
+  },
+  "0x7f0f0278": {
+   "c": "删除所有历史对话",
+   "n": "profile_delete_all_chat_button"
+  },
+  "0x7f0f0279": {
+   "c": "删除成功",
+   "n": "profile_delete_all_chat_ok_toast"
+  },
+  "0x7f0f027a": {
+   "c": "电子邮箱",
+   "n": "profile_email"
+  },
+  "0x7f0f027b": {
+   "c": "Google",
+   "n": "profile_google_account_title"
+  },
+  "0x7f0f027c": {
+   "c": "帮助与反馈",
+   "n": "profile_help_and_feedback"
+  },
+  "0x7f0f027d": {
+   "c": "数据用于优化体验",
+   "n": "profile_imporve_model"
+  },
+  "0x7f0f027e": {
+   "c": "允许我们将你的对话内容用于优化 DeepSeek 的使用体验。我们保障你的数据隐私安全。",
+   "n": "profile_imporve_model_supporting_label"
+  },
+  "0x7f0f027f": {
+   "c": "账户",
+   "n": "profile_info_section_header"
+  },
+  "0x7f0f0280": {
+   "c": "退出登录",
+   "n": "profile_logout"
+  },
+  "0x7f0f0281": {
+   "c": "手机号",
+   "n": "profile_mobile"
+  },
+  "0x7f0f0282": {
+   "c": "应用权限",
+   "n": "profile_premission_list"
+  },
+  "0x7f0f0283": {
+   "c": "个人信息收集清单",
+   "n": "profile_private_info_list"
+  },
+  "0x7f0f0284": {
+   "c": "服务协议",
+   "n": "profile_service_section_header"
+  },
+  "0x7f0f0285": {
+   "c": "设置",
+   "n": "profile_title"
+  },
+  "0x7f0f0286": {
+   "c": "微信",
+   "n": "profile_wechat_account_title"
+  },
+  "0x7f0f0287": {
+   "c": "内容超长约 %1$d%%，请删减后再试",
+   "n": "prompt_too_long_toast"
+  },
+  "0x7f0f028a": {
+   "c": "已关闭自动朗读",
+   "n": "read_aloud_auto_disabled_toast"
+  },
+  "0x7f0f028b": {
+   "c": "已开启自动朗读",
+   "n": "read_aloud_auto_enabled_toast"
+  },
+  "0x7f0f028c": {
+   "c": "朗读已达今日限额，请稍后再试",
+   "n": "read_aloud_daily_limit_reached_toast"
+  },
+  "0x7f0f028d": {
+   "c": "操作过于频繁，请稍后再试",
+   "n": "read_aloud_frequent_toast"
+  },
+  "0x7f0f028e": {
+   "c": "语音朗读中断",
+   "n": "read_aloud_interrupted_toast"
+  },
+  "0x7f0f028f": {
+   "c": "当前语言暂不支持朗读，可尝试切换音色",
+   "n": "read_aloud_language_not_supported_switch_voice_toast"
+  },
+  "0x7f0f0290": {
+   "c": "当前语言暂不支持朗读",
+   "n": "read_aloud_language_not_supported_toast"
+  },
+  "0x7f0f0291": {
+   "c": "朗读失败，请稍后再试",
+   "n": "read_aloud_load_failed_toast"
+  },
+  "0x7f0f0292": {
+   "c": "当前音量较低，请调高设备音量",
+   "n": "read_aloud_low_volume_toast"
+  },
+  "0x7f0f0293": {
+   "c": "请检查网络后重试",
+   "n": "read_aloud_network_error_toast"
+  },
+  "0x7f0f0294": {
+   "c": "音色播放失败，请稍后再试",
+   "n": "read_aloud_play_failed_toast"
+  },
+  "0x7f0f0295": {
+   "c": "朗读",
+   "n": "read_aloud_start_label"
+  },
+  "0x7f0f0296": {
+   "c": "停止朗读",
+   "n": "read_aloud_stop_label"
+  },
+  "0x7f0f0297": {
+   "c": "该音色已下线，请选择其他音色",
+   "n": "read_aloud_voice_discontinued_toast"
+  },
+  "0x7f0f0298": {
+   "c": "音色切换失败，请稍后重试",
+   "n": "read_aloud_voice_switch_failed_toast"
+  },
+  "0x7f0f0299": {
+   "c": "正在朗读",
+   "n": "reading_aloud"
+  },
+  "0x7f0f029a": {
+   "c": "变更失败，请稍后再试 (B%1$d)",
+   "n": "rebind_fallback_toast"
+  },
+  "0x7f0f029c": {
+   "c": "去变更",
+   "n": "rebind_mobile_alert_confirm"
+  },
+  "0x7f0f029d": {
+   "c": "当前绑定的手机号码为 %1$s，变更后，你将无法使用该手机号登录 DeepSeek，%2$s如不希望历史对话被迁移至新手机号，可以在更换前删除所有对话。",
+   "n": "rebind_mobile_alert_message"
+  },
+  "0x7f0f029e": {
+   "c": "当前账号的开放平台余额，网页端和 App 中的历史对话均会迁移至新手机号。",
+   "n": "rebind_mobile_alert_message_bold"
+  },
+  "0x7f0f029f": {
+   "c": "变更已绑定的手机号？",
+   "n": "rebind_mobile_alert_title"
+  },
+  "0x7f0f02a0": {
+   "c": "服务异常，请稍后重试",
+   "n": "rebind_mobile_check_service_error_toast"
+  },
+  "0x7f0f02a1": {
+   "c": "变更失败，请稍后再试",
+   "n": "rebind_mobile_failed"
+  },
+  "0x7f0f02a3": {
+   "c": "检测到该手机号仍可正常接收短信，请返回使用短信验证",
+   "n": "rebind_mobile_still_in_use_toast"
+  },
+  "0x7f0f02a4": {
+   "c": "变更成功",
+   "n": "rebind_mobile_succeed"
+  },
+  "0x7f0f02a5": {
+   "c": "新手机号已经被绑定至其他账号，请更换后重试",
+   "n": "rebind_mobile_toast_bound_by_others"
+  },
+  "0x7f0f02a6": {
+   "c": "新手机号不能与原手机号相同",
+   "n": "rebind_mobile_toast_same_number"
+  },
+  "0x7f0f02a7": {
+   "c": "手机号多次错误，如需申诉，请%1$s",
+   "n": "rebind_mobile_too_many_attempts_toast"
+  },
+  "0x7f0f02a8": {
+   "c": "变更",
+   "n": "rebind_mobile_verify_confirm_button"
+  },
+  "0x7f0f02a9": {
+   "c": "验证新手机号",
+   "n": "rebind_mobile_verify_new_mobile"
+  },
+  "0x7f0f02aa": {
+   "c": "下一步",
+   "n": "rebind_mobile_verify_next_button"
+  },
+  "0x7f0f02ab": {
+   "c": "验证当前手机号",
+   "n": "rebind_mobile_verify_old_mobile"
+  },
+  "0x7f0f02ac": {
+   "c": "手机号校验失败，剩余 %1$d 次机会",
+   "n": "rebind_mobile_wrong_old_number_remaining_toast"
+  },
+  "0x7f0f02ae": {
+   "c": "识别中",
+   "n": "recognizing_label"
+  },
+  "0x7f0f02af": {
+   "c": "录音将在 %1$d 秒后结束",
+   "n": "record_remaining_second"
+  },
+  "0x7f0f02b0": {
+   "c": "录音将在 %1$d 秒后结束",
+   "n": "record_remaining_seconds"
+  },
+  "0x7f0f02b1": {
+   "c": "松手取消",
+   "n": "record_swiped_up_label"
+  },
+  "0x7f0f02b2": {
+   "c": "松手发送，上滑取消",
+   "n": "recording_label"
+  },
+  "0x7f0f02b3": {
+   "c": "重拨",
+   "n": "redial_call"
+  },
+  "0x7f0f02b4": {
+   "c": "即将离开 DeepSeek，打开其他应用",
+   "n": "redirect_dialog_message"
+  },
+  "0x7f0f02b5": {
+   "c": "重做",
+   "n": "redo"
+  },
+  "0x7f0f02b6": {
+   "c": "关闭搜索",
+   "n": "regenerate_disable_search"
+  },
+  "0x7f0f02b7": {
+   "c": "搜索网页",
+   "n": "regenerate_enable_search"
+  },
+  "0x7f0f02b8": {
+   "c": "再试一次",
+   "n": "regenerate_normal"
+  },
+  "0x7f0f02b9": {
+   "c": "重新生成次数超过限制",
+   "n": "regenerate_quota_exceed_toast"
+  },
+  "0x7f0f02ba": {
+   "c": "更加详细",
+   "n": "regenerate_verbosity_high"
+  },
+  "0x7f0f02bb": {
+   "c": "更加简洁",
+   "n": "regenerate_verbosity_low"
+  },
+  "0x7f0f02bc": {
+   "c": "注册失败，请稍后再试 (B%1$d)",
+   "n": "register_fallback_toast"
+  },
+  "0x7f0f02be": {
+   "c": "重命名失败",
+   "n": "rename_failed"
+  },
+  "0x7f0f02bf": {
+   "c": "重命名",
+   "n": "rename_session_action"
+  },
+  "0x7f0f02c0": {
+   "c": "重命名对话",
+   "n": "rename_session_modal_title"
+  },
+  "0x7f0f02c1": {
+   "c": "%1$d秒后重发",
+   "n": "resend_verification_code_text"
+  },
+  "0x7f0f02c2": {
+   "c": "重置密码",
+   "n": "reset_password_button"
+  },
+  "0x7f0f02c3": {
+   "c": "你正在重置 %1$s 的密码",
+   "n": "reset_password_description"
+  },
+  "0x7f0f02c4": {
+   "c": "密码重置失败，请稍后再试 (B%1$d)",
+   "n": "reset_password_fallback_toast"
+  },
+  "0x7f0f02c5": {
+   "c": "请输入新密码",
+   "n": "reset_password_title"
+  },
+  "0x7f0f02c6": {
+   "c": "回答设置",
+   "n": "response_settings"
+  },
+  "0x7f0f02c7": {
+   "c": "异常请求（2）",
+   "n": "resume_message_not_found_toast"
+  },
+  "0x7f0f02c8": {
+   "c": "异常请求（3）",
+   "n": "resume_message_time_too_long_toast"
+  },
+  "0x7f0f02c9": {
+   "c": "重试",
+   "n": "retry"
+  },
+  "0x7f0f02ca": {
+   "c": "重新加载",
+   "n": "retry_button"
+  },
+  "0x7f0f02cc": {
+   "c": "旋转",
+   "n": "rotate"
+  },
+  "0x7f0f02cd": {
+   "c": "图像识别",
+   "n": "scan_image_camera_title"
+  },
+  "0x7f0f02ce": {
+   "c": "扫码继续聊",
+   "n": "scan_q_r_code_alert"
+  },
+  "0x7f0f02cf": {
+   "c": "文字识别",
+   "n": "scan_text_camera_title"
+  },
+  "0x7f0f02d1": {
+   "c": "暂无相关结果",
+   "n": "search_empty_result"
+  },
+  "0x7f0f02d2": {
+   "c": "搜索失败，请检查网络",
+   "n": "search_fail"
+  },
+  "0x7f0f02d3": {
+   "c": "搜索对话内容...",
+   "n": "search_hint"
+  },
+  "0x7f0f02d4": {
+   "c": "搜索过于频繁，请稍后再试",
+   "n": "search_limit"
+  },
+  "0x7f0f02d5": {
+   "c": "重新加载",
+   "n": "search_load_error_retry_action"
+  },
+  "0x7f0f02d6": {
+   "c": "查找更早的消息",
+   "n": "search_load_more"
+  },
+  "0x7f0f02d7": {
+   "c": "时间可能有些久，请耐心等待...",
+   "n": "search_long_time"
+  },
+  "0x7f0f02d9": {
+   "c": "更多结果加载失败，%1$s",
+   "n": "search_more_result_fail"
+  },
+  "0x7f0f02da": {
+   "c": "没有找到对应消息",
+   "n": "search_navigate_fail"
+  },
+  "0x7f0f02db": {
+   "c": "暂未找到结果，%1$s",
+   "n": "search_no_result"
+  },
+  "0x7f0f02dc": {
+   "c": "查找更早的消息",
+   "n": "search_no_result_load_more_action"
+  },
+  "0x7f0f02dd": {
+   "c": "重新加载",
+   "n": "search_reload"
+  },
+  "0x7f0f02de": {
+   "c": "全选",
+   "n": "select_all"
+  },
+  "0x7f0f02df": {
+   "c": "圈选区域提问",
+   "n": "select_area_to_ask"
+  },
+  "0x7f0f02e0": {
+   "c": "选择对话",
+   "n": "select_chat_title"
+  },
+  "0x7f0f02e1": {
+   "c": "已选中",
+   "n": "selected"
+  },
+  "0x7f0f02e2": {
+   "c": "选择的对话为空，未能置顶",
+   "n": "selected_chat_empty"
+  },
+  "0x7f0f02e3": {
+   "c": "选择的对话为空，未能置顶",
+   "n": "selected_chat_empty_plural"
+  },
+  "0x7f0f02e6": {
+   "c": "发送",
+   "n": "send"
+  },
+  "0x7f0f02e7": {
+   "c": "验证码已发送",
+   "n": "send_code_ok_toast"
+  },
+  "0x7f0f02e8": {
+   "c": "发送验证码",
+   "n": "send_verification_code_button"
+  },
+  "0x7f0f02e9": {
+   "c": "对话加载失败，请稍后再试",
+   "n": "send_when_session_history_fail_toast"
+  },
+  "0x7f0f02ea": {
+   "c": "正在加载对话，请稍后再试",
+   "n": "send_when_session_history_fetching_toast"
+  },
+  "0x7f0f02eb": {
+   "c": "发送中",
+   "n": "sending"
+  },
+  "0x7f0f02ec": {
+   "c": "回答由 AI 生成，仅供参考",
+   "n": "session_a_i_alert"
+  },
+  "0x7f0f02ed": {
+   "c": "已经在新对话中",
+   "n": "session_already_in_new_toast"
+  },
+  "0x7f0f02ee": {
+   "c": "删除选择的 %1$d 个对话？",
+   "n": "session_batch_delete_alert_title"
+  },
+  "0x7f0f02ef": {
+   "c": "删除选择的 %1$d 个对话？",
+   "n": "session_batch_delete_alert_title_plural"
+  },
+  "0x7f0f02f0": {
+   "c": "删除后，对话将不可恢复，由该对话生成的分享链接也将失效。",
+   "n": "session_batch_delete_description"
+  },
+  "0x7f0f02f1": {
+   "c": "已删除 %1$d 个对话",
+   "n": "session_batch_delete_success_toast"
+  },
+  "0x7f0f02f2": {
+   "c": "已删除 %1$d 个对话",
+   "n": "session_batch_delete_success_toast_plural"
+  },
+  "0x7f0f02f4": {
+   "c": "多选",
+   "n": "session_batch_entry_button"
+  },
+  "0x7f0f02f6": {
+   "c": "将选择的 %1$d 个对话置顶？",
+   "n": "session_batch_pin_alert"
+  },
+  "0x7f0f02f7": {
+   "c": "将选择的 %1$d 个对话置顶？",
+   "n": "session_batch_pin_alert_plural"
+  },
+  "0x7f0f02f8": {
+   "c": "已超过可置顶对话限制",
+   "n": "session_batch_pin_limit_toast"
+  },
+  "0x7f0f02f9": {
+   "c": "已置顶 %1$d 个对话",
+   "n": "session_batch_pin_success_toast"
+  },
+  "0x7f0f02fa": {
+   "c": "已置顶 %1$d 个对话",
+   "n": "session_batch_pin_success_toast_plural"
+  },
+  "0x7f0f02fb": {
+   "c": "已选择 %1$d 个对话",
+   "n": "session_batch_selected_count"
+  },
+  "0x7f0f02fd": {
+   "c": "将选择的 %1$d 个对话取消置顶？",
+   "n": "session_batch_unpin_alert"
+  },
+  "0x7f0f02fe": {
+   "c": "将选择的 %1$d 个对话取消置顶？",
+   "n": "session_batch_unpin_alert_plural"
+  },
+  "0x7f0f02ff": {
+   "c": "已取消置顶 %1$d 个对话",
+   "n": "session_batch_unpin_success_toast"
+  },
+  "0x7f0f0300": {
+   "c": "已取消置顶 %1$d 个对话",
+   "n": "session_batch_unpin_success_toast_plural"
+  },
+  "0x7f0f0301": {
+   "c": "该对话暂时无法置顶",
+   "n": "session_cannot_be_pinned_toast"
+  },
+  "0x7f0f0302": {
+   "c": "该对话暂时无法重命名",
+   "n": "session_cannot_update_title_toast"
+  },
+  "0x7f0f0305": {
+   "c": "删除该对话",
+   "n": "session_delete_confirm"
+  },
+  "0x7f0f0306": {
+   "c": "由该对话生成的分享链接也将失效",
+   "n": "session_delete_description"
+  },
+  "0x7f0f0307": {
+   "c": "删除对话失败",
+   "n": "session_delete_error_toast"
+  },
+  "0x7f0f0308": {
+   "c": "删除后，该对话将不可恢复",
+   "n": "session_delete_modal"
+  },
+  "0x7f0f0309": {
+   "c": "对话已删除",
+   "n": "session_delete_successfully_toast"
+  },
+  "0x7f0f030b": {
+   "c": "置顶",
+   "n": "session_group_pinned"
+  },
+  "0x7f0f030c": {
+   "c": "置顶 %1$d 个对话",
+   "n": "session_group_pinned_collapsed"
+  },
+  "0x7f0f030d": {
+   "c": "对话加载失败",
+   "n": "session_history_error_title"
+  },
+  "0x7f0f030e": {
+   "c": "30 天内",
+   "n": "session_history_timeline_label30days"
+  },
+  "0x7f0f030f": {
+   "c": "7 天内",
+   "n": "session_history_timeline_label7_days"
+  },
+  "0x7f0f0310": {
+   "c": "今天",
+   "n": "session_history_timeline_label_today"
+  },
+  "0x7f0f0311": {
+   "c": "昨天",
+   "n": "session_history_timeline_label_yesterday"
+  },
+  "0x7f0f0312": {
+   "c": "新对话",
+   "n": "session_init_title"
+  },
+  "0x7f0f0313": {
+   "c": "该对话已被删除",
+   "n": "session_is_deleted_toast"
+  },
+  "0x7f0f0315": {
+   "c": "Your chat with DeepSeek will be displayed here.",
+   "n": "session_list_empty_description"
+  },
+  "0x7f0f0316": {
+   "c": "暂无对话",
+   "n": "session_list_empty_title"
+  },
+  "0x7f0f0317": {
+   "c": "历史对话加载失败",
+   "n": "session_list_error_title"
+  },
+  "0x7f0f0318": {
+   "c": "历史对话加载失败",
+   "n": "session_list_load_error_toast"
+  },
+  "0x7f0f0319": {
+   "c": "未能加载，上滑重试",
+   "n": "session_list_load_more_failed"
+  },
+  "0x7f0f031a": {
+   "c": "开启新对话",
+   "n": "session_list_new_chat_button"
+  },
+  "0x7f0f031b": {
+   "c": "如需切换模式，请开启新对话",
+   "n": "session_model_name_tag_toast"
+  },
+  "0x7f0f031c": {
+   "c": "开启新对话",
+   "n": "session_new_chat_button"
+  },
+  "0x7f0f031d": {
+   "c": "置顶",
+   "n": "session_pin_action"
+  },
+  "0x7f0f031e": {
+   "c": "置顶失败",
+   "n": "session_pin_error_default_toast"
+  },
+  "0x7f0f031f": {
+   "c": "置顶对话数量已达上限",
+   "n": "session_pin_error_toast2"
+  },
+  "0x7f0f0320": {
+   "c": "要置顶的对话已经被删除",
+   "n": "session_pin_error_toast3"
+  },
+  "0x7f0f0321": {
+   "c": "内容比较长，消息将发送到新的对话",
+   "n": "session_send_tip_new_chat"
+  },
+  "0x7f0f0322": {
+   "c": "取消置顶",
+   "n": "session_unpin_action"
+  },
+  "0x7f0f0323": {
+   "c": "选择你的出生年月，验证是否进入未成年人模式",
+   "n": "set_age_picker_title_for_settings"
+  },
+  "0x7f0f0324": {
+   "c": "设置",
+   "n": "settings"
+  },
+  "0x7f0f0325": {
+   "c": "分享",
+   "n": "share"
+  },
+  "0x7f0f0326": {
+   "c": "该消息不支持分享",
+   "n": "share_content_filter_status_toast"
+  },
+  "0x7f0f0327": {
+   "c": "分享链接已复制",
+   "n": "share_copy_ok_toast"
+  },
+  "0x7f0f032a": {
+   "c": "生成链接失败",
+   "n": "share_create_error_toast"
+  },
+  "0x7f0f032d": {
+   "c": "当前对话生成链接数达到上限",
+   "n": "share_create_link_exceed_limit_toast"
+  },
+  "0x7f0f032f": {
+   "c": "删除链接后，任何人无法通过该链接访问你分享的对话。",
+   "n": "share_delete_description"
+  },
+  "0x7f0f0330": {
+   "c": "确认删除吗？",
+   "n": "share_delete_title"
+  },
+  "0x7f0f0331": {
+   "c": "分享中的文件不支持展示",
+   "n": "share_file_description"
+  },
+  "0x7f0f0332": {
+   "c": "文件",
+   "n": "share_file_name"
+  },
+  "0x7f0f0333": {
+   "c": "创建会话失败",
+   "n": "share_fork_error_toast"
+  },
+  "0x7f0f0334": {
+   "c": "生成图片",
+   "n": "share_generate_image_button"
+  },
+  "0x7f0f0337": {
+   "c": "回答由 AI 生成，仅供参考",
+   "n": "share_image_footer_alert_v2"
+  },
+  "0x7f0f0338": {
+   "c": "保存失败",
+   "n": "share_image_save_error_toast"
+  },
+  "0x7f0f0339": {
+   "c": "保存图片",
+   "n": "share_image_save_photo"
+  },
+  "0x7f0f033a": {
+   "c": "分享图片",
+   "n": "share_image_title"
+  },
+  "0x7f0f033b": {
+   "c": "选择的消息过长，图片生成失败",
+   "n": "share_image_too_big_toast"
+  },
+  "0x7f0f033d": {
+   "c": "复制链接",
+   "n": "share_link_copy"
+  },
+  "0x7f0f033e": {
+   "c": "复制链接",
+   "n": "share_link_copy_button"
+  },
+  "0x7f0f033f": {
+   "c": "你访问的链接已失效",
+   "n": "share_link_expired_toast"
+  },
+  "0x7f0f0340": {
+   "c": "你访问的链接不存在",
+   "n": "share_link_invalid_toast"
+  },
+  "0x7f0f0341": {
+   "c": "删除失败，请重试",
+   "n": "share_links_manage_delete_failed_toast"
+  },
+  "0x7f0f0342": {
+   "c": "删除成功",
+   "n": "share_links_manage_delete_ok_toast"
+  },
+  "0x7f0f0343": {
+   "c": "暂无共享的链接",
+   "n": "share_list_empty"
+  },
+  "0x7f0f0344": {
+   "c": "重新加载",
+   "n": "share_list_fail"
+  },
+  "0x7f0f0345": {
+   "c": "共享于%1$s",
+   "n": "share_list_share_time"
+  },
+  "0x7f0f0346": {
+   "c": "我共享的链接",
+   "n": "share_list_title"
+  },
+  "0x7f0f0347": {
+   "c": "更多分享",
+   "n": "share_more_button"
+  },
+  "0x7f0f0348": {
+   "c": "暂无可选对话",
+   "n": "share_no_selectable_message"
+  },
+  "0x7f0f0349": {
+   "c": "该对话来自分享，由 AI 生成，请仔细甄别。",
+   "n": "share_preview_top_alert"
+  },
+  "0x7f0f034b": {
+   "c": "存在不支持选中的对话，已全选其余对话",
+   "n": "share_select_all_partial_toast"
+  },
+  "0x7f0f034e": {
+   "c": "已选 %1$d 组",
+   "n": "share_select_count_short"
+  },
+  "0x7f0f034f": {
+   "c": "已选 %1$d 组",
+   "n": "share_select_count_short_plural"
+  },
+  "0x7f0f0350": {
+   "c": "分享到微信",
+   "n": "share_to_we_chat"
+  },
+  "0x7f0f0351": {
+   "c": "该消息暂不支持分享，请稍后再试",
+   "n": "share_uncertain_status_toast"
+  },
+  "0x7f0f0352": {
+   "c": "你的账号已被禁言",
+   "n": "shared_but_mute_toast"
+  },
+  "0x7f0f0353": {
+   "c": "登录后即可开始对话",
+   "n": "shared_but_not_signed_in_toast"
+  },
+  "0x7f0f0354": {
+   "c": "无法获取分享内容，请重试",
+   "n": "shared_files_not_exist_toast"
+  },
+  "0x7f0f0355": {
+   "c": "显示通话字幕",
+   "n": "show_call_captions"
+  },
+  "0x7f0f0356": {
+   "c": "显示菜单",
+   "n": "show_menu"
+  },
+  "0x7f0f0357": {
+   "c": "显示密码",
+   "n": "show_password"
+  },
+  "0x7f0f0358": {
+   "c": "当前网络不佳，请刷新重试",
+   "n": "shumei_captcha_load_failed"
+  },
+  "0x7f0f0359": {
+   "c": "个人信息",
+   "n": "sider_profile"
+  },
+  "0x7f0f035c": {
+   "c": "登录失败",
+   "n": "sign_in_failed_toast"
+  },
+  "0x7f0f0360": {
+   "c": "手机号",
+   "n": "sign_in_mobile_placeholder"
+  },
+  "0x7f0f0361": {
+   "c": "非中国大陆地区请通过其他方式注册/登录",
+   "n": "sign_in_only_from_mainland_toast"
+  },
+  "0x7f0f0362": {
+   "c": "密码错误或账户不存在，请检查后重试",
+   "n": "sign_in_password_email_error_toast"
+  },
+  "0x7f0f0369": {
+   "c": "请安装微信",
+   "n": "sign_in_wechat_not_installed_tip"
+  },
+  "0x7f0f036a": {
+   "c": "非中国大陆地区请通过其他方式注册/登录",
+   "n": "sign_in_with_wechat_only_from_mainland_toast"
+  },
+  "0x7f0f036b": {
+   "c": "注册",
+   "n": "sign_up_button"
+  },
+  "0x7f0f036c": {
+   "c": "确认密码",
+   "n": "sign_up_confirm_password_placeholder"
+  },
+  "0x7f0f036d": {
+   "c": "注册失败，暂不支持该邮箱域名注册，建议使用Gmail、Outlook、Hotmail、Yahoo 等国际通用邮箱进行注册。",
+   "n": "sign_up_email_domain_not_supported"
+  },
+  "0x7f0f036e": {
+   "c": "邮箱已被注册，如果这是你的邮箱，你可以直接登录或找回密码",
+   "n": "sign_up_email_exists_toast"
+  },
+  "0x7f0f036f": {
+   "c": "邮箱注册仅开放非中国大陆地区，中国大陆地区请通过其他方式注册",
+   "n": "sign_up_email_from_mainland_toast"
+  },
+  "0x7f0f0371": {
+   "c": "密码不合法",
+   "n": "sign_up_password_invalid_toast"
+  },
+  "0x7f0f0372": {
+   "c": "密码",
+   "n": "sign_up_password_placeholder"
+  },
+  "0x7f0f0374": {
+   "c": "注册",
+   "n": "sign_up_title"
+  },
+  "0x7f0f0375": {
+   "c": "两次输入的密码不一致",
+   "n": "sign_up_warn_password2_not_same"
+  },
+  "0x7f0f0377": {
+   "c": "部分文件获取失败",
+   "n": "some_files_failed_toast"
+  },
+  "0x7f0f0379": {
+   "c": "正在说话",
+   "n": "speaking"
+  },
+  "0x7f0f037a": {
+   "c": "开启对话",
+   "n": "start_chat"
+  },
+  "0x7f0f037b": {
+   "c": "Empty",
+   "n": "state_empty"
+  },
+  "0x7f0f037c": {
+   "c": "Off",
+   "n": "state_off"
+  },
+  "0x7f0f037d": {
+   "c": "On",
+   "n": "state_on"
+  },
+  "0x7f0f037f": {
+   "c": "停止",
+   "n": "stop"
+  },
+  "0x7f0f0380": {
+   "c": "允许访问外部储存",
+   "n": "storage_permission_app_dialog_title"
+  },
+  "0x7f0f0381": {
+   "c": "请授权该权限以保存图片到相册",
+   "n": "storage_permission_description"
+  },
+  "0x7f0f0382": {
+   "c": "外部储存权限说明",
+   "n": "storage_permission_title"
+  },
+  "0x7f0f0383": {
+   "c": "提交",
+   "n": "submit_call_feedback"
+  },
+  "0x7f0f0384": {
+   "c": "分析一下",
+   "n": "suggestion_prompt_analyze"
+  },
+  "0x7f0f0385": {
+   "c": "解释一下",
+   "n": "suggestion_prompt_explain"
+  },
+  "0x7f0f0386": {
+   "c": "答案是什么",
+   "n": "suggestion_prompt_find_answer"
+  },
+  "0x7f0f0387": {
+   "c": "怎么办",
+   "n": "suggestion_prompt_suggest_solution"
+  },
+  "0x7f0f0388": {
+   "c": "总结",
+   "n": "suggestion_prompt_summarize"
+  },
+  "0x7f0f0389": {
+   "c": "这是什么",
+   "n": "suggestion_prompt_what_is_this"
+  },
+  "0x7f0f038a": {
+   "c": "Switch",
+   "n": "switch_role"
+  },
+  "0x7f0f038b": {
+   "c": "切换至文字",
+   "n": "switch_to_text"
+  },
+  "0x7f0f038c": {
+   "c": "图片中没有文字，去试试 %1$s",
+   "n": "switch_to_vision_banner"
+  },
+  "0x7f0f038d": {
+   "c": "切换至语音",
+   "n": "switch_to_voice"
+  },
+  "0x7f0f038f": {
+   "c": "Tab",
+   "n": "tab"
+  },
+  "0x7f0f0390": {
+   "c": "%1$d percent.",
+   "n": "template_percent"
+  },
+  "0x7f0f0391": {
+   "c": "用户协议及隐私政策",
+   "n": "term_and_privacy_policy"
+  },
+  "0x7f0f0392": {
+   "c": "感谢你使用 DeepSeek。请仔细阅读、充分理解《%1$s》和《%2$s》后再点击同意，我们将按照你同意的条款使用你的个人信息，以便为你更好地服务。",
+   "n": "terms_agree_on_launch"
+  },
+  "0x7f0f0393": {
+   "c": "用户协议",
+   "n": "terms_of_use"
+  },
+  "0x7f0f0395": {
+   "c": "思考内容自动折叠",
+   "n": "thinking_auto_fold"
+  },
+  "0x7f0f0396": {
+   "c": "开启后，思考结束后将自动折叠思考内容",
+   "n": "thinking_auto_fold_desc"
+  },
+  "0x7f0f0397": {
+   "c": "该账号正在通话的设备过多，请重试",
+   "n": "too_many_active_call_devices"
+  },
+  "0x7f0f0398": {
+   "c": "请求过于频繁，请稍后再试",
+   "n": "too_many_request_toast"
+  },
+  "0x7f0f0399": {
+   "c": "查找失败",
+   "n": "tool_find_failed"
+  },
+  "0x7f0f039a": {
+   "c": "已查找到“%1$s”",
+   "n": "tool_find_finished"
+  },
+  "0x7f0f039b": {
+   "c": "未查找到“%1$s”",
+   "n": "tool_find_no_result"
+  },
+  "0x7f0f039c": {
+   "c": "正在查找“%1$s”",
+   "n": "tool_find_wip"
+  },
+  "0x7f0f039d": {
+   "c": "浏览",
+   "n": "tool_open"
+  },
+  "0x7f0f039e": {
+   "c": "浏览失败",
+   "n": "tool_open_failed"
+  },
+  "0x7f0f039f": {
+   "c": "浏览搜索结果",
+   "n": "tool_open_search_result"
+  },
+  "0x7f0f03a0": {
+   "c": "联网搜索暂不可用",
+   "n": "tool_search_failed"
+  },
+  "0x7f0f03a3": {
+   "c": "搜索结果",
+   "n": "tool_search_result"
+  },
+  "0x7f0f03a8": {
+   "c": "请稍后再试",
+   "n": "try_again_toast"
+  },
+  "0x7f0f03a9": {
+   "c": "朗读音色已切换为 %1$s",
+   "n": "tts_voice_switched_toast"
+  },
+  "0x7f0f03ab": {
+   "c": "关闭麦克风",
+   "n": "turn_off_microphone"
+  },
+  "0x7f0f03ad": {
+   "c": "打开麦克风",
+   "n": "turn_on_microphone"
+  },
+  "0x7f0f03af": {
+   "c": "确认解绑",
+   "n": "unbind_wechat_alert_confirm"
+  },
+  "0x7f0f03b0": {
+   "c": "解除绑定后，你将不能通过该微信账号（%1$s）登录 DeepSeek。",
+   "n": "unbind_wechat_alert_message"
+  },
+  "0x7f0f03b1": {
+   "c": "解除微信账号绑定？",
+   "n": "unbind_wechat_alert_title"
+  },
+  "0x7f0f03b2": {
+   "c": "解绑失败，请稍后再试",
+   "n": "unbind_wechat_failed"
+  },
+  "0x7f0f03b3": {
+   "c": "解绑失败，该账号未绑定微信",
+   "n": "unbind_wechat_failed_not_bound"
+  },
+  "0x7f0f03b4": {
+   "c": "解绑失败，请稍后再试 (B%1$d)",
+   "n": "unbind_wechat_fallback_toast"
+  },
+  "0x7f0f03b5": {
+   "c": "解绑成功",
+   "n": "unbind_wechat_succeed"
+  },
+  "0x7f0f03b6": {
+   "c": "撤销",
+   "n": "undo"
+  },
+  "0x7f0f03b7": {
+   "c": "展开",
+   "n": "unfold"
+  },
+  "0x7f0f03b8": {
+   "c": "当前操作暂时无法完成，请稍后再试",
+   "n": "unknown_biz_code_default_toast"
+  },
+  "0x7f0f03b9": {
+   "c": "账号注销失败，请稍后再试 (B%1$d)",
+   "n": "unregister_fallback_toast"
+  },
+  "0x7f0f03ba": {
+   "c": "注销失败，近期你的注销操作过于频繁，请稍后再试",
+   "n": "unregister_too_frequent_toast"
+  },
+  "0x7f0f03bb": {
+   "c": "该格式暂不支持",
+   "n": "unsupported_file_format"
+  },
+  "0x7f0f03bc": {
+   "c": "立即更新",
+   "n": "upgrade_app"
+  },
+  "0x7f0f03bd": {
+   "c": "请删除异常文件再发送",
+   "n": "upload_file_delete_invalid_file_prompt"
+  },
+  "0x7f0f03be": {
+   "c": "未能上传，请重试",
+   "n": "upload_file_failed_toast"
+  },
+  "0x7f0f03bf": {
+   "c": "本地文件",
+   "n": "upload_file_menu_local"
+  },
+  "0x7f0f03c0": {
+   "c": "微信文件",
+   "n": "upload_file_menu_we_chat"
+  },
+  "0x7f0f03c1": {
+   "c": "未提取到文字",
+   "n": "upload_file_status_content_empty"
+  },
+  "0x7f0f03c2": {
+   "c": "可能违反使用规范",
+   "n": "upload_file_status_content_filter"
+  },
+  "0x7f0f03c3": {
+   "c": "解析失败",
+   "n": "upload_file_status_failed"
+  },
+  "0x7f0f03c5": {
+   "c": "已上传",
+   "n": "upload_file_status_sucess"
+  },
+  "0x7f0f03c6": {
+   "c": "上传中...",
+   "n": "upload_file_status_uploading"
+  },
+  "0x7f0f03c7": {
+   "c": "授权更多可访问图片",
+   "n": "upload_panel_add_more_photos"
+  },
+  "0x7f0f03c8": {
+   "c": "相册",
+   "n": "upload_panel_album"
+  },
+  "0x7f0f03c9": {
+   "c": "拍照",
+   "n": "upload_panel_camera"
+  },
+  "0x7f0f03cb": {
+   "c": "文件",
+   "n": "upload_panel_file"
+  },
+  "0x7f0f03cd": {
+   "c": "正在上传",
+   "n": "uploading"
+  },
+  "0x7f0f03ce": {
+   "c": "由于违规次数过多，你的账号已被临时停用",
+   "n": "user_is_banned_toast"
+  },
+  "0x7f0f03cf": {
+   "c": "手机验证码登录",
+   "n": "verification_code_login_button"
+  },
+  "0x7f0f03d0": {
+   "c": "验证码登录",
+   "n": "verification_code_login_title"
+  },
+  "0x7f0f03d1": {
+   "c": "验证码",
+   "n": "verification_code_placeholder"
+  },
+  "0x7f0f03d2": {
+   "c": "验证账号",
+   "n": "verify_account"
+  },
+  "0x7f0f03d3": {
+   "c": "为保护账号安全，请完成验证后继续登录",
+   "n": "verify_account_description"
+  },
+  "0x7f0f03d4": {
+   "c": "暂不支持该运营商手机号验证，如需帮助，请%1$s",
+   "n": "verify_disabled_mobile_not_supported"
+  },
+  "0x7f0f03d5": {
+   "c": "验证并登录",
+   "n": "verify_to_login"
+  },
+  "0x7f0f03d6": {
+   "c": "擅长理解图片内容",
+   "n": "vision_model_description"
+  },
+  "0x7f0f03d7": {
+   "c": "识图模式",
+   "n": "vision_model_name"
+  },
+  "0x7f0f03d8": {
+   "c": "按住说话",
+   "n": "voice_input_button"
+  },
+  "0x7f0f03d9": {
+   "c": "语音发送失败",
+   "n": "voice_send_error"
+  },
+  "0x7f0f03de": {
+   "c": "朗读音色",
+   "n": "voice_switch_bottom_sheet_title"
+  },
+  "0x7f0f03df": {
+   "c": "确认",
+   "n": "voice_switch_confirm"
+  },
+  "0x7f0f03e0": {
+   "c": "微信登录的账号与当前账号不一致",
+   "n": "we_chat_account_mismatch_toast"
+  },
+  "0x7f0f03e2": {
+   "c": "微信登录失败，请稍后再试 (B%1$d)",
+   "n": "wechat_fallback_toast"
+  },
+  "0x7f0f03e3": {
+   "c": "微信登录",
+   "n": "wechat_login_button"
+  },
+  "0x7f0f03e5": {
+   "c": "验证失败，该手机号已绑定其他微信号",
+   "n": "wechat_mobile_verification_mobile_bound_toast"
+  },
+  "0x7f0f03e6": {
+   "c": "验证失败，该微信号已绑定其他手机号",
+   "n": "wechat_mobile_verification_we_chat_bound_toast"
+  },
+  "0x7f0f03e8": {
+   "c": "登录失败，登录信息已失效，请重试",
+   "n": "wechat_sign_in_swap_code_invalid_error"
+  },
+  "0x7f0f03ed": {
+   "c": "今天有什么可以帮到你？",
+   "n": "welcome_message_title_unified"
+  }
+ }
+}

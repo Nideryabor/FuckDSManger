@@ -147,14 +147,129 @@ public final class GmMusicDj {
      * <p>要点：**只说怎么做，不解释内部机制**（模型不需要知道我们有 hook）；
      * 标记写法要短、要能一眼抄对（所以给了例子 + 明确"不要写在代码块里"）。
      */
+    /**
+     * 提示词里那段「怎么点歌」的约定 🐲
+     *
+     * <p>★★ 2026-11-07（3.76.4）· **在线 / 本地明确分开**（主人拍板）。
+     * 拆开之前只有 {@code ⟦DJ:⟧}，而它一律走网易云搜索 ——
+     * 主人说「来一首红色高跟鞋，本地版」，模型只能输出 {@code ⟦DJ:红色高跟鞋-蔡健雅⟧}，
+     * 于是**永远是在线播放**，本地点播这条路根本不存在。
+     *
+     * <p>⇒ 现在写清楚两族：
+     * <ul>
+     *   <li>{@code ⟦DJ:歌名-歌手⟧} → **在线**（网易云）</li>
+     *   <li>{@code ⟦LOCAL:N⟧} / {@code ⟦LOCAL:歌名-歌手⟧} → **本地曲库**，查不到就说查不到，
+     *       <b>不许偷偷换成在线</b></li>
+     * </ul>
+     * 本地曲库为空时**整段不出现**（没有的歌单就别提，免得模型编）。
+     */
     public static String promptSection() {
-        return "\n\n【点歌】你想给用户放首歌的时候，在回复里**另起一行**写：\n"
-                + "\u27E6DJ:歌名-歌手\u27E7\n"
-                + "例如：\u27E6DJ:晴天-周杰伦\u27E7 或 \u27E6DJ:海阔天空-Beyond\u27E7"
-                + "（只知道歌名、不确定歌手时，只写歌名也行）。\n"
-                + "这一行**不会显示给用户看**，会变成「♪ 正在给你放：歌名 - 歌手」；"
-                + "若想连这行提示都不要（悄悄放），写成 \u27E6DJ:歌名-歌手|hidden\u27E7。\n"
-                + "⚠️ 只在**用户明确想听歌**时用；不要把它写进代码块/引号里，也不要解释这个标记。\n";
+        StringBuilder b = new StringBuilder();
+        b.append("\n\n【点歌·在线】你想给用户放一首**网上的**歌时，在回复里**另起一行**写：\n")
+                .append("\u27E6DJ:歌名-歌手\u27E7\n")
+                .append("例如：\u27E6DJ:晴天-周杰伦\u27E7 或 \u27E6DJ:海阔天空-Beyond\u27E7")
+                .append("（只知道歌名、不确定歌手时，只写歌名也行）。\n")
+                .append("这一行**不会显示给用户看**，会变成「♪ 正在给你放：歌名 - 歌手」；")
+                .append("若想连这行提示都不要（悄悄放），写成 \u27E6DJ:歌名-歌手|hidden\u27E7。\n")
+                .append("⚠️ 只在**用户明确想听歌**时用；不要把它写进代码块/引号里，也不要解释这个标记。\n");
+
+        // ★ 本地那一半：只看曲库有没有歌
+        //
+        //  ⚠️ 这里原来用 `GmLocalMusic.all(ctx)` —— 那是读 UI 推来的旧 JSON，
+        //  现在曲库真源是「宿主播出来的授权目录」⇒ 必须用 scan()。
+        //  （用 all() 会导致：本地明明有歌，提示词里却不出现「点歌·本地」这一段）
+        int n = 0;
+        try {
+            android.content.Context ctx = GmUtil.app();
+            n = GmLocalMusic.scan(ctx).size();
+        } catch (Throwable ignore) {
+        }
+        if (n > 0) {
+            b.append("\n【点歌·本地】用户的手机里存了 ").append(n).append(" 首歌（就是上文「本地歌单」那份）。\n")
+                    .append("想放**本地的**歌时，**另起一行**写：\n")
+                    .append("\u27E6LOCAL:序号\u27E7  或  \u27E6LOCAL:歌名-歌手\u27E7\n")
+                    .append("例如：\u27E6LOCAL:3\u27E7 或 \u27E6LOCAL:红色高跟鞋-蔡健雅\u27E7。\n")
+                    .append("这一行同样不会显示，会变成「♪ 正在给你放（本地）：歌名 - 歌手」；")
+                    .append("加 |hidden 可悄悄放。\n")
+                    .append("⚠️ **本地和在线是两件事**：\n")
+                    .append("  · 用户说「本地版 / 我手机里的 / 存的」⇒ 用 \u27E6LOCAL:\u27E7\n")
+                    .append("  · 用户说的歌**不在上面的本地歌单里** ⇒ 老实说「本地没有这首」，")
+                    .append("**不要**改用 \u27E6DJ:\u27E7 偷偷放到网上那首\n")
+                    .append("  · 其余情况（没说本地）⇒ 用 \u27E6DJ:\u27E7\n");
+        }
+        return b.toString();
+    }
+
+    /**
+     * 处理一个**本地**点歌标记（{@code ⟦LOCAL:序号⟧} / {@code ⟦LOCAL:歌名-歌手⟧}）。
+     *
+     * <p>与 {@link #handle} 完全不同的一条路：**不联网、不搜索**，
+     * 只在 UI 推来的曲库里找；找不到就明说找不到（绝不回落在线）。
+     *
+     * @param body 标记里的原文（可能带 {@code |hidden}）
+     * @return 要显示的那一行；{@code null} = 什么都不显示
+     */
+    public static String handleLocal(String body) {
+        try {
+            if (body == null) return null;
+            String spec = body.trim();
+            boolean hidden = false;
+            int bar = body.indexOf('|');
+            if (bar >= 0) {
+                spec = body.substring(0, bar).trim();
+                for (String f : body.substring(bar + 1).split("\\|")) {
+                    if (FLAG_HIDDEN.equalsIgnoreCase(f.trim())) hidden = true;
+                }
+            }
+            if (spec.isEmpty()) return null;
+
+            Context ctx = GmUtil.app();
+            if (ctx == null) return null;
+            // 这里**不看** K_OFF（那个开关是「让不让模型点歌」的总闸，
+            // 本地这半边也应该受它管）—— 保持一致，关掉就全不放
+            if (!on()) {
+                GmUtil.logOnce("dj.off", "收到本地点歌标记但开关是关的（" + K_OFF + "）—— 已吞掉");
+                return null;
+            }
+
+            GmLocalMusic.Item it = GmLocalMusic.pick(ctx, spec);
+            if (it == null) {
+                GmUtil.log("【Music】本地曲库里没有 → " + spec + "（不回落在线）");
+                return hidden ? null : ("本地没有这首歌：" + spec);
+            }
+
+            final String dedupKey = (hidden ? "HL|" : "L|") + it.n + "|" + it.path;
+            if (recentlyHandled(dedupKey)) {
+                // ★★★ 2026-11-07 · **去重不能拦住真正的切歌**
+                //
+                //  主人的最终症状：「切回海阔天空没声、卡片还是红色高跟鞋、
+                //  切后台回来又能放、有时灵有时不灵」——
+                //  根因就是这里：15 秒窗口内切回同一首，直接 return 了，
+                //  **播放器一行都没跑**（所以界面连标题都不变）。
+                //
+                //  去重的用途是挡「同一条消息流式渲染重复触发」；
+                //  判据：**只要当前正在放的不是这一首，就说明用户是真心想切**
+                //  ⇒ 必须真的去播，不能只回一句话。
+                if (!GmMusicPlayer.isPlayingLocalUri(it.source())) {
+                    GmUtil.log("【Music】15 秒内处理过同一条，但当前没在放这首 ⇒ 仍然执行切歌："
+                            + it.label());
+                } else {
+                    GmUtil.logOnce("dj.dupL." + Math.abs(dedupKey.hashCode()),
+                            "同一条本地点歌被重复渲染且**确实正在放** ⇒ 跳过：" + dedupKey);
+                    return hidden ? null : ("♪ 正在给你放（本地）：" + it.label());
+                }
+            }
+
+            GmMusicPlayer pl = GmMusicPlayer.get();
+            if (pl == null) return hidden ? null : ("♪ 正在给你放（本地）：" + it.label());
+            String pr = pl.playLocal(it);
+            GmUtil.log("【Music】点歌·本地 → " + pr);
+
+            return hidden ? null : ("♪ 正在给你放（本地）：" + it.label());
+        } catch (Throwable t) {
+            GmUtil.logFail("dj.local", t);
+            return null;
+        }
     }
 
     /**
@@ -210,9 +325,25 @@ public final class GmMusicDj {
             //   （流式/滚动会让同一条消息 rebuild 很多次，见 DEDUP_MS 的说明）
             final String dedupKey = (hidden ? "H|" : "") + song + "|" + artist;
             if (recentlyHandled(dedupKey)) {
-                GmUtil.logOnce("dj.dup." + Math.abs(dedupKey.hashCode()),
-                        "同一条点歌被重复渲染 ⇒ 跳过（不重复搜/放/吐司）：" + dedupKey);
-                return show;
+                // ★ 同本地点歌那条（2026-11-07）：**去重不能拦住真正的切歌**。
+                //   15 秒内切回同一首在线歌，如果当前放的**不是它**，仍要重新搜/放。
+                boolean playingIt = false;
+                try {
+                    GmMusicPlayer gp = GmMusicPlayer.get();
+                    if (gp != null) {
+                        GmMusicPlayer.Track cur = gp.curTrack();
+                        playingIt = cur != null && gp.isPlaying()
+                                && eqPart(cur.name, song) && eqPart(cur.artist, artist);
+                    }
+                } catch (Throwable ignore) {
+                }
+                if (playingIt) {
+                    GmUtil.logOnce("dj.dup." + Math.abs(dedupKey.hashCode()),
+                            "同一条点歌被重复渲染且正在放 ⇒ 跳过：" + dedupKey);
+                    return show;
+                }
+                GmUtil.log("【Music】15 秒内处理过同一条在线点歌，但当前没在放它 ⇒ 仍然执行："
+                        + dedupKey);
             }
 
             // ── ④ 搜 → 选 → 放（回调在主线程）──
@@ -348,5 +479,13 @@ public final class GmMusicDj {
         } catch (Throwable t) {
             return null;
         }
+    }
+
+    /** 忽略大小写/空白的相等判断（给"是否正在放这首"用）。 */
+    private static boolean eqPart(String a, String b) {
+        String x = a == null ? "" : a.replaceAll("\\s", "").toLowerCase();
+        String y = b == null ? "" : b.replaceAll("\\s", "").toLowerCase();
+        if (x.isEmpty() || y.isEmpty()) return false;
+        return x.equals(y) || x.contains(y) || y.contains(x);
     }
 }

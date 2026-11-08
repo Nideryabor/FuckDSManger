@@ -101,6 +101,14 @@ object Tree {
             It(ctx.getString(R.string.tree_031), ctx.getString(R.string.tree_032), K.SUB, sub = "bg"),
             It(ctx.getString(R.string.tree_033), ctx.getString(R.string.tree_034),
                 K.SUB, sub = "glass"),
+            // ★★ 2026-11-07 · 「宿主の终极美化策略」—— 替换宿主**所有**资源文字 / 图片
+            //
+            //   数据来源是**静态提取**（tools/res_dump.py 扫全库硬编码 id）：
+            //   string 747/762、drawable 204/266，打进 res/raw/host_res.json。
+            //   —— 一开始想做"运行时抓"，真机实测 60 秒只有 44 条（用户得把每个界面点一遍），
+            //      所以换成静态提取，一次到位。
+            It(ctx.getString(R.string.tree_260), ctx.getString(R.string.tree_261),
+                K.SUB, sub = "resbeauty"),
             // ★ 2026-10-10（3.64.0）拆「悬浮全家桶」：
             //   便签**上移一层**到这儿（主人：「把里面的便签功能往上移一层」）；
             //   而"悬浮迷你条"那一项**删掉了** —— 它的家在**音乐页**（那儿有开关 + 一个「悬浮条设置」入口），

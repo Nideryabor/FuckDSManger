@@ -17,10 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Alignment
@@ -62,14 +58,32 @@ object FallbackHost {
 
     private val C_CARD = Color(0xFF1E1E22)
     private val C_TITLE = Color(0xFFFFFFFF)
-    private val C_BODY = Color(0xFFB0B0B8)
     private val C_PRIMARY = Color(0xFF3D7EFF)
     private val C_SECOND = Color(0xFF33333A)
+    /** 橙：root 用户（隐藏应用列表那条）。 */
     private val C_WARN = Color(0xFFFF8A65)
+    /** 绿：npatch 用户（暂时找不到原因）。 */
+    private val C_GREEN = Color(0xFF6BCB77)
+    /** 青：行动指引。 */
+    private val C_CYAN = Color(0xFF4DD0E1)
 
-    /** 那句排查指引 —— 主人原话，一字不改。 */
-    private const val HINT =
-        "你能看到这里说明模块成功注入但是拉不起来，请检查隐藏应用列表是否排除了模块主包"
+    // ══════════════════════════════════════════════════════════════════
+    //  文案（2026-11-07 主人定稿：**两个弹窗合并成一个**）
+    //
+    //  旧形态是「先显示一句含糊的失败说明 → 点了按钮才换成排查指引」，
+    //  问题是：主人第一次看到时**什么有用信息都没有**，必须点一下才知道该查什么，
+    //  而点一下又正好会重试拉起（把状态搅得更乱）。
+    //  ⇒ 现在**一次全摊开**，点按钮就只是重试。
+    //
+    //  ⚠️ 这三段必须和 FdmFallbackDialog 里的 T_* 常量**逐字一致**
+    //     （两份实现 = 两条渲染路径，但只能有一份文案）。
+    // ══════════════════════════════════════════════════════════════════
+    private const val T_TITLE = "貌似拉起模块出错了……"
+    private const val T_ROOT =
+        "root用户请单独看看是不是隐藏应用列表把模块排除了，尽量选择对宿主隐藏模块，" +
+            "这样数美启动最多探测到有隐藏应用列表，不会上报包名"
+    private const val T_NPATCH = "修补(npatch)用户暂时找不到可能的原因"
+    private const val T_ACT = "点击下面的按钮重试"
 
     /**
      * 把 Compose 内容装进 {@code cv}。
@@ -89,9 +103,6 @@ object FallbackHost {
 
     @Composable
     private fun FallbackCard(reason: String?, onLaunch: Runnable?, onHost: Runnable?) {
-        // 点过「拉起模块 UI」之后就把排查指引摊开
-        var showHint by remember { mutableStateOf(false) }
-
         Column(
             Modifier
                 .fillMaxWidth()
@@ -100,20 +111,16 @@ object FallbackHost {
                 .padding(horizontal = 22.dp, vertical = 20.dp)
         ) {
             Text(
-                text = "FuckDSManger",
+                text = T_TITLE,
                 color = C_TITLE,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(Modifier.height(10.dp))
-
-            Text(
-                text = if (showHint) HINT else bodyOf(reason),
-                color = if (showHint) C_WARN else C_BODY,
-                fontSize = if (showHint) 12.sp else 13.sp,
-                lineHeight = 18.sp
-            )
+            // ── 三段说明（一次全摊开，不再"点一下才显示"）──
+            Note(T_ROOT, C_WARN)
+            Note(T_NPATCH, C_GREEN)
+            Note(T_ACT, C_CYAN)
 
             Spacer(Modifier.height(18.dp))
 
@@ -126,13 +133,23 @@ object FallbackHost {
                     bg = C_PRIMARY,
                     modifier = Modifier.weight(1f)
                 ) {
-                    // 先给信息，再动作 —— 万一重试又把进程搞没了，
-                    // 至少这句话已经显示出来了。
-                    showHint = true
+                    // 文案已经一次摊开了 ⇒ 按钮只做重试这一件事
                     onLaunch?.run()
                 }
             }
         }
+    }
+
+    /** 一段带颜色的说明（段落间距靠 padding 而不是 Spacer，省一层布局）。 */
+    @Composable
+    private fun Note(text: String, color: Color) {
+        Text(
+            text = text,
+            color = color,
+            fontSize = 13.sp,
+            lineHeight = 19.sp,
+            modifier = Modifier.padding(top = 12.dp)
+        )
     }
 
     @Composable
@@ -158,8 +175,4 @@ object FallbackHost {
             )
         }
     }
-
-    private fun bodyOf(reason: String?): String =
-        "模块已注入，但界面没能拉起来。" +
-            if (reason.isNullOrEmpty()) "" else "\n（$reason）"
 }

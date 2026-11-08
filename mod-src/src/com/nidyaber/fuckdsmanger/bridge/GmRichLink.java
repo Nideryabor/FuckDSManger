@@ -58,11 +58,15 @@ public final class GmRichLink {
      *  <p>2.5.2 `in` · 2.6.x `jn` → `kn` · 2.7.1 `kn` · **2.7.2 `qn`**
      *  <p>★ 2026-10-31：`qn` 逐条对上了 —— `implements Appendable` / `a:StringBuilder`
      *  / `b:ArrayList` / `h(Lho6;)I`（pushLink）/ `e(String)`（append）/ `f()`（pop）/ `k()Lsn;` */
-    private static final String[] CAND_IN  = {"qn", "kn", "jn", "in"};
+    private static final String[] CAND_IN  = {"rn", "qn", "kn", "jn", "in"};
+    // ★ 2026-11-07（3.76.0）· 2.7.5 = **rn**（Appendable + a:StringBuilder + h(Lno6;)I + e/f/k）
     /** LinkAnnotation.Clickable —— <init>(String tag, styles, listener)
-     *  <p>2.6.2 `wi6` · 2.7.1 `em6` · **2.7.2 `fo6`**（串 `LinkAnnotation.Clickable(tag=` 落在它身上；
-     *  `.super Lho6;`、字段 `a:String` / `b:Lgxa;` / `c:Lio6;`） */
-    private static final String[] CAND_RI6 = {"fo6", "em6", "wi6", "xi6"};
+     *  <p>2.6.2 `wi6` · 2.7.1 `em6` · 2.7.2 `fo6` · **2.7.5 `lo6`**
+     *  <p>⚠️ 2.7.5 里 `lo6`(Clickable) 与 `mo6`(Url) **构造器签名逐位相同**
+     *  `(String, nxa=TextLinkStyles, oo6=Listener)`、同父 `no6` ⇒ 结构上分不开，
+     *  只能靠类里的 toString 常量：lo6 有 "LinkAnnotation.Clickable(tag="、
+     *  mo6 有 "LinkAnnotation.Url(url=" ⇒ **顺序必须先 Clickable**，别按字母排。 */
+    private static final String[] CAND_RI6 = {"lo6", "fo6", "em6", "wi6", "xi6"};
 
     // ★★ 2026-10-31 大改：**只猜两个名字，其余全部结构派生**
     //

@@ -2,12 +2,31 @@
 <!-- 人话（默认）。键名规则：语义前缀_编号；值就是原文，方便拿 MT 认。 -->
 <resources>
     <string name="app_name">FuckDSManger</string>
+    <string name="bbl_001">开启 AI 气泡背景</string>
+    <string name="bbl_002">给 AI 回复加底色或图片</string>
+    <string name="bbl_003">背景类型</string>
+    <string name="bbl_004">纯色</string>
+    <string name="bbl_005">自定义图片</string>
+    <string name="bbl_006">开启用户气泡背景</string>
+    <string name="bbl_007">给自己发的消息加底色或图片</string>
+    <string name="bbl_008">纯色用下面的颜色；图片用下面选的图</string>
+    <string name="bbl_009">选一张图（选完自动切到「自定义图片」）</string>
+    <string name="bbl_010">生效方式</string>
+    <string name="bbl_011">气泡是在消息绘制时现画的：改开关或颜色请退出会话再进（或重启宿主）；换图是实时的。</string>
+    <string name="bbl_012">图片铺法</string>
+    <string name="bbl_013">只在「纯色 / 图片」选图片时有用</string>
+    <string name="bbl_014">等比裁切</string>
+    <string name="bbl_015">拉伸（会变形）</string>
+    <string name="bbl_016">等比适应（留边）</string>
+    <string name="bbl_017">平铺</string>
     <string name="c_back">返回</string>
     <string name="c_jump_go">去「系统提示词」看看 ›</string>
     <string name="c_jump_hint">猜你想跳转</string>
     <string name="c_more">更多</string>
     <string name="c_nav_about">关于</string>
     <string name="c_nav_home">首页</string>
+    <string name="c_night_off">切到白天</string>
+    <string name="c_night_on">切到夜间</string>
     <string name="c_save">保存</string>
     <string name="conf_001">总开关：关掉就完全不动宿主背景</string>
     <string name="conf_002" formatted="false">越小越透（25 = 露出 25%）</string>
@@ -252,6 +271,61 @@
     <string name="hlp_005">这个功能是怎么工作的、怎么让它生效、不生效怎么查</string>
     <string name="hlp_006">打开</string>
     <string name="hlp_007">（详细说明已搬到页面末尾的「功能原理 &amp; 帮助」</string>
+    <string name="hp_001">宿主文件夹授权</string>
+    <string name="hp_002">这个文件夹授权是所有「读写共享文件」功能的公共前提，很重要：</string>
+    <string name="hp_003">① 本地音乐曲库 ② 美化策略里的图片预览 ③ 以后的一键导出/导入 —— 全都靠它。
+授权记在宿主名下，重启也还在。</string>
+    <string name="hp_004" formatted="false">当前已授权：%1$s</string>
+    <string name="hp_005">还没授权 —— 下面这些功能现在用不了</string>
+    <string name="hp_006">换一个文件夹</string>
+    <string name="hp_007">去授权（推荐先做这一步）</string>
+    <string name="hp_008">换一个文件夹（宿主）</string>
+    <string name="hp_009">本应用也要授权一次：SAF 的授权记在 uid 上，宿主拿到 ≠ 我们拿到。不授权的话，图片预览 / 导出 / 导入都会读不到。</string>
+    <string name="hp_010" formatted="false">本应用已授权：%1$s</string>
+    <string name="hp_011">本应用还没授权 —— 图片预览/导出/导入读不到文件</string>
+    <string name="hp_012">换一个文件夹（本应用）</string>
+    <string name="hp_013">去授权（选同一个文件夹！）</string>
+    <string name="lm_001">本地音乐</string>
+    <string name="lm_002">曲库目录</string>
+    <string name="lm_003">曲库就是你在上面授权的那个文件夹（含子目录）。mp3 和同名 .lrc 放进去即可 —— **扫描在宿主进程里做**，因为读取权记在它名下。</string>
+    <string name="lm_004">"共 "</string>
+    <string name="lm_005">" 首 · 有歌词 "</string>
+    <string name="lm_006">" 首 · 已勾选 "</string>
+    <string name="lm_007">扫描中…</string>
+    <string name="lm_008">重新扫描</string>
+    <string name="lm_009">导入文件</string>
+    <string name="lm_010">还没有歌。先点「选择文件夹」授权一个目录，再用「导入文件」把 mp3 选进来，</string>
+    <string name="lm_011">或者你自己把文件放进那个目录，然后点「重新扫描」。</string>
+    <string name="lm_012">进系统提示词</string>
+    <string name="lm_013">自动追加到系统提示词</string>
+    <string name="lm_014">开着：每次发消息都把「歌名 - 歌手」列表带上（按下面的勾选）。</string>
+    <string name="lm_015">关掉：只在提示词里写了 {local_music} 的地方出现。</string>
+    <string name="lm_016">每首写成「序号. 歌名 - 歌手」，序号就是以后 [[play_local:N]] 里的 N，</string>
+    <string name="lm_017">按「曲库顺序 ∩ 勾选」编号；勾选只影响提示词，不动磁盘上的文件。</string>
+    <string name="lm_018">曲库</string>
+    <string name="lm_019">"已勾选 "</string>
+    <string name="lm_020">全选</string>
+    <string name="lm_021">全不选</string>
+    <string name="lm_022">这里空的 —— 先去上面授权目录、导入文件。</string>
+    <string name="lm_023">未知歌手</string>
+    <string name="lm_024">有歌词</string>
+    <string name="lm_025">无歌词</string>
+    <string name="lm_030">本地音乐 ›</string>
+    <string name="lm_031">扫描 / 导入 / 勾选进系统提示词（变量 {local_music}）</string>
+    <string name="lm_032">宿主进程读不了 /sdcard 里的歌（它没有媒体音频权限），所以要让**它自己**去系统里挑一个文件夹：选完我把读取权长期记在它名下，重启也还在。</string>
+    <string name="lm_033">已请宿主拉起系统选择器 —— 请在宿主界面上选好文件夹</string>
+    <string name="lm_034">选择文件夹（推荐先做这一步）</string>
+    <string name="lm_035">宿主的曲库是空的 —— 先点上面「选择文件夹」授权一个放歌的目录，再把 mp3 丢进去</string>
+    <string name="lm_036">已请宿主拉起文件选择器 —— 选完会自动拷进曲库目录</string>
+    <string name="lm_037">曲库 = 你授权的那个文件夹</string>
+    <string name="lm_040">已请宿主拉起文件选择器 —— 选一个 .lrc 就行</string>
+    <string name="lm_041">已请宿主拉起图片选择器 —— 选一张图就行</string>
+    <string name="lm_042">已恢复成「同名文件自动配对」</string>
+    <string name="lm_043">点条目打开的是单曲设置：可以给这首歌单独指定歌词 / 封面文件。不指定就按同名文件自动配对（同名 .lrc、同名图片）。</string>
+    <string name="lm_044">指定歌词文件（.lrc）</string>
+    <string name="lm_045">还没授权文件夹 —— 去**首页**的「宿主文件夹授权」那里选一个（选完回来刷新）</string>
+    <string name="lm_046">文件夹授权在**首页**那张卡里管理（这里只显示状态）</string>
+    <string name="lm_047">💡 本功能的思路由网友提出，由尼尼照着实现。</string>
     <string name="mlg_001">服务端没给凭证（MUSIC_U）——登录没成功，或这版接口变了</string>
     <string name="mlg_002">已把凭证交给宿主，等它回执…</string>
     <string name="mlg_003">宿主没回执（它可能没在跑）</string>
@@ -410,7 +484,7 @@
     <string name="pg_028">让宿主跑一遍 status 动作并把结果回传</string>
     <string name="pg_029">改完点保存，重启 App 生效；均会自动备份原值，点全部恢复可还原</string>
     <string name="pg_030">重置灰度（服务器重下发）</string>
-    <string name="pg_031">删掉宿主里的灰度缓存（kv_remote_settings_*）⇒ 宿主下次启动会向服务器重新拉一份。比"从备份还原"更彻底。</string>
+    <string name="pg_031">"删掉宿主里的灰度缓存（kv_remote_settings_*）⇒ 宿主下次启动会向服务器重新拉一份。比&quot;从备份还原&quot;更彻底。"</string>
     <string name="pg_032">重新读取宿主当前值</string>
     <string name="pg_033">让宿主再回读一遍</string>
     <string name="pg_034">最近一次动作</string>
@@ -424,9 +498,51 @@
     <string name="pg_042">通话页留驻：已开启</string>
     <string name="pg_043">通话页留驻：已关闭</string>
     <string name="pg_044">服务端报错时不让通话页自动消失 —— 钩住 ChatCallHost 的渲染闸门（CallPageViewModel.a）</string>
+    <string name="pg_045">搜歌 / 播放 / 歌词 —— 免登录 320k</string>
     <string name="pg_047">通话功能</string>
     <string name="pg_048">通话页留驻</string>
-    <string name="pg_045">搜歌 / 播放 / 歌词 —— 免登录 320k</string>
+    <string name="rb_001">宿主の终极美化策略</string>
+    <string name="rb_002" formatted="false">已改 文字 %1$d 条 · 图片 %2$d 条</string>
+    <string name="rb_003">刷新状态</string>
+    <string name="rb_004">全部还原</string>
+    <string name="rb_005">搜资源名 或 当前文字</string>
+    <string name="rb_006">文字</string>
+    <string name="rb_007">图片</string>
+    <string name="rb_008">已改</string>
+    <string name="rb_009">没有匹配的条目</string>
+    <string name="rb_010" formatted="false">宿主当前显示：%1$s</string>
+    <string name="rb_011">改完重启宿主（或重进页面）生效。留空保存 = 还原这一条。</string>
+    <string name="rb_012">还原</string>
+    <string name="rb_013">文字全部恢复宿主原文，图片全部删掉。这个操作不可撤销。</string>
+    <string name="rb_014">确定还原</string>
+    <string name="rb_015">当前显示：宿主原图</string>
+    <string name="rb_016">（替换图读不出来，可能已被清理）</string>
+    <string name="rb_017" formatted="false">已替换为：%1$s</string>
+    <string name="rb_018">这是宿主自己的图标，可以直接换成你喜欢的图。</string>
+    <string name="rb_019">换一张</string>
+    <string name="rb_020">替换这张图</string>
+    <string name="rb_021">正在让宿主把这张图画出来…</string>
+    <string name="rb_022">宿主当前的样子（原图）</string>
+    <string name="rb_023">宿主没能把这张图画出来</string>
+    <string name="rb_024">重试</string>
+    <string name="rb_025">⚠️ 图片改完必须重启宿主才生效（Compose 把图缓存在内存里）</string>
+    <string name="rb_026">立即重启宿主</string>
+    <string name="rb_027">说明：图标位很小（16~24dp），且多数是正方形。长图会被自动居中裁成正方形再缩小，所以换图标请用【小分辨率正方形图】（建议 128×128 以内、接近 1:1），效果最好。改完必须重启宿主才生效。</string>
+    <string name="rb_028">导出备份</string>
+    <string name="rb_029">导入备份</string>
+    <string name="rb_030">把当前文字 + 图片打包成一个 zip，写进已授权的宿主文件夹。</string>
+    <string name="rb_031">文件名可以改。导出后你在那个文件夹里能看到它，可以直接发给别人。</string>
+    <string name="rb_032">正在导出：</string>
+    <string name="rb_033">导出</string>
+    <string name="rb_034">读不到那个文件（可能没给权限）</string>
+    <string name="rb_035">已提交导入，稍等看结果</string>
+    <string name="rb_036">导入失败：</string>
+    <string name="rb_037">授权文件夹里还没有备份包。
+可以先「导出备份」，或者用下面的按钮从别处选一个。</string>
+    <string name="rb_038">点一个包导入（会整体替换当前配置和图片）：</string>
+    <string name="rb_039">正在导入：</string>
+    <string name="rb_040">如果备份包在别的地方（比如微信下载的）：</string>
+    <string name="rb_041">从系统里选一个 zip</string>
     <string name="rows_001">"宿主： "</string>
     <string name="rows_002">选颜色…</string>
     <string name="rows_003">快捷</string>
@@ -775,24 +891,6 @@
     <string name="tree_196">图片</string>
     <string name="tree_197">渐变</string>
     <string name="tree_198">摄像头</string>
-    <!-- 气泡背景（3.74.7）—— 两类气泡各自「纯色 / 图片」 -->
-    <string name="bbl_001">开启 AI 气泡背景</string>
-    <string name="bbl_002">给 AI 回复加底色或图片</string>
-    <string name="bbl_003">背景类型</string>
-    <string name="bbl_004">纯色</string>
-    <string name="bbl_005">自定义图片</string>
-    <string name="bbl_006">开启用户气泡背景</string>
-    <string name="bbl_007">给自己发的消息加底色或图片</string>
-    <string name="bbl_008">纯色用下面的颜色；图片用下面选的图</string>
-    <string name="bbl_009">选一张图（选完自动切到「自定义图片」）</string>
-    <string name="bbl_010">生效方式</string>
-    <string name="bbl_011">气泡是在消息绘制时现画的：改开关或颜色请退出会话再进（或重启宿主）；换图是实时的。</string>
-    <string name="bbl_012">图片铺法</string>
-    <string name="bbl_013">只在「纯色 / 图片」选图片时有用</string>
-    <string name="bbl_014">等比裁切</string>
-    <string name="bbl_015">拉伸（会变形）</string>
-    <string name="bbl_016">等比适应（留边）</string>
-    <string name="bbl_017">平铺</string>
     <string name="tree_199">摄像头方向</string>
     <string name="tree_200">后置</string>
     <string name="tree_201">前置</string>
@@ -859,4 +957,6 @@
     <string name="tree_257">本地数据库</string>
     <string name="tree_258">防撤回备份库：共 N 条 / 占用 N KB（宿主回读）</string>
     <string name="tree_259">清空</string>
+    <string name="tree_260">宿主の终极美化策略</string>
+    <string name="tree_261">替换宿主里所有资源的文字和图片（747 条文字 / 204 张图，宿主升级也不失效）</string>
 </resources>

@@ -210,6 +210,8 @@ final class GmMiniBarView extends FrameLayout {
     private final List<Long> lrcMs = new ArrayList<Long>();
     private int curLine = -1;
     private boolean lrcFollow = true;
+    /** 歌词/封面缓存代次（单曲设置改过就变） */
+    private int lrcVer = -1;
     private boolean lrcJustBuilt = false;
     private Runnable lrcUnlock = null;
 
@@ -227,6 +229,9 @@ final class GmMiniBarView extends FrameLayout {
     // ── 其它 ──
     private long coverWanted = -1L;
     private int curDur = 0;
+
+    /** 逐帧跟踪开关（CMD `bar_trace` 切换；只打日志，不改行为）。 */
+    public static volatile boolean sTrace = false;
     private boolean seekTouching = false;
     private long lastTouchLog = 0L;
     private boolean lastLoopOne = false, lastShuffle = false;
@@ -869,7 +874,11 @@ final class GmMiniBarView extends FrameLayout {
             GmMusicPlayer p = pl();
             long id = (s != null && s.track != null) ? s.track.id : -1L;
 
-            if (id < 0) {
+            // ★★ 2026-11-07 修：**本地曲目 id 是负数**，原来这里
+            //    `if (id < 0) { 清空歌词 ; return; }` 直接把本地歌判成"没在放歌"
+            //    ⇒ 本地曲目永远「——」，同名 .lrc 一次都没被读过。
+            //  现在只把 **-1（真的没歌）** 当"没在放"，其它负数是正常的本地 id。
+            if (id == -1L) {
                 if (lrcId != -1L || lrcText.size() != 1) {
                     lrcId = -1L;
                     lrcSrcLen = -2;
@@ -880,10 +889,20 @@ final class GmMiniBarView extends FrameLayout {
             }
             if (p == null) return;
 
-            String src = p.cachedLyric(id);
-            int len = (src == null) ? -1 : src.length();
+            // ★ 2026-11-07：缓存代次变了（单曲设置改过）⇒ 丢掉内部状态重读
+            int ver = GmMusicPlayer.mediaVer();
+            if (ver != lrcVer) {
+                lrcVer = ver;
+                lrcId = -999L;
+                lrcAskId = -999L;
+                lrcSrcLen = -3;
+            }
 
-            if (len <= 0) {
+            String src = p.cachedLyric(id);
+
+            // ★★ null = 还没加载；"" = **确认没有歌词**（这两个必须分开，
+            //    否则真没歌词的歌会永远停在「歌词加载中…」）
+            if (src == null) {
                 if (lrcId != id) {
                     lrcId = id;
                     lrcSrcLen = -2;
@@ -901,10 +920,16 @@ final class GmMiniBarView extends FrameLayout {
                 return;
             }
 
-            if (lrcId == id && len == lrcSrcLen) return;
+            int len = src.length();
+            if (lrcId == id && len == lrcSrcLen) return;   // 没变 ⇒ 不重建
 
             lrcId = id;
             lrcSrcLen = len;
+            if (len == 0) {
+                // 确认没有歌词 ⇒ 给一句人话，别留在"加载中"
+                setLyricHint("这首歌没有歌词");
+                return;
+            }
             rebuildLyric(src);
         } catch (Throwable t) {
             GmUtil.logFail("【GmMiniBar】同步歌词失败", t);
@@ -944,6 +969,9 @@ final class GmMiniBarView extends FrameLayout {
     private void highlight(int pos) {
         try {
             if (lrcMs.isEmpty()) return;
+            // ★ 2026-11-07 修：用户刚长按跳转 ⇒ **这一拍不改 curLine**，
+            //   否则会按新进度重算、把刚跳到的行覆盖掉（看着像"跳了又被拉回"）。
+            if (!lrcFollow && lrcUnlock != null) return;
             int idx = -1;
             for (int i = 0; i < lrcMs.size(); i++) {
                 if (lrcMs.get(i).longValue() <= pos) idx = i;
@@ -1142,20 +1170,35 @@ final class GmMiniBarView extends FrameLayout {
 
             @Override
             public void onLongPress(MotionEvent e) {
-                if (!focusMode || pureImage) return;
+                if (!focusMode) {
+                    // ★ 2026-11-07 修：常态卡片上长按也允许跳转（主人要的"歌词长按跳转"）。
+                    //   原来必须先在聚焦态才行 ⇒ 大多数时候按不动。
+                    GmUtil.log("【GmMiniBar】长按歌词但当前不是聚焦态 ⇒ 先切聚焦再跳");
+                    setFocusMode(true);
+                }
                 try {
                     int pos = vLyric.pointToPosition((int) e.getX(), (int) e.getY());
-                    if (pos < 0 || pos >= lrcMs.size()) return;
+                    if (pos < 0 || pos >= lrcMs.size()) {
+                        GmUtil.log("【GmMiniBar】长按没落在歌词行上（pos=" + pos + "）");
+                        return;
+                    }
                     long at = lrcMs.get(pos).longValue();
                     GmMusicPlayer p = pl();
-                    if (p != null) p.seekTo((int) at);
-                    lrcFollow = true;
+                    if (p == null) return;
+                    p.seekTo((int) at);
+                    // ★★ 关键：跳完要**把自动跟随压住一小会儿**，
+                    //   否则下一拍 highlight() 会按新进度重新算出 curLine，
+                    //   视觉上就是"点了又被拉回去"。这里 1.2s 足够看到跳转结果。
+                    lrcFollow = false;
                     curLine = pos;
                     vLyric.invalidateViews();
-                    lyricScrollToCurrent(true);
+                    vLyric.setSelectionFromTop(Math.max(0, pos),
+                            Math.max(0, (vLyric.getHeight() - dp(LRC_ROW_H)) / 2));
+                    scheduleFollowResume();
                     GmUtil.log("【GmMiniBar】长按歌词第 " + pos + " 行 → 跳到 "
                             + (at / 1000.0) + "s（" + lrcText.get(pos) + "）");
-                } catch (Throwable ignore) {
+                } catch (Throwable t) {
+                    GmUtil.log("【GmMiniBar】长按歌词失败：" + t);
                 }
             }
         });
@@ -1164,7 +1207,12 @@ final class GmMiniBarView extends FrameLayout {
             @Override
             public boolean onTouch(View v, MotionEvent e) {
                 try {
-                    gdLyric.onTouchEvent(e);
+                    // ★ 2026-11-07 修：必须**给手势探测器喂事件**（返回它是否消费）。
+                    //   原来是 `gdLyric.onTouchEvent(e)` 结果丢掉、统一 return false ——
+                    //   长按有可能在 ListView 抢走事件流之前就没被识别 ⇒ 长按跳转时灵时不灵。
+                    //   现在：探测器认了（长按/单击/双击）就 return true 吃掉；
+                    //   没认（滚动）才 return false 让 ListView 自己滚。
+                    if (gdLyric.onTouchEvent(e)) return true;
                 } catch (Throwable ignore) {
                 }
                 return false;      /* ★ 不吞 —— ListView 自己还要滚 */
@@ -1516,6 +1564,20 @@ final class GmMiniBarView extends FrameLayout {
 
             GmMusicPlayer.Track t = s.track;
             boolean has = (t != null);
+
+            // ★★★ 2026-11-07 · **每帧跟踪**（定位「切的是一首、显示另一首」）
+            //   主人现象：切后台一次就会出现"放的是 A、歌词封面标题是 B"，
+            //   而且怎么切都回到错的那个状态 ⇒ 怀疑是**多个卡片实例各记一份缓存**。
+            //   这一行把「实例身份 + 收到的歌 + 各缓存字段」全打出来，
+            //   如果是多实例，日志里会看到同一个时间点有两个不同的 @hash。
+            if (sTrace) {
+                GmUtil.log("【卡片帧】inst=" + Integer.toHexString(System.identityHashCode(this))
+                        + " track=" + (t == null ? "null" : (t.name + "/" + t.id))
+                        + " playing=" + s.playing + " pos=" + s.pos + " dur=" + s.dur
+                        + " | lastTitle=" + lastTitle
+                        + " coverWanted=" + coverWanted + " lrcId=" + lrcId
+                        + " titleViews=" + (vTitle != null ? "1" : "0"));
+            }
             boolean err = (s.error != null && s.error.length() > 0);
 
             String title;
@@ -1589,6 +1651,10 @@ final class GmMiniBarView extends FrameLayout {
                 try {
                     if (coverWanted == id && b != null && vCover != null) {
                         vCover.setImageBitmap(b);
+                    } else if (coverWanted == id && b == null && vCover != null) {
+                        // ★ 2026-11-07 · 本地歌没有网易云封面 ⇒ 清空后显示占位音符
+                        vCover.setImageBitmap(null);
+                        vCover.setBackgroundColor(0x14FFFFFF);
                     }
                 } catch (Throwable ignore) {
                 }

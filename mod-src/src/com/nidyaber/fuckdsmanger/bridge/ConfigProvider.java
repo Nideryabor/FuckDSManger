@@ -10,8 +10,12 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.util.Log;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  * 桥的【UI 侧端点】🐲
@@ -136,6 +140,119 @@ public final class ConfigProvider extends ContentProvider {
         }
         Log.i(TAG, "call " + method + " → " + out);
         return out;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  ★★ 2026-11-07（3.76.9）· **本地音乐：把音频以 fd 方式借给宿主进程**
+    //
+    //  为什么要这一套（真机铁证，不是推断）：
+    //    宿主（DeepSeek，uid=10410）读 /storage/emulated/0/DCIM/fdm/*.mp3 报
+    //      FileNotFoundException: open failed: EACCES (Permission denied)
+    //    它的清单里**没有 READ_MEDIA_AUDIO**（系统连「音乐和音频」权限项都不给它显示），
+    //    我们也没法往别人的清单里加权限 ⇒ 按路径读这条路**机制上就走不通**。
+    //
+    //  修法：**我们进程**（有这个权限，SAF 也是我们导的）开文件，把
+    //  ParcelFileDescriptor 通过 provider 交给宿主。MediaPlayer 直接吃
+    //  content:// ⇒ 零落盘、不占空间、宿主不需要任何权限。
+    //
+    //  安全（provider 是 exported 的，必须自己把关）：
+    //    ① 调用方 uid 必须是**已信任的**（= 那个拿对 token 握过手的宿主进程 uid）
+    //    ② 只允许读 ALLOW_ROOT 下面、非目录、不含 ".." 的文件
+    //    ⇒ 别的应用就算知道 uri 也读不到任何东西。
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /** 本地曲库根目录 —— 只有它下面的文件能被借出去（跟 Lm.DIR 一致） */
+    public static final String ALLOW_ROOT = "/storage/emulated/0/DCIM/fdm";
+
+    /** uri 的第一段：把「配置 provider」和「借文件」区分开 */
+    public static final String SEG_LOCAL = "local";
+
+    /**
+     * 造一个「借文件」的 uri：`content://<包名>.config/local/<base64url(绝对路径)>`。
+     *
+     * <p>为什么用 base64url 而不是直接把路径塞进去：
+     * 路径里有 `/` 和中文 ⇒ 塞进 path 会变成多段、还会被 Uri 转义两次，
+     * base64url 不含 `/`、`+`、`=`，一段就够。
+     */
+    public static Uri localUri(Context ctx, String absPath) {
+        String b64 = android.util.Base64.encodeToString(
+                absPath.getBytes(java.nio.charset.Charset.forName("UTF-8")),
+                android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP
+                | android.util.Base64.NO_PADDING);
+        // ⚠️ **不能用 ctx.getPackageName()**：这个方法在**宿主进程**里被调，
+        //   拿到的会是宿主包名（com.deepseek.chat.a）⇒ authority 拼错 ⇒ 打不开。
+        //   必须写死**模块自己**的包名（与出包自检 ⑫.1 校验的是同一个常量）。
+        return Uri.parse("content://" + FdmBridge.MODULE_PKG + AUTHORITY_SUFFIX)
+                .buildUpon().appendPath(SEG_LOCAL).appendPath(b64).build();
+    }
+
+    /**
+     * 打开一个**借出去**的本地文件。
+     *
+     * <p>⚠️ 这里**没有 extras 可带 token**（openFile 的签名里没有 Bundle）⇒
+     * 只能用「已信任 uid」判据。那个 uid 是 `call()` 时用对 token 记下的，
+     * 所以只有真正握过手的宿主进程能进来。
+     */
+    @Override
+    public ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException {
+        if (uri == null) throw new FileNotFoundException("uri=null");
+        if (mode != null && mode.contains("w")) {
+            // 只借读：写穿到我们私有数据太危险
+            throw new SecurityException("local music is read-only");
+        }
+        if (!callerTrusted()) {
+            Log.w(TAG, "openFile rejected from uid=" + Binder.getCallingUid());
+            throw new SecurityException("caller not trusted: uid=" + Binder.getCallingUid());
+        }
+
+        java.util.List<String> seg = uri.getPathSegments();
+        if (seg == null || seg.size() < 2 || !SEG_LOCAL.equals(seg.get(0))) {
+            throw new FileNotFoundException("not a local-music uri: " + uri);
+        }
+        String abs;
+        try {
+            byte[] raw = android.util.Base64.decode(seg.get(1),
+                    android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP
+                    | android.util.Base64.NO_PADDING);
+            abs = new String(raw, java.nio.charset.Charset.forName("UTF-8"));
+        } catch (Throwable t) {
+            throw new FileNotFoundException("bad path segment: " + t);
+        }
+
+        // ① 只允许曲库根目录下面
+        if (abs == null || abs.indexOf("..") >= 0 || !abs.startsWith(ALLOW_ROOT + "/")) {
+            Log.w(TAG, "openFile 越界被拒：" + abs);
+            throw new FileNotFoundException("outside local music root: " + abs);
+        }
+        File f = new File(abs);
+        if (!f.isFile()) throw new FileNotFoundException("not a file: " + abs);
+
+        try {
+            ParcelFileDescriptor p = ParcelFileDescriptor.open(
+                    f, ParcelFileDescriptor.MODE_READ_ONLY);
+            Log.i(TAG, "📤 借出本地文件 → uid=" + Binder.getCallingUid()
+                    + " " + f.getName() + " (" + f.length() + " B)");
+            return p;
+        } catch (Throwable t) {
+            Log.e(TAG, "openFile 失败：" + abs, t);
+            throw new FileNotFoundException("open failed: " + t);
+        }
+    }
+
+    /**
+     * 「借文件」专用授权：<b>只认已信任 uid</b>（不重新校验 token）。
+     *
+     * <p>自己 / root / system 照旧放行（调试与 adb 验证要用）。
+     */
+    private boolean callerTrusted() {
+        final int uid = Binder.getCallingUid();
+        if (uid == Process.myUid()) return true;
+        if (uid == 0 || uid == 1000) return true;
+        Context ctx = getContext();
+        if (ctx == null) return false;
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (sp.getString(KEY_TOKEN, null) == null) return false;   // 从没握过手 ⇒ 谁都别进
+        return sp.getInt(KEY_TRUSTED_UID, -1) == uid;
     }
 
     // ---------- 其余 API 全是空壳：这个 provider 只走 call() ----------

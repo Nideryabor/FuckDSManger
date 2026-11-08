@@ -108,6 +108,19 @@ public final class FdmBridge {
         } catch (Throwable t) {
             GmUtil.logFail("【FdmBridge】GmCall.ensure 失败（不影响宿主）", t);
         }
+
+        // ★ 2026-11-07：「宿主の终极美化策略」—— 把资源替换配置读进内存
+        //
+        //   必须在这里做（Application.onCreate 阶段），因为之后第一次
+        //   Compose 组合就会去 getString/getDrawable 了。
+        //   ★ 教训（probe2 实测）：图片的 getDrawable 只在该页**首次组合**时被要一次
+        //     （painterResource 包在 remember 里）⇒ 配置如果晚于组合加载，
+        //     这一页的图就永远是宿主原图。所以"贪早"是必须的。
+        try {
+            GmResHook.refresh(ctx);
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmBridge】GmResHook.refresh 失败（不影响宿主）", t);
+        }
     }
 
     /**
@@ -1652,6 +1665,147 @@ public final class FdmBridge {
         lastData = null;
         Object arg = (it == null || it.getExtras() == null) ? null : it.getExtras().get("arg");
         String back = "?";
+
+        // ══════════════════════════════════════════════════════════════════
+        //  ★★ 2026-11-07 · 「宿主の终极美化策略」（资源文字 / 图片替换）
+        //
+        //  单独放在最前面：这一族全是**小数据 + 高频**（改一条就要立刻 refresh），
+        //  混进下面 100 多个分支里不好读，也容易误伤。
+        //
+        //  参数统一用 `名字|值` 的竖线格式（和 img_path 一致，UI 侧不用改协议）。
+        // ══════════════════════════════════════════════════════════════════
+        if ("res_state".equals(cmd)) {
+            lastData = GmResHook.dump(ctx);
+            back = "资源替换配置：" + GmResHook.selfTest();
+            GmUtil.log("【FdmRes】res_state → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("res_set_text".equals(cmd)) {
+            String[] a = String.valueOf(arg).split("\\|", -1);
+            String name = a[0];
+            String text = a.length > 1 ? a[1] : "";
+            // 允许把 "|" 本身写进替换文字：只切第一个
+            if (a.length > 2) {
+                StringBuilder sb = new StringBuilder(a[1]);
+                for (int i = 2; i < a.length; i++) sb.append('|').append(a[i]);
+                text = sb.toString();
+            }
+            back = GmResHook.setText(ctx, name, text);
+            lastData = GmResHook.dump(ctx);
+            GmUtil.log("【FdmRes】res_set_text " + name + " → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("res_set_img".equals(cmd)) {
+            // arg = 资源名|源图路径（图由 UI 写到 /sdcard/Pictures/FDM，这里拷进宿主私有目录）
+            String[] a = String.valueOf(arg).split("\\|", -1);
+            String name = a[0];
+            String path = a.length > 1 ? a[1] : null;
+            if (path == null || path.length() == 0) {
+                back = GmResHook.setImg(ctx, name, null);       // = 还原
+            } else {
+                java.io.File src = new java.io.File(path);
+                if (!src.isFile() || src.length() == 0) {
+                    back = "源图不存在或为空：" + path;
+                } else {
+                    java.io.File dst = GmResHook.imgFile(ctx, name);
+                    try {
+                        copyFile(src, dst);
+                        // ★ 先验能不能解码 —— 教训：写过一坨 4041 字节的 0，
+                        //   之后头像那条链直接崩（VectorDrawable→BitmapDrawable 强转）。
+                        if (!isDecodableImage(dst)) {
+                            dst.delete();
+                            back = "源图不可解码（" + src.length() + " 字节）⇒ 没改任何东西";
+                        } else {
+                            back = GmResHook.setImg(ctx, name, dst);
+                        }
+                    } catch (Throwable t) {
+                        back = "拷图失败：" + t;
+                    }
+                }
+            }
+            lastData = GmResHook.dump(ctx);
+            GmUtil.log("【FdmRes】res_set_img " + name + " → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("res_clear_all".equals(cmd)) {
+            back = GmResHook.clearAll(ctx);
+            lastData = GmResHook.dump(ctx);
+            GmUtil.log("【FdmRes】res_clear_all → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("res_restart_host".equals(cmd)) {
+            // ★ 2026-11-07（主人报「改图和没改没区别」）
+            //
+            //   真因：Compose 的 painterResource 把 Drawable 结果**缓存**在 remember 里，
+            //   图一旦画出来，改配置不会让它重新取 ⇒ **必须重启宿主进程**才看得到新图。
+            //   （文字没这个问题：getString 每次组合都现调。）
+            //
+            //   这里做「自杀 + 自动拉回」：先排一个 800ms 后拉起自己的 alarm，
+            //   再 killProcess —— 用户看到的就是"宿主闪一下重启"，不用手动点。
+            back = restartSelf(ctx);
+            lastData = back;
+            GmUtil.log("【FdmRes】res_restart_host → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("res_export".equals(cmd)) {
+            // ★ 2026-11-07：「一键导出」—— 配置 + 所有替换图打成 zip 写进 SAF 目录
+            //   arg = 文件名（可空，默认 fdm_res_backup_<时间>.zip）
+            String fn = arg == null ? null : String.valueOf(arg).trim();
+            if (fn == null || fn.isEmpty()) {
+                java.text.SimpleDateFormat f = new java.text.SimpleDateFormat(
+                        "yyyyMMdd_HHmmss", java.util.Locale.US);
+                fn = "fdm_res_backup_" + f.format(new java.util.Date()) + ".zip";
+            }
+            String uri = GmResHook.exportZip(ctx, fn);
+            lastData = uri;
+            back = uri == null
+                    ? ("导出失败（SAF 目录没授权？）文件名：" + fn)
+                    : ("已导出：" + fn);
+            GmUtil.log("【FdmRes】res_export → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("res_import".equals(cmd)) {
+            // ★ 2026-11-07：「一键导入」—— 从 SAF 目录读一个 zip，整体替换配置与图片
+            //   arg = 文件名
+            String fn = arg == null ? "" : String.valueOf(arg).trim();
+            if (fn.isEmpty()) {
+                back = "没给文件名";
+                lastData = "";
+            } else {
+                back = GmResHook.importZip(ctx, fn);
+                lastData = GmResHook.dump(ctx);
+            }
+            GmUtil.log("【FdmRes】res_import " + fn + " → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("res_selftest".equals(cmd)) {
+            back = GmResHook.selfTest();
+            lastData = GmResHook.dump(ctx);
+            GmUtil.log("【FdmRes】自检 → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("res_preview".equals(cmd)) {
+            // ★ 2026-11-07（主人指出）：图片预览要真的显示**宿主那张图**。
+            //
+            //   之前 UI 那边只能显示一句「当前显示：宿主原图」—— 因为它读不到宿主的资源
+            //   （两个 APK，资源表各自独立；createPackageContext 又被包可见性挡死）。
+            //   这里让**宿主自己**把它画成 PNG，落到「音乐曲库那个已授权 SAF 目录」，
+            //   再把**路径**交给 UI 去读。复用主人已经给过的授权，不新增任何权限。
+            //
+            //   arg = 资源名，可选 `名字|1` 表示强制重新导出
+            String[] a = String.valueOf(arg).split("\\|", -1);
+            String name = a[0];
+            boolean force = a.length > 1 && "1".equals(a[1]);
+            // ★ 2026-11-07 修：返回的是 **base64 PNG**（不是文件路径）。
+            //   路径那条路过不去 —— 宿主私有目录 UI 读不到，模块又没有存储权限。
+            String b64 = GmResHook.preview(ctx, name, force);
+            lastData = b64 == null ? "" : b64;
+            back = b64 == null ? ("预览失败：" + name)
+                    : ("预览已生成：" + name + "（" + b64.length() + " 字符）");
+            GmUtil.log("【FdmRes】res_preview " + name + " → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        }
         try {
             if ("avatar_img".equals(cmd)) {
                 boolean ok2 = GmAvatar.saveImage(ctx, android.net.Uri.parse(String.valueOf(arg)));
@@ -1668,11 +1822,30 @@ public final class FdmBridge {
                 //      ② 我们**UI dex**（classes3/4）里的类能不能在宿主进程加载
                 //      ③ setContent 的参数类型到底是什么
                 back = composeProbe(ctx);
+            } else if ("page_probe".equals(cmd)) {
+                // ★ 2026-11-07：**「整个 Compose 页面塞进宿主」的活体探针**
+                //   走和保底弹窗完全相同的挂载路径（三件套 owner + 手工 recomposer），
+                //   但内容是全屏的：输入框(IME) + 点击(状态) + LazyColumn 60 行(滚动)。
+                //   三样都过 ⇒ 整页方案可行。
+                //     adb shell am broadcast -a com.little_femaleboy.fdm.CMD --es cmd page_probe
+                boolean okPage = FdmComposeDialog.tryShowPage(ctx);
+                back = okPage ? "整页探针已显示（看屏幕：能不能打字/滚动）"
+                        : "整页探针失败（看 【FdmComposeDlg】 日志）";
+                GmUtil.log("【FdmBridge】page_probe ⇒ " + back);
             } else if ("fallback_demo".equals(cmd)) {
                 // ★ 2026-11-07：保底弹窗的**演示/自测**入口（尼尼自己用，不用真等失败）
                 //     adb shell am broadcast -a com.little_femaleboy.fdm.CMD --es cmd fallback_demo
-                FdmFallbackDialog.show(ctx, "演示：人为触发的保底", null, null);
-                back = "已请求弹保底（看屏幕）";
+                // ★ 2026-11-07：走**带检测**的那条（模块在就不弹），
+                //   这样 `fallback_demo` 能直接验证「模块起来了就不显示」这个关卡。
+                boolean absent = FdmUiHook.moduleLooksAbsent(ctx);
+                if (!absent) {
+                    FdmFallbackDialog.dismissIfShowing();
+                    back = "模块已在 ⇒ 不弹保底（顺带把残留的关掉）";
+                } else {
+                    FdmFallbackDialog.show(ctx, "演示：人为触发的保底", null, null);
+                    back = "已请求弹保底（看屏幕）";
+                }
+                GmUtil.log("【FdmBridge】fallback_demo ⇒ " + back);
             } else if ("open_ui_pi".equals(cmd)) {
                 // ★★ 2026-11-06：由**前台的宿主**代发模块建好的 PendingIntent。
                 //   两级（解析层 / 启动层）一次过，见 FdmOpenUi 的类注释。
@@ -1685,6 +1858,12 @@ public final class FdmBridge {
                 } else {
                     back = "没拿到 PendingIntent（" + pio + "）";
                 }
+            } else if ("update_jump_test".equals(cmd)) {
+                // ★ 2026-11-07：**更新按钮改道**的自测入口 —— 不用等宿主真弹更新窗。
+                //   真实弹窗要服务端给新版本才出现（抓包：biz_data:null ⇒ 只弹「已是最新」Toast）。
+                //   adb shell am broadcast -a com.little_femaleboy.fdm.CMD --es cmd update_jump_test
+                back = FdmUpdateJumpHook.selfTest(ctx);
+                GmUtil.log("【FdmUpdateJump】自测：" + back);
             } else if ("open_ui".equals(cmd)) {
                 // ★ 2026-11-06：给尼尼自己用的诊断入口 ——
                 //   用 adb 一条广播就能让**宿主进程**走一遍完整换乘链，
@@ -2431,6 +2610,140 @@ public final class FdmBridge {
                 GmCallPin.setOn(ctx, want);
                 lastData = GmCallPin.state(ctx);
                 back = "通话页留驻已" + (want ? "开启" : "关闭") + "（" + lastData + "）";
+            } else if ("local_probe".equals(cmd)) {
+                // ★ 2026-11-07（3.76.4）· 真机探针：宿主进程到底能不能读本地曲库里的文件。
+                //   结论直接看日志 —— 能读 ⇒ 按路径播就行；不能读 ⇒ 得换 content:// 那条路。
+                String r = GmLocalMusic.probe(ctx);
+                lastData = r;
+                GmUtil.log("【本地音乐】探针：\n" + r);
+                // ★ 3.76.9：日志/广播都可能被截断 ⇒ **同时落一份到我们能写的地方**，
+                //   adb 直接 cat 出来看全文（真机排查靠这个，别靠截断的日志）
+                try {
+                    java.io.File out = new java.io.File(
+                            "/sdcard/Pictures/FDM/localmusic-probe.txt");
+                    java.io.File dir = out.getParentFile();
+                    if (dir != null && !dir.exists()) dir.mkdirs();
+                    java.io.FileOutputStream fo = new java.io.FileOutputStream(out);
+                    fo.write(r.getBytes("UTF-8"));
+                    fo.close();
+                } catch (Throwable ignore) {
+                }
+                // ★ 3.76.9：日志会被截断（GmUtil.log 有长度上限），
+                //   所以探针结果**按行打日志 + 分片进 SP**，两条路都能看到全文。
+                try {
+                    String[] lines = r.split("\n");
+                    for (int i = 0; i < lines.length; i++) {
+                        GmUtil.log("【本地音乐】" + i + "| " + lines[i]);
+                    }
+                } catch (Throwable ignore) {
+                }
+                try {
+                    android.content.SharedPreferences sp =
+                            ctx.getSharedPreferences("fdm_ui", Context.MODE_PRIVATE);
+                    android.content.SharedPreferences.Editor ed = sp.edit();
+                    for (int i = 0; i < 8; i++) ed.remove("probe.local." + i);
+                    int chunk = 700;
+                    int k = 0;
+                    for (int pos = 0; pos < r.length() && k < 8; pos += chunk, k++) {
+                        ed.putString("probe.local." + k,
+                                r.substring(pos, Math.min(r.length(), pos + chunk)));
+                    }
+                    ed.putInt("probe.local.n", k);
+                    ed.apply();
+                } catch (Throwable ignore) {
+                }
+                back = "本地曲库探针：" + r.replace("\n", " · ");
+            } else if ("bar_trace".equals(cmd)) {
+                // 逐帧跟踪迷你卡（定位「放的是一首、显示另一首」）
+                GmMiniBarView.sTrace = !"off".equals(String.valueOf(arg));
+                back = "卡片逐帧跟踪 → " + (GmMiniBarView.sTrace ? "开" : "关");
+            } else if ("update_row_diag".equals(cmd)) {
+                // ★ 诊断「检查更新」case 号（只打日志，不改变行为）
+                boolean on = !"off".equals(String.valueOf(arg));
+                FdmUpdateRowHook.setDiag(on);
+                back = "检查更新诊断 → " + (on ? "开（点一次会打印 e/f/调用栈）" : "关");
+            } else if ("local_diag".equals(cmd)) {
+                // ★ 诊断：把扫描每一步都打出来（不受 logOnce 限制）
+                String d = GmLocalMusic.diag(ctx);
+                lastData = d;
+                for (String line : d.split("\n")) GmUtil.log("【本地音乐·诊断】" + line);
+                back = d.replace("\n", " | ");
+            } else if ("local_list".equals(cmd)) {
+                // ★ 2026-11-07 · 曲库列表（宿主扫出来的，带序号）→ 回传给界面显示
+                String list = GmLocalMusic.listJson(ctx);
+                String text = GmLocalMusic.promptText(ctx);
+                try {
+                    GmStore.write(ctx, GmLocalMusic.K_TEXT, text, "s");
+                } catch (Throwable ignore) {
+                }
+                lastData = list;
+                back = list;
+                GmUtil.log("【本地音乐】列表 " + list.length() + " 字，提示词 "
+                        + text.length() + " 字");
+            } else if ("local_sel".equals(cmd)) {
+                String text = GmLocalMusic.setSel(ctx, String.valueOf(arg));
+                lastData = text;
+                back = "已更新勾选，提示词 " + text.length() + " 字";
+            } else if ("local_import".equals(cmd)) {
+                // ★ 导入也必须由**宿主**拉起：回调的临时读权限挂在发起者 uid 上
+                String r = GmLocalMusic.pickImport(ctx);
+                lastData = r;
+                GmUtil.log("【本地音乐】导入：" + r);
+                back = r;
+            } else if ("local_pick_tree".equals(cmd)) {
+                // ★ 2026-11-07 · 让**宿主自己**用系统选择器挑一个文件夹当曲库。
+                //   这是唯一走得通的路（实测：按路径 EACCES、我们 provider 被包可见性挡死）。
+                //   拿到 FLAG_GRANT_READ_URI_PERMISSION + takePersistable ⇒ 重启还在。
+                String r = GmLocalMusic.pickTree(ctx);
+                lastData = r;
+                GmUtil.log("【本地音乐】选文件夹：" + r);
+                back = r;
+            } else if ("local_tree".equals(cmd)) {
+                String t = GmLocalMusic.treeDisplay(ctx);
+                lastData = t;
+                back = t;
+            } else if ("local_play".equals(cmd)) {
+                // 手动起播一首本地歌（界面/调试用）：arg = 序号 或 歌名-歌手
+                GmLocalMusic.Item litem = GmLocalMusic.pick(ctx, String.valueOf(arg));
+                if (litem == null) {
+                    back = "本地曲库没有：" + arg;
+                } else {
+                    GmMusicPlayer pl = GmMusicPlayer.get();
+                    if (pl == null) {
+                        back = "播放器不在这个进程";
+                    } else {
+                        // ★ 2026-11-07 修：原来这里**先写死"本地起播"再调用**，
+                        //   而 playLocal 可能走「这首已经在放 ⇒ 不重开」直接返回
+                        //   ⇒ 日志自相矛盾（既说不重开、又说本地起播）。
+                        //   现在让 playLocal 返回**真实结果**，照它打日志。
+                        String r = pl.playLocal(litem);
+                        back = r;
+                        GmUtil.log("【Music】local_play → " + r);
+                    }
+                }
+            } else if ("local_meta".equals(cmd)) {
+                String r = GmLocalMusic.meta(ctx, String.valueOf(arg));
+                lastData = r;
+                back = r;
+                GmUtil.log("【Music】单曲设置 → " + r.replace("\n", " | "));
+            } else if ("local_set_lrc".equals(cmd)) {
+                String r = GmLocalMusic.setOverride(ctx, String.valueOf(arg), true);
+                lastData = r;
+                back = r;
+                GmUtil.log("【Music】指定歌词 → " + r);
+            } else if ("local_set_cover".equals(cmd)) {
+                String r = GmLocalMusic.setOverride(ctx, String.valueOf(arg), false);
+                lastData = r;
+                back = r;
+                GmUtil.log("【Music】指定封面 → " + r);
+            } else if ("local_pick_lrc".equals(cmd)) {
+                String r = GmLocalMusic.pickFileFor(ctx, String.valueOf(arg), true);
+                lastData = r;
+                back = r;
+            } else if ("local_pick_cover".equals(cmd)) {
+                String r = GmLocalMusic.pickFileFor(ctx, String.valueOf(arg), false);
+                lastData = r;
+                back = r;
             } else if ("dump_text".equals(cmd)) {
                 StringBuilder sb = new StringBuilder();
                 try {
@@ -2463,14 +2776,73 @@ public final class FdmBridge {
         }
         GmUtil.log("【FdmBridge】动作 " + cmd + " → " + (back != null && back.length() > 120
                 ? back.substring(0, 120) + "…" : back));
+        sendResult(ctx, cmd, back, lastData);
+    }
+
+    /**
+     * 把动作结果发回 UI 进程 🐲 2026-11-07
+     *
+     * <p>抽出来的原因：新加的「资源替换」那一族要在**提前 return 的分支**里回结果
+     * （它们不往下走到函数尾部）。原来只有尾部那一处内联发送，
+     * 如果在新分支里复制一遍，就是**两套逻辑**——改一处忘另一处那种经典坑。
+     *
+     * <p>★ 数据（灰度 JSON / 资源配置 / 日志全文）必须**用广播发回去**：
+     * 宿主写自己的 {@code fdm_ui} 我们读不到（不同进程不同文件）。
+     */
+    private static void sendResult(Context ctx, String cmd, String back, String data) {
         try {
             Intent r = new Intent(FdmPush.ACTION_RESULT);
             r.putExtra("cmd", cmd);
             r.putExtra("text", back);
-            // ★ 数据要**用广播发回去**：宿主写自己的 fdm_ui 我们读不到（不同进程不同文件）
-            r.putExtra("data", lastData);
+            r.putExtra("data", data);
             ctx.sendBroadcast(r);
         } catch (Throwable ignore) {
+        }
+    }
+
+    /**
+     * 让**宿主自己**重启（自杀 + 800ms 后自动拉回）🐲 2026-11-07
+     *
+     * <p>为什么需要：Compose 的 {@code painterResource} 把 Drawable 缓存在 {@code remember}
+     * 里 ⇒ 改了图片资源后，**不重启进程就看不到变化**（文字没有这个问题）。
+     *
+     * <p>为什么用 AlarmManager 而不是直接 kill：直接 kill 之后用户得手动再点开 App，
+     * 体验很差。先排一个 800ms 的 PendingIntent 指向自己的 launcher，再 kill ——
+     * 表现就是"闪一下重启"。
+     */
+    private static String restartSelf(Context ctx) {
+        try {
+            Intent i = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
+            if (i == null) return "拿不到自己的启动 Intent（宿主没有 launcher activity？）";
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            int flags = android.os.Build.VERSION.SDK_INT >= 23
+                    ? android.app.PendingIntent.FLAG_UPDATE_CURRENT
+                    | android.app.PendingIntent.FLAG_IMMUTABLE
+                    : android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+            android.app.PendingIntent pi = android.app.PendingIntent
+                    .getActivity(ctx, 0x52455354, i, flags);      // "REST"
+            Object am = ctx.getSystemService(Context.ALARM_SERVICE);
+            if (am instanceof android.app.AlarmManager) {
+                ((android.app.AlarmManager) am).set(
+                        android.app.AlarmManager.ELAPSED_REALTIME,
+                        android.os.SystemClock.elapsedRealtime() + 800, pi);
+            }
+            GmUtil.log("【FdmRes】已排 800ms 后自动拉起，现在杀自己");
+            final int pid = android.os.Process.myPid();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(300);      // 让上面的日志和广播先落地
+                    } catch (Throwable ignore) {
+                    }
+                    android.os.Process.killProcess(pid);
+                }
+            }).start();
+            return "宿主正在重启（约 1~2 秒后自动回来）";
+        } catch (Throwable t) {
+            GmUtil.logFail("【FdmRes】restartSelf 失败", t);
+            return "重启失败：" + t + "（请手动杀掉宿主再打开）";
         }
     }
 
