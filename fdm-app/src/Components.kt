@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.DarkMode
@@ -93,6 +94,26 @@ fun JumpHintCard(onOpen: () -> Unit, text: String = stringResource(R.string.c_ju
 }
 
 /* ───────────────────────── 顶部应用栏：64dp / surface / titleLarge / 左右 48dp 图标钮 ───────────────────────── */
+
+/**
+ * 【整页关闭】🐲 2026-11-14（3.108.2）
+ *
+ * <p>主人：「关闭按钮应该在菜单栏」。
+ *
+ * <p>第一版把它做成了**悬浮圆钮**压在状态栏下方 68dp 处 —— 位置算得很小心，
+ * 但主人截图一看就不对：它悬在顶栏底下飘着，既不像顶栏的按钮，
+ * 又挡住了「灰度选项管理」那块卡片的上沿。
+ *
+ * <p>⇒ 改成**顶栏 action**：和「保存 / 夜间 / 更多」同一排、同一个 48dp 触摸区。
+ *
+ * <h3>为什么用 CompositionLocal 而不是加参数</h3>
+ * {@code FdmTopBar} 有 **5 个调用点**（首页 / 各功能页 / 美化页 / 工具页 / 更多页），
+ * 而 `NightState` 已经用过同一招（{@code LocalNight}）—— 照抄它：
+ * 整页在 {@code HostPage} 里 provide 一次，**所有层级的顶栏自动带上关闭钮**，
+ * 模块本体的老路径不 provide ⇒ 恒为 null ⇒ 一个像素都不变。
+ */
+val LocalClose = androidx.compose.runtime.staticCompositionLocalOf<(() -> Unit)?> { null }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FdmTopBar(
@@ -163,6 +184,16 @@ fun FdmTopBar(
             if (onMore != null) {
                 IconButton(onClick = onMore, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.Rounded.MoreVert, stringResource(R.string.c_more))
+                }
+            }
+            // ★ 2026-11-14（3.108.2）· 整页的「关闭」
+            //   从悬浮圆钮搬进顶栏（主人：「关闭按钮应该在菜单栏」）。
+            //   排在**最右**：它是"离开这个界面"的动作，语义上和保存/搜索不同组。
+            //   模块本体里 LocalClose 恒为 null ⇒ 这里什么都不画，老路径零变化。
+            val close = LocalClose.current
+            if (close != null) {
+                IconButton(onClick = close, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Rounded.Close, stringResource(R.string.c_close))
                 }
             }
         },

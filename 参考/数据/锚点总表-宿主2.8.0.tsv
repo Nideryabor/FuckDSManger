@@ -1,0 +1,88 @@
+类型	域	职责	语义键	锚点(2.7.5)	锚点(2.8.0)	本版核验	把握
+类	资源	杂物间（painterResource） 串 PainterResources.android.kt	kf5	s27	q57	✅ 静态核验	★☆☆
+类	资源	stringResource 2.8.0 = i77.C	k47	k47	i77	✅ 静态核验	★☆☆
+类	UI原子	Modifier.paint a0(6类型逐位)→e0；合并了 pic	fh6	wx6	zw7,u48	⚠️ 拆 2 个候选	★★☆
+类	UI原子	图标 Hook 锚 签名逐位	me4	qj5	ll5	✅ 静态核验	★☆☆
+类	入口	入口：设置行→路由桶 串 batch_management_click	m5	z5	y5	✅ 静态核验	★☆☆
+类	会话	消息列表 Composable 串 messageListWidth	h91	h42	p42	✅ 静态核验	★☆☆
+类	账号	账号头像桶 2.7.5 = b6（见 MTH 注释）	p5	b6	a6	✅ 静态核验	★☆☆
+类	气泡	气泡单元 Composable 拆 3（八参逐位→szb.o）	pn9	y2c	hfc,qgc	⚠️ 拆 2 个候选	★★☆
+类	气泡	气泡作用域 8 串中 7 条逐字相同	ls9	yb0	ac0	✅ 静态核验	★☆☆
+类	气泡	Modifier 扩展桶 拆 3	uia	da8,yu7	dc8,dgb,nl9,o8a	⚠️ 拆 4 个候选	★★☆
+类	UI原子	ShaderBrush 实现 字段 c:I/d:Object 同形	tn0	ls0	ms0	✅ 静态核验	★☆☆
+类	气泡	气泡阴影 fp_match 100% 5/5	jd8	vy9	e1a	✅ 静态核验	★☆☆
+类	气泡	背景 Element 4 字段 + ctor 逐位	se0	zi0	bj0	✅ 静态核验	★☆☆
+类	会话	ChatPage 作用域 串 STRIKETHROUGH/INLINE_MATH	zc	vx6	zw7	✅ 静态核验	★☆☆
+类	账号	账号名桶 2.7.1 的 a6 已换主人（r(Object,Object)Object）	s5	d6	c6	✅ 静态核验	★★☆
+类	配置	配置源头 model 域 fp_match 100% + h() 未变	p66	tj7	sl7	✅ 静态核验	★☆☆
+类	配置	配置源头 main 域 fp_match 97.2%	h02	hx2	qx2	✅ 静态核验	★☆☆
+类	会话	会话提供接口 fp_match 100% 66/66	ao1	nk2	wk2	✅ 静态核验	★☆☆
+类	下发	下发数据对象 fp_match 100% 27/28 方法	bx4	f46	b66	✅ 静态核验	★☆☆
+类	建议	建议 Prompt 视图 串 promptCrossfade 唯一	yb5	p67	g17,s17	⚠️ 拆 2 个候选	★☆☆
+类	提示词	提示词文本 s(Lhe7;Context;)String 逐位	pd5	g37	f57,s57	⚠️ 拆 2 个候选	★☆☆
+类	渲染	渲染列表 fp_match 100%	hp8	zaa	kda	✅ 静态核验	★☆☆
+类	存储	消息主存储 fp_match 100% 30/39 方法	wr	zs	at	✅ 静态核验	★☆☆
+类	检测	字节 APM root 检测 fp_match 86.2% + C()Z 原样	sr9	ug9	d89	✅ 静态核验	★☆☆
+类	UI原子	Kotlin Unit 单例 fp_match 100% 形状全同	lp9	ghb	qjb	✅ 静态核验	★☆☆
+类	UI原子	图像包装 implements Lei5 + a:Bitmap	le	rf	rf	✅ 静态核验	★☆☆
+类	UI原子	BitmapPainter 字段 f/g/h/i/j/k 逐位同形	ok0	vo0	xo0	✅ 静态核验	★☆☆
+类	UI原子	Painter 基类 bo0.super Ld58	ku6	q88	ra8	✅ 静态核验	★☆☆
+类	存储	消息基类 fp_match 100% 46/46	vq	yr	zr	✅ 静态核验	★☆☆
+类	UI原子	Modifier 接口 三参签名逐位	c76	fk7	em7	✅ 静态核验	★☆☆
+类	Compose	Compose Composer fp_match 100% 21/21	ey3	v15	h25	✅ 静态核验	★☆☆
+类	UI原子	Brush 同上第 2 参（abstract class）	sn0	ks0	ls0	✅ 静态核验	★☆☆
+类	UI原子	ShaderBrush（抽象） or0.super Lus9	dd8	ay9	h0a	✅ 静态核验	★☆☆
+类	UI原子	Shape 同上第 3 参	md8	yy9	h1a	✅ 静态核验	★☆☆
+类	建议	GmReplyHook 用 fp_match 100% 8/8	we5	(无)	(无)	❌ 已消失	★☆☆
+类	UI原子	GmPaintModHook 用 bo0.k:Lmo0 交叉验证	vk0	gp0	hp0	✅ 静态核验	★☆☆
+类	通话	GmCallDialog 用 fp_match 100% 4/4	gz3	a35	m35	✅ 静态核验	★☆☆
+类	账号	账号数据类 Companion:Lyfb + f:[Lnf6	it9	(无)	(无)	❌ 已消失	★☆☆
+类	UI原子	Shape 工厂 a()/b(F)/c(FFFF)/d(FFI)/e() 全同	u19	qb9	yd9	✅ 静态核验	★☆☆
+类	气泡	绘制节点：字段 o:J/p:Brush/q:F/r:Shape 全同形，super xj7→ek7	nod	aj0	cj0	✅ 静态核验	—
+类	气泡	节点基类：14 字段 abstract	nodbase	ek7	dm7	✅ 静态核验	—
+类	气泡	气泡 Shape 容器：35 字段全同（t:Lib9;→Lpb9;、n:Lk78;→Lq78;）	shapeholder	y82	g92	✅ 静态核验	—
+类	气泡	clip(Modifier,Shape)：`w(Lfk7;Lyy9;)Lfk7;` 全树唯一	clipmod	dec	ee	✅ 静态核验	—
+类	气泡	clipmod.round	clipmod.round	oc5	je5	✅ 静态核验	—
+类	气泡	assistcell	assistcell	h40	j40	✅ 静态核验	—
+类	气泡	assistbody	assistbody	yu7	nl9,o8a	⚠️ 拆 2 个候选	—
+类	气泡	AppSurface 2.7.2 = l23.a(Lyj7;Lsy9;JJLr33;Lr15;I)V	l23	q23	oy5	✅ 静态核验	★☆☆
+类	建议	建议/快捷项 item 类 fp_match 100% 7/7	g56	ni7	lk7	✅ 静态核验	★☆☆
+类	入口	openlink	openlink	zi	aj	✅ 静态核验	—
+类	入口	updatevm	updatevm	fy2	oy2	✅ 静态核验	—
+类	通用	painter.res	painter.res	painter.res	pac	✅ 静态核验	—
+类	语音	语音门控（GmAsrHook / GmSeeHook）	yp1	(无)	(无)	❌ 已消失	—
+方法	资源	头像 Painter 全树唯一 (II,Composer)LPainter;	kf5.K	s27.E	r47.U	✅ 静态核验	★☆☆
+方法	资源	k47.G	k47.G	k47.G	i77.C	✅ 静态核验	—
+方法	UI原子	Modifier.paint 六类型逐位唯一	fh6.N	wx6.P	zw7.S	✅ 静态核验	★☆☆
+方法	入口	入口行点击	m5.v	z5.w	y5.v	✅ 静态核验	—
+方法	账号	账号头像 2.7.5 = b6.w	p5.v	b6.w	a6.v	✅ 静态核验	★★☆
+方法	账号	账号名 类换人 + **方法 v→w**	s5.v	d6.w	c6.v	✅ 静态核验	★★☆
+方法	会话	消息列表 11 形参逐位	h91.a	h42.a	p42.a	✅ 静态核验	★☆☆
+方法	气泡	气泡单元 八参逐位	pn9.c	y2c.k	hfc.g	✅ 静态核验	★☆☆
+方法	气泡	气泡作用域	ls9.f	yb0.e	ac0.e	✅ 静态核验	—
+方法	会话	GotoBottomButton —— 方法跑到 dz7！	zc.s	yu7.n	nl9.q	✅ 静态核验	★★☆
+方法	UI原子	ShaderBrush	tn0.b	ls0.b	ms0.b	✅ 静态核验	—
+方法	气泡	背景 Element	se0.c	zi0.d	bj0.d	✅ 静态核验	—
+方法	气泡	画底原语·4 参 Brush 版	uia.u	da8.p	dc8.r	✅ 静态核验	—
+方法	气泡	画底原语·3 参颜色版	uia.v	da8.q	dc8.s	✅ 静态核验	—
+方法	气泡	clipmod.bg	clipmod.bg	da8.q	dc8.s	✅ 静态核验	—
+方法	气泡	clipmod.clip	clipmod.clip	dec.w	ee.s	✅ 静态核验	—
+方法	气泡	clipmod.round	clipmod.round	oc5.<init>	je5.<init>	✅ 静态核验	—
+方法	配置	model 域下发 方法名未变	p66.h	tj7.h	sl7.h	✅ 静态核验	★☆☆
+方法	配置	main 域下发	h02.u	hx2.y	qx2.y	✅ 静态核验	—
+方法	会话	会话接口	ao1.I	nk2.k	wk2.k	✅ 静态核验	—
+方法	会话	会话接口	ao1.J	nk2.P	wk2.P	✅ 静态核验	—
+方法	会话	会话接口（W()Lns; → Y()Lps;）	ao1.M	nk2.Y	wk2.Y	✅ 静态核验	—
+方法	下发	下发数据对象	bx4.get	f46.get	b66.get	✅ 静态核验	—
+方法	建议	建议列表 九参逐位	yb5.e	p67.f	g17.f	✅ 静态核验	★☆☆
+方法	建议	建议列表 九参逐位	yb5.f	p67.g	g17.g	✅ 静态核验	★☆☆
+方法	提示词	提示词文本 Context 唯一	pd5.I	-.-	(无).-	❌ 已消失	★☆☆
+方法	提示词	提示词文本	pd5.H	g37.A	f57.y	✅ 静态核验	—
+方法	存储	渲染列表（D()Lw1a → C()Lk5a）	wr.x	zs.C	at.C	✅ 静态核验	—
+方法	存储	列表更新	wr.z	zs.E	at.E	✅ 静态核验	—
+方法	UI原子	图标 Hook 锚	me4.a	qj5.a	ll5.a	✅ 静态核验	—
+方法	渲染	渲染列表判空	hp8.isEmpty	zaa.isEmpty	kda.isEmpty	✅ 静态核验	—
+方法	检测	字节 APM root 检测	sr9.w	ug9.C	d89.D	✅ 静态核验	—
+方法	入口	设置「检查更新」点击 e=22/23	settings.row.update.z	pg7.z	yg7.y	✅ 静态核验	★☆☆
+方法	会话	协程 resumeWith 吞掉它=宿主逻辑一行不跑	cont.impl.h.h	sj0.h	uj0.h	✅ 静态核验	★☆☆
+方法	通用	painter.res.U	painter.res.U	painter.res.U.painter.res.U	pac.y	✅ 静态核验	—

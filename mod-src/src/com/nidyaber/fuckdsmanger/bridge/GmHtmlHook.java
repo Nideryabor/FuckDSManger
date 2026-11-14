@@ -52,11 +52,33 @@ public final class GmHtmlHook extends XC_MethodHook {
 
     // ─────────────────────── 候选混淆名 ───────────────────────
 
-    /** 语言判断工具（R8 合并类）—— 2.6.1=`v7a` / 2.6.2=`oaa` / **2.7.1=`hea`** */
-    private static final String[] CAND_LANG = {"nja", "hea", "oaa"};
-    // ★ 2.7.2 = **nja**（abstract class, super Lmja）
-    //   证据：`M(Ljava/lang/String;Ljava/lang/String;Z)Z` 全树唯一命中；
-    //   相邻重载 L(String,String,Z)Z / J(String)Z / O(I,String)String 与 2.7.1 的 hea 同族
+    /**
+     * 语言判断工具（R8 合并类）—— 2.6.1=`v7a` / 2.6.2=`oaa` / 2.7.1=`hea` /
+     * 2.7.2=`nja` / **2.8.0=`hma`**（2026-11-14 定位）。
+     *
+     * <p>★ 为什么把 2.8.0 补上（3.106.6）：`版本/3.106.5.md` 遗留里那条
+     * 「HTML 语言闸门 {@code M(String,String,boolean)} 两版都不存在」——
+     * 静态复查 `tmp/h280`（宿主 2.8.0 全量 smali）确认真身是
+     * <pre>
+     *   hma.J(Ljava/lang/String;Ljava/lang/String;Z)Z
+     *     if-nez p0 → (p1 == null ? true : false)
+     *     if-nez p2 → p0.equals(p1)            ← ★ 语言闸门走这条（第三参 = true）
+     *     否则        p0.equalsIgnoreCase(p1)
+     * </pre>
+     * = 2.6.2 的 `oaa.U` / 2.7.1 的 `hea.G` / 2.7.2 的 `nja.M`（方法体逐条同形，
+     * 都是 null 判断 + equals / equalsIgnoreCase 两个分支）。
+     *
+     * <p>同族里另外两个同名签名**不是**闸门，别挂错：
+     * <pre>
+     *   hma.I(String,String,Z)Z → endsWith   + regionMatches（忽略大小写版）
+     *   hma.N(String,String,Z)Z → startsWith + regionMatches
+     * </pre>
+     *
+     * <p>调用点铁证（`grep -rn "Lhma;->J(Ljava/lang/String;Ljava/lang/String;Z)Z"`）：
+     * `f27.smali:5967` 与 `mr0.smali:2104` 都是
+     * {@code invoke-static {lang, "mermaid", true}, Lhma;->J} —— 正是代码块语言判定。
+     */
+    private static final String[] CAND_LANG = {"hma", "nja", "hea", "oaa"};
 
     /**
      * 「持有 mermaid WebView」的那个混淆类 —— 从它身上<b>伸手拿</b> WebView 子类的 Class。
@@ -527,18 +549,30 @@ public final class GmHtmlHook extends XC_MethodHook {
     private static int hookLang(ClassLoader cl) {
         int hooked = 0;
         for (String name : CAND_LANG) {
+            Class<?> c;
             try {
-                Class<?> c = Class.forName(name, false, cl);
+                c = Class.forName(name, false, cl);
+            } catch (Throwable notFound) {
+                // ★ 2026-11-14（3.106.6）：候选名**必然**大部分不存在（每次升级都会换名），
+                //   原来这里走 logFail ⇒ 每次开机都刷三条 `hookM FAIL html … ClassNotFound`
+                //   ⇒ 主人看日志时会把它们当成"功能挂了"。改成**静默跳过**，
+                //   只在最后统一报一句"命中哪个 / 一个都没命中"。
+                continue;
+            }
+            try {
                 Method[] ms = c.getDeclaredMethods();
                 for (int i = 0; i < ms.length; i++) {
                     Method m = ms[i];
                     // 语言比较：2.6.2=`oaa.U`（equals+equalsIgnoreCase）
-                    //          → **2.7.1=`hea.G`**（方法体逐条相同：equals/equalsIgnoreCase）
+                    //          → 2.7.1=`hea.G` → 2.7.2=`nja.M` → **2.8.0=`hma.J`**
                     //   证据：oaa.T/U/Y ↔ hea.F/G/K，整体位移 3 位且方法体一一对应
                     //         （T/F=endsWith · U/G=equals · Y/K=startsWith）
-                    // 方法名：2.6.2=`U` → 2.7.1=`G` → **2.7.2=`M`**
-                    //   （2.7.2 实测 `nja.M(String,String,Z)Z` 全树唯一；相邻重载 L/J/O 同族）
-                    if (!"M".equals(m.getName()) && !"G".equals(m.getName()) && !"U".equals(m.getName())) continue;
+                    //   2.8.0 同族：hma.I=endsWith / **hma.J=equals（闸门）** / hma.N=startsWith
+                    //   ⇒ 名字白名单加上 J；endsWith/startsWith 两个**不挂**
+                    //     （它们被调得极频繁，而闸门判据 [html] vs "mermaid" 永远不会在它们身上成立，
+                    //       挂了只是白付热路径开销）。
+                    String mn = m.getName();
+                    if (!"M".equals(mn) && !"G".equals(mn) && !"U".equals(mn) && !"J".equals(mn)) continue;
                     if (!Modifier.isStatic(m.getModifiers())) continue;
                     if (m.getReturnType() != boolean.class) continue;
                     Class<?>[] ps = m.getParameterTypes();

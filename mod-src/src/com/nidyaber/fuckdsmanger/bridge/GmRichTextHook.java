@@ -64,32 +64,44 @@ public final class GmRichTextHook extends XC_MethodHook {
      * AnnotatedString —— implements CharSequence，字段 b=text
      * <p>2.6.2=ln → 2.7.1=mn → 2.7.2=sn → **2.7.5=tn**
      */
-    private static final String[] CAND_KN = {"tn", "sn", "mn", "ln"};
+    private static final String[] CAND_KN = {"vn", "tn", "sn", "mn", "ln"};
+    // ★★ 2.8.0 = **vn**（implements CharSequence + a:List b:String c:ArrayList d:ArrayList
+    //   + `static final e:Lug9;`→`Ld89;` —— 正好印证 GmRemap 的 ug9→d89）
+    //   ⚠️ 2.8.0 的 `tn` 已被复用成 Builder（同名换主人），不能当 AnnotatedString 用
     // ★ 2026-11-07（3.76.0）· 2.7.5 全树反查（tmp/h275）：
     //   tn = CharSequence + a:List / b:String / c:ArrayList / d:ArrayList + ctor (String,List)
     //   ⚠️ 2.7.5 的 sn 已换主人（a:Object b:I c:I d:String，不是 AnnotatedString）
     /** AnnotatedString.Builder —— 字段 a=StringBuilder、b=ArrayList；k()=toAnnotatedString */
-    private static final String[] CAND_IN = {"rn", "qn", "kn", "jn"};
+    private static final String[] CAND_IN = {"tn", "rn", "qn", "kn", "jn"};
+    // ★★ 2.8.0 = **tn**（implements Appendable，ctor(Lvn;)，k()Lvn;，j(Lnea;)I）
+    //   ⚠️ 撞名陷阱：2.7.5 的 tn 是 AnnotatedString，2.8.0 已换主人变成 Builder
     // ★ 2.7.5 = **rn**：c(tn,II)=append / e(String) / j(cca)I=pushStyle / f()=pop / k()Ltn;
     /** SpanStyle —— toString "SpanStyle(color="，15 参构造器 */
-    private static final String[] CAND_SPAN = {"cca", "tba", "m6a", "y2a"};
+    private static final String[] CAND_SPAN = {"nea", "cca", "tba", "m6a", "y2a"};
+    // ★★ 2.8.0 = **nea**（15 实例字段，类型序列 O,J,O,O,O,O,String,J,O,O,O,J,O,O,O 与 cca 逐位同形）
+    //   交叉验证：nea.c=Lvs4(Weight) / nea.d=Lts4(Style) / nea.m=Lxwa(Deco)，与 cca.c/d/m 一一对应
+    //   2.7.5 = cca
     // ★ 2.7.5 = **cca**（15 字段 / 15 参构造器）
     //   ctor `(JJ,Ljs4;,Lhs4;,Lis4;,Lzq4;,String,J,Ljl0;,Lpwa;,Lqr6;,J,Lkua;,Lty9;,I)V`
     //   与 2.7.2 tba `(JJ,fs4;,ds4;,es4;,vq4;,String,J,il0;,jwa;,kr6;,J,cua;,ny9;,I)V` 逐位同形
     //   ⚠️ 2.7.5 的 tba 只剩 2 字段（换主人了）⇒ 3.75.x 之前一直卡在自检这一步（见下）
     /** FontWeight —— 字段 a:I */
-    private static final String[] CAND_WEIGHT = {"js4", "fs4", "wq4", "oo4"};   // 2.7.5 = js4（a:I + b~f:自引用）
+    private static final String[] CAND_WEIGHT = {"vs4", "js4", "fs4", "wq4", "oo4"};   // ★ 2.8.0 = vs4（a:I + b~f 5 个自引用；= nea.c）
     /** FontStyle —— 字段 a:I（0=Normal 1=Italic） */
-    private static final String[] CAND_STYLE = {"hs4", "ds4", "uq4", "mo4"};    // 2.7.5 = hs4
+    private static final String[] CAND_STYLE = {"ts4", "hs4", "ds4", "uq4", "mo4"};    // ★ 2.8.0 = ts4（a:I 单字段；= nea.d）
     /** TextDecoration —— 字段 a:I（0=None 1=Underline 2=LineThrough） */
-    private static final String[] CAND_DECO = {"kua", "cua", "yoa", "xka"};     // 2.7.5 = kua
+    private static final String[] CAND_DECO = {"xwa", "kua", "cua", "yoa", "xka"};     // ★ 2.8.0 = xwa（a:I + b~d 3 个自引用；= nea.m）
     /** MarkdownTextKt（R8 合并类）—— 里面那个 `b(AnnotatedString,Modifier,Colors,Config,Composer,II)`
      *  <p>2.6.2=`bz0.y(Lln;Lgc7;Lkoa;Lk;Lby4;II)V`
      *  <p>**2.7.1=`q13.k(Lmn;Leg7;Ljsa;Lk;Ln05;II)V`** ★ 七参逐位全对
      *  （`ln→mn` `gc7→eg7` `koa→jsa` `k→k`(未改名) `by4→n05`），方法名 `y→k`
      *  <p>⚠️ 2.7.1 的 `bz0` 是**别的类**（同名换主人）⇒ 已从候选里移除，
      *  否则 findClass 成功但方法对不上，只会浪费一次尝试。 */
-    private static final String[] CAND_MT = {"s27", "k27", "q13", "bz0"};
+    private static final String[] CAND_MT = {"r47", "s27", "k27", "q13", "bz0"};
+    // ★★ 2.8.0 = **r47.b(Lvn;Lem7;Ls0b;Lk;Lh25;II)V**
+    //   与 2.7.5 s27.b(Ltn;Lfk7;Liya;Lk;Lv15;II)V 逐位对位：
+    //     tn→vn(AnnotatedString) fk7→em7(Modifier) iya→s0b(Colors) k→k(未变) v15→h25(Composer)
+    //   ★ 且 r47 同时也是 kf5(painterResource) 的 2.8.0 值 —— 与 2.7.5 的 s27 一样是**巨型合并类**
     // ★ 2.7.5 = **s27.b(Ltn;Lfk7;Liya;Lk;Lv15;II)V**（全树唯一：首参 tn=AnnotatedString）
 
     // ─────────────────────── 宿主类句柄 ───────────────────────

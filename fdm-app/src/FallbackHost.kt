@@ -101,6 +101,183 @@ object FallbackHost {
         }
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  【选择页】2026-11-13 · 点宿主「检查更新」→ 让主人选走哪条路
+    //
+    //  主人原话：「原本我们不是点检查更新拉起模块吗，那就干脆做一个二级页面，
+    //             选择拉起模块还是选择查看宿主的 compose 子页面并打开」
+    //
+    //  为什么必须内嵌在宿主里：
+    //    · 跨进程 startActivity 被**包可见性**挡（宿主 targetSdk=36 且没有 <queries> 声明我们）
+    //      实测 5 次只成功 1 次，而且主人开了「隐藏应用列表」，成功率更低
+    //    · 而**进程内 ComposeView** 完全不受这个限制（它就是宿主自己的一段 UI）
+    //    ⇒ 这是唯一「不用关隐藏应用列表」就能稳定工作的方案
+    //
+    //  为什么复用这个类：`FdmComposeDialog.show()` 已经把
+    //    「ComposeView + 三件套 owner + 手工 recomposer」这套脏活干完了
+    //    （2026-11-07 血证：少一样就 IllegalStateException: ViewTreeLifecycleOwner not found）
+    //    ⇒ 我们只换**内容**，不碰挂载逻辑。
+    // ══════════════════════════════════════════════════════════════════
+
+    /** 选择页文案（和 FdmFallbackDialog 的对应常量逐字一致）。 */
+    private const val C_TITLE_CHOICE = "检查更新"
+    private const val T_CHOICE_DESC =
+        "这一行已被 FuckDSManger 接管。\n\n" +
+            "· 打开模块：进入插件自身的设置界面\n" +
+            "· 检查宿主更新：走宿主原本的检查更新（已被拦截，不会真的发请求）"
+    private const val T_CHOICE_MODULE = "打开模块"
+    private const val T_CHOICE_HOST = "检查宿主更新"
+
+    /**
+     * 选择页。
+     *
+     * @param onModule 点「打开模块」
+     * @param onHost   点「检查宿主更新」
+     */
+    @JvmStatic
+    fun installChoice(cv: View, onModule: Runnable?, onHost: Runnable?) {
+        val compose = cv as ComposeView
+        compose.setContent {
+            ChoiceCard(onModule = onModule, onHost = onHost)
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  【选择页 · 三按钮】2026-11-14 · 整页正式上入口
+    //
+    //  主人拍板：「保留二选一弹窗，只把里面『打开模块』那个按钮改成开整页」
+    //           + 「两条并存：加个开关/两个按钮，让主人自己选」
+    //
+    //  ⇒ 三按钮形态：
+    //      ① 打开模块 · 整页   ← 新路：进程内 ComposeView（HostPage），不受包可见性影响
+    //      ② 模块本体          ← 老路：跨进程 startActivity（原样，一个字没动）
+    //      ③ 检查宿主更新      ← 原样
+    //
+    //  ⚠️ 为什么**新增**一个方法而不是改旧的 `installChoice`：
+    //     教训 335 —— 新东西挂独立入口。旧的二参版本仍然是老路径的唯一实现，
+    //     bridge 侧优先反射三参版本，**反射不到就自动退回二参**
+    //     （= 旧 UI APK + 新 bridge 这种错配也不会崩）。
+    // ══════════════════════════════════════════════════════════════════
+
+    /** 三按钮版选择页的文案（与旧版共用标题，说明另写）。 */
+    private const val T_CHOICE3_DESC =
+        "这一行已被 FuckDSManger 接管。\n\n" +
+            "· 打开模块 · 整页：界面直接画在宿主进程里，不受包可见性 / 隐藏应用列表影响（推荐）\n" +
+            "· 模块本体：跨进程打开模块自己的界面（可能被挡住，失败会弹保底卡片）\n" +
+            "· 检查宿主更新：走宿主原本的检查更新（已被拦截，不会真的发请求）"
+    private const val T_CHOICE3_FULL = "打开模块 · 整页"
+    private const val T_CHOICE3_MODULE = "模块本体"
+    private const val T_CHOICE3_HOST = "检查宿主更新"
+
+    /**
+     * 选择页（三按钮版）。
+     *
+     * @param onFull   点「打开模块 · 整页」（进程内 HostPage）
+     * @param onModule 点「模块本体」（跨进程，老路径）
+     * @param onHost   点「检查宿主更新」
+     */
+    @JvmStatic
+    fun installChoice3(cv: View, onFull: Runnable?, onModule: Runnable?, onHost: Runnable?) {
+        val compose = cv as ComposeView
+        compose.setContent {
+            ChoiceCard3(onFull = onFull, onModule = onModule, onHost = onHost)
+        }
+    }
+
+    @Composable
+    private fun ChoiceCard3(onFull: Runnable?, onModule: Runnable?, onHost: Runnable?) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(C_CARD)
+                .padding(horizontal = 22.dp, vertical = 20.dp)
+        ) {
+            Text(
+                text = C_TITLE_CHOICE,
+                color = C_TITLE,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Note(T_CHOICE3_DESC, C_CYAN)
+
+            Spacer(Modifier.height(18.dp))
+
+            // ① 主路：整页（整行宽，视觉上就是\"推荐\"）
+            Btn(
+                label = T_CHOICE3_FULL,
+                bg = C_PRIMARY,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                onFull?.run()
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // ② 备路：模块本体（跨进程）+ ③ 检查宿主更新
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Btn(
+                    label = T_CHOICE3_MODULE,
+                    bg = C_SECOND,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    onModule?.run()
+                }
+                Btn(
+                    label = T_CHOICE3_HOST,
+                    bg = C_SECOND,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    onHost?.run()
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun ChoiceCard(onModule: Runnable?, onHost: Runnable?) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(C_CARD)
+                .padding(horizontal = 22.dp, vertical = 20.dp)
+        ) {
+            Text(
+                text = C_TITLE_CHOICE,
+                color = C_TITLE,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Note(T_CHOICE_DESC, C_CYAN)
+
+            Spacer(Modifier.height(18.dp))
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Btn(
+                    label = T_CHOICE_MODULE,
+                    bg = C_PRIMARY,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    onModule?.run()
+                }
+                Btn(
+                    label = T_CHOICE_HOST,
+                    bg = C_SECOND,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    onHost?.run()
+                }
+            }
+        }
+    }
+
     @Composable
     private fun FallbackCard(reason: String?, onLaunch: Runnable?, onHost: Runnable?) {
         Column(

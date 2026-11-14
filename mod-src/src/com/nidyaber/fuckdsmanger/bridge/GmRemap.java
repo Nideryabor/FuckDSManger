@@ -10,6 +10,11 @@ package com.nidyaber.fuckdsmanger.bridge;
  *   2026-10-16 升级为「**多代键**」（2.5.2 与 2.6.1 都收），值 = **2.6.2**
  *   2026-10-24 升级为「**四代键 + 拆类**」，值 = **2.7.1**
  *   2026-11-06 升级为「**六代键**」，值 = **2.7.5**（CLS5 → CLS6；clsAll 改成遍历前 N-1 列）
+ *   2026-11-13 升级为「**七代键**」，值 = **2.8.0**（CLS6 → CLS7；宿主 vc297）
+ *              · 本轮依据：si_fullmap 1251 方法/437 类精确对位 + 类 IDF 串集投票
+ *                + 方法体归一化 difflib + 签名翻译全树唯一定位
+ *              · ★ 拆类仍在：da8 的 p/q 在**新碎片 dc8**（dgb 只是同域大杂烩）；
+ *                y2c 的 k 在 hfc；yu7 的 n 在 nl9；wx6 的 P 在 zw7；p67 的 f/g 在 g17
  *
  * 为什么要「多代键」（2.6.2 轮的血泪）：
  *   底座各文件不是同一代写的 —— GmEntry 的 hookM 用 **2.5.2 名**（走本表），
@@ -43,52 +48,61 @@ public final class GmRemap {
     private GmRemap() {}
 
     // ══════════════════════════════════════════════════════════════════
-    //  宿主类名：{2.5.2, 2.6.1, 2.6.2, 2.7.1, 2.7.2, 2.7.5}
+    //  宿主类名：{2.5.2, 2.6.1, 2.6.2, 2.7.1, 2.7.2, 2.7.5, 2.8.0}
     //  · 值允许逗号分隔（R8 拆类）
     //  · null = 未定位 ⇒ 安全跳过
     //  · ⚠️ 前 N-1 列都是「键」，**最后一列才是目标值**；clsAll 自动遍历前 N-1 列
     // ══════════════════════════════════════════════════════════════════
-    private static final String[][] CLS6 = {
-        //  2.5.2   2.6.1   2.6.2              2.7.1          2.7.2
-        {"kf5", "kh7", "j77", "pc7", "k27", "s27"},         // 杂物间（painterResource）★ 串 PainterResources.android.kt
-        {"fh6", "w2b", "e3c", "kmc", "qx6", "wx6"},         // Modifier.paint ★ a0(6类型逐位)→e0；★合并了 pic
-        {"me4", "pe5", "pe5", "th5", "lj5", "qj5"},         // 图标 Hook 锚 ★ 签名逐位
-        {"m5", "t5", "t5", "u5", "y5", "z5"},          // 入口：设置行→路由桶 ★ 串 batch_management_click
-        {"h91", "d12", "j12", "j32", "c42", "h42"},         // 消息列表 Composable ★ 串 messageListWidth
-        {"p5", "x5", "x5", "x5", "a6", "b6"},          // 账号头像桶 ★ 2.7.5 = b6（见 MTH 注释）
-        {"pn9", "i93", "jtb", "szb,x4c,fxb", "cfb,mdb,j37,v5a,vcc", "y2c"}, // 气泡单元 Composable ★★ 拆 3（八参逐位→szb.o）
-        {"ls9", "ua0", "xa0", "za0", "wb0", "yb0"},         // 气泡作用域 ★ 8 串中 7 条逐字相同
-        {"uia", "qk7", "us6", "p68,dz7,r0b", "x98,qu7,z2c,g83,j37,zi9", "da8,yu7"}, // Modifier 扩展桶 ★★ 拆 3
-        {"tn0", "jq0", "oq0", "or0", "ks0", "ls0"},         // ShaderBrush 实现 ★ 字段 c:I/d:Object 同形
-        {"jd8", "dn9", "xp9", "pt9", "py9", "vy9"},         // 气泡阴影 ★ fp_match 100% 5/5
-        {"se0", "eh0", "ih0", "fi0", "yi0", "zi0"},         // 背景 Element ★ 4 字段 + ctor 逐位
-        {"zc", "pr6", "qn7", "jr7", "px6", "vx6"},         // ChatPage 作用域 ★ 串 STRIKETHROUGH/INLINE_MATH
+    private static final String[][] CLS7 = {
+        //  2.5.2   2.6.1   2.6.2              2.7.1          2.7.2          2.7.5        2.8.0
+        {"kf5", "kh7", "j77", "pc7", "k27", "s27", "q57"},         // 杂物间（painterResource）★ 串 PainterResources.android.kt
+        // ═══ 2026-11-14（3.106.6）· stringResource 的**真实落点** ═══
+        //   `GmResTextHook` 一直写死 `k47` + 方法 `G`（底座 GmEntry.smali:607）。
+        //   静态复查 `tmp/h275` / `tmp/h280` 两棵树，实情是：
+        //     2.7.5  k47.G(I,Lv15;)Ljava/lang/String;   ← 串 StringResources.android.kt:33 ✅
+        //     2.8.0  i77.C(I,Lh25;)Ljava/lang/String;   ← 同一个串，**类名和方法名都变了**
+        //            而同名的 `i77.G(I,Lh25;)Lhfa;` 是**另一个**东西（返回 StringResource
+        //            包装类，不是 String）⇒ 只按方法名 `G` 撞会挂到错的方法上。
+        //   ⇒ 走表，别再写死。
+        {"k47", "k47", "k47", "k47", "l47", "k47", "i77"},          // stringResource ★ 2.8.0 = i77.C
+        {"fh6", "w2b", "e3c", "kmc", "qx6", "wx6", "zw7,u48"},         // Modifier.paint ★ a0(6类型逐位)→e0；★合并了 pic
+        {"me4", "pe5", "pe5", "th5", "lj5", "qj5", "ll5"},         // 图标 Hook 锚 ★ 签名逐位
+        {"m5", "t5", "t5", "u5", "y5", "z5", "y5"},          // 入口：设置行→路由桶 ★ 串 batch_management_click
+        {"h91", "d12", "j12", "j32", "c42", "h42", "p42"},         // 消息列表 Composable ★ 串 messageListWidth
+        {"p5", "x5", "x5", "x5", "a6", "b6", "a6"},          // 账号头像桶 ★ 2.7.5 = b6（见 MTH 注释）
+        {"pn9", "i93", "jtb", "szb,x4c,fxb", "cfb,mdb,j37,v5a,vcc", "y2c", "hfc,qgc"}, // 气泡单元 Composable ★★ 拆 3（八参逐位→szb.o）
+        {"ls9", "ua0", "xa0", "za0", "wb0", "yb0", "ac0"},         // 气泡作用域 ★ 8 串中 7 条逐字相同
+        {"uia", "qk7", "us6", "p68,dz7,r0b", "x98,qu7,z2c,g83,j37,zi9", "da8,yu7", "dc8,dgb,nl9,o8a"}, // Modifier 扩展桶 ★★ 拆 3
+        {"tn0", "jq0", "oq0", "or0", "ks0", "ls0", "ms0"},         // ShaderBrush 实现 ★ 字段 c:I/d:Object 同形
+        {"jd8", "dn9", "xp9", "pt9", "py9", "vy9", "e1a"},         // 气泡阴影 ★ fp_match 100% 5/5
+        {"se0", "eh0", "ih0", "fi0", "yi0", "zi0", "bj0"},         // 背景 Element ★ 4 字段 + ctor 逐位
+        {"zc", "pr6", "qn7", "jr7", "px6", "vx6", "zw7"},         // ChatPage 作用域 ★ 串 STRIKETHROUGH/INLINE_MATH
                                                //   ⚠️ 但方法 s 在 dz7！见 MTH + clsFor()
-        {"s5", "a6", "a6", "z5", "c6", "d6"},          // 账号名桶 ★★ 2.7.1 的 a6 已换主人（r(Object,Object)Object）
-        {"p66", "m97", "tb7", "rf7", "mj7", "tj7"},         // 配置源头 model 域 ★ fp_match 100% + h() 未变
-        {"h02", "yt2", "bu2", "iw2", "cx2", "hx2"},         // 配置源头 main 域 ★ fp_match 97.2%
-        {"ao1", "gh2", "kh2", "oj2", "ik2", "nk2"},         // 会话提供接口 ★ fp_match 100% 66/66
-        {"bx4", "py5", "py5", "w16", "a46", "f46"},         // 下发数据对象 ★ fp_match 100% 27/28 方法
-        {"yb5", "hs7", "rd7", "oh7", "h67", "p67"},         // 建议 Prompt 视图 ★ 串 promptCrossfade 唯一
-        {"pd5", "i93", "rb7", "pf7", "y27", "g37"},         // 提示词文本 ★ s(Lhe7;Context;)String 逐位
-        {"hp8", "dz9", "w1a", "k5a", "qaa", "zaa"},         // 渲染列表 ★ fp_match 100%
-        {"wr", "ns", "ns", "ps", "ys", "zs"},          // 消息主存储 ★ fp_match 100% 30/39 方法
-        {"sr9", "zx8", "r09", "a79", "ng9", "ug9"},         // 字节 APM root 检测 ★ fp_match 86.2% + C()Z 原样
-        {"lp9", "s4b", "l7b", "qbb", "ahb", "ghb"},         // Kotlin Unit 单例 ★ fp_match 100% 形状全同
-        {"le", "af", "cf", "rf", "qf", "rf"},          // 图像包装 ★ implements Lei5 + a:Bitmap
-        {"ok0", "an0", "dn0", "bo0", "uo0", "vo0"},         // BitmapPainter ★ 字段 f/g/h/i/j/k 逐位同形
-        {"ku6", "mz7", "l18", "d58", "k88", "q88"},         // Painter 基类 ★ bo0.super Ld58
-        {"vq", "mr", "lr", "nr", "xr", "yr"},          // 消息基类 ★ fp_match 100% 46/46
-        {"c76", "x97", "gc7", "eg7", "yj7", "fk7"},         // Modifier 接口 ★ 三参签名逐位
-        {"ey3", "yx4", "by4", "n05", "r15", "v15"},         // Compose Composer ★ fp_match 100% 21/21
-        {"sn0", "iq0", "nq0", "nr0", "js0", "ks0"},         // Brush ★ 同上第 2 参（abstract class）
-        {"dd8", "im9", "cp9", "us9", "tx9", "ay9"},         // ShaderBrush（抽象）★ or0.super Lus9
-        {"md8", "gn9", "aq9", "st9", "sy9", "yy9"},         // Shape ★ 同上第 3 参
-        {"we5", "pz7", "rw8", "f09", "p39", null},         // GmReplyHook 用 ★ fp_match 100% 8/8
-        {"vk0", "jn0", "on0", "mo0", "fp0", "gp0"},         // GmPaintModHook 用 ★ bo0.k:Lmo0 交叉验证
-        {"gz3", "bz4", "ez4", "q15", "v25", "a35"},         // GmCallDialog 用 ★ fp_match 100% 4/4
-        {"it9", "d9b", "xbb", "zfb", "olb", null},         // 账号数据类 ★ Companion:Lyfb + f:[Lnf6
-        {"u19", "u19", "m49", "x79", "jb9", "qb9"},         // Shape 工厂 ★ a()/b(F)/c(FFFF)/d(FFI)/e() 全同
+        {"s5", "a6", "a6", "z5", "c6", "d6", "c6"},          // 账号名桶 ★★ 2.7.1 的 a6 已换主人（r(Object,Object)Object）
+        {"p66", "m97", "tb7", "rf7", "mj7", "tj7", "sl7"},         // 配置源头 model 域 ★ fp_match 100% + h() 未变
+        {"h02", "yt2", "bu2", "iw2", "cx2", "hx2", "qx2"},         // 配置源头 main 域 ★ fp_match 97.2%
+        {"ao1", "gh2", "kh2", "oj2", "ik2", "nk2", "wk2"},         // 会话提供接口 ★ fp_match 100% 66/66
+        {"bx4", "py5", "py5", "w16", "a46", "f46", "b66"},         // 下发数据对象 ★ fp_match 100% 27/28 方法
+        {"yb5", "hs7", "rd7", "oh7", "h67", "p67", "g17,s17"},         // 建议 Prompt 视图 ★ 串 promptCrossfade 唯一
+        {"pd5", "i93", "rb7", "pf7", "y27", "g37", "f57,s57"},         // 提示词文本 ★ s(Lhe7;Context;)String 逐位
+        {"hp8", "dz9", "w1a", "k5a", "qaa", "zaa", "kda"},         // 渲染列表 ★ fp_match 100%
+        {"wr", "ns", "ns", "ps", "ys", "zs", "at"},          // 消息主存储 ★ fp_match 100% 30/39 方法
+        {"sr9", "zx8", "r09", "a79", "ng9", "ug9", "d89"},         // 字节 APM root 检测 ★ fp_match 86.2% + C()Z 原样
+        {"lp9", "s4b", "l7b", "qbb", "ahb", "ghb", "qjb"},         // Kotlin Unit 单例 ★ fp_match 100% 形状全同
+        {"le", "af", "cf", "rf", "qf", "rf", "rf"},          // 图像包装 ★ implements Lei5 + a:Bitmap
+        {"ok0", "an0", "dn0", "bo0", "uo0", "vo0", "xo0"},         // BitmapPainter ★ 字段 f/g/h/i/j/k 逐位同形
+        {"ku6", "mz7", "l18", "d58", "k88", "q88", "ra8"},         // Painter 基类 ★ bo0.super Ld58
+        {"vq", "mr", "lr", "nr", "xr", "yr", "zr"},          // 消息基类 ★ fp_match 100% 46/46
+        {"c76", "x97", "gc7", "eg7", "yj7", "fk7", "em7"},         // Modifier 接口 ★ 三参签名逐位
+        {"ey3", "yx4", "by4", "n05", "r15", "v15", "h25"},         // Compose Composer ★ fp_match 100% 21/21
+        {"sn0", "iq0", "nq0", "nr0", "js0", "ks0", "ls0"},         // Brush ★ 同上第 2 参（abstract class）
+        {"dd8", "im9", "cp9", "us9", "tx9", "ay9", "h0a"},         // ShaderBrush（抽象）★ or0.super Lus9
+        {"md8", "gn9", "aq9", "st9", "sy9", "yy9", "h1a"},         // Shape ★ 同上第 3 参
+        {"we5", "pz7", "rw8", "f09", "p39", null, null},         // GmReplyHook 用 ★ fp_match 100% 8/8
+        {"vk0", "jn0", "on0", "mo0", "fp0", "gp0", "hp0"},         // GmPaintModHook 用 ★ bo0.k:Lmo0 交叉验证
+        {"gz3", "bz4", "ez4", "q15", "v25", "a35", "m35"},         // GmCallDialog 用 ★ fp_match 100% 4/4
+        {"it9", "d9b", "xbb", "zfb", "olb", null, null},         // 账号数据类 ★ Companion:Lyfb + f:[Lnf6
+        {"u19", "u19", "m49", "x79", "jb9", "qb9", "yd9"},         // Shape 工厂 ★ a()/b(F)/c(FFFF)/d(FFI)/e() 全同
         // ★ 2026-10-31（3.73.19）：宿主「通用表面容器」AppSurface(Modifier, Shape, color, contentColor, …)
         //   它是**气泡**的载体（每个消息气泡都套一层它）。气泡背景只能在这一层改。
         //   真机实证：caller=l23.a:167 → 用户气泡(色=-9223372036854775808) / 透明外壳(色=0)
@@ -101,20 +115,20 @@ public final class GmRemap {
         //   ⇒ 用我们自己的语义键，一个锚点一条，永不歧义。
         //
         //   判据（2.7.2 → 2.7.5，逐条实测）：
-        {"nod", "nod", "nod", "nod", "zi0", "aj0"},      // 绘制节点：字段 o:J/p:Brush/q:F/r:Shape 全同形，super xj7→ek7
-        {"nodbase", "nodbase", "nodbase", "nodbase", "xj7", "ek7"}, // 节点基类：14 字段 abstract
-        {"shapeholder", "shapeholder", "shapeholder", "shapeholder", "t82", "y82"}, // 气泡 Shape 容器：35 字段全同（t:Lib9;→Lpb9;、n:Lk78;→Lq78;）
-        {"clipmod", "clipmod", "clipmod", "clipmod", "vcc", "dec"}, // clip(Modifier,Shape)：`w(Lfk7;Lyy9;)Lfk7;` 全树唯一
+        {"nod", "nod", "nod", "nod", "zi0", "aj0", "cj0"},      // 绘制节点：字段 o:J/p:Brush/q:F/r:Shape 全同形，super xj7→ek7
+        {"nodbase", "nodbase", "nodbase", "nodbase", "xj7", "ek7", "dm7"}, // 节点基类：14 字段 abstract
+        {"shapeholder", "shapeholder", "shapeholder", "shapeholder", "t82", "y82", "g92"}, // 气泡 Shape 容器：35 字段全同（t:Lib9;→Lpb9;、n:Lk78;→Lq78;）
+        {"clipmod", "clipmod", "clipmod", "clipmod", "vcc", "dec", "ee"}, // clip(Modifier,Shape)：`w(Lfk7;Lyy9;)Lfk7;` 全树唯一
         // RoundedCornerShape 实现（`new oc5(2)`）—— cls 和 mth 都要有，别只加一边
-        {"clipmod.round", "clipmod.round", "clipmod.round", "clipmod.round", "kc5", "oc5"},
+        {"clipmod.round", "clipmod.round", "clipmod.round", "clipmod.round", "kc5", "oc5", "je5"},
         // 助手气泡注入的两个候选容器（GmBubbleBg 用）—— 用 SourceInfo 定位：
         //   e40.a  ↔  h40.a   （AssistantChatMessageCell.kt:130，13 形参逐位同形）
         //   ru7.c  ↔  yu7.?   （AssistantChatMessageContent.kt:100；yu7 现在是大杂烩，
         //                       还含 GotoBottomButton，所以只当兜底）
-        {"assistcell", "assistcell", "assistcell", "assistcell", "e40", "h40"},
-        {"assistbody", "assistbody", "assistbody", "assistbody", "ru7", "yu7"},
-        {"l23", "l23", "l23", "appsurface", "l23", "q23"},   // AppSurface ★ 2.7.2 = l23.a(Lyj7;Lsy9;JJLr33;Lr15;I)V
-        {"g56", "g87", "ja7", "he7", "gi7", "ni7"},         // 建议/快捷项 item 类 ★ fp_match 100% 7/7
+        {"assistcell", "assistcell", "assistcell", "assistcell", "e40", "h40", "j40"},
+        {"assistbody", "assistbody", "assistbody", "assistbody", "ru7", "yu7", "nl9,o8a"},
+        {"l23", "l23", "l23", "appsurface", "l23", "q23", "oy5"},   // AppSurface ★ 2.7.2 = l23.a(Lyj7;Lsy9;JJLr33;Lr15;I)V
+        {"g56", "g87", "ja7", "he7", "gi7", "ni7", "lk7"},         // 建议/快捷项 item 类 ★ fp_match 100% 7/7
         // ═══ 2026-11-07（2.7.5 从零静态定位）· 更新弹窗「立即更新」的落点 ═══
         //   宿主那一整条「打开更新链接」的类：**只有一个 Context 字段 + 一个 (String)V 方法**，
         //   方法体 = Uri.parse → Intent(ACTION_VIEW) → Context.startActivity（无 setPackage / 无 chooser）。
@@ -122,7 +136,7 @@ public final class GmRemap {
         //   天然无歧义（对比设置行那条 `pg7.z` 被复制/删除/重生成四家共用，判据不可能可靠）。
         //   判据：类里同时含 "android.intent.action.VIEW" + "Can't open " 两个串、单 Context 字段。
         //   2.7.5 = `zi`（见 专题/宿主更新按钮-静态链路-2.7.5.md）
-        {"openlink", "openlink", "openlink", "openlink", "openlink", "zi"},
+        {"openlink", "openlink", "openlink", "openlink", "openlink", "zi", "aj"},
         // ═══ 2026-11-07 · 设置页「检查更新」那一行的**唯一语义落点** ═══
         //   2.7.5 的 `fy2` = UpdateViewModel；它有两个入口：
         //     · `a(Lec3)`                 ← 方法体里**写死** "check_update" ⇒ 手动检查（就它）
@@ -131,9 +145,18 @@ public final class GmRemap {
         //     （都是它自己的协程状态机：`cy2.z` 是 lambda invokeSuspend、`dx9.z` 是调用点）。
         //   ★ 为什么不用旧的 `pg7.z`/`sj0.h`：那是 R8 合并出来的**路由桶下标**
         //     （复制/删除对话/重新生成 四家共用 e=22/23）⇒ 必然误伤，已四次血证。
-        {"updatevm", "updatevm", "updatevm", "updatevm", "updatevm", "fy2"},
+        {"updatevm", "updatevm", "updatevm", "updatevm", "updatevm", "fy2", "oy2"},
+        // ═══ 2026-11-13（2.8.0）· painterResource 的**真实落点** ═══
+        //   `dec.U(int,Context)Drawable` = 「按 id 取 Drawable」本体（2.7.5）。
+        //   ⚠️ **又是拆类**：`dec` 的 54 个方法在 2.8.0 散到 `ee`(clip) 和 `pac`(U)
+        //       dec.w(clip) → ee.s   ← 那是 clipmod.clip，不是这里
+        //       dec.U        → pac.y  ← 本行
+        //   判据：全树 `(I,Context)Drawable` 静态方法**只有一处** = pac.y
+        //   ★ 这个锚点没挂上 ⇒ 只改了 tv.string 没换 getDrawable
+        //     ⇒ 宿主把 "fdm_replaced" 当位图解析 ⇒ **首页助手头像变蓝色小方块**
+        {"painter.res", "painter.res", "painter.res", "painter.res", "painter.res", "painter.res", "pac"},
 
-        {"yp1", "yp1", "yp1", null, null, null},          // 语音门控（GmAsrHook / GmSeeHook）
+        {"yp1", "yp1", "yp1", null, null, null, null},          // 语音门控（GmAsrHook / GmSeeHook）
                                                //   ⚠️ 2.7.1 **同名已换主人**：变成 implements Ld15 的
                                                //   合成 lambda（a()Ltm9; / c()[Lt86; / d(Lbn3;)Object）
                                                //   ⇒ 同名的 a/c 方法存在且能被 hook，但**钩的是错误的东西**
@@ -148,14 +171,17 @@ public final class GmRemap {
     //    · 最后一列写 null = 该锚点在最新版已消失 ⇒ method() 返回 GONE 名，安全失败
     // ══════════════════════════════════════════════════════════════════
     private static final String[][] MTH = {
-        //  2.5.2键    2.6.1键    2.6.2键        2.7.2类  2.7.2方法
-        {"kf5.K", "kh7.K", "j77.p", "k27", "D", "s27", "E"},   // 头像 Painter ★ 全树唯一 (II,Composer)LPainter;
-        {"fh6.N", "w2b.N", "e3c.a0", "qx6", "l0", "wx6", "P"},  // Modifier.paint ★ 六类型逐位唯一
-        {"m5.v", "t5.v", "t5.w", "y5", "v", "z5", "w"},   // 入口行点击
+        //  2.5.2键    2.6.1键    2.6.2键        2.7.2类  2.7.2方法   2.7.5类 2.7.5方法  2.8.0类 2.8.0方法
+        {"kf5.K", "kh7.K", "j77.p", "k27", "D", "s27", "E", "r47", "U"},   // 头像 Painter ★ 全树唯一 (II,Composer)LPainter;
+        // stringResource(I, Composer)String —— GmResTextHook 的落点（3.106.6 补 2.8.0）
+        //   键只按 2.7.5 那代写 `k47.G`（底座 GmEntry.smali 传的就是 "k47"+"G"）
+        {"k47.G", "k47.G", "k47.G", "l47", "u", "k47", "G", "i77", "C"},
+        {"fh6.N", "w2b.N", "e3c.a0", "qx6", "l0", "wx6", "P", "zw7", "S"},  // Modifier.paint ★ 六类型逐位唯一
+        {"m5.v", "t5.v", "t5.w", "y5", "v", "z5", "w", "y5", "v"},   // 入口行点击
         //  ★ 2026-11-06 修正（3.75.0）：方法名 **v → w**。
         //    真机实测：2.7.5 的 `z5` 只有 **`w()Ljava/lang/Object;`** 一个方法（没有 v）。
         //    这就是「设置页里点我们那一行没反应」的直接原因（findAndHookMethod 抛 NoSuchMethod 被吞）。
-        {"p5.v", "x5.v", "x5.w", "a6", "v", "b6", "w"},   // 账号头像 ★★ 2.7.5 = b6.w
+        {"p5.v", "x5.v", "x5.w", "a6", "v", "b6", "w", "a6", "v"},   // 账号头像 ★★ 2.7.5 = b6.w
         //  ★ 2026-11-06 定位过程（3.75.17）—— 之前的「安全失败」现在补上了：
         //    ① 2.7.5 里 `a6` 这个短名**还在**，但已被复用成
         //       `a:I + b:String + q(Object,Object)Object`（同名诈尸，绝对不是头像桶）
@@ -172,7 +198,7 @@ public final class GmRemap {
         //         invoke-interface Lzda;->getValue()   Liea;->getValue()
         //       ⇒ 唯一差别就是 `Lzda; → Liea;`（Compose MutableState 改名）
         //    ⑤ 方法名 `v → w`：和 z5（0x1d→w）、d6（v→w）同一批重命名规律
-        {"s5.v", "a6.v", "a6.w", "c6", "v", "d6", "w"},   // 账号名 ★★ 类换人 + **方法 v→w**
+        {"s5.v", "a6.v", "a6.w", "c6", "v", "d6", "w", "c6", "v"},   // 账号名 ★★ 类换人 + **方法 v→w**
         //  ★ 2026-11-06 修（3.75.17）：方法名 `v → w`
         //    真机铁证：日志 `hookM d6.v count=0`（挂不上，昵称一直是坏的）
         //    形状对照（2.7.2 c6 → 2.7.5 d6）：
@@ -181,28 +207,28 @@ public final class GmRemap {
         //      d6: 同样 `a:int / b:Object / c:Object / d:Object`
         //          同样 `a()Object` + **`w()Object`**
         //    ⇒ c6 的 public v() 对应 d6 的 public w()（a() 是 private 的同名辅助，别挂错）
-        {"h91.a", "d12.a", "j12.a", "c42", "a", "h42", "a"},   // 消息列表 ★ 11 形参逐位
-        {"pn9.c", "i93.c", "jtb.f", "cfb", "g", "y2c", "k"},   // 气泡单元 ★ 八参逐位
-        {"ls9.f", "ua0.f", "xa0.g", "wb0", "e", "yb0", "e"},   // 气泡作用域
-        {"zc.s", "pr6.s", "qn7.p", "qu7", "r", "yu7", "n"},   // ★★ GotoBottomButton —— 方法跑到 dz7！
-        {"tn0.b", "jq0.b", "oq0.b", "ks0", "b", "ls0", "b"},   // ShaderBrush
-        {"se0.c", "eh0.c", "ih0.g", "yi0", "d", "zi0", "d"},   // 背景 Element
-        {"uia.u", "qk7.C", "us6.y", "x98", "s", "da8", "p"},   // 画底原语·4 参 Brush 版
-        {"uia.v", "qk7.D", "us6.z", "x98", "t", "da8", "q"},   // 画底原语·3 参颜色版
+        {"h91.a", "d12.a", "j12.a", "c42", "a", "h42", "a", "p42", "a"},   // 消息列表 ★ 11 形参逐位
+        {"pn9.c", "i93.c", "jtb.f", "cfb", "g", "y2c", "k", "hfc", "g"},   // 气泡单元 ★ 八参逐位
+        {"ls9.f", "ua0.f", "xa0.g", "wb0", "e", "yb0", "e", "ac0", "e"},   // 气泡作用域
+        {"zc.s", "pr6.s", "qn7.p", "qu7", "r", "yu7", "n", "nl9", "q"},   // ★★ GotoBottomButton —— 方法跑到 dz7！
+        {"tn0.b", "jq0.b", "oq0.b", "ks0", "b", "ls0", "b", "ms0", "b"},   // ShaderBrush
+        {"se0.c", "eh0.c", "ih0.g", "yi0", "d", "zi0", "d", "bj0", "d"},   // 背景 Element
+        {"uia.u", "qk7.C", "us6.y", "x98", "s", "da8", "p", "dc8", "r"},   // 画底原语·4 参 Brush 版
+        {"uia.v", "qk7.D", "us6.z", "x98", "t", "da8", "q", "dc8", "s"},   // 画底原语·3 参颜色版
         // ★ 2026-11-06：给「气泡背景」用的语义键。
         //   血证（3.75.18）：GmBubbleBg 里写 `clsFor("x98","t")` / `method("x98","t")`，
         //   但 MTH 的**键只认前三代**（uia.v / qk7.D / us6.z），"x98" 是 2.7.2 的**值列**
         //   ⇒ method("x98","t") 原样返回 "t" ⇒ 在 da8 里找不到 t 方法
         //   ⇒ 日志 `⑥ x98.t(Modifier,long,Shape) 没找到 ⇒ 不注入助手背景`。
         //   现在用语义键 "clipmod.bg"，一个入口两条路都通。
-        {"clipmod.bg", "clipmod.bg", "clipmod.bg", "x98", "t", "da8", "q"},
+        {"clipmod.bg", "clipmod.bg", "clipmod.bg", "x98", "t", "da8", "q", "dc8", "s"},
         // ★ 2026-11-06：clip(Modifier, Shape) 的**方法名**也要走表。
         //   血证（3.75.19 日志）：`② 挂上 clip: B(yq8,zo)` —— 方法名还是 "B"（2.7.2 的值），
         //   而 2.7.5 的 `dec` 里是 **`w(Lfk7;Lyy9;)Lfk7;`** ⇒ 挂到的是别的方法，
         //   用户气泡的 clip 根本没被拦下来。
         //   （同一个坑第三次：`x98.t` / `MTH_CLIP` / `GmEntryHook` 的 case 号，
         //     都是「把上一版的字面量写死在代码里」）
-        {"clipmod.clip", "clipmod.clip", "clipmod.clip", "vcc", "B", "dec", "w"},
+        {"clipmod.clip", "clipmod.clip", "clipmod.clip", "vcc", "B", "dec", "w", "ee", "s"},
         // ★ 2026-11-06：RoundedCornerShape（`new RoundedCornerShape(2)`）
         //   血证（3.75.20 日志）：`✗ 助手注入异常: method da8.q argument 3 has type yy9, got java.lang.Object`
         //   ⇒ 我们拿的 `dec.n` 在 2.7.5 里是 **`new Object()` 空壳**（R8 把真实形状内联掉了），
@@ -210,27 +236,27 @@ public final class GmRemap {
         //   2.7.2 的 `vcc.n` 是 `new kc5(2)`；2.7.5 对应 **`oc5`**：
         //     行号 10/12/16/20/63/104/695 全同、都是 `<init>(I)V` synthetic、
         //     `toString()` 都返回 "RectangleShape"。
-        {"clipmod.round", "clipmod.round", "clipmod.round", "vcc", "n", "oc5", "<init>"},
-        {"p66.h", "m97.h", "tb7.h", "mj7", "h", "tj7", "h"},   // model 域下发 ★ 方法名未变
-        {"h02.u", "yt2.u", "bu2.v", "cx2", "y", "hx2", "y"},   // main 域下发
+        {"clipmod.round", "clipmod.round", "clipmod.round", "vcc", "n", "oc5", "<init>", "je5", "<init>"},
+        {"p66.h", "m97.h", "tb7.h", "mj7", "h", "tj7", "h", "sl7", "h"},   // model 域下发 ★ 方法名未变
+        {"h02.u", "yt2.u", "bu2.v", "cx2", "y", "hx2", "y", "qx2", "y"},   // main 域下发
         //  ★ 2026-11-06 修正（3.75.0）：上一轮写的是 `cx2 -> v`，那是**错的**。
         //    铁证：2.7.2 树里 `s4.smali:4171` → `invoke-virtual {v0,...}, Lcx2;->y(La46;ILjava/lang/String;Ljava/lang/String;)V`
         //    而 `cx2.v()` 是 `()Ljava/lang/String;`（无参 getter）。
         //    ⇒ main 域下发从 2.7.2 起就挂在错方法上（静默失效），本轮一并纠正。
         //    真机复核（2.7.5）：`hx2.y(f46, int, String, String)` ✓，与 `tj7.h` 是同签名对。
-        {"ao1.I", "gh2.I", "kh2.k", "ik2", "k", "nk2", "k"},   // 会话接口
-        {"ao1.J", "gh2.J", "kh2.l0", "ik2", "P", "nk2", "P"},   // 会话接口
-        {"ao1.M", "gh2.M", "kh2.W", "ik2", "Y", "nk2", "Y"},   // 会话接口（W()Lns; → Y()Lps;）
-        {"bx4.get", "py5.get", "py5.get", "a46", "get", "f46", "get"}, // 下发数据对象
-        {"yb5.e", "hs7.e", "rd7.c", "h67", "e", "p67", "f"},   // 建议列表 ★ 九参逐位
-        {"yb5.f", "hs7.f", "rd7.d", "h67", "f", "p67", "g"},   // 建议列表 ★ 九参逐位
-        {"pd5.I", "i93.I", "rb7.K", "y27", "z", null, null},   // 提示词文本 ★ Context 唯一
-        {"pd5.H", "i93.H", "rb7.J", "y27", "y", "g37", "A"},   // 提示词文本
-        {"wr.x", "ns.x", "ns.D", "ys", "C", "zs", "C"},   // 渲染列表（D()Lw1a → C()Lk5a）
-        {"wr.z", "ns.z", "ns.F", "ys", "E", "zs", "E"},   // 列表更新
-        {"me4.a", "pe5.a", "pe5.a", "lj5", "a", "qj5", "a"},   // 图标 Hook 锚
-        {"hp8.isEmpty", "dz9.isEmpty", "w1a.isEmpty", "qaa", "isEmpty", "zaa", "isEmpty"}, // 渲染列表判空
-        {"sr9.w", "zx8.w", "r09.C", "ng9", "C", "ug9", "C"},   // 字节 APM root 检测
+        {"ao1.I", "gh2.I", "kh2.k", "ik2", "k", "nk2", "k", "wk2", "k"},   // 会话接口
+        {"ao1.J", "gh2.J", "kh2.l0", "ik2", "P", "nk2", "P", "wk2", "P"},   // 会话接口
+        {"ao1.M", "gh2.M", "kh2.W", "ik2", "Y", "nk2", "Y", "wk2", "Y"},   // 会话接口（W()Lns; → Y()Lps;）
+        {"bx4.get", "py5.get", "py5.get", "a46", "get", "f46", "get", "b66", "get"}, // 下发数据对象
+        {"yb5.e", "hs7.e", "rd7.c", "h67", "e", "p67", "f", "g17", "f"},   // 建议列表 ★ 九参逐位
+        {"yb5.f", "hs7.f", "rd7.d", "h67", "f", "p67", "g", "g17", "g"},   // 建议列表 ★ 九参逐位
+        {"pd5.I", "i93.I", "rb7.K", "y27", "z", null, null, null, null},   // 提示词文本 ★ Context 唯一
+        {"pd5.H", "i93.H", "rb7.J", "y27", "y", "g37", "A", "f57", "y"},   // 提示词文本
+        {"wr.x", "ns.x", "ns.D", "ys", "C", "zs", "C", "at", "C"},   // 渲染列表（D()Lw1a → C()Lk5a）
+        {"wr.z", "ns.z", "ns.F", "ys", "E", "zs", "E", "at", "E"},   // 列表更新
+        {"me4.a", "pe5.a", "pe5.a", "lj5", "a", "qj5", "a", "ll5", "a"},   // 图标 Hook 锚
+        {"hp8.isEmpty", "dz9.isEmpty", "w1a.isEmpty", "qaa", "isEmpty", "zaa", "isEmpty", "kda", "isEmpty"}, // 渲染列表判空
+        {"sr9.w", "zx8.w", "r09.C", "ng9", "C", "ug9", "C", "d89", "D"},   // 字节 APM root 检测
         // ★★ 2026-11-07：设置页「检查更新」那一行的**点击逻辑**（≠ 改文案！）
         //
         //   来由 —— 主人一句戳中：
@@ -254,15 +280,19 @@ public final class GmRemap {
         //      null ⇒ `cls()` 返回必然不存在的类 ⇒ 钩子静默不挂 ⇒ 又回到"点了没反应"。
         //      代价是宿主升级要重新定位，手段就是上面这条 frida 栈
         //      （记在 `专题/写死字面量坑` 的账上）。
-        {"settings.row.update.z", "settings.row.update.z", "settings.row.update.z", null, null, "pg7", "z"},   // 设置「检查更新」点击 ★ e=22/23
-        {"cont.impl.h.h", "cont.impl.h.h", "cont.impl.h.h", null, null, "sj0", "h"},   // 协程 resumeWith ★ 吞掉它=宿主逻辑一行不跑
+        {"settings.row.update.z", "settings.row.update.z", "settings.row.update.z", null, null, "pg7", "z", "yg7", "y"},   // 设置「检查更新」点击 ★ e=22/23
+        {"cont.impl.h.h", "cont.impl.h.h", "cont.impl.h.h", null, null, "sj0", "h", "uj0", "h"},   // 协程 resumeWith ★ 吞掉它=宿主逻辑一行不跑
         // ═══ 2026-11-07 · 「手动检查更新」的**唯一语义入口** ═══
         //   `fy2.a(Lec3)Object` = UpdateViewModel 里写死 scenario="check_update" 的那个 suspend 函数。
         //   xref 只有 2 处：`cy2.z`（它自己的协程 invokeSuspend）+ `dx9.z`（设置页那一行的调用点）。
         //   ⇒ 语义唯一，可安全旁路（**不 setResult**，只顺手把我们的 UI 拉起来，
         //     宿主那次检查更新照跑，但它的 Toast/Dialog 已被 FdmUpdatePopupHook 拦掉）。
         {"updatevm.check", "updatevm.check", "updatevm.check", "updatevm.check",
-                "updatevm.check", "fy2", "a"},
+                "updatevm.check", "fy2", "a", "oy2", "a"},
+        // ═══ 2026-11-13（2.8.0）· painterResource 本体 U(int,Context)Drawable ═══
+        //   2.7.5 = dec.U · 2.8.0 = pac.y（签名全树唯一）
+        //   2.7.2 那代没定位 ⇒ null（安全失败，不会乱咬宿主）
+        {"painter.res.U", "painter.res.U", "painter.res.U", "painter.res.U", "painter.res.U", "painter.res.U", "painter.res.U", "pac", "y"},
     };
 
     /**
@@ -273,7 +303,7 @@ public final class GmRemap {
      */
     public static String[] clsAll(String old) {
         if (old == null) return new String[] { GONE + "null" };
-        for (String[] p : CLS6) {
+        for (String[] p : CLS7) {
             // ★ 2026-11-06（3.75.18）：改成「遍历前 N-1 列」而不是写死 p[0]..p[3]。
             //   历史教训（指南 U 条）：2.7.2 那轮加列后漏了 clsAll 里的 p[3]→p[4]，
             //   结果所有 cls() 都返回旧类名，玻璃/头像/富文本/提示词全挂，卡了半宿。
@@ -419,7 +449,7 @@ public final class GmRemap {
 
     /** 当前表里登记了多少条（自检用） */
     public static String stats() {
-        return "CLS6=" + CLS6.length + " MTH=" + MTH.length + " gen=2.7.5";
+        return "CLS7=" + CLS7.length + " MTH=" + MTH.length + " gen=2.8.0";
     }
 
     private static boolean eq(String a, String b) {

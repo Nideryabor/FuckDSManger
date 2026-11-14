@@ -111,6 +111,77 @@ public final class FdmFallbackDialog {
      * @param onTryLaunch 点「拉起模块 UI」时重试拉起
      * @param onHostUpdate 已废弃（第二个按钮已删），保留形参只为不改调用方
      */
+    /**
+     * 【强制弹】跳过两道防重入闸（2026-11-13 新增）。
+     *
+     * <h3>为什么需要</h3>
+     * 真机血证（22:43:26）：选择页（本身是个 Dialog）正在显示时，
+     * 点「打开模块」→ 跨进程拉起失败 → 调到这里想弹保底
+     * ⇒ 被下面两道闸挡住了：
+     * <pre>
+     *   ① sShowing != null &amp;&amp; sShowing.isShowing()  ← 任何 Dialog 在显示就拦
+     *   ② now - sLastShowAt &lt; 2000L                  ← 2 秒窗口
+     * </pre>
+     * 而这两道闸是 2026-11-07 为「一次点击弹两个保底」加的 —— 那场景是
+     * **两条路各自弹保底**，和现在「选择页 → 用户主动点按钮 → 要弹保底」完全不同。
+     *
+     * <p>⇒ 给主动调用的场景一个后门：先关掉选择页，再强弹保底。
+     *
+     * @return true ＝ 已发起
+     */
+    /**
+     * 强弹（跳过两道防重入闸）。
+     *
+     * <p>★ 2026-11-14 修「保底弹窗的按钮点了没反应」：
+     * 原来这里写的是 `show(ctx, reason, null, null)` —— `onTryLaunch` 传 **null**，
+     * 而 Compose 版卡片里那个「拉起模块 UI」按钮的回调正是它 ⇒ 点下去什么都不发生。
+     * 主人真机报的「保底弹窗的按钮也失效了」就是这一处。
+     *
+     * <p>现在：<b>不传回调就自己给一个</b> —— 复用 {@link FdmUiHook#launchWithFallback}
+     * （它会先试进程内整页、再试跨进程，最后才回到这里）。
+     * 这样任何调用点都不用再操心"记得把重试动作传进来"。
+     */
+    public static boolean showForce(final Context ctx, final String reason) {
+        return showForce(ctx, reason, null);
+    }
+
+    /** 同 {@link #showForce(Context, String)}，可以指定点「拉起模块 UI」时要做什么。 */
+    public static boolean showForce(final Context ctx, final String reason,
+                                    final Runnable onTryLaunch) {
+        try {
+            // ① 先把我们自己的选择页关掉（它是 Dialog，不关会挡在保底上面）
+            FdmComposeDialog.dismissShowing();
+            // ② 清掉两道闸
+            sLastShowAt = 0L;
+            try {
+                if (sShowing != null && sShowing.isShowing()) {
+                    sShowing.dismiss();
+                }
+            } catch (Throwable ignore) {
+            }
+            sShowing = null;
+            // ③ 按钮回调：没传就自己兜一个（见上面的注释）
+            final Runnable retry = onTryLaunch != null ? onTryLaunch : new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (ctx != null) {
+                            FdmUiHook.launchWithFallback(ctx, "保底卡片·重试", null);
+                        }
+                    } catch (Throwable t) {
+                        log("保底卡片重试异常：" + t);
+                    }
+                }
+            };
+            // ④ 现在可以正常弹了
+            show(ctx, reason, retry, null);
+            return true;
+        } catch (Throwable t) {
+            log("showForce 失败：" + t);
+            return false;
+        }
+    }
+
     public static void show(final Context ctx, final String reason,
                             final Runnable onTryLaunch, final Runnable onHostUpdate) {
         // ★★ 2026-11-07：**一次点击只许弹一个**

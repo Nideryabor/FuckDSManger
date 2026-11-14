@@ -31,7 +31,7 @@ import java.util.Locale
  *
  * <p><b>两个大好处</b>：
  * <ol>
- *   <li>调用点**永远是同一句话**：`ctx.getString(R.string.xxx)` —— 它自动是当前说话方式的版本，
+ *   <li>调用点**永远是同一句话**：`ctx.fdmStr(R.string.xxx)` —— 它自动是当前说话方式的版本，
  *       加新文案不需要动 Kotlin；</li>
  *   <li>`values-zz` **不用写满**：没写的 key 自动回落到人话版（Android 的资源 fallback）
  *       ⇒ 龙龙语可以**一句一句慢慢加**，永远处于"能用的中间状态"。</li>
@@ -110,7 +110,7 @@ object Lang {
     fun nameRes(v: Int): Int =
         if (v == DRAGON) R.string.fdm_lang_dragon else R.string.fdm_lang_human
 
-    fun name(ctx: Context, v: Int): String = ctx.getString(nameRes(v))
+    fun name(ctx: Context, v: Int): String = ctx.fdmStr(nameRes(v))
 
     /** 选项下面那行小字（人话版 / 龙龙语版）。 */
     fun subRes(v: Int): Int =
@@ -129,12 +129,12 @@ object Lang {
      */
     object S {
         /** 关于页标语 */
-        fun tagline(ctx: Context): String = ctx.getString(R.string.fdm_lang_tagline)
+        fun tagline(ctx: Context): String = ctx.fdmStr(R.string.fdm_lang_tagline)
 
         /** 系统提示词页的空容器提示 */
-        fun emptyBox(ctx: Context): String = ctx.getString(R.string.fdm_lang_emptybox)
+        fun emptyBox(ctx: Context): String = ctx.fdmStr(R.string.fdm_lang_emptybox)
 
         /** 「功能原理 & 帮助」入口 */
-        fun helpEntry(ctx: Context): String = ctx.getString(R.string.fdm_lang_help)
+        fun helpEntry(ctx: Context): String = ctx.fdmStr(R.string.fdm_lang_help)
     }
 }

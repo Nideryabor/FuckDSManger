@@ -2,9 +2,11 @@
 // Copyright (c) 2026 尼得亚伯 (Nideryabor) & dxyabab | 仅供学习交流，禁止商业使用
 package com.nidyaber.fuckdsmanger.bridge;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -28,7 +30,31 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * 底座 dex 是**二进制成品**（手写 smali 时代留下的），不能改。
  * 桥（这一层）是我们能自由编译的部分 —— 所以就长在入口外面。
  */
-public final class FdmEntry implements IXposedHookLoadPackage {
+public final class FdmEntry implements IXposedHookLoadPackage, IXposedHookZygoteInit {
+
+    /**
+     * 模块 APK 的绝对路径 —— **框架白送的** 🐲 2026-11-14
+     *
+     * <p>LSPosed 的 `XposedInit.initModule(...)` 里：
+     * <pre>
+     *   param.modulePath = apk;
+     *   ((IXposedHookZygoteInit) moduleInstance).initZygote(param);
+     * </pre>
+     * 每个目标进程、每次加载模块都会跑，且**早于** {@link #handleLoadPackage}。
+     *
+     * <p>整页（`HostPage`）要靠它 `addAssetPath` 才拿得到模块自己的资源表；
+     * 原来那条「模块进程跑一次再广播过来」的路是**循环依赖**（不开本体就永远没有路径）。
+     */
+    @Override
+    public void initZygote(StartupParam startupParam) {
+        try {
+            String p = startupParam == null ? null : startupParam.modulePath;
+            FdmBridge.setModuleApkFromZygote(p);
+            XposedBridge.log("[FDM] initZygote 拿到模块 APK 路径：" + p);
+        } catch (Throwable t) {
+            XposedBridge.log("[FDM] initZygote 取 modulePath 失败：" + t);
+        }
+    }
 
     /** 底座 dex 里的真入口。 */
     private static final String BASE_ENTRY = "com.nidyaber.fuckdsmanger.GmEntry";
@@ -63,6 +89,13 @@ public final class FdmEntry implements IXposedHookLoadPackage {
         XposedBridge.log("[FDM] FdmEntry.handleLoadPackage pkg=" + lp.packageName);
 
         if (isHost(lp.classLoader)) {
+            // ★ 2026-11-14：「整页模式」开关 —— 界面以后会**画在宿主进程里**，
+            //   配置读写必须直连宿主存储（`FdmBridge.hostRead/hostWrite`），
+            //   不能再去读"我们自己 App 的 SharedPreferences"（那是另一个文件）。
+            //   详见 `FdmBridge` 里 sInHost 那一段注释。
+            FdmBridge.setInHost(true);
+            XposedBridge.log("[FDM] 整页模式已置位（FdmBridge.inHost=true）");
+
             // ★ 落点用**框架类**：`android.app.Application` 的名字永远不变。
             //   旧写法锚的是 `com.deepseek.chat.MainActivity`，宿主一换包名/类名就静默哑掉。
             //   顺带一个好处：Application.onCreate **只跑一次** ⇒ 拿 Context 比逐 Activity 更早、更省。
@@ -191,6 +224,27 @@ public final class FdmEntry implements IXposedHookLoadPackage {
                 FdmUpdateRowJumpHook.install(lp.classLoader);
             } catch (Throwable t) {
                 XposedBridge.log("[FDM] FdmUpdateRowJumpHook.install 抛了（不影响其它钩子）：" + t);
+            }
+
+            // ③.6.6 ★★ 2026-11-13 · **把「检查更新」的结果吃掉**
+            //
+            //   frida 实证（job=280probe2，21:46）：
+            //     · yg7.y 的 e 是 **23 / 24**（不是写死的 22/23）
+            //     · 宿主**不弹 Toast**（Toast.show 命中 0 次）⇒ FdmUpdatePopupHook 不在路径上
+            //     · 真正取文案的是 **Context.getString(0x7f0f0275)**
+            //       = resources 里 profile_check_for_updates_newest
+            //   ⇒ 按**资源名**拦 getString，命中就给空串：
+            //     宿主界面上**一个字都不显示**，也就没有「跳宿主逻辑」的观感。
+            //   ★ 零 R8 依赖（不碰混淆名），资源 id 漂移也不怕（运行时 getIdentifier）。
+            try {
+                Context appCtx = null;
+                try {
+                    appCtx = com.nidyaber.fuckdsmanger.gm.GmUtil.app();
+                } catch (Throwable ignore) {
+                }
+                FdmUpdateIntercept.install(lp.classLoader, appCtx);
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] FdmUpdateIntercept.install 抛了（不影响其它钩子）：" + t);
             }
 
             // ③.6.7 ★★ 2026-11-07 · 装「宿主被顶到后台」监视器

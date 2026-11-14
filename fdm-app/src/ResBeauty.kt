@@ -161,7 +161,7 @@ fun ResBeautyPage(onBack: () -> Unit) {
             try {
                 val bytes = SafDir.readUriBytes(ctx, uri)
                 if (bytes == null || bytes.isEmpty()) {
-                    importMsg = ctx.getString(R.string.rb_034)
+                    importMsg = ctx.fdmStr(R.string.rb_034)
                 } else {
                     // 交给宿主：先把字节落到宿主能读的地方，再让它解包
                     val dir = File("/sdcard/Pictures/FDM")
@@ -169,12 +169,12 @@ fun ResBeautyPage(onBack: () -> Unit) {
                     val dst = File(dir, "fdm_import_tmp.zip")
                     dst.writeBytes(bytes)
                     FdmPush.sendCmd(ctx, "res_import", dst.name)
-                    importMsg = ctx.getString(R.string.rb_035)
+                    importMsg = ctx.fdmStr(R.string.rb_035)
                     showImport = false
                     refreshSoon()
                 }
             } catch (e: Throwable) {
-                importMsg = ctx.getString(R.string.rb_036) + e
+                importMsg = ctx.fdmStr(R.string.rb_036) + e
             }
         }
     }
@@ -643,7 +643,7 @@ fun ResBeautyPage(onBack: () -> Unit) {
                 TextButton(onClick = {
                     FdmPush.sendCmd(ctx, "res_export", exportName)
                     showExport = false
-                    importMsg = ctx.getString(R.string.rb_032) + exportName
+                    importMsg = ctx.fdmStr(R.string.rb_032) + exportName
                     refreshSoon()
                 }) { Text(stringResource(R.string.rb_033)) }
             },
@@ -676,7 +676,7 @@ fun ResBeautyPage(onBack: () -> Unit) {
                                     .fillMaxWidth()
                                     .clickable {
                                         FdmPush.sendCmd(ctx, "res_import", z)
-                                        importMsg = ctx.getString(R.string.rb_039) + z
+                                        importMsg = ctx.fdmStr(R.string.rb_039) + z
                                         showImport = false
                                         refreshSoon()
                                     }

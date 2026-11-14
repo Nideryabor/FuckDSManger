@@ -71,6 +71,46 @@ public final class FdmUiHook {
      * 任何失败都只记日志，**绝不影响宿主**。
      */
 
+    /**
+     * 【兜底】直接打开**底座的旧 View UI**（{@code GmHomeUi.open()}）🐲 2026-11-13
+     *
+     * <h3>为什么需要它</h3>
+     * 跨进程拉起模块被**包可见性**挡死（宿主 targetSdk=36 且清单没有 {@code <queries>} 声明我们）：
+     * <pre>
+     *   ActivityNotFoundException: Unable to find explicit activity class
+     *       {com.little_femaleboy.../com.nidyaber.fuckdsmanger.MainActivity}
+     * </pre>
+     * 实测 5 次只成功 1 次 —— 主人还开着「隐藏应用列表」，成功率更低。
+     *
+     * <h3>它为什么一定能开</h3>
+     * {@code GmHomeUi} 是**我们自己的类**（名字永远不变），而且它在
+     * **底座 classes.dex** 里 ⇒ 已经在宿主进程内加载 ⇒ 调它就是个普通的方法调用，
+     * **不涉及任何跨包查询**，包可见性管不着。
+     *
+     * <p>⚠️ 注意：本方法**跳过** {@code GmHomeUi.open} 的 hook（用 invokeOriginalMethod 不可行，
+     * 因为 hook 是按方法挂的，直接反射调用会再次进 beforeHookedMethod）。
+     * 所以这里先看 {@code sAllowOldUi} 闸门 —— 由调用方临时打开，
+     * 让那一次 {@code open()} 顺利通过。
+     *
+     * @return true ＝ 已发起（不代表已显示）
+     */
+    public static boolean openOldUi(ClassLoader cl) {
+        try {
+            Class<?> oldUi = XposedHelpers.findClass(OLD_UI,
+                    cl != null ? cl : FdmUiHook.class.getClassLoader());
+            sAllowOldUiUntil = System.currentTimeMillis() + 3000L;
+            oldUi.getMethod("open").invoke(null);
+            GmUtil.log("【FdmUiHook】✅ 已打开旧 View UI（进程内兜底，绕过包可见性）");
+            return true;
+        } catch (Throwable t) {
+            GmUtil.log("【FdmUiHook】旧 View UI 打开失败：" + t);
+            return false;
+        }
+    }
+
+    /** 放行旧 UI 的时间窗口（截止时刻）。 */
+    private static volatile long sAllowOldUiUntil = 0L;
+
     /** 这次 GmHomeUi.open 是不是底座 GmEntryHook 调的？（栈里有它就说明是） */
     private static boolean fromBaseHook() {
         try {
@@ -197,6 +237,13 @@ public final class FdmUiHook {
                         //  如果放行 ⇒ 弹手写 smali 时代的旧 View UI（更糟）。
                         //  ⇒ 正确做法：**识别出"来自底座误触发"就什么都不做**，
                         //     并且 setResult 让旧 UI 也不执行。
+                        // ★ 2026-11-13：**我们自己主动调 openOldUi() 时放行**。
+                        //   否则下面的误触发拦截会把它一起吞掉 ⇒ 兜底失效。
+                        if (System.currentTimeMillis() < sAllowOldUiUntil) {
+                            GmUtil.log("【FdmUiHook】旧 View UI 放行（openOldUi 主动调用）");
+                            return;
+                        }
+
                         if (fromBaseHook()) {
                             GmUtil.log("【FdmUiHook】底座 GmEntryHook 误触发（a==0x14 已失效）"
                                     + " ⇒ 吞掉，不弹任何 UI");
@@ -542,8 +589,13 @@ public final class FdmUiHook {
         //   一次点击会走两条路（我新挂的 pg7.z + 底座原有的 GmHomeUi.open）。
         final long now = System.currentTimeMillis();
         if (now - sLastLaunchAt < 1500L) {
-            GmUtil.log("【FdmUiHook】1.5s 内已发起过拉起 ⇒ 本次跳过");
-            return true;
+            // ★★ 2026-11-13 修「假成功」：
+            //   原来这里 `return true`，上游会当成「已拉起」⇒ 不弹保底也不重试。
+            //   但真机日志显示：22:27:58.475 这里返回后，1 秒后看门狗仍然
+            //   判定「宿主仍在前台、没收到 UI_OPENED ⇒ 拉起失败」⇒ 还是弹了保底。
+            //   ⇒ 返回值必须如实：「本次没发起」就是 false。
+            GmUtil.log("【FdmUiHook】1.5s 内已发起过拉起 ⇒ 本次跳过（返回 false，不再谎报成功）");
+            return false;
         }
         sLastLaunchAt = now;
         sUiOpened = false;

@@ -44,7 +44,7 @@ private val spatial = spring<IntOffset>(dampingRatio = Spring.DampingRatioNoBoun
 private val effects = spring<Float>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)
 
 @Composable
-fun FdmApp(initialPage: String? = null) {
+fun FdmApp(initialPage: String? = null, onClose: (() -> Unit)? = null) {
     var page by remember { mutableStateOf(HOME) }
     var tr by remember { mutableStateOf(Tr.FADE) }
     var stack by remember { mutableStateOf(listOf<String>()) }
@@ -67,13 +67,22 @@ fun FdmApp(initialPage: String? = null) {
     }
 
     fun back() {
-        val prev = stack.lastOrNull() ?: return
+        val prev = stack.lastOrNull()
+        if (prev == null) {
+            // ★ 2026-11-14：**返回栈空** ⇒ 这是「已经回到首页还按返回」。
+            //   宿主内整页要靠这一步关掉自己（`HostPage` 传 onClose 进来）；
+            //   模块自己的 MainActivity 不传 ⇒ 行为一点没变（交给系统处理）。
+            onClose?.invoke()
+            return
+        }
         tr = Tr.IN_LEFT                     // 反向播放：新页从左滑入，旧页向右滑出
         stack = stack.dropLast(1)
         page = prev
     }
 
-    BackHandler(enabled = stack.isNotEmpty()) { back() }
+    // 有栈可退 → 我们自己退一页；没栈但有 onClose → 我们负责"关掉整页"。
+    // 两者都没有（模块本体里在首页按返回）⇒ 不拦，让系统正常退出 App。
+    BackHandler(enabled = stack.isNotEmpty() || onClose != null) { back() }
 
     AnimatedContent(
         targetState = page,

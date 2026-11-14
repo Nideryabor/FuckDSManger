@@ -12,29 +12,49 @@
 import re, sys
 
 def parse_rows(src, name):
-    m = re.search(name + r'\s*=\s*\{(.*?)\n    \};', src, re.S)
-    if not m:
+    """解析 String[][] XXX = { {...}, {...} }; 成 list[list[str|None]]
+
+    2026-11-13 三次修正记录：
+      ① 原用 r'\\n\\s*\\};' 非贪婪正则 —— \\s* 能跨行 ⇒ 表中间就截断（50 行只出 28 行）
+      ② 改成花括号配对，但仍在**带注释的原文**上做 ⇒ 注释里的 { } 破坏深度 ⇒ 把 CLS 和 MTH 连成一片（84 行）
+      ③ 现在：**先剥注释，再配对**，彻底干净
+    """
+    # 先剥 // 注释（表里字符串内的 // 不存在，安全）
+    nocmt = re.sub(r'//[^\n]*', '', src)
+    mi = re.search(name + r'\s*=\s*\{', nocmt)
+    if not mi:
         return []
+    i = nocmt.rindex('{', 0, mi.end())
+    depth, j = 0, i
+    while j < len(nocmt):
+        c = nocmt[j]
+        if c == '{':
+            depth += 1
+        elif c == '}':
+            depth -= 1
+            if depth == 0:
+                break
+        j += 1
+    body_all = nocmt[i + 1:j]
     rows = []
-    for line in m.group(1).split('\n'):
-        s = line.strip()
-        if not s.startswith('{"'):
+    # 直接抓所有 {...}（表里有跨行的行，不能按行切）
+    for mm in re.finditer(r'\{([^{}]*)\}', body_all):
+        body = mm.group(1)
+        if '"' not in body:
             continue
-        body = s[s.index('{') + 1: s.rindex('}')]
         tmp = re.sub(r'"[^"]*"', lambda x: x.group(0).replace(',', '\x00'), body)
         vals = []
         for p in tmp.split(','):
-            p = p.strip().replace('\x00', ',')
+            p = p.strip().replace('\x00', ',').replace('\n', ' ')
             if p == 'null':
                 vals.append(None)
             elif p.startswith('"'):
                 vals.append(p[1:-1])
             else:
                 vals.append(p)
-        rows.append(vals)
+        if vals:
+            rows.append(vals)
     return rows
-
-
 
 
 def check_key_resolves(mth_rows):
@@ -111,7 +131,7 @@ def sim_owner(rows, cls, mth):
 
 def main():
     src = open(sys.argv[1], encoding='utf-8').read()
-    cls_rows = parse_rows(src, r'String\[\]\[\] CLS6')
+    cls_rows = parse_rows(src, r'String\[\]\[\] CLS\d+')   # 自动识别代数
     mth_rows = parse_rows(src, r'String\[\]\[\] MTH')
     print('CLS6=%d 行   MTH=%d 行' % (len(cls_rows), len(mth_rows)))
 
@@ -137,20 +157,21 @@ def main():
     # ③ 关键锚点的语义抽查（这些是出过事的）
     # ⚠️ MTH 的键**只认前三代**（2.5.2 / 2.6.1 / 2.6.2 的 "类.方法"），
     #    2.7.x 那两列是「类/方法对」，不是键 —— 这是表结构本身的设计，别搞错。
+    # ★ 2026-11-13：期望值升到 **2.8.0**（宿主 2.8.0 / vc297）
     check = [
-        # (键类, 键方法, 期望 2.7.5 类, 期望 2.7.5 方法)
-        ('j77', 'p', 's27', 'E'),        # 头像 Painter
-        ('us6', 'z', 'da8', 'q'),        # 画底原语 3 参
-        ('us6', 'y', 'da8', 'p'),        # 画底原语 4 参
-        ('t5', 'w', 'z5', 'w'),          # ← BUG A 本次修的：方法名 v→w
-        ('yt2', 'u', 'hx2', 'y'),        # ← 本次修的：main 域下发 v→y
-        ('tb7', 'h', 'tj7', 'h'),        # model 域下发
-        ('jtb', 'f', 'y2c', 'k'),        # 气泡单元
-        ('xa0', 'g', 'yb0', 'e'),        # 气泡作用域
-        ('qn7', 'p', 'yu7', 'n'),        # GotoBottom
-        ('kh2', 'k', 'nk2', 'k'),        # 会话接口
-        ('e3c', 'a0', 'wx6', 'P'),       # Modifier.paint
-        # x5.w 故意不查（a6 未定位 ⇒ 走 GONE 安全失败），单独验
+        # (键类, 键方法, 期望 2.8.0 类, 期望 2.8.0 方法)
+        ('j77', 'p', 'r47', 'U'),        # 头像 Painter      (2.7.5 s27.E)
+        ('us6', 'z', 'dc8', 's'),        # 画底原语 3 参      (2.7.5 da8.q)
+        ('us6', 'y', 'dc8', 'r'),        # 画底原语 4 参      (2.7.5 da8.p)
+        ('t5', 'w', 'y5', 'v'),          # 入口行点击          (2.7.5 z5.w)
+        ('yt2', 'u', 'qx2', 'y'),        # main 域下发        (2.7.5 hx2.y)
+        ('tb7', 'h', 'sl7', 'h'),        # model 域下发       (2.7.5 tj7.h)
+        ('jtb', 'f', 'hfc', 'g'),        # 气泡单元            (2.7.5 y2c.k)
+        ('xa0', 'g', 'ac0', 'e'),        # 气泡作用域          (2.7.5 yb0.e)
+        ('qn7', 'p', 'nl9', 'q'),        # GotoBottom         (2.7.5 yu7.n)
+        ('kh2', 'k', 'wk2', 'k'),        # 会话接口            (2.7.5 nk2.k)
+        ('e3c', 'a0', 'zw7', 'S'),       # Modifier.paint     (2.7.5 wx6.P)
+        # x5.w 单独验（b6 → a6）
     ]
     # ④ 键反查（★ 2026-11-07 新增 —— 这个坑犯过两次）
     _bad_keys = check_key_resolves(mth_rows)
@@ -173,11 +194,11 @@ def main():
         if not okline:
             bad += 1
 
-    # ③b 已定位锚点必须解析到位（2026-11-06：x5.w 原来是 GONE，现在钉到 b6.w）
+    # ③b 已定位锚点必须解析到位（2.8.0：x5.w → a6.v）
     gone = sim_owner(mth_rows, 'x5', 'w')
     gm = sim_method(mth_rows, 'x5', 'w')
-    okb = (gone == 'b6' and gm == 'w')
-    print('  x5.w → owner=%s method=%s  %s' % (gone, gm, '✓' if okb else '✗ 期望 b6.w'))
+    okb = (gone == 'a6' and gm == 'v')   # ★ 2.8.0：b6.w → a6.v
+    print('  x5.w → owner=%s method=%s  %s' % (gone, gm, '✓' if okb else '✗ 期望 a6.v'))
     if not okb:
         bad += 1
 

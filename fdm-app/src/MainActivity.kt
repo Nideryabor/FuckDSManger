@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
              * ★ 3.68.0「说话方式」🐲 —— 全树的 ctx 就在这一处定下来。
              *
              * 龙龙语时它是一个带 `zz` locale 的 Configuration ⇒ 全 UI 的
-             * `ctx.getString(...)` / `stringResource(...)` **自动**去
+             * `ctx.fdmStr(...)` / `stringResource(...)` **自动**去
              * `res/values-zz/strings.xml` 取文案，取不到就回落到人话版。
              *
              *   · 读 `Lang.version` 是为了换说话方式时**当场**换语言

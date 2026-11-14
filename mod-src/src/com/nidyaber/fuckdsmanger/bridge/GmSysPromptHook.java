@@ -162,6 +162,11 @@ public final class GmSysPromptHook extends XC_MethodHook {
      * <p>当前实测：**2.7.2 (vc289) = `ly1`**（2.7.1 为 `sx1`、2.6.2 为 `tv1`）。
      */
     private static final String[] CANDIDATE_NAMES = {
+            "yy1",                                   // ★★ 2026-11-13 deepseek 2.8.0 (vc297) 实测
+                                                     //   铁证：`Lyy1;->Companion:Lxy1;` + 12 实例字段
+                                                     //   字段类型 12/12 逐位同形（String,Integer,String,List,Z,Z,String,Z,String,String,String,String）
+                                                     //   且 ctor `(String,Integer,String,ArrayList,ZZ String,Z,String,String,String,I)V`
+                                                     //   **方法体 sim=1.000（逐行完全相同）**
             "qy1",                                   // ★ 2026-11-06 deepseek 2.7.5 (vc295) 实测                                                     //   铁证：`Lqy1;->Companion:Lpy1;`、12 实例字段
                                                      //   (a:String b:Integer c:String d:List e:Z f:Z g:String h:Z i:String j:String k:String l:String)
                                                      //   ctor `(String,Integer,String,ArrayList,ZZ String,Z,String,String,String,I)V` 12 参

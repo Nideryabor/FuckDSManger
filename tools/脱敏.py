@@ -212,6 +212,11 @@ def main():
                     pd['text'] = json.dumps(mask_json(json.loads(t), m), ensure_ascii=False)
                 except Exception:
                     pd['text'] = m.mask_text('BODY', t)
+            elif t.strip().startswith(('SocketException', 'java.', 'javax.')):
+                # ★ 2026-11-13：**异常/错误文本不是敏感数据**，不能塞进对照表。
+                #   原来 SocketException 这类走了 RAWBODY 分支 ⇒ 被登记成"原值"
+                #   ⇒ 自检阶段自己把自己判成"残留"（假阳性）。
+                pass
             elif t.strip():
                 # ★ 表单 / octet-stream / 二进制：看不出结构 ⇒ 整体替掉
                 #   （#39 的 9.3KB 上报体、#22 的 ABTest 体都属于这类，

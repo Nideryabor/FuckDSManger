@@ -107,6 +107,39 @@ public final class FdmPush {
 
     /** 写一项配置并立刻推给宿主。 */
     public static void set(Context ctx, String key, Object value) {
+        // ★ 2026-11-14：**整页模式**（界面跑在宿主进程里）⇒ 直连写，不碰 SP、不发广播。
+        //
+        //   为什么必须在这里短路：整页里 `ctx` 是 `HostPage.ResCtx`，它的
+        //   `getSharedPreferences("fdm_ui")` 已经被换成直连适配器（HostStore）——
+        //   所以就算照原路走也不会写错地方，但**多了一次无意义的重组读**；
+        //   更关键的是 `push()` 那一步会把"UI 侧的那套 SP"打包成配置广播出去，
+        //   而整套 Sp 在整页里是空的 ⇒ 等于给宿主推一份空配置。必须拦住。
+        if (FdmBridge.inHost()) {
+            String t;
+            String s;
+            if (value instanceof Boolean) {
+                // ⚠️ "true"/"false" —— 底座 `GmStore.write` 用的是 Boolean.parseBoolean，
+                //    传 "1" 会变成 false
+                t = "b";
+                s = String.valueOf(value);
+            } else if (value instanceof Integer) {
+                t = "i";
+                s = String.valueOf(value);
+            } else if (value instanceof Long) {
+                t = "l";
+                s = String.valueOf(value);
+            } else if (value instanceof Float) {
+                t = "f";
+                s = String.valueOf(value);
+            } else {
+                t = "s";
+                s = String.valueOf(value);
+            }
+            boolean ok = FdmBridge.hostWrite(ctx, key, s, t);
+            Log.i(TAG, "整页模式：直连写宿主 " + key + "=" + s + "(" + t + ") → " + ok);
+            return;
+        }
+
         SharedPreferences.Editor ed = sp(ctx).edit();
         if (value instanceof Boolean) {
             ed.putBoolean(key, (Boolean) value);
@@ -127,8 +160,83 @@ public final class FdmPush {
         return ctx.getSharedPreferences(SP, Context.MODE_PRIVATE);
     }
 
+    /**
+     * 【本进程的 SAF 授权快照】🐲 2026-11-14（3.108.2）
+     *
+     * <p>只在**模块自己的进程**里有意义 —— SAF 持久授权记在 uid 上，
+     * 宿主进程里查到的永远是宿主那份。
+     *
+     * @return `{"ok":true,"name":"DCIM/fdm","uri":"content://..."}`
+     */
+    public static JSONObject safSnapshot(Context ctx) {
+        JSONObject o = new JSONObject();
+        try {
+            String s = sp(ctx).getString("ui_saf_tree", null);
+            String name = "";
+            boolean ok = false;
+            if (s != null && s.length() > 0) {
+                android.net.Uri u = android.net.Uri.parse(s);
+                try {
+                    for (android.content.UriPermission p : ctx.getContentResolver().getPersistedUriPermissions()) {
+                        if (p.isReadPermission() && u.equals(p.getUri())) {
+                            ok = true;
+                            break;
+                        }
+                    }
+                } catch (Throwable ignore) {
+                }
+                try {
+                    String id = android.provider.DocumentsContract.getTreeDocumentId(u);
+                    int c = id.indexOf(':');
+                    name = c >= 0 ? id.substring(c + 1) : id;
+                    if (name.length() == 0) name = "（存储根目录）";
+                } catch (Throwable ignore) {
+                    name = s;
+                }
+            }
+            o.put("ok", ok);
+            o.put("name", name);
+            o.put("uri", s == null ? "" : s);
+        } catch (Throwable t) {
+            try {
+                o.put("ok", false);
+            } catch (Throwable ignore) {
+            }
+        }
+        return o;
+    }
+
     /** 打包当前配置并广播给宿主。返回推出去的项数。 */
     public static int push(Context ctx) {
+        // ★★ 2026-11-14 血证修正：**判据不能只看 FdmBridge.inHost()**
+        //
+        //   原来这里 write 那个方法用了 `FdmBridge.inHost()` 短路，但这个 push 走的是
+        //   模块 UI 进程（`FdmApp.onCreate` → `FdmPush.push(this)`）—— 那是**我们自己的进程**，
+        //   `inHost()` 为 false ⇒ 不会短路。
+        //
+        //   而整页启动时 HostPage 把 `getSharedPreferences("fdm_ui")` 换成了 HostStore，
+        //   于是（在宿主进程里）push 会读到一堆"宿主里没有的键"⇒ 打包一份**空/默认值**
+        //   推上去。真机血证 11:15:11.868：
+        //     `收到 UI 推来的配置：rev=1 json={... "fuckds_bubble_on":0, "fuckds_ububble_on":0 ...}`
+        //     `气泡开关现状：AI=false 用户=false ← 把主人原本开着的开关推成了关`
+        //   ⇒ 等于**整页一打开就把主人的配置改坏**。
+        //
+        //   两道闸，任一条命中就绝不推：
+        //     ① 本进程是宿主进程（整页模式）—— 配置本来就是宿主的，没什么可推
+        //     ② 这次拿到的 SP 不是真的 SharedPreferences（HostStore）—— 数据不可信
+        if (FdmBridge.inHost()) {
+            Log.i(TAG, "整页模式：配置直连 ⇒ 跳过 CONFIG_PUSH 广播");
+            return 0;
+        }
+        // ② 整页里那个 SP 是 HostStore（类名可判）—— 它读的是宿主表、不是我们的 fdm_ui，
+        //    拿它打包等于拿宿主的键去填我们的配置格式 ⇒ 全是默认值。绝不推。
+        try {
+            if (sp(ctx).getClass().getName().endsWith("HostStore")) {
+                Log.i(TAG, "SP 是 HostStore（整页）⇒ 跳过推送");
+                return 0;
+            }
+        } catch (Throwable ignore) {
+        }
         try {
             JSONObject bools = new JSONObject(), ints = new JSONObject(), longs = new JSONObject();
             JSONObject floats = new JSONObject(), strings = new JSONObject();
@@ -233,6 +341,39 @@ public final class FdmPush {
             payload.put("longs", longs);
             payload.put("floats", floats);
             payload.put("strings", strings);
+            // ★★ 2026-11-14 · 把**我们自己的 APK 路径**捎给宿主（一整条链路的关键一环）
+            //
+            //   为什么需要：整页（`HostPage`）跑在**宿主进程**里，而我们和宿主是
+            //   两个 APK、资源表各自独立 ⇒ 不给它一份"指向我们 APK"的 Resources，
+            //   `FdmApp` 里那 1023 个 `R.string.*` 全都会去查宿主的表，取到错文案/0。
+            //
+            //   而 `AssetManager.addAssetPath(路径)` 需要知道路径。**只有我们自己的进程
+            //   知道得最清楚**：`getPackageCodePath()` 是本进程的公开 API，零权限、零 hook、
+            //   不查 PackageManager、不扫内存、不碰别人的 ClassLoader
+            //   ⇒ 宿主只需要 `addAssetPath` 这个标准调用，学不到任何"入侵"手法。
+            //
+            //   ⚠️ 别去扫 `/proc/self/maps`、别反射别人的 loader、别往包里塞资源副本 ——
+            //     那三条路都比这条脏，而且都是在替别人把手法写明白。
+            try {
+                payload.put("apk", ctx.getPackageCodePath());
+            } catch (Throwable ignore) {
+            }
+
+            // ★★ 2026-11-14（3.108.2）· 捎上**我们自己的 SAF 授权状态**
+            //
+            //   为什么必须由我们报：SAF 的持久授权**记在 uid 上**，
+            //   宿主（`com.deepseek.chat.a`）和我们模块是两个 uid
+            //   ⇒ 整页（跑在宿主进程里）无论怎么查 `persistedUriPermissions`
+            //   查到的都是**宿主**的，永远看不到我们自己的那份。
+            //
+            //   真机现象（主人截图）：全部授权过了，首页仍显示
+            //   「本应用还没授权 —— 图片预览/导出/导入读不到文件」。
+            //   根因就是整页里 `SafDir` 读的 `ui_saf_tree` 在我们自己的 SP 里，
+            //   而整页拿到的是 HostStore（宿主表）⇒ 恒读不到。
+            try {
+                payload.put("saf", safSnapshot(ctx));
+            } catch (Throwable ignore) {
+            }
 
             Intent it = new Intent(ACTION_PUSH);
             it.putExtra("rev", sp.getInt("rev", 1));

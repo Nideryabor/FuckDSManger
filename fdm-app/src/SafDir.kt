@@ -36,6 +36,98 @@ object SafDir {
     private const val TAG = "FdmSaf"
     private const val KEY = "ui_saf_tree"
 
+    // ══════════════════════════════════════════════════════════════════
+    //  ★★ 2026-11-14（3.108.2）· 整页（宿主进程）分流
+    //
+    //  真机现象（主人截图）：宿主 + 模块两边都授权过了，
+    //  整页首页仍然显示「还没授权」「本应用还没授权」。
+    //
+    //  根因有两条，**都是 uid 惹的**：
+    //    ① 我们自己的授权记在**模块 uid** 上，而整页跑在宿主进程 ⇒
+    //       `persistedUriPermissions` 只能看到宿主的，看不到我们自己的；
+    //       而 `sp(ctx).getString("ui_saf_tree")` 在整页里拿到的是 HostStore
+    //       （= 宿主那张表）⇒ 我们自己那条 `ui_saf_tree` 也读不到。
+    //    ② 宿主自己那条（`treeText`）走广播 + `delay(400)` 往返，
+    //       在整页里既慢又容易踩空。
+    //
+    //  ⇒ 分流：
+    //     · 整页里：模块的授权状态读宿主存储里模块上报的那两个键；
+    //       宿主的授权状态**直接查**（我们就在宿主进程里，查的就是宿主 uid）
+    //     · 模块本体里：一个字不动（老路径原样）
+    // ══════════════════════════════════════════════════════════════════
+
+    /** true ＝ 跑在宿主进程里（整页模式）。 */
+    fun inHost(): Boolean = try {
+        com.nidyaber.fuckdsmanger.bridge.FdmBridge.inHost()
+    } catch (e: Throwable) {
+        false
+    }
+
+    /**
+     * 供 UI 判断「现在是不是整页模式」—— 包一层是为了让 `Pages.kt` 不用直接
+     * import bridge（那里的代码要在模块自己的进程里也能跑）。
+     */
+    @JvmStatic
+    fun hostMode(): Boolean = inHost()
+
+    /** 模块上报到宿主存储里的键（宿主侧写、整页侧读）。 */
+    private const val KEY_MOD_SAF_OK = "fuckdsmanger_mod_saf_ok"
+    private const val KEY_MOD_SAF_NAME = "fuckdsmanger_mod_saf_name"
+
+    /** 模块上报的授权状态（**只在整页里有意义**）。 */
+    private fun modSafOk(ctx: Context): Boolean = try {
+        com.nidyaber.fuckdsmanger.bridge.FdmBridge
+            .hostRead(ctx, KEY_MOD_SAF_OK, "b").trim().equals("true", ignoreCase = true)
+    } catch (e: Throwable) {
+        false
+    }
+
+    private fun modSafName(ctx: Context): String = try {
+        com.nidyaber.fuckdsmanger.bridge.FdmBridge.hostRead(ctx, KEY_MOD_SAF_NAME, "s")
+    } catch (e: Throwable) {
+        ""
+    }
+
+    /**
+     * 【宿主自己的 SAF 授权】—— 只有**在宿主进程里**才问得准。
+     *
+     * <p>为什么整页能直接查：SAF 持久授权记在 uid 上，整页就活在宿主 uid 里
+     * ⇒ `persistedUriPermissions` 返回的正是宿主那份。
+     * 这也顺手干掉了老路径那个 `delay(400)` 广播往返的竞态。
+     *
+     * @return `DCIM/fdm` 这种短名；没授权返回空串
+     */
+    fun hostTreeDisplay(ctx: Context): String {
+        try {
+            val perms = ctx.contentResolver.persistedUriPermissions
+            if (perms.isNullOrEmpty()) return ""
+            // 优先挑「看起来像我们那个目录」的（DCIM/fdm / Music/fdm）；
+            // 都没有就取最后一个（最近授权的那个）。
+            var best: Uri? = null
+            for (p in perms) {
+                if (!p.isReadPermission) continue
+                val d = displayOf(p.uri)
+                if (d.contains("/fdm", ignoreCase = true) || d.equals("fdm", ignoreCase = true)) {
+                    best = p.uri
+                    break
+                }
+                best = p.uri
+            }
+            return best?.let { displayOf(it) } ?: ""
+        } catch (e: Throwable) {
+            return ""
+        }
+    }
+
+    /** 从 tree uri 里截出 `DCIM/fdm` 这种短名。 */
+    private fun displayOf(u: Uri): String = try {
+        val id = DocumentsContract.getTreeDocumentId(u)   // "primary:DCIM/fdm"
+        val name = id.substringAfter(':', id)
+        if (name.isEmpty()) "（存储根目录）" else name
+    } catch (e: Throwable) {
+        u.toString()
+    }
+
     /** 记住的目录 uri（没有 = 还没授权）。 */
     fun tree(ctx: Context): Uri? {
         val s = FdmPush.sp(ctx).getString(KEY, null)
@@ -47,8 +139,14 @@ object SafDir {
         }
     }
 
-    /** 授权还在吗（用户可能去系统设置里撤销）。 */
+    /**
+     * 授权还在吗（用户可能去系统设置里撤销）。
+     *
+     * <p>★ 整页里不能走下面那套：那是**模块 uid** 的授权，宿主进程里查不到，
+     * 而且 `sp(ctx)` 拿到的是 HostStore ⇒ 恒 false（= 主人截图里那句"还没授权"）。
+     */
     fun granted(ctx: Context): Boolean {
+        if (inHost()) return modSafOk(ctx)
         val u = tree(ctx) ?: return false
         return try {
             ctx.contentResolver.persistedUriPermissions.any {
@@ -61,6 +159,7 @@ object SafDir {
 
     /** 显示用：`DCIM/fdm` 这种短名。 */
     fun display(ctx: Context): String {
+        if (inHost()) return modSafName(ctx)
         val u = tree(ctx) ?: return ""
         return try {
             val id = DocumentsContract.getTreeDocumentId(u)   // "primary:DCIM/fdm"

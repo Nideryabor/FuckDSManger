@@ -198,11 +198,11 @@ fun AboutScreen(onNav: (Int) -> Unit) {
     if (showLangPick) {
         AlertDialog(
             onDismissRequest = { showLangPick = false },
-            title = { Text(ctx.getString(R.string.fdm_lang_title)) },
+            title = { Text(ctx.fdmStr(R.string.fdm_lang_title)) },
             text = {
                 Column {
                     Text(
-                        ctx.getString(R.string.fdm_lang_desc),
+                        ctx.fdmStr(R.string.fdm_lang_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -220,12 +220,12 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                             Spacer(Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    ctx.getString(Lang.nameRes(v)),
+                                    ctx.fdmStr(Lang.nameRes(v)),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 Text(
-                                    ctx.getString(Lang.subRes(v)),
+                                    ctx.fdmStr(Lang.subRes(v)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -234,7 +234,7 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                     }
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        ctx.getString(R.string.fdm_lang_note),
+                        ctx.fdmStr(R.string.fdm_lang_note),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -246,14 +246,14 @@ fun AboutScreen(onNav: (Int) -> Unit) {
                     showLangPick = false
                     Toast.makeText(
                         ctx,
-                        ctx.getString(Lang.toastRes(lang)),
+                        ctx.fdmStr(Lang.toastRes(lang)),
                         Toast.LENGTH_SHORT,
                     ).show()
-                }) { Text(ctx.getString(R.string.fdm_lang_confirm)) }
+                }) { Text(ctx.fdmStr(R.string.fdm_lang_confirm)) }
             },
             dismissButton = {
                 TextButton(onClick = { showLangPick = false }) {
-                    Text(ctx.getString(R.string.fdm_lang_cancel))
+                    Text(ctx.fdmStr(R.string.fdm_lang_cancel))
                 }
             },
         )

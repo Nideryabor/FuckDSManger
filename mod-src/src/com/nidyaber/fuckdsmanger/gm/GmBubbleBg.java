@@ -611,6 +611,74 @@ public final class GmBubbleBg {
      * {@code Compose Color} = <b>{@code (argb << 32) | colorSpaceId}</b>。
      * v1 直接写 {@code 0xFF5B8DEF} 就崩了：{@code Invalid ID: 46}（宿主 {@code zi9.Y} 只放行 id ≤ 0xF）。
      */
+    /**
+     * 尺寸合理性闸门 —— **气泡不可能是"铺满整屏宽"的一大块** 🐲 2026-11-14
+     *
+     * <h3>为什么必须有（真机血证）</h3>
+     * <pre>
+     *   11:15:55.165 ③ 认到【用户气泡】元素 #1 @835fe0e
+     *   11:15:55.182 ★用户 气泡绘制#1 开关=true 模式=1 尺寸=1440x757
+     * </pre>
+     * `1440` = 屏幕物理宽度（PMS 报 1440x3168）⇒ 那块东西**占满整屏宽**，
+     * 而消息气泡左右一定有边距，**永远不可能是整屏宽**。
+     * 表现就是主人看到的：宿主「字体大小」设置页底部糊了一整块用户气泡图。
+     *
+     * <h3>误标的根因（为什么会被当成气泡）</h3>
+     * 判据只有一条：`clip(Modifier, Shape)` 的 Shape **引用等于**气泡 Shape，
+     * 之后创建的第一个「背景 Element」就记成用户气泡。
+     * 而宿主的**设置页卡片 / 面板**也走 `clip` + 同一个共享 Shape 实例
+     * ⇒ 被误认（`sPending` 这个"下一个就是气泡"的旗子挂错了对象）。
+     *
+     * <h3>为什么用尺寸闸而不是改判据</h3>
+     * 改判据要重新定位"消息列表那条路"，风险高、而且宿主一升级就再坏一次；
+     * 而**尺寸是物理事实**：气泡宽度必然小于屏宽、也远小于屏高。
+     * 这道闸对真气泡零误伤，对误标的大块则必然拦住。
+     */
+    private static boolean plausibleBubble(int kind, float w, float h) {
+        if (w <= 0f || h <= 0f) return false;
+        // ★★ 2026-11-14（3.108.2）· **AI 气泡不受这道闸约束**
+        //
+        //   真机血证（3.108.1 装机后）：
+        //     ③ 认到【AI气泡】元素 #1 @79a0e76
+        //     ⛔ 尺寸不像气泡 ⇒ 跳过（1440x6342 · 屏宽 1440）   ← 58ms 后
+        //     ③ 认到【AI气泡】元素 #3 @14c0f57
+        //     ⛔ 尺寸不像气泡 ⇒ 跳过（1440x196 · 屏宽 1440）
+        //   ⇒ AI 气泡的颜色/图片**一次都没画**（连 `·AI 气泡绘制` 那行都没有）。
+        //
+        //   为什么宿主的 AI 气泡会满屏宽：AI 回复本来就是**整块流式内容**
+        //   （正文 + 代码块 + 表格），宿主的容器就是满宽，左右边距在更外层。
+        //   所以「宽度 < 92% 屏宽」对 AI 从一开始就不成立。
+        //
+        //   为什么 AI **不需要**这道闸：
+        //     用户气泡靠 `clip(Shape)` 的**引用相等**去认 → 设置页卡片共享同一个
+        //     Shape 实例 → **会误标**（3.107.0 那个"气泡图泄漏到设置页"就是这个）。
+        //     而 AI 气泡靠 `sAssistPending` —— 那是**我们自己刚注入出来的那个元素**，
+        //     身份是确定的，根本不存在误标。
+        //   ⇒ 教训 338 原文「能用量纲卡住的，就别靠身份」在这里**正好反过来用**：
+        //     已经有可靠身份的地方，不要再用量纲去卡。
+        if (kind == KIND_ASSIST) return true;
+
+        int sw = sScreenW;
+        if (sw <= 0) {
+            try {
+                sw = android.content.res.Resources.getSystem().getDisplayMetrics().widthPixels;
+            } catch (Throwable ignore) {
+            }
+            if (sw <= 0) return true;          // 拿不到屏幕宽就当合理（宁可不挡真气泡）
+            sScreenW = sw;
+        }
+        // ① 宽度：留出容器边距。气泡**不可能**贴满整屏宽。
+        //    用 92% 而不是 100%：气泡在窄屏 + 长文本时可能很宽，但不至于顶满。
+        if (w > sw * 0.92f) return false;
+        // ② 高度：单条气泡再长也不会超过屏宽的 3 倍（超过就是整页/列表容器之类）
+        if (h > sw * 3.0f) return false;
+        return true;
+    }
+
+    private static volatile int sScreenW = 0;
+    /** 被尺寸闸拦下的次数（诊断用）。 */
+    private static volatile int sRejected = 0;
+
     private static final class DrawHook extends XC_MethodHook {
         private long oldColor;
         private boolean touched;
@@ -630,10 +698,23 @@ public final class GmBubbleBg {
                 int ent = ++sEnter;
                 boolean on = cfgOn(kind);
                 int mode = cfgMode(kind);
+
+                // ★★ 2026-11-14 尺寸闸门：先量一次，**不是气泡尺寸就整段放弃**
+                //   （含纯色模式 —— 否则设置页那块大背景会被涂成气泡色）
+                long sz0 = sizePackOf(scope);
+                float w0 = Float.intBitsToFloat((int) (sz0 >> 32));
+                float h0 = Float.intBitsToFloat((int) sz0);
+                if (!plausibleBubble(kind, w0, h0)) {
+                    int n = ++sRejected;
+                    if (n <= 3) {
+                        log("⛔ 尺寸不像气泡 ⇒ 跳过（" + Math.round(w0) + "x" + Math.round(h0)
+                                + " · 屏宽 " + sScreenW + " · 已被误标元素 #" + n + "）");
+                    }
+                    return;
+                }
+
                 if (ent <= 4 || (on && sPainted < 3)) {
-                    long sz0 = sizePackOf(scope);
-                    note(kind, ent, on, mode, Float.intBitsToFloat((int) (sz0 >> 32)),
-                            Float.intBitsToFloat((int) sz0), scope);
+                    note(kind, ent, on, mode, w0, h0, scope);
                 }
                 if (!on) return;
 

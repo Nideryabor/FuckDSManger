@@ -59,6 +59,163 @@ public final class FdmBridge {
     private static volatile boolean sTried = false;
     private static volatile boolean sRecvInstalled = false;
     private static volatile boolean sGotConfig = false;
+
+    // ══════════════════════════════════════════════════════════════════
+    //  ★ 2026-11-14 · 「整页模式」：界面跑在**宿主进程**里
+    //
+    //  背景（`专题/待办与遗留.md` 第一段）：跨进程拉起模块 UI 被**包可见性**
+    //  整条堵死（显式 / scheme / 显式广播三条路全 ANFE，2026-11-14 真机日志）。
+    //  唯一的根治办法是把设置界面直接画在宿主进程里（`HostPage`）。
+    //
+    //  但界面一旦搬进来，**配置从哪来**就变了：
+    //    · 原来：UI 进程读**我们自己 App** 的 SharedPreferences（`fdm`），
+    //      改完通过广播推给宿主（`ACTION_PUSH`）。
+    //    · 现在：整页在宿主进程里，`getSharedPreferences("fdm")` 拿到的是
+    //      **宿主的那份** ⇒ 键名、值、缓存全都对不上，界面会显示一堆假值。
+    //
+    //  ⇒ 整页模式下走**直连**：宿主配置就在同一个进程的 MMKV 里，
+    //    直接用 `GmStore.read2/write` 读写，一个广播都不用发。
+    //    （`Bridge.kt` 按 {@link #inHost()} 分流，本类只提供这两个门。）
+    // ══════════════════════════════════════════════════════════════════
+
+    /** 本进程是不是**宿主进程**（整页模式）。由 `FdmEntry` 在宿主侧置位。 */
+    private static volatile boolean sInHost = false;
+
+    /**
+     * 宿主存储里那个「模块 APK 路径」的键。
+     *
+     * <p>写入方 = **模块进程**（`FdmPush.push()` 把 `getPackageCodePath()` 捎进 payload）；
+     * 读取方 = **整页**（`HostPage.moduleResources()` 拿它 `addAssetPath`）。
+     * 这样宿主不需要查 PackageManager（包可见性/隐藏应用列表都管不着），
+     * 也不需要去扫进程内存或反射别人的 ClassLoader。
+     */
+    public static final String KEY_MOD_APK = "fuckdsmanger_apk_path";
+
+    /** 读那个路径（宿主进程内）；没有就返回空串。 */
+    public static String moduleApkPath(Context ctx) {
+        try {
+            String v = com.nidyaber.fuckdsmanger.gm.GmStore.read2(ctx, KEY_MOD_APK, "s");
+            return v == null ? "" : v;
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    /**
+     * 【主路】模块 APK 路径 —— **框架亲口告诉我们的** 🐲 2026-11-14
+     *
+     * <h3>为什么换这条</h3>
+     * 原来整页要的路径只有一条来源：**模块进程跑一次** → 广播捎 `getPackageCodePath()` →
+     * 宿主存键。可整页存在的意义恰恰是「不用开模块本体」⇒ **循环依赖**：
+     * 模块本体没跑过，整页就永远打不开（真机血证 2026-11-14：日志里
+     * `已记下模块 APK 路径` 出现 **0 次** ⇒ `HostPage` 拿不到 Resources ⇒ 退回保底卡片）。
+     *
+     * <h3>这条为什么一定成立（源码实证，不是猜）</h3>
+     * LSPosed `core/.../XposedInit.initModule(...)`：
+     * <pre>
+     *   if (moduleInstance instanceof IXposedHookZygoteInit) {
+     *       StartupParam param = new StartupParam();
+     *       param.modulePath = apk;                       // ← 模块 APK 的绝对路径
+     *       ((IXposedHookZygoteInit) moduleInstance).initZygote(param);
+     *   }
+     * </pre>
+     * 它在**每个目标进程**加载模块时都会跑一遍，且**早于** `handleLoadPackage`。
+     * ⇒ 我们只要实现 `IXposedHookZygoteInit`，路径就是框架送上门来的：
+     *   **不用存储、不用跨进程、不用反射任何私有字段**。
+     *
+     * <p>⚠️ 这是**兜底链的第一环**，不是唯一一环 —— 万一某个框架版本不调 `initZygote`，
+     * `HostPage` 还有「问自己的 ClassLoader」和「反射 pathList」两条后手。
+     */
+    public static String moduleApkFromZygote() {
+        String p = sModApkFromZygote;
+        return p == null ? "" : p;
+    }
+
+    /** 由 {@code FdmEntry.initZygote} 写入（框架给的模块 APK 路径）。 */
+    public static void setModuleApkFromZygote(String path) {
+        if (path != null && path.length() > 0) {
+            sModApkFromZygote = path;
+        }
+    }
+
+    /** 框架给的模块 APK 路径（`initZygote` 里收到的那份）。 */
+    private static volatile String sModApkFromZygote = null;
+
+    public static void setInHost(boolean v) {
+        sInHost = v;
+    }
+
+    /** true ＝ 我们在宿主进程里跑（整页模式）⇒ 配置读写走直连。 */
+    public static boolean inHost() {
+        return sInHost;
+    }
+
+    /**
+     * 整页模式：**直接**读宿主存储（同进程，零跨进程）。
+     *
+     * <p>⚠️ 返回**空串**表示"宿主没有这个键"（`GmStore.read2` 的语义就是这样，
+     * 它不返回 null）。调用方要自己退回默认值 —— 别把空串当 false。
+     *
+     * @param type 宿主类型字符：`b` 布尔 / `i` 整数 / `l` 长整 / `f` 浮点 / 其它 = 字符串
+     */
+    public static String hostRead(Context ctx, String key, String type) {
+        try {
+            return hostReadStrict(ctx, key, type);
+        } catch (Throwable t) {
+            GmUtil.log("【FdmBridge】hostRead 失败 " + key + "：" + t);
+            return "";
+        }
+    }
+
+    /**
+     * 同 {@link #hostRead}，但**类型不符会抛**（`ClassCastException`）。
+     *
+     * <p>★ 为什么必须留这个"会抛"的版本：宿主存储是**强类型**的
+     * （`GmStore` 桩里那条铁律：类型不符会静默读回默认值 / 直接抛）。
+     * 而整页里 `SharedPreferences.getString("cfg.fuckds_bg_on", …)` 这种调用
+     * **不知道宿主那个键到底是 b 还是 i** ⇒ 只能挨个类型试一遍：
+     * <pre>
+     *   for (t in ["b","i","l","f","s"]) {
+     *     runCatching { hostReadStrict(ctx, key, t) }   ← 抛了 = 类型不对，换下一个
+     *   }
+     * </pre>
+     * 用 {@link #hostRead} 那个吞异常的版本做这件事是**做不到**的：
+     * 它把"类型不对"和"没这个键"都变成空串，两者分不开。
+     */
+    public static String hostReadStrict(Context ctx, String key, String type) {
+        String v = com.nidyaber.fuckdsmanger.gm.GmStore.read2(ctx, key, type == null ? "s" : type);
+        return v == null ? "" : v;
+    }
+
+    /**
+     * 整页模式：**直接**写宿主存储。
+     *
+     * @param type 同 {@link #hostRead}；**注意 `GmStore.write` 的参数顺序是
+     *             「键 → 值 → 类型」**，类型在最后（底座注释里专门标了三个感叹号）
+     */
+    public static boolean hostWrite(Context ctx, String key, String val, String type) {
+        if (ctx == null || key == null) return false;
+        try {
+            com.nidyaber.fuckdsmanger.gm.GmStore.write(
+                    ctx, key, val == null ? "" : val, type == null ? "s" : type);
+            return true;
+        } catch (Throwable t) {
+            GmUtil.log("【FdmBridge】hostWrite 失败 " + key + "：" + t);
+            return false;
+        }
+    }
+
+    /** 整页模式：删掉宿主存储里的一个键（`Editor.remove` 用）。 */
+    public static boolean hostRemove(Context ctx, String key) {
+        if (ctx == null || key == null) return false;
+        try {
+            com.nidyaber.fuckdsmanger.gm.GmStore.remove(ctx, key);
+            return true;
+        } catch (Throwable t) {
+            GmUtil.log("【FdmBridge】hostRemove 失败 " + key + "：" + t);
+            return false;
+        }
+    }
     /**
      * 桥的握手令牌 🐲
      *
@@ -376,6 +533,43 @@ public final class FdmBridge {
         }
 
         JSONObject j = new JSONObject(raw);
+
+        // ★★ 2026-11-14：把 UI 进程捎来的**模块 APK 路径**记下来（整页要拿它 addAssetPath）。
+        //   这是整条链路的第二环：模块进程报告自己 → 宿主存住 → 整页用它挂资源表。
+        //   ⚠️ 只认"长得像 apk 路径"的值，别把任意字符串写进宿主存储。
+        try {
+            String apk = j.optString("apk", "");
+            if (apk.endsWith(".apk") && apk.startsWith("/")) {
+                GmStore.write(ctx, KEY_MOD_APK, apk, "s");
+                GmUtil.log("【FdmBridge】已记下模块 APK 路径（整页用）：" + apk);
+            }
+        } catch (Throwable ignore) {
+        }
+
+        // ★★ 2026-11-14（3.108.2）· 模块进程报上来的「**我们自己**的 SAF 授权状态」
+        //
+        //   为什么不在这儿现查：SAF 持久授权**记在 uid 上**。这个方法跑在宿主进程里，
+        //   `ctx.getContentResolver().getPersistedUriPermissions()` 拿到的是**宿主的**那份
+        //   ⇒ 我们模块自己的授权在宿主进程里**根本看不见**。
+        //   真机现象（主人截图）：全部授权过了，整页首页仍写「本应用还没授权」。
+        //
+        //   所以只能由模块进程自查、随配置一起报上来，宿主存住，整页再读。
+        try {
+            JSONObject saf = j.optJSONObject("saf");
+            if (saf != null) {
+                GmStore.write(ctx, "fuckdsmanger_mod_saf_ok",
+                        saf.optBoolean("ok", false) ? "true" : "false", "b");
+                GmStore.write(ctx, "fuckdsmanger_mod_saf_name",
+                        saf.optString("name", ""), "s");
+                GmStore.write(ctx, "fuckdsmanger_mod_saf_uri",
+                        saf.optString("uri", ""), "s");
+                GmUtil.log("【FdmBridge】收到模块 SAF 授权：ok="
+                        + saf.optBoolean("ok", false) + " name=" + saf.optString("name", ""));
+            }
+        } catch (Throwable ignore) {
+        }
+
+
         SharedPreferences.Editor ed = GmStore.get(ctx).edit();
         int n = 0;
 
@@ -732,7 +926,6 @@ public final class FdmBridge {
             {"max_upload_file_size", "20185380"},
             {"normal_history_and_file_token_limit", "20220303"},
             {"one_tap_login_enabled", "20196881"},
-            {"pow_header_paths", "20189347"},
             {"query_files_time_interval", "20186902"},
             {"query_title_time_interval", "20187746"},
             {"r1_history_and_file_token_limit", "20220302"},
@@ -1822,6 +2015,24 @@ public final class FdmBridge {
                 //      ② 我们**UI dex**（classes3/4）里的类能不能在宿主进程加载
                 //      ③ setContent 的参数类型到底是什么
                 back = composeProbe(ctx);
+            } else if ("page_full".equals(cmd)) {
+                // ★★ 2026-11-14 · **整页实验的独立入口**（不掺进「打开模块」那条老路径）
+                //
+                //   按主人 2026-11-14 的定调：整页只回答一个问题 ——
+                //   「宿主进程里能不能画出**完整的**设置界面」。
+                //   能 ⇒ 以后所有入口再切过来；不能 ⇒ 整块删掉，
+                //   而老路径因为从头到尾没被碰过，一定还是好的。
+                //
+                //     adb shell am broadcast -a com.little_femaleboy.fdm.CMD --es cmd page_full
+                boolean okFull = FdmComposeDialog.tryShowFullPage(ctx, new Runnable() {
+                    @Override
+                    public void run() {
+                        FdmComposeDialog.dismissShowing();
+                    }
+                });
+                back = okFull ? "整页已显示（看屏幕：能不能画出来 / 改配置 / 退回来）"
+                        : "整页装不上（看 【FdmComposeDlg】 日志的 ✗ 那一行）";
+                GmUtil.log("【FdmBridge】page_full ⇒ " + back);
             } else if ("page_probe".equals(cmd)) {
                 // ★ 2026-11-07：**「整个 Compose 页面塞进宿主」的活体探针**
                 //   走和保底弹窗完全相同的挂载路径（三件套 owner + 手工 recomposer），
@@ -2887,7 +3098,6 @@ public final class FdmBridge {
             {"kv_remote_settings_allow_parallel_streams", "b"},
             {"kv_remote_settings_interrupt_and_send_enabled", "b"},
             {"kv_remote_settings_allow_file_with_search", "b"},
-            {"kv_remote_settings_sse_smooth_follow", "b"},
             {"kv_remote_settings_normal_history_and_file_token_limit", "i"},
             {"kv_remote_settings_r1_history_and_file_token_limit", "i"},
             {"kv_remote_settings_completion_request_timeout_ms", "i"},
@@ -2936,7 +3146,6 @@ public final class FdmBridge {
             {"kv_remote_settings_sm_sdk_host", "s"},
             {"kv_remote_settings_android_apk_link", "s"},
             {"support_chat_file_exts", "s"},
-            {"pow_header_paths", "s"},
             {"authed_pow_functions", "s"},
             {"image_cache_invalidate_before", "l"},
             {"camera_compress_ratio", "i"},

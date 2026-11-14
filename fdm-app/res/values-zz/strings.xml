@@ -2,6 +2,8 @@
 <!-- 🐲 龙龙语。没写的键自动回落到 values/ 的人话版。 -->
 <resources>
     <string name="c_back">回窝</string>
+
+    <string name="c_close">收爪</string>
     <string name="c_jump_go">去「系统提示词」瞅瞅嗷 ›</string>
     <string name="c_jump_hint">猜你想蹦去哪</string>
     <string name="c_more">还有啥</string>

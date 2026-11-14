@@ -169,10 +169,10 @@ private fun typeTitleRes(type: String): Int = when (type) {
 /** 默认卡片池（第一次进这个页面时的样子：内置三张 + 源卡片，都在抽屉里）。 */
 private fun defaultCards(ctx: Context): MutableMap<String, CCard> {
     val m = mutableMapOf<String, CCard>()
-    m[T_SUGGEST] = CCard(T_SUGGEST, T_SUGGEST, ctx.getString(typeTitleRes(T_SUGGEST)), "")
-    m[T_MUSIC] = CCard(T_MUSIC, T_MUSIC, ctx.getString(typeTitleRes(T_MUSIC)), "")
-    m[T_RICHTEXT] = CCard(T_RICHTEXT, T_RICHTEXT, ctx.getString(typeTitleRes(T_RICHTEXT)), "")
-    m[K_SRC] = CCard(K_SRC, T_TEXTSRC, ctx.getString(typeTitleRes(T_TEXTSRC)), "")
+    m[T_SUGGEST] = CCard(T_SUGGEST, T_SUGGEST, ctx.fdmStr(typeTitleRes(T_SUGGEST)), "")
+    m[T_MUSIC] = CCard(T_MUSIC, T_MUSIC, ctx.fdmStr(typeTitleRes(T_MUSIC)), "")
+    m[T_RICHTEXT] = CCard(T_RICHTEXT, T_RICHTEXT, ctx.fdmStr(typeTitleRes(T_RICHTEXT)), "")
+    m[K_SRC] = CCard(K_SRC, T_TEXTSRC, ctx.fdmStr(typeTitleRes(T_TEXTSRC)), "")
     return m
 }
 
@@ -215,11 +215,11 @@ private class Saved(
         fun coerce(k: String) {
             val ex = cards[k]
             val c: CCard? = when (k) {
-                T_SUGGEST -> CCard(k, T_SUGGEST, ctx.getString(typeTitleRes(T_SUGGEST)), ex?.text ?: "")
-                T_MUSIC -> CCard(k, T_MUSIC, ctx.getString(typeTitleRes(T_MUSIC)), ex?.text ?: "")
-                T_RICHTEXT -> CCard(k, T_RICHTEXT, ctx.getString(typeTitleRes(T_RICHTEXT)), ex?.text ?: "")
+                T_SUGGEST -> CCard(k, T_SUGGEST, ctx.fdmStr(typeTitleRes(T_SUGGEST)), ex?.text ?: "")
+                T_MUSIC -> CCard(k, T_MUSIC, ctx.fdmStr(typeTitleRes(T_MUSIC)), ex?.text ?: "")
+                T_RICHTEXT -> CCard(k, T_RICHTEXT, ctx.fdmStr(typeTitleRes(T_RICHTEXT)), ex?.text ?: "")
                 // ★ 3.64.3：它是**默认模板** ⇒ 内容固定为默认值（不再沿用旧的/播种来的文本）
-                K_SRC -> CCard(k, T_TEXTSRC, ctx.getString(typeTitleRes(T_TEXTSRC)), ctx.getString(DEF_TEXT_RES))
+                K_SRC -> CCard(k, T_TEXTSRC, ctx.fdmStr(typeTitleRes(T_TEXTSRC)), ctx.fdmStr(DEF_TEXT_RES))
                 else -> if (ex != null && ex.isText) ex else null
             }
             if (c != null && !cards2.containsKey(k)) cards2[k] = c
@@ -267,7 +267,7 @@ private fun readLayout(ctx: Context): Saved? {
                 }
                 cm[k] = CCard(
                     k, ty2,
-                    co.optString("title", ctx.getString(typeTitleRes(ty2))),
+                    co.optString("title", ctx.fdmStr(typeTitleRes(ty2))),
                     co.optString("text", ""),
                     co.optBoolean("withTitle", false),
                 )
@@ -298,7 +298,7 @@ private fun writeLayout(ctx: Context, drawer: List<String>, box: List<String>, e
         o.put("nextId", nextId)
         FdmPush.sp(ctx).edit().putString(LAYOUT_KEY, o.toString()).apply()
     } catch (t: Throwable) {
-        Toast.makeText(ctx, ctx.getString(R.string.spv_007) + t, Toast.LENGTH_SHORT).show()
+        Toast.makeText(ctx, ctx.fdmStr(R.string.spv_007) + t, Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -334,7 +334,7 @@ private fun compose(ctx: Context, box: List<String>, cards: Map<String, CCard>) 
         FdmPush.sendCmd(ctx, "prompt_compose", payload)
         FdmPush.sp(ctx).edit().putLong("dbg.compose_sent_at", System.currentTimeMillis()).apply()
     } catch (t: Throwable) {
-        Toast.makeText(ctx, ctx.getString(R.string.spv_008) + t, Toast.LENGTH_SHORT).show()
+        Toast.makeText(ctx, ctx.fdmStr(R.string.spv_008) + t, Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -487,19 +487,19 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                     val t = jsonToMap(raw)["sysprompt_text"]
                     // 宿主回了、但没带提示词正文 ⇒ 别说"没应声"（那是两回事）
                     promptPreview = t ?: (
-                            ctx.getString(R.string.spv_009) +
-                                    ctx.getString(R.string.spv_010) +
-                                    ctx.getString(R.string.spv_011) +
-                                    ctx.getString(R.string.spv_012)
+                            ctx.fdmStr(R.string.spv_009) +
+                                    ctx.fdmStr(R.string.spv_010) +
+                                    ctx.fdmStr(R.string.spv_011) +
+                                    ctx.fdmStr(R.string.spv_012)
                             )
                     return@launch
                 }
             }
             promptPreview =
-                ctx.getString(R.string.spv_009) +
-                ctx.getString(R.string.spv_010) +
-                ctx.getString(R.string.spv_011) +
-                ctx.getString(R.string.spv_012)
+                ctx.fdmStr(R.string.spv_009) +
+                ctx.fdmStr(R.string.spv_010) +
+                ctx.fdmStr(R.string.spv_011) +
+                ctx.fdmStr(R.string.spv_012)
         }
     }
 
@@ -579,7 +579,7 @@ fun SysPromptV2Page(onBack: () -> Unit, onNav: (String) -> Unit) {
                         if (c != null && c.type == T_TEXTSRC) {
                             // ★ 复制语义：能无限拖 —— 每拖一次就多一张独立副本
                             val nk = "text#" + nextId
-                            cards[nk] = CCard(nk, T_TEXT, ctx.getString(DEF_TITLE_RES), ctx.getString(DEF_TEXT_RES), false)
+                            cards[nk] = CCard(nk, T_TEXT, ctx.fdmStr(DEF_TITLE_RES), ctx.fdmStr(DEF_TEXT_RES), false)
                             nextId += 1
                             inBox = insertByY(inBox, nk, r.center.y)
                         } else {
@@ -1199,7 +1199,7 @@ private fun PromptCard(
                     )
                 } else {
                     Text(
-                        if (card.isText) card.title else ctx.getString(typeTitleRes(card.type)),
+                        if (card.isText) card.title else ctx.fdmStr(typeTitleRes(card.type)),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -1215,7 +1215,7 @@ private fun PromptCard(
             // ★ ▸ 只有内置三张有；自定义文本卡在抽屉里则是**红色删除**
             if (card.isBuiltin) {
                 IconButton(onClick = onNav, modifier = Modifier.size(44.dp)) {
-                    Icon(Icons.Rounded.ChevronRight, stringResource(R.string.spv_030) + ctx.getString(typeTitleRes(card.type)) + stringResource(R.string.spv_031))
+                    Icon(Icons.Rounded.ChevronRight, stringResource(R.string.spv_030) + ctx.fdmStr(typeTitleRes(card.type)) + stringResource(R.string.spv_031))
                 }
             } else if (showDelete) {
                 IconButton(onClick = onDelete, modifier = Modifier.size(44.dp)) {
@@ -1248,7 +1248,7 @@ private fun PromptCard(
                                 if (st.isFocused) bHadFocus = true
                                 else if (bHadFocus) { bHadFocus = false; onCommit() }
                             },
-                        placeholder = { Text(card.text.ifEmpty { ctx.getString(DEF_TEXT_RES) }) },
+                        placeholder = { Text(card.text.ifEmpty { ctx.fdmStr(DEF_TEXT_RES) }) },
                         label = { Text(stringResource(R.string.spv_033)) },
                     )
                     Spacer(Modifier.height(6.dp))
@@ -1271,7 +1271,7 @@ private fun PromptCard(
                         val changed = onCommit()
                         Toast.makeText(
                             ctx2,
-                            if (changed) ctx.getString(R.string.spv_035) else ctx.getString(R.string.spv_036),
+                            if (changed) ctx.fdmStr(R.string.spv_035) else ctx.fdmStr(R.string.spv_036),
                             Toast.LENGTH_SHORT,
                         ).show()
                     }) { Text(stringResource(R.string.spv_037)) }
@@ -1312,11 +1312,11 @@ internal const val K_DJ_OFF = "fuckds_dj_off"
 
 /** 卡片副标题（说明它是什么）。 */
 private fun cardHint(ctx: Context, c: CCard): String = when (c.type) {
-    T_SUGGEST -> ctx.getString(R.string.spv_039)
-    T_MUSIC -> ctx.getString(R.string.spv_040)
-    T_RICHTEXT -> ctx.getString(R.string.spv_041)
-    T_TEXTSRC -> ctx.getString(R.string.spv_042)
-    else -> if (c.text.isEmpty()) ctx.getString(R.string.spv_043) else c.text.take(60)
+    T_SUGGEST -> ctx.fdmStr(R.string.spv_039)
+    T_MUSIC -> ctx.fdmStr(R.string.spv_040)
+    T_RICHTEXT -> ctx.fdmStr(R.string.spv_041)
+    T_TEXTSRC -> ctx.fdmStr(R.string.spv_042)
+    else -> if (c.text.isEmpty()) ctx.fdmStr(R.string.spv_043) else c.text.take(60)
 }
 
 /**
@@ -1327,36 +1327,36 @@ private fun cardHint(ctx: Context, c: CCard): String = when (c.type) {
  * 剩下的是"怎么把提示词送出去"的设置：开关 / 注入模式 / 承载方式 / 前缀 / 后缀。
  */
 private fun sysPromptItems(ctx: Context): List<It> = listOf(
-    It(ctx.getString(R.string.spv_044), ctx.getString(R.string.spv_045),
+    It(ctx.fdmStr(R.string.spv_044), ctx.fdmStr(R.string.spv_045),
         K.SW, key = "fuckds_sysprompt_on", def = false),
-    It(ctx.getString(R.string.spv_046), ctx.getString(R.string.spv_047) +
-            ctx.getString(R.string.spv_048) +
-            ctx.getString(R.string.spv_049) +
-            ctx.getString(R.string.spv_050),
+    It(ctx.fdmStr(R.string.spv_046), ctx.fdmStr(R.string.spv_047) +
+            ctx.fdmStr(R.string.spv_048) +
+            ctx.fdmStr(R.string.spv_049) +
+            ctx.fdmStr(R.string.spv_050),
         K.CH, key = "fuckds_sysprompt_mode", def = 0,
-        choices = listOf(ctx.getString(R.string.spv_051), ctx.getString(R.string.spv_052))),
-    It(ctx.getString(R.string.spv_053), ctx.getString(R.string.spv_054) +
-            ctx.getString(R.string.spv_055) +
-            ctx.getString(R.string.spv_056) +
-            ctx.getString(R.string.spv_057) +
-            ctx.getString(R.string.spv_058),
+        choices = listOf(ctx.fdmStr(R.string.spv_051), ctx.fdmStr(R.string.spv_052))),
+    It(ctx.fdmStr(R.string.spv_053), ctx.fdmStr(R.string.spv_054) +
+            ctx.fdmStr(R.string.spv_055) +
+            ctx.fdmStr(R.string.spv_056) +
+            ctx.fdmStr(R.string.spv_057) +
+            ctx.fdmStr(R.string.spv_058),
         K.CH, key = "fuckds_sysprompt_carrier", def = 0,
-        choices = listOf(ctx.getString(R.string.spv_059), ctx.getString(R.string.spv_060))),
-    It(ctx.getString(R.string.spv_061), ctx.getString(R.string.spv_062) +
-            ctx.getString(R.string.spv_063) +
-            ctx.getString(R.string.spv_064) +
-            ctx.getString(R.string.spv_065) +
-            ctx.getString(R.string.spv_066),
+        choices = listOf(ctx.fdmStr(R.string.spv_059), ctx.fdmStr(R.string.spv_060))),
+    It(ctx.fdmStr(R.string.spv_061), ctx.fdmStr(R.string.spv_062) +
+            ctx.fdmStr(R.string.spv_063) +
+            ctx.fdmStr(R.string.spv_064) +
+            ctx.fdmStr(R.string.spv_065) +
+            ctx.fdmStr(R.string.spv_066),
         K.TX, key = "fuckds_sysprompt_head",
         def = "My standing preference for this whole conversation: "),
-    It(ctx.getString(R.string.spv_067), ctx.getString(R.string.spv_068) +
-            ctx.getString(R.string.spv_069) +
-            ctx.getString(R.string.spv_070),
+    It(ctx.fdmStr(R.string.spv_067), ctx.fdmStr(R.string.spv_068) +
+            ctx.fdmStr(R.string.spv_069) +
+            ctx.fdmStr(R.string.spv_070),
         K.TX, key = "fuckds_sysprompt_tail", def = ""),
-    It(ctx.getString(R.string.spv_071), ctx.getString(R.string.spv_072) +
-            ctx.getString(R.string.spv_073) +
-            ctx.getString(R.string.spv_074) +
-            ctx.getString(R.string.spv_075) +
-            ctx.getString(R.string.spv_076),
+    It(ctx.fdmStr(R.string.spv_071), ctx.fdmStr(R.string.spv_072) +
+            ctx.fdmStr(R.string.spv_073) +
+            ctx.fdmStr(R.string.spv_074) +
+            ctx.fdmStr(R.string.spv_075) +
+            ctx.fdmStr(R.string.spv_076),
         K.INFO),
 )

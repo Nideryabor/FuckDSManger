@@ -153,17 +153,17 @@ private fun ItemRow(
                 ctx.contentResolver.openInputStream(uri)?.use { ins ->
                     java.io.FileOutputStream(dst).use { out -> ins.copyTo(out) }
                 }
-                FdmPush.sendCmd(ctx, "ui_step", ctx.getString(R.string.pg_001) + dst.length() + ctx.getString(R.string.pg_002) + dst.absolutePath)
+                FdmPush.sendCmd(ctx, "ui_step", ctx.fdmStr(R.string.pg_001) + dst.length() + ctx.fdmStr(R.string.pg_002) + dst.absolutePath)
                 if (dst.length() > 0) {
                     FdmPush.sendCmd(ctx, "img_path", kind + "|" + dst.absolutePath)
-                    Log.e(TAG, "传路径 $kind → " + dst.absolutePath + "（" + dst.length() + ctx.getString(R.string.pg_003))
+                    Log.e(TAG, "传路径 $kind → " + dst.absolutePath + "（" + dst.length() + ctx.fdmStr(R.string.pg_003))
                 } else {
-                    Log.e(TAG, ctx.getString(R.string.pg_004))
+                    Log.e(TAG, ctx.fdmStr(R.string.pg_004))
                 }
                 bump()
             } catch (t: Throwable) {
-                FdmPush.sendCmd(ctx, "ui_step", ctx.getString(R.string.pg_005) + t)
-                Log.e(TAG, ctx.getString(R.string.pg_006), t)
+                FdmPush.sendCmd(ctx, "ui_step", ctx.fdmStr(R.string.pg_005) + t)
+                Log.e(TAG, ctx.fdmStr(R.string.pg_006), t)
             }
         }
     }
@@ -171,7 +171,7 @@ private fun ItemRow(
     when (it.k) {
         K.SW -> SettingSwitch(it.label, valueParam as Boolean, it.key, host, it.hint) { v ->
             poke(bump)
-            Log.e(TAG, ctx.getString(R.string.pg_007) + it.key + " = " + v)
+            Log.e(TAG, ctx.fdmStr(R.string.pg_007) + it.key + " = " + v)
             saveLocal(ctx, it, v)                        // ★ 本地也存（界面要显示/重进要回显）
             if (it.cmd != null) FdmPush.sendCmd(ctx, it.cmd, v)
             else FdmPush.sendCmd(ctx, "cfg_put", it.key!! + "\u001f" + "b" + "\u001f" + v)
@@ -206,18 +206,18 @@ private fun ItemRow(
             FdmPush.sendCmd(ctx, "cfg_put", it.key!! + "\u001f" + "s" + "\u001f" + v); bump()
         }
         K.SUB -> SettingNav(it.label, it.hint) { onNav(it.sub!!) }
-        K.ACT -> SettingAction(it.label, it.hint ?: ctx.getString(R.string.pg_008)) {
+        K.ACT -> SettingAction(it.label, it.hint ?: ctx.fdmStr(R.string.pg_008)) {
             FdmPush.sendCmd(ctx, it.cmd!!, null); bump()
         }
-        K.PICK -> SettingAction(it.label, it.hint ?: ctx.getString(R.string.pg_009)) {
+        K.PICK -> SettingAction(it.label, it.hint ?: ctx.fdmStr(R.string.pg_009)) {
             picker.launch("image/*")     // ★ 调起**系统**选择器（不是让宿主弹 ✗）
         }
-        K.COPY -> SettingAction(it.label, it.hint ?: ctx.getString(R.string.pg_010)) {
+        K.COPY -> SettingAction(it.label, it.hint ?: ctx.fdmStr(R.string.pg_010)) {
             FdmPush.sendCmd(ctx, it.cmd ?: "dump_text", null)
-            val t = ctxSp(ctx).getString("cmd.dump_text", ctx.getString(R.string.pg_011)) ?: ""
+            val t = ctxSp(ctx).getString("cmd.dump_text", ctx.fdmStr(R.string.pg_011)) ?: ""
             val cb = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             cb.setPrimaryClip(ClipData.newPlainText("FDM", t))
-            Log.e(TAG, ctx.getString(R.string.pg_012) + t.length + ctx.getString(R.string.pg_013))
+            Log.e(TAG, ctx.fdmStr(R.string.pg_012) + t.length + ctx.fdmStr(R.string.pg_013))
             bump()
         }
         K.INFO -> SettingInfo(it.label, it.hint ?: "")
@@ -663,6 +663,18 @@ fun TreeHome(onNav: (String) -> Unit, onAbout: () -> Unit) {
     //   藏在内层页里，用户根本不知道重要性 ⇒ 放首页、带状态、没授权时高亮提示。
     var treeText by remember { mutableStateOf("") }
     LaunchedEffect(t) {
+        // ★★ 2026-11-14（3.108.2）· 整页里**别走广播**，直接查
+        //
+        //   老路（模块本体进程）：sendCmd("local_tree") → 宿主 receiver 回写
+        //   `cmd.local_tree` → 我们 400ms 后读。两跳 + 一个固定的 400ms 猜测。
+        //
+        //   而整页**就活在宿主进程里** ⇒ `persistedUriPermissions` 拿到的正是宿主那份，
+        //   一步到位、没有竞态、也不会因为 `delay(400)` 不够而显示"还没授权"。
+        //   （主人截图里那句红字"还没授权"就是这么来的。）
+        if (SafDir.hostMode()) {
+            treeText = SafDir.hostTreeDisplay(ctx)
+            return@LaunchedEffect
+        }
         FdmPush.sendCmd(ctx, "local_tree", null)
         delay(400)
         treeText = FdmPush.sp(ctx).getString("cmd.local_tree", "") ?: ""

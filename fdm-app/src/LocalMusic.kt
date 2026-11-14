@@ -176,7 +176,7 @@ fun LocalMusicPage(onBack: () -> Unit) {
             busy = false
             tick++
             if (out.isEmpty()) {
-                note = ctx.getString(R.string.lm_035)
+                note = ctx.fdmStr(R.string.lm_035)
             }
         }
     }
@@ -272,7 +272,7 @@ fun LocalMusicPage(onBack: () -> Unit) {
                         // ★ 导入也必须让**宿主**拉起：回调的临时读权限挂在发起者 uid 上，
                         //   我们这边选完文件，宿主照样读不到（旧方案就是这么废掉的）。
                         FdmPush.sendCmd(ctx, "local_import", null)
-                        note = ctx.getString(R.string.lm_036)
+                        note = ctx.fdmStr(R.string.lm_036)
                     }, enabled = !busy) {
                         Text(stringResource(R.string.lm_009))
                     }
@@ -424,17 +424,17 @@ fun LocalMusicPage(onBack: () -> Unit) {
             artist = o.optString("artist", ""),
             onSetLrc = {
                 FdmPush.sendCmd(ctx, "local_pick_lrc", no.toString())
-                note = ctx.getString(R.string.lm_040)
+                note = ctx.fdmStr(R.string.lm_040)
             },
             onSetCover = {
                 FdmPush.sendCmd(ctx, "local_pick_cover", no.toString())
-                note = ctx.getString(R.string.lm_041)
+                note = ctx.fdmStr(R.string.lm_041)
             },
             onReset = {
                 // 清掉手动指定 ⇒ 回到「同名自动配对」
                 FdmPush.sendCmd(ctx, "local_set_lrc", "$no|")
                 FdmPush.sendCmd(ctx, "local_set_cover", "$no|")
-                note = ctx.getString(R.string.lm_042)
+                note = ctx.fdmStr(R.string.lm_042)
             },
             onDismiss = { editing = null },
         )

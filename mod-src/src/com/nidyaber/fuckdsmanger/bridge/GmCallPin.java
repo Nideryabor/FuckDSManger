@@ -55,6 +55,9 @@ public final class GmCallPin {
      * ⚠️ 这两个都是**混淆名** —— 宿主升级时必须跟着 `GmRemap` 一起重新定位。
      */
     private static final String[] CAND_VM = {
+            "vt1",        // ★★ 2026-11-13 定位（2.8.0 / vc297）
+                          //   判据：9 个字段 a..i 逐位同形（c/d 同为 MutableState、h/i 同类型）
+                          //   + `a()Z` 方法体 sim=0.900、`b(...)` sim=0.973
             "kt1",        // ★ 2026-11-06 定位（2.7.5）：hc3.smali:8590 = `:cond_38 / invoke-virtual {p0}, Lkt1;->a()Z`
                           //   （= ChatCallHost.kt:32，与 2.7.2 的 g83:15658 完全同形）
             "it1",        // 2.7.2（2.7.5 已不存在）
@@ -69,7 +72,8 @@ public final class GmCallPin {
      * <p>⚠️ 别用 `getType().getName().equals("Lzda;")` 那种判法 —— 混淆类在默认包里，
      *    返回的是 `zda` 而不是 `Lzda;`，永远不成立。
      */
-    private static final String[] STATE_SIMPLE_NAMES = {"iea", "zda", "lea", "vda"};
+    private static final String[] STATE_SIMPLE_NAMES = {"tga", "iea", "zda", "lea", "vda"};
+    // ★ 2.8.0 = **tga**（vt1 的 c/d 字段都是 Ltga; = MutableState）
 
     /**
      * ★★ 2026-10-02 修（主人实测："杀后台再打开也是通话页"）：

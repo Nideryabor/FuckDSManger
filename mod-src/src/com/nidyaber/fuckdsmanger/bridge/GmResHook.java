@@ -394,14 +394,28 @@ public final class GmResHook {
                     GmUtil.log("【FdmRes】dec.U：拿不到宿主 ClassLoader，跳过");
                     hl = GmResHook.class.getClassLoader();
                 }
-                Class<?> dec = XposedHelpers.findClass("dec", hl);
+                // ★★ 2026-11-13（2.8.0）：**不许再写死 "dec"**！
+                //   2.8.0 里 R8 把 `dec` 拆了：dec.w(clip)→ee.s、dec.U→pac.y
+                //   写死 "dec" ⇒ findClass 失败 ⇒ 只改 tv.string 没换 getDrawable
+                //   ⇒ 宿主把 "fdm_replaced" 当位图解析 ⇒ **首页助手头像变蓝方块**（真机事故）
+                final String PR_KEY = "painter.res";
+                final String PR_MTH = "U";
+                String prCls = GmRemap.clsFor(PR_KEY, PR_MTH);
+                String prMth = GmRemap.method(PR_KEY, PR_MTH);
+                if (!GmRemap.hit(PR_KEY, PR_MTH)) {
+                    GmUtil.log("【FdmRes】✗ MTH 表里没有键 \"" + PR_KEY + "." + PR_MTH
+                            + "\" ⇒ 不挂 painterResource 钩子（宁可图片不换，也不能只换一半）");
+                    throw new IllegalStateException("painter.res 未登记");
+                }
+                GmUtil.log("【FdmRes】painterResource 锚点 ⇒ " + prCls + "." + prMth);
+                Class<?> dec = XposedHelpers.findClass(prCls, hl);
                 // ★ 用**类名字符串**的重载：它能拿到宿主的 ClassLoader，
                 //   比传 Class 更稳（也避免跨 loader 的 isInstance 坑）。
                 //
                 //   ⚠️ 2026-11-07 我自己踩的坑：曾以为「static 方法挂不上」——
                 //   **那是错的**。Xposed 的 findAndHookMethod 遍历 getDeclaredMethods，
                 //   **不区分 static / 实例**。所以 decU命中=0 另有原因，别再往这上面想。
-                XposedHelpers.findAndHookMethod("dec", hl, "U", int.class, Context.class,
+                XposedHelpers.findAndHookMethod(prCls, hl, prMth, int.class, Context.class,
                         new XC_MethodHook() {
                             @Override
                             protected void afterHookedMethod(MethodHookParam p) {
@@ -487,22 +501,48 @@ public final class GmResHook {
                 //   绘制时：q88.g 的 this 是 vo0，vo0.f 是 ImageBitmap(rf)，rf.a 是 Bitmap。
                 //        → 一路 iget 字段虽然要反射，但**只在命中候选时才做**：
                 //          先用一个前置筛子 —— 见下。
-                final Class<?> vo0Cls = XposedHelpers.findClass(
-                        "vo0", sHostLoader == null ? GmResHook.class.getClassLoader() : sHostLoader);
-                final Class<?> q88Cls = XposedHelpers.findClass(
-                        "q88", sHostLoader == null ? GmResHook.class.getClassLoader() : sHostLoader);
+                // ★★ 2026-11-13（2.8.0）：这四个名字也**全部改走 GmRemap**，不再写死。
+                //   2.7.5 → 2.8.0：vo0→xo0(ok0) · q88→ra8(ku6) · rf→rf(le) · gp0→hp0(vk0)
+                final ClassLoader hl2 =
+                        sHostLoader == null ? GmResHook.class.getClassLoader() : sHostLoader;
+                final String vo0N = GmRemap.cls("ok0");     // BitmapPainter
+                final String q88N = GmRemap.cls("ku6");     // Painter 基类
+                final String rfN = GmRemap.cls("le");       // 图像包装
+                final String gp0N = GmRemap.cls("vk0");     // Paint
+                GmUtil.log("【FdmRes】tint 锚点 ⇒ vo0=" + vo0N + " q88=" + q88N
+                        + " rf=" + rfN + " gp0=" + gp0N);
+                final Class<?> vo0Cls = XposedHelpers.findClass(vo0N, hl2);
+                final Class<?> q88Cls = XposedHelpers.findClass(q88N, hl2);
                 final java.lang.reflect.Field fImageBitmap =
-                        vo0Cls.getDeclaredField("f");          // vo0.f : ck5
+                        vo0Cls.getDeclaredField("f");          // <BitmapPainter>.f : ImageBitmap
                 fImageBitmap.setAccessible(true);
                 final java.lang.reflect.Field fBitmap =
-                        XposedHelpers.findClass("rf",
-                                sHostLoader == null ? GmResHook.class.getClassLoader() : sHostLoader)
-                                .getDeclaredField("a");        // rf.a : Bitmap
+                        XposedHelpers.findClass(rfN, hl2)
+                                .getDeclaredField("a");        // <图像包装>.a : Bitmap
                 fBitmap.setAccessible(true);
 
-                XposedHelpers.findAndHookMethod(q88Cls, "g", "v24", long.class,
-                        float.class, XposedHelpers.findClass("gp0",
-                                sHostLoader == null ? GmResHook.class.getClassLoader() : sHostLoader),
+                // ★★ 2026-11-13（2.8.0）：第一个参数类型**不再写死 "v24"**（那是 2.7.5）。
+                //   2.8.0 是 `g(Ld34;JFLhp0;)V`。与其再写死一个 "d34"，不如**从方法签名派生** ——
+                //   找 `g(X, long, float, <Paint>)` 那个重载，X 就是要的类型。以后版本再变也不用改。
+                final Class<?> gp0Cls = XposedHelpers.findClass(gp0N, hl2);
+                Class<?> firstArg = null;
+                for (java.lang.reflect.Method _m : q88Cls.getDeclaredMethods()) {
+                    if (!"g".equals(_m.getName())) continue;
+                    Class<?>[] _pt = _m.getParameterTypes();
+                    if (_pt.length == 4 && _pt[1] == long.class && _pt[2] == float.class
+                            && _pt[3].getName().equals(gp0Cls.getName())) {
+                        firstArg = _pt[0];
+                        break;
+                    }
+                }
+                if (firstArg == null) {
+                    GmUtil.log("【FdmRes】✗ " + q88N + " 里没有 g(X,long,float," + gp0N
+                            + ") 重载 ⇒ 不挂 tint 剥离（只影响「剥 tint」，不影响图片替换）");
+                    throw new IllegalStateException("q88.g 形状不符");
+                }
+                GmUtil.log("【FdmRes】g 首参派生 ⇒ " + firstArg.getName());
+                XposedHelpers.findAndHookMethod(q88Cls, "g", firstArg, long.class,
+                        float.class, gp0Cls,
                         new XC_MethodHook() {
                             @Override
                             protected void beforeHookedMethod(MethodHookParam p) {

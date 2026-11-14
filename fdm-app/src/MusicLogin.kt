@@ -130,14 +130,14 @@ fun MusicLoginPage(onBack: () -> Unit) {
     /** 登录成功后：把凭证送进宿主（只有宿主能写它自己的私有目录）。 */
     fun handOff(musicU: String, uid: String, nick: String) {
         if (musicU.isEmpty()) {
-            msg = ctx.getString(R.string.mlg_001)
+            msg = ctx.fdmStr(R.string.mlg_001)
             return
         }
         // ★ 本地也留一份（键名刻意**不带 fuckds_ 前缀** ⇒ 不会被全量推给宿主，
         //   免得凭证又被塞进宿主的 MMKV、多一处副本）
         sp.edit().putString("music.token", musicU).apply()
         FdmPush.sendCmd(ctx, "music_login_save", "$musicU\u001f$uid\u001f$nick")
-        msg = ctx.getString(R.string.mlg_002)
+        msg = ctx.fdmStr(R.string.mlg_002)
         // ★ 不写"假成功"：读**宿主的真实回执**（last_result）再下结论
         scope.launch {
             delay(1200)
@@ -145,7 +145,7 @@ fun MusicLoginPage(onBack: () -> Unit) {
             FdmPush.sendCmd(ctx, "cfg_state", null)
             delay(600)
             val r = sp.getString("last_result", "") ?: ""
-            msg = if (r.isEmpty()) ctx.getString(R.string.mlg_003) else "宿主回执：$r"
+            msg = if (r.isEmpty()) ctx.fdmStr(R.string.mlg_003) else "宿主回执：$r"
             tick++
         }
     }
@@ -174,7 +174,7 @@ fun MusicLoginPage(onBack: () -> Unit) {
                     Button(onClick = {
                         FdmPush.sendCmd(ctx, "music_login_clear", null)
                         FdmPush.sp(ctx).edit().remove("music.token").apply()
-                        msg = ctx.getString(R.string.mlg_008)
+                        msg = ctx.fdmStr(R.string.mlg_008)
                         tick++
                     }) { Text(stringResource(R.string.mlg_009)) }
                 }
@@ -220,17 +220,17 @@ fun MusicLoginPage(onBack: () -> Unit) {
                                 enabled = !busy && phone.length >= 6 && countdown == 0,
                                 onClick = {
                                     busy = true
-                                    msg = ctx.getString(R.string.mlg_016)
+                                    msg = ctx.fdmStr(R.string.mlg_016)
                                     scope.launch {
                                         val r = withContext(Dispatchers.IO) {
                                             try {
                                                 GmMusicApi.captchaSent(phone, ctcode)
                                             } catch (t: Throwable) {
-                                                mapOf("code" to -1L, "msg" to (t.message ?: ctx.getString(R.string.mlg_017)))
+                                                mapOf("code" to -1L, "msg" to (t.message ?: ctx.fdmStr(R.string.mlg_017)))
                                             }
                                         }
                                         val code = (r["code"] as? Number)?.toLong() ?: -1L
-                                        msg = if (code == 200L) ctx.getString(R.string.mlg_018)
+                                        msg = if (code == 200L) ctx.fdmStr(R.string.mlg_018)
                                         else "发码失败：code=$code ${r["msg"]}"
                                         if (code == 200L) sentAt = System.currentTimeMillis()
                                         busy = false
@@ -243,13 +243,13 @@ fun MusicLoginPage(onBack: () -> Unit) {
                             enabled = !busy && phone.isNotEmpty() && captcha.isNotEmpty(),
                             onClick = {
                                 busy = true
-                                msg = ctx.getString(R.string.mlg_020)
+                                msg = ctx.fdmStr(R.string.mlg_020)
                                 scope.launch {
                                     val r = withContext(Dispatchers.IO) {
                                         try {
                                             GmMusicApi.loginByCaptcha(phone, captcha, ctcode)
                                         } catch (t: Throwable) {
-                                            mapOf("code" to -1L, "msg" to (t.message ?: ctx.getString(R.string.mlg_017)))
+                                            mapOf("code" to -1L, "msg" to (t.message ?: ctx.fdmStr(R.string.mlg_017)))
                                         }
                                     }
                                     val code = (r["code"] as? Number)?.toLong() ?: -1L
@@ -293,7 +293,7 @@ fun MusicLoginPage(onBack: () -> Unit) {
                             enabled = !busy && pwd.isNotEmpty() && (phone.isNotEmpty() || email.isNotEmpty()),
                             onClick = {
                                 busy = true
-                                msg = ctx.getString(R.string.mlg_020)
+                                msg = ctx.fdmStr(R.string.mlg_020)
                                 scope.launch {
                                     val md5 = GmMusicCrypto.md5Hex(pwd)
                                     val r = withContext(Dispatchers.IO) {
@@ -304,7 +304,7 @@ fun MusicLoginPage(onBack: () -> Unit) {
                                                 GmMusicApi.loginByEmail(email, md5)
                                             }
                                         } catch (t: Throwable) {
-                                            mapOf("code" to -1L, "msg" to (t.message ?: ctx.getString(R.string.mlg_017)))
+                                            mapOf("code" to -1L, "msg" to (t.message ?: ctx.fdmStr(R.string.mlg_017)))
                                         }
                                     }
                                     val code = (r["code"] as? Number)?.toLong() ?: -1L
