@@ -20,7 +20,6 @@
     <string name="bbl_016">等比适应（留边）</string>
     <string name="bbl_017">平铺</string>
     <string name="c_back">返回</string>
-
     <string name="c_close">关闭</string>
     <string name="c_jump_go">去「系统提示词」看看 ›</string>
     <string name="c_jump_hint">猜你想跳转</string>
@@ -456,6 +455,15 @@
     <string name="mus_056">听歌本身仍受网易云的版权约束，请勿用于转载或再分发。</string>
     <string name="mus_057">（致谢已搬到「关于」页面）</string>
     <string name="mus_dj">点歌</string>
+    <string name="nav_001">宿主页面导航器</string>
+    <string name="nav_002">✅ 就绪 —— 点一下直接跳进宿主自己的页面</string>
+    <string name="nav_003">⚠️ 现在不在整页里 —— 请从「打开模块 · 整页」进来再用</string>
+    <string name="nav_004">请从「打开模块 · 整页」进来再用</string>
+    <string name="nav_005">这条宿主页面要参数 —— 填好后点「跳转」</string>
+    <string name="nav_006">跳转</string>
+    <string name="nav_007">📥 下面这些值来自宿主自己上次导航（已预填）</string>
+    <string name="nav_008">参数不能为空：</string>
+    <string name="nav_009">已跳转：</string>
     <string name="pg_001">"写出 "</string>
     <string name="pg_002">" 字节 → "</string>
     <string name="pg_003">" 字节）"</string>

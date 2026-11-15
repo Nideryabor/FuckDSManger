@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.Mood
 import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Sms
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -258,7 +259,7 @@ private suspend fun pokeDelayed(bump: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
+fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit, onClose: (() -> Unit)? = null) {
     if (id == "gray") {                       // 「灰度选项管理」= 宿主开关编辑器
         GrayPage(onBack)
         return
@@ -281,6 +282,13 @@ fun TreePage(id: String, onNav: (String) -> Unit, onBack: () -> Unit) {
     }
     if (id == "resbeauty") {                  // ★ 「宿主の终极美化策略」（2026-11-07 · 3.101.0）
         ResBeautyPage(onBack)
+        return
+    }
+    if (id == "hostnav") {
+        // ★ 2026-11-14（3.108.4）· 【宿主页面导航器】
+        //   只在整页里有效（导航靠 hook 住宿主进程的 NavController）。
+        //   导航成功后要**关掉整页**才能看到宿主的目标页 —— 所以需要 onClose。
+        HostNavPage(onBack = onBack, onDone = { onClose?.invoke() })
         return
     }
     val ctx = LocalContext.current
@@ -778,12 +786,16 @@ fun TreeHome(onNav: (String) -> Unit, onAbout: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 val extra = listOf(
                     Triple(stringResource(R.string.mus_001), Icons.Rounded.MusicNote, stringResource(R.string.pg_045)),
+                    // ★ 2026-11-14（3.108.4）· 【宿主页面导航器】
+                    //   点一下直接跳进宿主自己的 Compose 页面（设置/字号/账号管理…）。
+                    //   只在「整页」里可用 —— 导航靠 hook 住宿主进程的 NavController。
+                    Triple(stringResource(R.string.nav_001), Icons.Rounded.OpenInNew, stringResource(R.string.nav_002)),
                     Triple(stringResource(R.string.scr_007), Icons.Rounded.AdminPanelSettings, stringResource(R.string.scr_008)),
                     Triple(stringResource(R.string.scr_009), Icons.Rounded.Build, stringResource(R.string.scr_010)),
                     Triple(stringResource(R.string.scr_005), Icons.Rounded.Sms, null as String?),
                     Triple(stringResource(R.string.scr_006), Icons.Rounded.Mood, null as String?),
                 )
-                val ids = listOf("music", "env", "debug", "chat", "beauty")
+                val ids = listOf("music", "hostnav", "env", "debug", "chat", "beauty")
                 extra.forEachIndexed { i, item ->
                     FdmListItem(
                         title = item.first,

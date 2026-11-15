@@ -188,6 +188,51 @@ public final class FdmBridge {
     }
 
     /**
+     * 整页模式：宿主存储里**有没有**这个键（`contains` 直通）。🐲 2026-11-15（3.108.10）
+     *
+     * <p>为什么要它：`GmStore.read2` 对「没这个键」和「键存在但值是空串」
+     * **都返回 `""`** ⇒ 分不开。而界面必须分清 ——
+     * 「没设过」该用默认值，「设成空」该显示空（比如自定义账号名留空 = 隐藏）。
+     */
+    public static boolean hostHas(Context ctx, String key) {
+        if (ctx == null || key == null) return false;
+        try {
+            SharedPreferences sp = GmStore.get(ctx);
+            return sp != null && sp.contains(key);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /**
+     * ~~整页模式：探出宿主那个键的真实类型~~ 🐲 2026-11-15（3.108.10）**已废弃**
+     *
+     * <h3>为什么废弃（两条都试过，两条都死）</h3>
+     * <ol>
+     *   <li><b>「挨个 getXxx、抛了算类型不对」</b>：MMKV 的 `getBoolean` 对 int
+     *       <b>非零即 true、不抛</b> ⇒ 实测 `fuckds_bg_alpha`(25) 被判成 `b`、读成 `true`。</li>
+     *   <li><b>「`getAll()` 拿真实 Java 类型」</b>：MMKV 的 `getAll()` 直接
+     *       <b>throw UnsupportedOperationException</b>：
+     *       <pre>
+     *   源码注释原文："Intentionally Not Supported. Use allKeys() instead,
+     *                 getAll() not implement because type-erasure inside mmkv"
+     *   证据：tmp/h280/com/tencent/mmkv/MMKV.smali:5279（反编译）
+     *         frida 实测 getAll() → InvocationTargetException
+     *              allKeys() → NoSuchMethodException（公开包装被 R8 裁了）
+     *       </pre></li>
+     * </ol>
+     * ⇒ **类型不可能在运行时探出来**。现在由整页侧的静态表
+     * （`HostStore.HOST_TYPES`，对着模块侧真实读法逐条核过）回答。
+     *
+     * @deprecated 用 {@link #hostHas} 判存在 + {@link #hostReadStrict} 按已知类型读。
+     */
+    @Deprecated
+    public static String hostType(Context ctx, String key) {
+        String t = hostHas(ctx, key) ? "s" : null;
+        return t;
+    }
+
+    /**
      * 整页模式：**直接**写宿主存储。
      *
      * @param type 同 {@link #hostRead}；**注意 `GmStore.write` 的参数顺序是
@@ -1871,6 +1916,84 @@ public final class FdmBridge {
             lastData = GmResHook.dump(ctx);
             back = "资源替换配置：" + GmResHook.selfTest();
             GmUtil.log("【FdmRes】res_state → " + back);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("nav_dump".equals(cmd)) {
+            // ★ 2026-11-15（3.108.6）· 导航器远程自检（**不占屏**）
+            //
+            //   导航图里的 route / 参数名 / 类型 / 样本全是运行时才知道的东西，
+            //   光读源码一个都验不出来；而伸手点主人的手机要抢屏。
+            //   ⇒ 让宿主自己 dump 出来：
+            //     adb shell am broadcast -a com.little_femaleboy.fdm.CMD --es cmd nav_dump
+            //   然后 grep dsm.log 里的 `【HostNav·dump】`。
+            lastData = HostNav.dump();
+            back = "导航图 dump 完成（" + (lastData == null ? 0 : lastData.length()) + " 字）";
+            GmUtil.log("【HostNav·dump】\n" + lastData);
+            sendResult(ctx, cmd, back, lastData);
+            return;
+        } else if ("cfg_probe".equals(cmd)) {
+            // ★ 2026-11-15（3.108.6）· 配置类型探测自检（`hostType` 的活体证据）
+            //
+            //   为什么必须单独验：整页里「读不到/读错配置」的根因是
+            //   `GmStore.read2` 的 catchall 把**类型不符也吞成空串**，
+            //   所以「读回默认值」和「没这个键」在旧代码里长得一模一样。
+            //   ⇒ 这里把 `contains / 真实类型 / 读回值` 三样并排打出来，
+            //     一眼就能看出是"没有"还是"类型判错"。
+            StringBuilder pb = new StringBuilder(1024);
+            pb.append("probe:\n");
+            String[] keys = {
+                    "fuckds_bg_on", "fuckds_bg_alpha", "fuckds_bg_mode", "fuckds_bg_grad",
+                    "fuckds_bubble_on", "fuckds_bubble_color", "fuckds_bubble_radius",
+                    "fuckds_glass_on", "fuckds_glass_tint", "fuckds_glass_color",
+                    "fuckds_note_bg", "fuckds_note_alpha", "fuckds_bar_w",
+                    "fuckds_welcome_msg", "fuckds_nick",
+                    "fuckds_ui_night_mode", "fuckds_toolbox_option",
+            };
+            // 抓一份原始 getAll —— 「真实 Java 类名」是这件事唯一的铁证：
+            // 「探测逻辑错」和「存储里被写坏」在只看 type 字符时分不开。
+            java.util.Map<String, ?> raw = null;
+            try {
+                SharedPreferences sp0 = GmStore.get(ctx);
+                if (sp0 != null) raw = sp0.getAll();
+            } catch (Throwable ignore) {
+            }
+            pb.append("  getAll().size=").append(raw == null ? -1 : raw.size()).append('\n');
+            for (String k : keys) {
+                String t = hostType(ctx, k);
+                String v;
+                if (t == null) {
+                    v = "<没有这个键>";
+                } else {
+                    v = hostReadStrict(ctx, k, t);
+                    if (v != null && v.length() > 40) v = v.substring(0, 40) + "…";
+                }
+                Object o = (raw == null) ? null : raw.get(k);
+                pb.append("  ").append(k)
+                        .append("  type=").append(t == null ? "-" : t)
+                        .append("  java=").append(o == null ? "-" : o.getClass().getSimpleName())
+                        .append("  val=").append(v).append('\n');
+            }
+            if (raw != null) {
+                int nb = 0, ni = 0, nl = 0, nf = 0, ns = 0;
+                java.util.List<String> bools = new java.util.ArrayList<String>();
+                for (java.util.Map.Entry<String, ?> e : raw.entrySet()) {
+                    String k = e.getKey();
+                    if (k == null || !k.startsWith("fuckds_")) continue;
+                    Object v = e.getValue();
+                    if (v instanceof Boolean) { nb++; if (bools.size() < 24) bools.add(k); }
+                    else if (v instanceof Integer) ni++;
+                    else if (v instanceof Long) nl++;
+                    else if (v instanceof Float) nf++;
+                    else ns++;
+                }
+                pb.append("  全部 fuckds_*：bool=").append(nb).append(" int=").append(ni)
+                        .append(" long=").append(nl).append(" float=").append(nf)
+                        .append(" str=").append(ns).append('\n');
+                pb.append("  是 bool 的：").append(bools).append('\n');
+            }
+            lastData = pb.toString();
+            back = "配置探测完成";
+            GmUtil.log("【FdmBridge·cfgProbe】\n" + lastData);
             sendResult(ctx, cmd, back, lastData);
             return;
         } else if ("res_set_text".equals(cmd)) {

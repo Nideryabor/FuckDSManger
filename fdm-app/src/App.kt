@@ -113,6 +113,9 @@ fun FdmApp(initialPage: String? = null, onClose: (() -> Unit)? = null) {
                 id = p,
                 onNav = { id -> go(id, Tr.IN_RIGHT, push = true) },
                 onBack = { back() },
+                // ★ 2026-11-14：整页里「宿主页面导航器」跳成功之后要关掉整页
+                //   （整页是 Dialog，盖在宿主上面 ⇒ 不关就看不见目标页）
+                onClose = onClose,
             )
         }
     }

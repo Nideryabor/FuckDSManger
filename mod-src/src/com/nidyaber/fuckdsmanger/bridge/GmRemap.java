@@ -45,6 +45,20 @@ public final class GmRemap {
     /** 必然不存在的类名前缀 —— 让 findClass 干净地失败 */
     private static final String GONE = "com.gm.gone.";
 
+    /**
+     * 某个名字是不是「安全失败」占位（= 该锚点在这版宿主里已消失）。
+     *
+     * <p>给 bridge 侧调用 —— {@code GONE} 本身是 private，外面判断不了。
+     * 典型用法：
+     * <pre>
+     *   String m = GmRemap.method("hostnav.ctrl", "getGraph");
+     *   if (GmRemap.isGone(m)) return "锚点升级失效";
+     * </pre>
+     */
+    public static boolean isGone(String name) {
+        return name != null && name.startsWith(GONE);
+    }
+
     private GmRemap() {}
 
     // ══════════════════════════════════════════════════════════════════
@@ -155,6 +169,36 @@ public final class GmRemap {
         //   ★ 这个锚点没挂上 ⇒ 只改了 tv.string 没换 getDrawable
         //     ⇒ 宿主把 "fdm_replaced" 当位图解析 ⇒ **首页助手头像变蓝色小方块**
         {"painter.res", "painter.res", "painter.res", "painter.res", "painter.res", "painter.res", "pac"},
+
+        // ═══ 2026-11-14（3.108.4）· 「宿主页面导航器」的五个锚点 ═══
+        //   目的：从模块 UI 里点一下，**在宿主进程内**导航到宿主自己的 Compose 页面。
+        //   依据：`专题/界面导航管理器-宿主对照.md`（2.5.2 那轮已经把机制摸透）+
+        //        本轮在 `tmp/h280`（2.8.0 真反编译树）上逐条验证。
+        //
+        //   ⚠️⚠️ 2.5.2 的「方案 A：造一个 @SerialName 伪路由对象喂给 navigate」在 2.8.0 **已经失效**：
+        //     `Lms7;`(=NavController) 的 `navigate(Object,extras)` 重载**没了**，
+        //     只剩 `n(Lss7;Landroid/os/Bundle;Lgt7;)V`（要宿主自己的 destination 对象）。
+        //     而长的像它的 `o(Ljava/lang/Object;Lgt7;)V` 其实是 popBackStack 家族
+        //     （读了方法体：`f(Object)String` 拿 route 串 → `l()` 取图 → `m()` 匹配，**没有入栈**）。
+        //   ⇒ 走**方案 C**：`matchRoute(String)` → 拿到 destination → 喂给 navigate。
+        //
+        //   链路（全部在 h280 里读方法体验过，不是猜）：
+        //     zs7.<init>(Context)  → this.b = new ms7(...)        ← 唯一 new 点（g37:10596 是 rememberNavController）
+        //     ms7.j()              → graph   (串 "You must call setGraph() before calling getGraph()")
+        //     vs7.m(String,Z,ss7)  → DeepLinkMatch rs7            (ss7 抽象基类 + a:String=route ⇒ 是 NavDestination)
+        //     rs7.a = destination(ss7) · rs7.b = Bundle
+        //     ms7.n(ss7,Bundle,gt7)                                ← 入栈
+        //     gt7 = NavOptions，<init>(ZZIZZII)，n() 里直接 iget 不判空 ⇒ **必须给实例**
+        {"hostnav.holder", "hostnav.holder", "hostnav.holder", "hostnav.holder", "hostnav.holder", "hostnav.holder", "zs7"},   // NavHostController 持有者（字段 b = NavController）
+        {"hostnav.ctrl", "hostnav.ctrl", "hostnav.ctrl", "hostnav.ctrl", "hostnav.ctrl", "hostnav.ctrl", "ms7"},   // NavController
+        {"hostnav.graph", "hostnav.graph", "hostnav.graph", "hostnav.graph", "hostnav.graph", "hostnav.graph", "vs7"},   // NavGraph（extends NavDestination）
+        {"hostnav.dest", "hostnav.dest", "hostnav.dest", "hostnav.dest", "hostnav.dest", "hostnav.dest", "ss7"},   // NavDestination（抽象）
+        {"hostnav.match", "hostnav.match", "hostnav.match", "hostnav.match", "hostnav.match", "hostnav.match", "rs7"},   // DeepLinkMatch
+        {"hostnav.opts", "hostnav.opts", "hostnav.opts", "hostnav.opts", "hostnav.opts", "hostnav.opts", "gt7"},   // NavOptions：`n()` 里直接 iget 不判空 ⇒ 必须造实例（<init>(ZZIZZII)）
+        // ★ 2026-11-15（3.108.6）· 参数 schema 要用到的两个类
+        //   `Lds7;` = NavArgument（字段 a:NavType · b:nullable · c:hasDefault）—— 它在 `ss7.c()` 返回的 Map 里，
+        //   只有我们能通过 NavDestination 拿到它，所以**类名走反射兜底**，这里只登记 NavType。
+        {"hostnav.type", "hostnav.type", "hostnav.type", "hostnav.type", "hostnav.type", "hostnav.type", "lt7"},   // NavType（抽象）：b()=类型名 · d(String)=parseValue
 
         {"yp1", "yp1", "yp1", null, null, null, null},          // 语音门控（GmAsrHook / GmSeeHook）
                                                //   ⚠️ 2.7.1 **同名已换主人**：变成 implements Ld15 的
@@ -293,6 +337,27 @@ public final class GmRemap {
         //   2.7.5 = dec.U · 2.8.0 = pac.y（签名全树唯一）
         //   2.7.2 那代没定位 ⇒ null（安全失败，不会乱咬宿主）
         {"painter.res.U", "painter.res.U", "painter.res.U", "painter.res.U", "painter.res.U", "painter.res.U", "painter.res.U", "pac", "y"},
+        // ═══ 2026-11-14（3.108.4）· 导航器的方法锚点（键用我们自己的语义键，各版本列全填它）═══
+        {"hostnav.holder.init", "hostnav.holder.init", "hostnav.holder.init", "hostnav.holder.init", "hostnav.holder.init", "hostnav.holder.init", "hostnav.holder.init", "zs7", "<init>"},   // 抓 NavController 实例的唯一时机
+        {"hostnav.ctrl.getGraph", "hostnav.ctrl.getGraph", "hostnav.ctrl.getGraph", "hostnav.ctrl.getGraph", "hostnav.ctrl.getGraph", "hostnav.ctrl.getGraph", "hostnav.ctrl.getGraph", "ms7", "j"},   // getGraph(): NavGraph
+        {"hostnav.graph.matchRoute", "hostnav.graph.matchRoute", "hostnav.graph.matchRoute", "hostnav.graph.matchRoute", "hostnav.graph.matchRoute", "hostnav.graph.matchRoute", "hostnav.graph.matchRoute", "vs7", "m"},   // matchRoute(String,Boolean,NavDestination): DeepLinkMatch?
+        {"hostnav.ctrl.navigate", "hostnav.ctrl.navigate", "hostnav.ctrl.navigate", "hostnav.ctrl.navigate", "hostnav.ctrl.navigate", "hostnav.ctrl.navigate", "hostnav.ctrl.navigate", "ms7", "n"},   // navigate(NavDestination,Bundle,NavOptions)
+        // ═══ 2026-11-15（3.108.6）· 参数 schema（让「带参页面」真能跳）═══
+        //   `Lss7;`(=NavDestination) 的 **`c()`** 返回 `Map<String,NavArgument>`
+        //   —— 实证在 `tmp/h280/ss7.smali:506`：
+        //       iget-object p0, p0, Lss7;->b:Lnt;        ← 数据持有者
+        //       iget-object p0, p0, Lnt;->d:Ljava/lang/Object;   ← LinkedHashMap
+        //       check-cast p0, Ljava/util/LinkedHashMap;
+        //       invoke-static {p0}, Lw07;->l0(Ljava/util/Map;)Ljava/util/Map;   ← toMap（只读副本）
+        //   ⚠️ **不是 `ss7.d`**！`d` 是 `Lrea;`（androidx 的 SparseArrayCompat），
+        //      旧代码拿 `d` 判"有参"永远 false（于是只能靠 UI 里那张硬编码名单凑数）。
+        {"hostnav.dest.arguments", "hostnav.dest.arguments", "hostnav.dest.arguments", "hostnav.dest.arguments", "hostnav.dest.arguments", "hostnav.dest.arguments", "hostnav.dest.arguments", "ss7", "c"},   // getArguments(): Map<String,NavArgument>
+        //   `Llt7;`(=NavType)：`b()` 返回类型名（"integer"/"string"/"bool"/"long"/"float"/"string[]"…），
+        //   `d(String)` 是 `parseValue`（返回 Integer/Long/Float/Boolean/String/String[]）。
+        //   ★ 用它解析比我们自己按名字 switch 更稳：宿主版本的命名差异（int/integer）它自己认。
+        {"hostnav.type.name", "hostnav.type.name", "hostnav.type.name", "hostnav.type.name", "hostnav.type.name", "hostnav.type.name", "hostnav.type.name", "lt7", "b"},
+        {"hostnav.type.parse", "hostnav.type.parse", "hostnav.type.parse", "hostnav.type.parse", "hostnav.type.parse", "hostnav.type.parse", "hostnav.type.parse", "lt7", "d"},
+
     };
 
     /**

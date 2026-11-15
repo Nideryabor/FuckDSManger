@@ -138,6 +138,20 @@ public final class FdmEntry implements IXposedHookLoadPackage, IXposedHookZygote
             } catch (Throwable t) {
                 XposedBridge.log("[FDM] GmCatchUp.install 抛了（不影响其它钩子）：" + t);
             }
+
+            // ★★ 2026-11-14（3.108.4）· 【宿主页面导航器】
+            //   挂 zs7.<init> 抓 NavController —— 那是全 dex **唯一** new ms7 的地方。
+            //   拿到之后，模块 UI 就能用 `HostNav.go(route串)` 在宿主进程内跳到
+            //   宿主自己的 Compose 页面（设置/字号/账号管理…）。
+            //
+            //   ⚠️ 为什么不 hook ms7.<init>：zs7 才是「一次创建、持有 Activity」的那个，
+            //      而且它的构造点只有一个（rememberNavController）；hook ms7 会拿到
+            //      NavigatorProvider 内部临时造的那些。
+            try {
+                HostNav.install(lp.classLoader);
+            } catch (Throwable t) {
+                XposedBridge.log("[FDM] HostNav.install 抛了（不影响其它钩子）：" + t);
+            }
         }
 
         // ③ 「检查更新」换乘：底座的 View 弹窗（GmHomeUi）→ 我们的 Compose UI
